@@ -12,6 +12,7 @@ namespace ConsoleApplication1
     {
         Regex regex;
         string inputFile;
+        bool lineNumbers = true;
 
         static int Main(string[] args)
         {
@@ -75,7 +76,14 @@ namespace ConsoleApplication1
                     line = line.Trim();
                     if (regex.IsMatch(line))
                     {
-                        Console.WriteLine(linePrefix + "{1}", i, line);                        
+                        if (lineNumbers)
+                        {
+                            Console.WriteLine(linePrefix + "{1}", i, line);
+                        }
+                        else
+                        {
+                            Console.WriteLine(line);
+                        }
                     }
                     line = reader.ReadLine();
                     i++;
@@ -89,6 +97,7 @@ namespace ConsoleApplication1
             Console.WriteLine("Outputs matching lines from the given file with the expression given in the options");
             Console.WriteLine("Options:");
             Console.WriteLine("  -e expr     the regular expression to match (in .NET regex syntax)");
+            Console.WriteLine("  -noln       no line numbers");
             Console.WriteLine("  file        the file to process, or standard input if no file provided");
         }
 
@@ -111,6 +120,9 @@ namespace ConsoleApplication1
                                 Console.WriteLine("### Error: expression after -e argument is missing");
                                 return false;
                             }
+                            break;
+                        case "noln":
+                            this.lineNumbers = false;
                             break;
                         default:
                         case "?":
