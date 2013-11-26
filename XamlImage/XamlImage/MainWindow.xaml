@@ -1,0 +1,33 @@
+﻿<Window x:Class="XamlImage.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="XAML PNG Creator" Height="800" Width="1280" Background="Black" Foreground="white">
+    <Window.InputBindings>
+        <KeyBinding Command="Save" Key="S" Modifiers="Control"/>
+        <KeyBinding Command="Paste" Key="V" Modifiers="Control"/>
+        <KeyBinding Command="Close" Key="F4" Modifiers="Alt"/>
+    </Window.InputBindings>
+    <Window.CommandBindings>
+        <CommandBinding Command="Save" Executed="OnSave"/>
+        <CommandBinding Command="Paste" Executed="OnPaste"/>
+        <CommandBinding Command="Close" Executed="OnExit"/>
+    </Window.CommandBindings>
+    <DockPanel>
+        <Menu IsMainMenu="True" DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Save..." Command="Save"/>
+                <MenuItem Header="Exit" Command="Close"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Paste XAML" Command="Paste"/>
+                <MenuItem Header="_Background">
+                    <MenuItem Header="_Black" Click="OnBlackBackground"/>
+                    <MenuItem Header="_White" Click="OnWhiteBackground"/>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+        <Grid x:Name="RootContent">
+        </Grid>
+    </DockPanel>
+    
+</Window>
