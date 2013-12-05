@@ -1,0 +1,176 @@
+<HTML>
+  <STYLE> H1 { COLOR: #336699; FONT-SIZE: x-large; MARGIN-BOTTOM: 0.5em; MARGIN-TOP: 1em; PADDING-LEFT: 4px }
+	H2 { BORDER-LEFT: #4e4887 8px solid; BORDER-TOP: #4e4887 1px solid; COLOR: #4e4887; FONT-SIZE: small; MARGIN-BOTTOM: 0.5em; MARGIN-TOP: 1em; PADDING-LEFT: 4px }
+	H3 { BORDER-LEFT: #4e4887 4px solid; BORDER-TOP: #4e4887 1px solid; COLOR: #4e4887; FONT-SIZE: x-small; MARGIN-BOTTOM: 0.5em; MARGIN-TOP: 1em; PADDING-LEFT: 4px }
+	H4 { COLOR: #4e4887; FONT-SIZE: x-small; MARGIN-BOTTOM: 0.5em }
+	H5 { COLOR: #4e4887; FONT-SIZE: x-small; MARGIN-BOTTOM: 0.5em }
+	H6 { COLOR: #4e4887; FONT-SIZE: x-small; FONT-STYLE: italic; MARGIN-BOTTOM: 0.5em }
+	TABLE { BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; BORDER-RIGHT: medium none; BORDER-TOP: medium none }
+	TD { BACKGROUND-COLOR: #ffdfbe; BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; BORDER-RIGHT: medium none; BORDER-TOP: medium none; FONT-SIZE: x-small; MARGIN: 2px; PADDING-BOTTOM: 2px; PADDING-LEFT: 2px; PADDING-RIGHT: 2px; PADDING-TOP: 2px; TEXT-ALIGN: left }
+	TH { BACKGROUND-COLOR: #FFAD4A; BORDER-BOTTOM: medium none; BORDER-LEFT: medium none; BORDER-RIGHT: medium none; BORDER-TOP: medium none; FONT-SIZE: x-small; MARGIN: 2px; PADDING-BOTTOM: 2px; PADDING-LEFT: 2px; PADDING-RIGHT: 2px; PADDING-TOP: 2px; TEXT-ALIGN: left }
+	TH { BACKGROUND-COLOR: #ffaa57 }
+	</STYLE>
+  <BODY>
+    <H1>XmlCsvReader</H1>
+    <P>XmlCsvReader is an implementation of the .NET managed System.Xml.XmlReader 
+      base class which parses tab delimited .csv files and returns the data as a 
+      stream of XML elements.&nbsp; Both the source code for the class and a command 
+      line executable are provided.</P>
+    <P><IMG alt="" src="download.gif" hspace="5">Download the zip file including the 
+      standalone executable and the full source code: <A href="XmlCsvReader.zip">XmlCsvReader.zip</A></P>
+    <P>See online demo at <A href="/tools/xmlcsvreader/demo.aspx">demo.aspx</A>.<BR>
+      See also <A href="/srcview/srcview.aspx?path=/tools/xmlcsvreader/XmlCsvReader.src">
+        online source</A>.</P>
+    <H3>Command Line Usage</H3>
+    <P>The command line executable version has the following options:</P>
+    <PRE>XmlCsvReader [-a] [-c] [-root name] [-row name] [-names a,b,c,...] [-e encoding] customer.csv result.xml</PRE>
+    <blockquote>
+      <TABLE id="Table1" cellSpacing="1" cellPadding="5" border="1">
+        <TR>
+          <TH>
+            -a</TH><TD>Specifies that you want attributes instead of subelements.</TD>
+        </TR>
+        <TR>
+          <TH>
+            -c</TH><TD>Specifies that the first row contains column names.</TD>
+        </TR>
+        <TR>
+          <TH>
+            -d char</TH>
+          <TD>
+            <P>Specifies the column delimiter character (default is 'auto' which means 
+              auto-detect the delimiter).&nbsp; Other possibilities are&nbsp;-d "," and -d 
+              "|" and -d "\t".</P>
+          </TD>
+        </TR>
+        <TR>
+          <TH>-e encoding</TH>
+          <TD>Specifies an override for the encoding used to decode the .csv file.&nbsp; 
+            Default is Encoding.Default.</TD>
+        </TR>
+        <TR>
+          <TH>
+            -root name</TH><TD>Specifies the root element name (default is 'root').</TD>
+        </TR>
+        <TR>
+          <TH>
+            -row name</TH><TD>Specifies the row element name (default is 'row').</TD>
+        </TR>
+        <TR>
+          <TH>
+            -names a,b,c</TH>
+          <TD>Specifies the actual column names to use, separated by commas or spaces. If 
+            you also specify "-c" then the header row in the .csv file is simply ignored, 
+            and your custom column names are used instead.</TD>
+        </TR>
+        <TR>
+          <TH>
+            customer.csv</TH><TD>The first file name specifies the .csv input file.&nbsp; 
+            If no file names are specified then it reads from standard input.</TD>
+        </TR>
+        <TR>
+          <TH>
+            result.xml</TH><TD>The second file name specifies the output xml file.&nbsp; If 
+            no second file name is specified then it writes to standard output.</TD>
+        </TR>
+      </TABLE>
+    </blockquote>
+    <H3>XmlCsvReader Constructor</H3>
+    <P>
+      XmlCsvReader is a subclass of XmlReader so you can use it anywhere you can use 
+      the XmlReader, for example in loading an XmlDocument or DataSet.&nbsp; The 
+      XmlCsvReader has the following constructors:</P>
+    <PRE><PRE>public XmlCsvReader();</PRE>public XmlCsvReader( <STRONG>Uri</STRONG> location,&nbsp; <BR>                     <STRONG>XmlNameTable</STRONG> nametable);<BR>public XmlCsvReader( <STRONG>Stream</STRONG> input,<BR><STRONG>			  Uri</STRONG> baseUri,<BR><STRONG> 			  XmlNameTable</STRONG> nametable);<BR>public XmlCsvReader( <STRONG>TextReader </STRONG>input,<BR><STRONG>		     Uri</STRONG> baseUri,<BR><STRONG>		     XmlNameTable</STRONG> nametable);</PRE>
+    <p>If you use the default constructor you must provide an input source either via 
+      the Href property or the TextReader property.&nbsp; You can customize the 
+      output XML via the following properties:</p>
+    <DL>
+      <DL>
+        <DT><STRONG>public string </STRONG>RootName
+          <DD>
+            The name of the root element, since .csv files do not define this. The default 
+            is "root". <DT><STRONG>public string </STRONG>RowName
+              <DD>
+                The name of the row element , since .csv files do not define this either. The 
+                defaulyt is "row". <DT><STRONG>public bool </STRONG>FirstRowHasColumnNames
+                  <DD>
+                    Indicates whether to get the column names from the first row of the .csv 
+                    file.&nbsp; If this is false, then the first row is returned as data and the 
+                    columns are automaticalled named "a1, a2, a3...a<EM>n</EM>". The default is 
+                    false. <DT><STRONG>public bool </STRONG>ColumnsAsAttrs
+                      <DD>
+                        Whether to return the columns as attributes of the row element or as child 
+                        elements.&nbsp; The default is false. <DT><STRONG>public string[] </STRONG>ColumnNames
+                          <DD>
+                            Specifies the actual column names to use.&nbsp; This can also return the column 
+                            names found when FirstRowHasColumnNames was set to true.&nbsp; If 
+                            FirstRowHasColumnNames is true and column names are provided then the header 
+                            row is simply ignored. <DT><STRONG>public char </STRONG>Delimiter
+                              <DD>
+                                Gets or sets the column delimiter. Default is '\0' which means /// the reader 
+                                will auto detect the delimiter.</DD>
+      </DL>
+    </DL>
+    <H3>Support</H3>
+    <P>Please email bugs, feedback and/or feature requests to <A href="mailto:clovett@microsoft.com">
+        Chris Lovett</A>.</P>
+    <H3>Change History</H3>
+    <P>
+      <TABLE id="Table2" cellSpacing="1" cellPadding="1" border="1">
+        <TR>
+          <TH height="24">
+            Version</TH>
+          <TH width="129" height="24">
+            Date</TH>
+          <TH height="24">
+            Description</TH></TR>
+        <TR>
+          <TD>1.3</TD>
+          <TD width="129">April 8th 2005</TD>
+          <TD>Fixed encoding problem, and bugs in handling of quoted columns and weird edge 
+            cases with escaped quotes at the end of the column.&nbsp; Added test suite for 
+            these cases also.</TD>
+        </TR>
+        <TR>
+          <TD>1.2</TD>
+          <TD width="129">January 16th 2004</TD>
+          <TD>Fix handling of column names that are illegal XML names (for example, name 
+            contains a space).&nbsp; Added test suite.</TD>
+        </TR>
+        <TR>
+          <TD>1.1</TD>
+          <TD width="129">June 21st 2003</TD>
+          <TD>
+            Fix bugs in handling of string literals.&nbsp;Fixed returning of attributes 
+            when loading XmlDocument&nbsp;</TD>
+        </TR>
+        <TR>
+          <TD>1.0.3</TD>
+          <TD width="129">April 27th 2003</TD>
+          <TD>Fix NameTable issues.</TD>
+        </TR>
+        <TR>
+          <TD>1.0.2</TD>
+          <TD width="129">April 20th 2003</TD>
+          <TD>Add manual setting for column delimiter.</TD>
+        </TR>
+        <TR>
+          <TD>1.0.1</TD>
+          <TD width="129">March 10th 2003</TD>
+          <TD>Fix bug in loading XmlCsvReader into an XmlDocument
+          </TD>
+        </TR>
+        <TR>
+          <TD>1.0.1105</TD>
+          <TD width="129">January 10th 2003</TD>
+          <TD>Add support for setting custom column names.</TD>
+        </TR>
+        <TR>
+          <TD>1.0</TD>
+          <TD width="129">August 15th 2002</TD>
+          <TD>Initial version</TD>
+        </TR>
+      </TABLE>
+    </P>
+  </BODY>
+</HTML>

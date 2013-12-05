@@ -1,0 +1,96 @@
+`
+"customer_id","account num","lname","fname","mi","address1","city","state_province","postal_code","country"
+1,87462024688,"Nowmer","Sheri","A.","2433 Bailey Road","Tlaxiaco","Oaxaca","15057","Mexico"
+`
+<root>
+  <row>
+    <a0>customer_id</a0>
+    <a1>account num</a1>
+    <a2>lname</a2>
+    <a3>fname</a3>
+    <a4>mi</a4>
+    <a5>address1</a5>
+    <a6>city</a6>
+    <a7>state_province</a7>
+    <a8>postal_code</a8>
+    <a9>country</a9>
+  </row>
+  <row>
+    <a0>1</a0>
+    <a1>87462024688</a1>
+    <a2>Nowmer</a2>
+    <a3>Sheri</a3>
+    <a4>A.</a4>
+    <a5>2433 Bailey Road</a5>
+    <a6>Tlaxiaco</a6>
+    <a7>Oaxaca</a7>
+    <a8>15057</a8>
+    <a9>Mexico</a9>
+  </row>
+</root>
+`-a
+"customer_id","account num","lname","fname","mi","address1","city","state_province","postal_code","country"
+1,87462024688,"Nowmer","Sheri","A.","2433 Bailey Road","Tlaxiaco","Oaxaca","15057","Mexico"
+`
+<root>
+  <row a0="customer_id" a1="account num" a2="lname" a3="fname" a4="mi" a5="address1" a6="city" a7="state_province" a8="postal_code" a9="country" />
+  <row a0="1" a1="87462024688" a2="Nowmer" a3="Sheri" a4="A." a5="2433 Bailey Road" a6="Tlaxiaco" a7="Oaxaca" a8="15057" a9="Mexico" />
+</root>
+`
+`-a -c -root foo -row bar
+"customer_id","account num","lname","fname","mi","address1","city","state_province","postal_code","country"
+1,87462024688,"Nowmer","Sheri","A.","2433 Bailey Road","Tlaxiaco","Oaxaca","15057","Mexico"
+`
+<foo>
+  <bar customer_id="1" account_x0020_num="87462024688" lname="Nowmer" fname="Sheri" mi="A." address1="2433 Bailey Road" city="Tlaxiaco" state_province="Oaxaca" postal_code="15057" country="Mexico" />
+</foo>
+`
+`-a -names "a b c d e f g h i j"
+1,87462024688,"Nowmer","Sheri","A.","2433 Bailey Road","Tlaxiaco","Oaxaca","15057","Mexico"
+`
+<root>
+  <row a="1" b="87462024688" c="Nowmer" d="Sheri" e="A." f="2433 Bailey Road" g="Tlaxiaco" h="Oaxaca" i="15057" j="Mexico" />
+</root>
+`
+Sogéposte,"string with ""embedded"" string",bar,'Excel doesn't double single quotes'
+`
+<root>
+  <row>
+    <a0>Sogéposte</a0>
+    <a1>string with "embedded" string</a1>
+    <a2>bar</a2>
+    <a3>Excel doesn't double single quotes</a3>
+  </row>
+</root>
+`-c
+"Column1"|"Column2"|"Column3"
+"1"|"An Example of a 'inner' Quote."|"OK"
+"2"|"An Example of a "inner".
+Quote."|"NOT OK"
+"3"|"An Example."|"OK"
+"4"|""An Example.""|"NOT OK"
+`
+<root>
+  <row>
+    <Column1>1</Column1>
+    <Column2>An Example of a 'inner' Quote.</Column2>
+    <Column3>OK</Column3>
+  </row>
+  <row>
+    <Column1>2</Column1>
+    <Column2>An Example of a "inner".
+Quote.</Column2>
+    <Column3>NOT OK</Column3>
+  </row>
+  <row>
+    <Column1>3</Column1>
+    <Column2>An Example.</Column2>
+    <Column3>OK</Column3>
+  </row>
+  <row>
+    <Column1>4</Column1>
+    <Column2>"An Example."</Column2>
+    <Column3>NOT OK</Column3>
+  </row>
+</root>
+`
