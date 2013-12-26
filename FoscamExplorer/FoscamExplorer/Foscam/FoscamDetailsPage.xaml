@@ -29,7 +29,10 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Image x:Name="CameraImage" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" Margin="50" VerticalAlignment="top"/>
+            <Grid Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" Margin="50" VerticalAlignment="top">
+                <Image x:Name="CameraImage" Width="640" Height="480" HorizontalAlignment="Left" VerticalAlignment="top"/>
+                <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
+            </Grid>
             <Grid Grid.Column="1" Margin="20">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>

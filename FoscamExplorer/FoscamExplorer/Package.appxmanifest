@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="37e7d252-0804-4f61-9901-73bda87d7b59" Publisher="CN=Chris" Version="1.0.0.0" />
+  <Identity Name="37e7d252-0804-4f61-9901-73bda87d7b59" Publisher="CN=Chris" Version="1.0.0.3" />
   <Properties>
     <DisplayName>FoscamExplorer</DisplayName>
     <PublisherDisplayName>Chris</PublisherDisplayName>

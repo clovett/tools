@@ -13,6 +13,14 @@ using Windows.Storage.Streams;
 
 namespace FoscamExplorer
 {
+    public enum CameraDirection
+    {
+        Up,
+        Down = 2,
+        Left = 4,
+        Right = 6
+    };
+
     public class FoscamDevice
     {
 
@@ -208,6 +216,23 @@ namespace FoscamExplorer
             return await SendCgiRequest(requestStr);
         }
 
+        public async Task<PropertyBag> Move(CameraDirection dir)
+        {
+            string requestStr = String.Format("http://{0}/decoder_control.cgi?command={1}&onestep=1", CameraInfo.IpAddress, (int)dir);
+            return await SendCgiRequest(requestStr);
+        }
+
+        public async Task<PropertyBag> ZoomIn()
+        {
+            string requestStr = String.Format("http://{0}/decoder_control.cgi?command=16&onestep=1", CameraInfo.IpAddress);
+            return await SendCgiRequest(requestStr);
+        }
+
+        public async Task<PropertyBag> ZoomOut()
+        {
+            string requestStr = String.Format("http://{0}/decoder_control.cgi?command=18&onestep=1", CameraInfo.IpAddress);
+            return await SendCgiRequest(requestStr);
+        }
 
         private async Task<PropertyBag> SendCgiRequest(string url)
         {
@@ -416,16 +441,26 @@ namespace FoscamExplorer
             return result;
         }
 
-        internal async void Rename(string newName)
+        internal async Task<string> Rename(string newName)
         {
             string requestStr = String.Format("http://{0}/set_alias.cgi?alias={1}", CameraInfo.IpAddress, newName);
             PropertyBag result = await SendCgiRequest(requestStr);
-            string rc = (string)result["result"];
+            string rc = result.GetValue<string>("error");
+            if (!string.IsNullOrEmpty(rc))
+            {
+                return rc;
+            }
+
+            rc = result.GetValue<string>("result");
             if (rc.StartsWith("ok"))
             {
                 this.CameraInfo.Name = newName;
+                return null;
             }
-            return;
+            else
+            {
+                return rc;
+            }
         }
 
         internal async void StartScanWifi()

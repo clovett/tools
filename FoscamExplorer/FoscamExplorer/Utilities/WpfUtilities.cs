@@ -14,6 +14,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml.Controls;
 using Windows.Storage;
 using Windows.ApplicationModel;
+using Windows.Foundation;
 
 namespace FoscamExplorer
 {

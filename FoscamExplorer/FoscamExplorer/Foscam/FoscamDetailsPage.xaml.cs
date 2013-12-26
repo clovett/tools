@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -23,6 +25,7 @@ namespace FoscamExplorer
     public sealed partial class FoscamDetailsPage : Page
     {
         FoscamDevice device;
+        ImageManipulationGesture gesture;
 
         public FoscamDetailsPage()
         {
@@ -31,7 +34,13 @@ namespace FoscamExplorer
 
             MergeWifiItem(new WifiNetworkInfo() { SSID = "disabled", Security = WifiSecurity.None });
             PasswordBoxWifi.IsEnabled = false;
+
+            gesture = new ImageManipulationGesture();
+            gesture.DragVectorChanged += OnDragVectorChanged;
+            gesture.ZoomDirectionChanged += OnZoomChanged;
+            gesture.Start(CameraImage);
         }
+
 
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
@@ -60,7 +69,8 @@ namespace FoscamExplorer
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             StopWifiScanner();
-            FinishWifiUpdate();
+            FinishUpdate();
+            StopMoving();
             base.OnNavigatedFrom(e);
         }
 
@@ -249,16 +259,7 @@ namespace FoscamExplorer
         private void OnNameChanged(object sender, TextChangedEventArgs e)
         {
             // send new name to the camera 
-            string newName = TextBoxName.Text.Trim();
-            if (newName.Length > 20)
-            {
-                newName = newName.Substring(0, 20);
-            }
-            CameraInfo camera = this.device.CameraInfo;
-            if (camera.Name != newName)
-            {
-                device.Rename(newName);
-            }
+            StartDelayedUpdate();
         }
 
         private void OnWifiSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -267,8 +268,9 @@ namespace FoscamExplorer
             {
                 var network = ComboBoxWifi.SelectedItem as WifiNetworkInfo;
                 PasswordBoxWifi.IsEnabled = (network.SSID != "disabled");
-                ShowError(""); 
-                StartDelayedWifiUpdate();
+                ShowError("");
+                wifiChanged = true;
+                StartDelayedUpdate();
             }
         }
 
@@ -276,47 +278,49 @@ namespace FoscamExplorer
         {
             if (!updatingParameters && PasswordBoxWifi.Password != this.device.CameraInfo.WifiPassword)
             {
-                ShowError(""); 
-                StartDelayedWifiUpdate();
+                ShowError("");
+                wifiChanged = true;
+                StartDelayedUpdate();
             }
         }
 
-        DispatcherTimer wifiUpdateTimer;
+        DispatcherTimer updateTimer;
+        bool wifiChanged;
 
-        private void StartDelayedWifiUpdate()
+        private void StartDelayedUpdate()
         {
-            if (wifiUpdateTimer == null)
+            if (updateTimer == null)
             {
-                wifiUpdateTimer = new DispatcherTimer();
-                wifiUpdateTimer.Interval = TimeSpan.FromSeconds(3);
-                wifiUpdateTimer.Tick += OnWifiUpdateTick;
+                updateTimer = new DispatcherTimer();
+                updateTimer.Interval = TimeSpan.FromSeconds(3);
+                updateTimer.Tick += OnUpdateTick;
             }
-            wifiUpdateTimer.Stop();
-            wifiUpdateTimer.Start();
+            updateTimer.Stop();
+            updateTimer.Start();
         }
 
-        private void StopWifiUpdate()
+        private void StopUpdate()
         {
-            if (wifiUpdateTimer != null)
+            if (updateTimer != null)
             {
-                wifiUpdateTimer.Tick -= OnWifiScanTick;
-                wifiUpdateTimer.Stop();
-                wifiUpdateTimer = null;
+                updateTimer.Tick -= OnWifiScanTick;
+                updateTimer.Stop();
+                updateTimer = null;
             }
         }
 
-        private void FinishWifiUpdate()
+        private void FinishUpdate()
         {
-            if (wifiUpdateTimer != null)
+            if (updateTimer != null)
             {
                 // do it now then!
-                OnWifiUpdateTick(this, null);
+                OnUpdateTick(this, null);
             }
         }
 
-        private async void OnWifiUpdateTick(object sender, object e)
+        private async void OnUpdateTick(object sender, object e)
         {
-            StopWifiUpdate();
+            StopUpdate();
             
             WifiNetworkInfo info = ComboBoxWifi.SelectedItem as WifiNetworkInfo;
             if (info != null && info.SSID == "disabled")
@@ -326,17 +330,211 @@ namespace FoscamExplorer
 
             device.CameraInfo.WifiNetwork = info;
 
-            string error = await device.UpdateWifiSettings();
-            if (error != null)
+            string newName = TextBoxName.Text.Trim();
+            if (newName.Length > 20)
             {
-                ShowError(error);
+                newName = newName.Substring(0, 20);
             }
-            else
+            CameraInfo camera = this.device.CameraInfo;
+            if (camera.Name != newName)
             {
-                ShowError("updated");
+                string rc = await device.Rename(newName);
+                if (!string.IsNullOrEmpty(rc))
+                {
+                    ShowError(rc);
+                    return;
+                }
+            }
+
+            if (wifiChanged)
+            {
+                wifiChanged = false;
+                string error = await device.UpdateWifiSettings();
+                if (error != null)
+                {
+                    ShowError(error);
+                    return;
+                }
+            }
+
+            ShowError("updated");
+        }
+
+        Vector moveDirection;
+        Vector movedSoFar;
+        int steps;
+        DispatcherTimer moveTimer;
+        int moveTimerId;
+        Windows.UI.Xaml.Shapes.Path arrowHead;
+
+        private async void OnZoomChanged(object sender, double zoomDirection)
+        {
+            FoscamDevice d = this.device;
+            if (d != null)
+            {
+                if (zoomDirection < 0)
+                {
+                    await d.ZoomOut();
+                }
+                else
+                {
+                    await d.ZoomIn();
+                }
             }
         }
 
+        void OnDragVectorChanged(object sender, Vector e)
+        {
+            moveDirection = e;
+            moveDirection.Normalize();
+            movedSoFar = new Vector(0, 0);
+            steps = 0;
+            if (e.X == 0 && e.Y == 0)
+            {
+                // stop moving
+                StopMoving();
+                if (arrowHead != null)
+                {
+                    ImageOverlay.Children.Remove(arrowHead);
+                    arrowHead = null;
+                }
+            }
+            else
+            {                
+                StartMoving();
+                if (arrowHead == null)
+                {
+                    arrowHead = new Windows.UI.Xaml.Shapes.Path() { Fill = new SolidColorBrush(Color.FromArgb(0xA0, 0xF0, 0xF0, 0xFF)) };
+                    ImageOverlay.Children.Add(arrowHead);
+                }
+                UpdatePathGeometry(arrowHead, e);
+            }
+        }
+
+        private void UpdatePathGeometry(Windows.UI.Xaml.Shapes.Path arrowHead, Vector vector)
+        {
+            Point downPos = gesture.MouseDownPosition;
+            Point endPos = new Point(downPos.X + vector.X, downPos.Y + vector.Y);
+            arrowHead.Data = GeometryUtilities.CreateFatArrow(endPos, downPos, 10, 16, 16);
+        }
+
+        private void StartMoving()
+        {
+            if (moveTimer == null)
+            {
+                moveTimerId++;
+                moveTimer = new DispatcherTimer();
+                moveTimer.Interval = TimeSpan.FromMilliseconds(1);
+                moveTimer.Tick += OnMoveTick;
+                moveTimer.Start();
+            }
+        }
+
+
+        async void OnMoveTick(object sender, object e)
+        {
+            int id = this.moveTimerId;
+            DispatcherTimer timer = this.moveTimer;
+            if (timer != null)
+            {
+                timer.Stop();
+
+                // try and make movedSoFar match moveDirection,
+                // this is similar to a pixel line drawing algorithm.
+
+                FoscamDevice d = this.device;
+                if (d != null)
+                {
+                    CameraDirection direction = CameraDirection.Right;
+
+                    steps++;
+
+                    // this is where we should have moved to.
+                    Point projected = new Point(moveDirection.X * steps, moveDirection.Y * steps);                    
+
+                    if (projected.X.IsAlmost(0))
+                    {
+                        // vertical
+                        direction = (projected.Y < 0) ? CameraDirection.Down : CameraDirection.Up;
+                    }
+                    else if (projected.Y.IsAlmost(0))
+                    {
+                        // horizontal
+                        direction = (projected.X < 0) ? CameraDirection.Left : CameraDirection.Right;
+                    }
+                    else if (Math.Abs(projected.Y) > Math.Abs(projected.X))
+                    {
+                        // favor the vertical
+                        if (Math.Abs(movedSoFar.Y) > Math.Abs(projected.Y))
+                        {
+                            // then time to step in the X direction
+                            direction = (projected.X < 0) ? CameraDirection.Left : CameraDirection.Right;
+                        }
+                        else
+                        {
+                            // step in the Y direction.
+                            direction = (projected.Y < 0) ? CameraDirection.Down : CameraDirection.Up;
+                        }
+                    }
+                    else
+                    {
+                        // favor the horizontal
+                        if (Math.Abs(movedSoFar.X) > Math.Abs(projected.X))
+                        {
+                            // then time to step in the Y direction
+                            direction = (projected.Y < 0) ? CameraDirection.Down : CameraDirection.Up;
+                        }
+                        else
+                        {
+                            // step in the X direction.
+                            direction = (projected.X < 0) ? CameraDirection.Left : CameraDirection.Right;
+                        }
+                    }
+                    switch (direction)
+                    {
+                        case CameraDirection.Up:
+                            movedSoFar.Y--;
+                            break;
+                        case CameraDirection.Down:
+                            movedSoFar.Y++;
+                            break;
+                        case CameraDirection.Left:
+                            movedSoFar.X--;
+                            break;
+                        case CameraDirection.Right:
+                            movedSoFar.X++;
+                            break;
+                    }
+                    var result = await d.Move(direction);
+
+                    var error = result.GetValue<string>("error");
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        Debug.WriteLine("Error moving camera: " + error);
+                    }
+                }
+                else
+                {
+                    StopMoving();
+                }
+
+
+                if (this.moveTimer != null && id == this.moveTimerId)
+                {
+                    timer.Start();
+                }
+            }
+        }
+
+        private void StopMoving()
+        {
+            if (moveTimer != null)
+            {
+                moveTimer.Tick -= OnMoveTick;
+                moveTimer.Stop();
+                moveTimer = null;
+            }
+        }
 
     }
 }

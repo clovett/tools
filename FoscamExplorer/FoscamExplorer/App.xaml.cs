@@ -43,7 +43,6 @@ namespace FoscamExplorer
         /// </summary>
         public CacheFolder CacheFolder { get; set; }
 
-        private FtpListener listener;
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -61,9 +60,6 @@ namespace FoscamExplorer
             await folder.PopulateCache();
             await DataStore.LoadAsync(folder);
 
-            listener = new FtpListener();
-            listener.Start();
-            
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active

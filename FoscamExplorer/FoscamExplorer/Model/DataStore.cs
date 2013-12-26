@@ -89,6 +89,7 @@ namespace FoscamExplorer
         {
             try
             {
+                Debug.WriteLine("Saving DataStore at time : " + DateTime.Now.ToString());
                 IsolatedStorage<DataStore> store = new IsolatedStorage<DataStore>(cache);
                 await store.SaveToFileAsync(DataFile, this);
             }

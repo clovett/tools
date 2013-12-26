@@ -57,8 +57,15 @@ namespace FoscamExplorer
             {
                 Prompt.Text = "Searching...";
             }
-            FoscamDevice.DeviceAvailable += OnDeviceAvailable;
-            FoscamDevice.FindDevices();
+            try
+            {
+                FoscamDevice.DeviceAvailable += OnDeviceAvailable;
+                FoscamDevice.FindDevices();
+            }
+            catch (Exception ex)
+            {
+                Prompt.Text = "Error: " + ex.Message;
+            }
         }
 
         async void OnDeviceAvailable(object sender, FoscamDevice e)
@@ -120,10 +127,6 @@ namespace FoscamExplorer
                     delaySaveTimer.Start();
 
                 }));
-            }
-            else
-            {                
-                delaySaveTimer.Start();        
             }
         }
 

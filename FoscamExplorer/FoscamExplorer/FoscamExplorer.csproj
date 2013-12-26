@@ -17,6 +17,7 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -125,7 +126,8 @@
     <Compile Include="Pages\LogonPage.xaml.cs">
       <DependentUpon>LogonPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utilities\FtpListener.cs" />
+    <Compile Include="Utilities\GeometryUtilities.cs" />
+    <Compile Include="Utilities\ImageManipulationGesture.cs" />
     <Compile Include="Utilities\MjpegDecoder.cs" />
     <Compile Include="Utilities\NumericExtensions.cs" />
     <Compile Include="Utilities\OrientedSize.cs" />
@@ -133,6 +135,7 @@
     <Compile Include="Utilities\CacheFolder.cs" />
     <Compile Include="Utilities\IsolatedStorage.cs" />
     <Compile Include="Utilities\PageExtensions.cs" />
+    <Compile Include="Utilities\Vector.cs" />
     <Compile Include="Utilities\WpfUtilities.cs" />
     <Compile Include="Utilities\WrapPanel.cs" />
   </ItemGroup>
@@ -140,6 +143,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="Docs\ipcam_cgi_sdk.pdf" />
     <None Include="FoscamExplorer_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
