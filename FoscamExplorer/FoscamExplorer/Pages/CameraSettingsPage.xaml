@@ -1,13 +1,13 @@
 ﻿<Page
     x:Name="pageRoot"
-    x:Class="FoscamExplorer.LogonPage"
+    x:Class="FoscamExplorer.CameraSettingsPage"
     DataContext="{Binding DefaultViewModel, RelativeSource={RelativeSource Self}}"
     xmlns:local="using:FoscamExplorer"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    FontSize="20" 
+    FontSize="20" FontWeight="Light"
     mc:Ignorable="d">
 
     <Page.Resources>
@@ -34,7 +34,7 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="backButton" Click="GoBack" Style="{StaticResource SettingsBackButtonStyle}" />
-                <TextBlock x:Name="pageTitle" Grid.Column="1" Text="Logon" Style="{StaticResource SettingsHeaderTextStyle}" />
+                <TextBlock x:Name="pageTitle" Grid.Column="1" Text="Camera Settings" Style="{StaticResource SettingsHeaderTextStyle}" />
             </Grid>
 
 
@@ -43,19 +43,28 @@
 
                     <StackPanel >
 
-                        <TextBlock Text="User name:" TextWrapping="Wrap" HorizontalAlignment="Left"   FontWeight="Light"/>
+                        <!-- Fps -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="FPS:" VerticalAlignment="Center" Margin="10" />
 
-                        <TextBox x:Name="TextBoxUserName"  Text="" Width="250" HorizontalAlignment="Left"  FontWeight="Light" 
-                                 GotFocus="OnUserNameGotFocus"/>
+                        <ComboBox x:Name="ComboBoxFps"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
+                                  SelectionChanged="OnFpsChanged"
+                          />
 
-                        <TextBlock Text="Password:" TextWrapping="Wrap" HorizontalAlignment="Left"   FontWeight="Light" Margin="0,20,0,0"/>
+                        <!-- Brightness -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Brightness:" VerticalAlignment="Center" Margin="10" />
 
-                        <PasswordBox x:Name="TextBoxPassword" Password="" Width="250" HorizontalAlignment="Left"   FontWeight="Light"
-                                     IsPasswordRevealButtonEnabled="True" GotFocus="OnPasswordGotFocus"
-                                     KeyDown="OnPasswordKeyDown"/>
+                        <ComboBox x:Name="ComboBoxBrightness"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"
+                                  SelectionChanged="OnBrightnessChanged"
+                          />
 
-                        <Button x:Name="ButtonLogin" Margin="0,20,0,0" Click="OnLogin"  >
-                            <TextBlock x:Name="ButtonLoginCaption" Text="Login"/></Button>
+                        <!-- Contrast -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Contrast:" VerticalAlignment="Center" Margin="10" />
+
+                        <ComboBox x:Name="ComboBoxContrast"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
+                                  SelectionChanged="OnContrastChanged"
+                          />
+
+                        <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
 
                     </StackPanel>
                 </Grid>

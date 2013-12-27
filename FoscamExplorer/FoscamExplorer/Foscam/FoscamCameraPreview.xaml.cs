@@ -29,6 +29,9 @@ namespace FoscamExplorer
 
         void FoscamCameraPreview_Unloaded(object sender, RoutedEventArgs e)
         {
+            device.CameraInfo.PropertyChanged -= OnCameraPropertyChanged;
+            device.Error -= OnDeviceError;
+            device.FrameAvailable -= OnFrameAvailable;
             device.StopStream();
         }
 
@@ -65,6 +68,20 @@ namespace FoscamExplorer
                 device.FrameAvailable += OnFrameAvailable;
                 newCamera.PropertyChanged += OnCameraPropertyChanged;
                 device.StartJpegStream();
+                OnRotationChanged();
+            }
+        }
+
+        private void OnRotationChanged()
+        {
+            bool flip = device.CameraInfo.Flipped;
+            if (flip)
+            {
+                CameraImage.RenderTransform = new RotateTransform() { Angle = 180, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
+            }
+            else
+            {
+                CameraImage.RenderTransform = null;
             }
         }
 
@@ -89,10 +106,18 @@ namespace FoscamExplorer
 
         void OnCameraPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "UserName" || e.PropertyName == "Password")
+            switch (e.PropertyName)
             {
-                DelayStartVideo(TimeSpan.FromMilliseconds(250));
+                case "UserName":
+                case "Password":
+                case "Fps":
+                    DelayStartVideo(TimeSpan.FromMilliseconds(250));
+                    break;
+                case "Flipped":
+                    OnRotationChanged();
+                    break;
             }
+            
         }
 
         void OnFrameAvailable(object sender, FrameReadyEventArgs e)

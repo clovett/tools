@@ -111,6 +111,10 @@ namespace FoscamExplorer
         private bool unauthorized;
         private WifiNetworkInfo network;
         private string wifipassword;
+        private bool flipped;
+        private byte brightness;
+        private byte contrast;
+        private byte fps;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -193,6 +197,19 @@ namespace FoscamExplorer
             }
         }
 
+        [DataMember]
+        public bool Flipped
+        {
+            get { return this.flipped; }
+            set
+            {
+                if (this.flipped != value)
+                {
+                    this.flipped = value;
+                    OnPropertyChanged("Flipped");
+                }
+            }
+        }
 
         [DataMember]
         public bool Unauthorized
@@ -232,6 +249,51 @@ namespace FoscamExplorer
                 {
                     this.wifipassword = value;
                     OnPropertyChanged("WifiPassword");
+                }
+            }
+        }
+
+        [DataMember]
+        public byte Brightness
+        {
+            get { return this.brightness; }
+            set
+            {
+                if (this.brightness != value)
+                {
+                    this.brightness = value;
+                    OnPropertyChanged("Brightness");
+                }
+            }
+        }
+
+        [DataMember]
+        public byte Contrast
+        {
+            get { return this.contrast; }
+            set
+            {
+                if (this.contrast != value)
+                {
+                    this.contrast = value;
+                    OnPropertyChanged("Contrast");
+                }
+            }
+        }
+
+        /// <summary>
+        /// The frames per second, a number from 0 to 23.  Where 0 is full speed and 23 is 1 frame every 5 seconds.
+        /// </summary>
+        [DataMember]
+        public byte Fps
+        {
+            get { return this.fps; }
+            set
+            {
+                if (this.fps != value)
+                {
+                    this.fps = value;
+                    OnPropertyChanged("Fps");
                 }
             }
         }

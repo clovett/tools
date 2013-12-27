@@ -75,7 +75,7 @@ namespace FoscamExplorer
                 store.MergeNewCamera(e.CameraInfo);
             }));
 
-            DelaySave(TimeSpan.FromMilliseconds(500));
+            DelaySave();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -96,9 +96,12 @@ namespace FoscamExplorer
                 LogonPage login = new LogonPage() { UserName = info.UserName, Password = info.Password };
                 login.Flyout(new Action(() =>
                 {
-                    info.UserName = login.UserName;
-                    info.Password = login.Password;
-                    DelaySave(TimeSpan.FromMilliseconds(500));
+                    if (!login.Cancelled)
+                    {
+                        info.UserName = login.UserName;
+                        info.Password = login.Password;
+                        DelaySave();
+                    }
                 }));
             }
             else
@@ -107,22 +110,27 @@ namespace FoscamExplorer
             }
         }
 
-
         DispatcherTimer delaySaveTimer;
+        int saveRequests;
 
-        void DelaySave(TimeSpan delay)
+        void DelaySave(int msdelay = 1000)
         {
+            saveRequests++;            
             if (delaySaveTimer == null)
             {
                 var quiet = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
                 {
                     delaySaveTimer = new DispatcherTimer();
-                    delaySaveTimer.Interval = delay;
+                    delaySaveTimer.Interval = TimeSpan.FromDays(msdelay);
                     delaySaveTimer.Tick += new EventHandler<object>((s, e) =>
                     {
-                        delaySaveTimer.Stop();
+                        if (delaySaveTimer != null)
+                        {
+                            delaySaveTimer.Stop();
+                            delaySaveTimer = null;
+                        }
                         Save();
-                        delaySaveTimer = null;
+                        saveRequests = 0;
                     });
                     delaySaveTimer.Start();
 

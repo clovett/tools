@@ -14,7 +14,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Image x:Name="CameraImage" Width="320" Height="240" Source="/Assets/padlock.png"/>
+        <Image x:Name="CameraImage" Width="320" Height="240" />
         <TextBlock Grid.Row="1" x:Name="DeviceName" Text="{Binding Name}" HorizontalAlignment="Center" Margin="10"/>
 
         <Border x:Name="ErrorBorder" Background="#E0000000" Visibility="Collapsed">

@@ -186,7 +186,7 @@ namespace FoscamExplorer
                 mjpeg.FrameReady += OnFrameReady;
                 mjpeg.Error += OnError;
 
-                string requestStr = String.Format("{0}videostream.cgi?resolution=" + resolution, CameraUrl);
+                string requestStr = String.Format("{0}videostream.cgi?resolution={1}&rate={2}", CameraUrl, resolution, CameraInfo.Fps);
 
                 mjpeg.GetVideoStream(new Uri(requestStr), GetCredentials());
             }
@@ -197,6 +197,7 @@ namespace FoscamExplorer
                 throw;
             }
         }
+
 
         public async Task<PropertyBag> GetParams()
         {
@@ -232,6 +233,33 @@ namespace FoscamExplorer
         {
             string requestStr = String.Format("http://{0}/decoder_control.cgi?command=18&onestep=1", CameraInfo.IpAddress);
             return await SendCgiRequest(requestStr);
+        }
+
+        enum ParameterType
+        {
+            Resolution,
+            Brightness,
+            Contrast,
+            Mode,
+            Patrol
+        }
+
+        public async Task<string> SetBrightness(byte brightness)
+        {
+            return await SetCameraControl(ParameterType.Brightness, brightness.ToString());
+        }
+
+        public async Task<string> SetContrast(byte contrast)
+        {
+            contrast = Math.Min((byte)6, contrast);
+            return await SetCameraControl(ParameterType.Contrast, contrast.ToString());
+        }
+
+        private async Task<string> SetCameraControl(ParameterType paramType, string value)
+        {
+            string requestStr = String.Format("http://{0}/camera_control.cgi?param={1}&value={2}", CameraInfo.IpAddress, (int)paramType, value);
+            var result = await SendCgiRequest(requestStr);
+            return result.GetValue<string>("error");
         }
 
         private async Task<PropertyBag> SendCgiRequest(string url)
@@ -311,6 +339,8 @@ namespace FoscamExplorer
         {
             if (mjpeg != null)
             {
+                mjpeg.FrameReady -= OnFrameReady;
+                mjpeg.Error -= OnError;
                 mjpeg.StopStream();
             }
         }
@@ -526,6 +556,48 @@ namespace FoscamExplorer
             string error = properties.GetValue<string>("error");
             return error;
         }
+
+        internal async Task<string> ChangeUserPassword(string userName, string password, int userIndex = 1, UserPermissions permission = UserPermissions.Administrator)
+        {
+            if (userIndex < 1 || userIndex > 8)
+            {
+                throw new IndexOutOfRangeException("userIndex valid range is 1 through 8");
+            }
+
+            var parameters = await GetParams();
+            StringBuilder sb = new StringBuilder(String.Format("http://{0}/set_users.cgi?", CameraInfo.IpAddress));
+
+            // preserve the other names
+            for (int i = 1; i <= 8; i++)
+            {
+                if (i > 1)
+                {
+                    sb.Append("&");
+                }
+                if (i == userIndex)
+                {
+                    sb.Append(string.Format("user{0}={1}&pwd{0}={2}&pri{0}={3}", 1, userName, password, (int)permission));
+                }
+                else
+                {
+                    string name = parameters.GetValue<string>("user" + i + "_name");
+                    string pwd = parameters.GetValue<string>("user" + i + "_pwd");
+                    string pri = parameters.GetValue<string>("user" + i + "_pri");
+                    sb.Append(string.Format("user{0}={1}&pwd{0}={2}&pri{0}={3}", i, name, pwd, pri));
+                }
+            }
+
+            var properties = await SendCgiRequest(sb.ToString());
+            string error = properties.GetValue<string>("error");
+            return error;
+        }
+    }
+
+    public enum UserPermissions
+    {
+        Visitor = 0,
+        Operator = 1,
+        Administrator = 2
     }
 
     public class WifiNetworkInfo
@@ -567,6 +639,12 @@ namespace FoscamExplorer
                 return default(T);
             }
             return ConvertToType<T>(v);
+        }
+
+        internal bool HasValue(string name)
+        {
+            object v = null;
+            return TryGetValue(name, out v);
         }
 
         internal T GetListItem<T>(string listName, uint index)
@@ -729,5 +807,6 @@ namespace FoscamExplorer
             }
             return (T)v;
         }
+
     }
 }

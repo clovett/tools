@@ -123,6 +123,12 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\DataStore.cs" />
+    <Compile Include="Pages\CameraSettingsPage.xaml.cs">
+      <DependentUpon>CameraSettingsPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Pages\WifiSettingsPage.xaml.cs">
+      <DependentUpon>WifiSettingsPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\LogonPage.xaml.cs">
       <DependentUpon>LogonPage.xaml</DependentUpon>
     </Compile>
@@ -171,6 +177,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\CameraSettingsPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Pages\WifiSettingsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

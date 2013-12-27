@@ -13,7 +13,6 @@ namespace FoscamExplorer
     {
         FrameworkElement element;
         Point? downPos;
-        double zoom = 1.0;
 
         public void Start(FrameworkElement e)
         {

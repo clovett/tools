@@ -2,7 +2,7 @@
     x:Class="FoscamExplorer.FoscamDetailsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:FoscamExplorer.Foscam"
+    xmlns:local="using:FoscamExplorer"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     FontSize="20" FontWeight="Light"
@@ -12,6 +12,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="140"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Back button and page title -->
@@ -24,16 +25,13 @@
             <TextBlock x:Name="PageTitle" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextStyle}"/>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-            <Grid Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" Margin="50" VerticalAlignment="top">
+        <local:WrapPanel Grid.Row="1">
+            <Grid Width="640" Height="480" HorizontalAlignment="Left" Margin="30,0" VerticalAlignment="top">
                 <Image x:Name="CameraImage" Width="640" Height="480" HorizontalAlignment="Left" VerticalAlignment="top"/>
+                <!--<MediaElement x:Name="Player" RealTimePlayback="True" />-->
                 <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
             </Grid>
-            <Grid Grid.Column="1" Margin="20">
+            <Grid Margin="30,10">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -58,26 +56,18 @@
                 <TextBox x:Name="TextBoxName"  Grid.Row="0" Grid.Column="1" Width="300" HorizontalAlignment="Left" Text="{Binding Name}" FontSize="20" VerticalAlignment="Center"
                          TextChanged="OnNameChanged" />
 
-                
-                <!-- Wifi -->
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Wifi network:" VerticalAlignment="Center" Margin="10" />
+                <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
 
-                <ComboBox x:Name="ComboBoxWifi"  Grid.Row="1" Grid.Column="1" Width="300" HorizontalAlignment="Left" FontSize="20" VerticalAlignment="Center"
-                          SelectionChanged="OnWifiSelectionChanged" SelectedItem="{Binding WifiNetwork}"
-                          />
-
-                <!-- Wifi password -->
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Wifi password:" VerticalAlignment="Center" Margin="10" />
-
-                <PasswordBox x:Name="PasswordBoxWifi"  Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Left" FontSize="20" VerticalAlignment="Center"  
-                             IsPasswordRevealButtonEnabled="True"
-                             Password="{Binding WifiPassword, Mode=TwoWay}"
-                             PasswordChanged="OnWifiPasswordChanged"/>
-                
-                <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />                
-                
             </Grid>
-        </Grid>
+        </local:WrapPanel>
 
+        <Grid Grid.Row="2">
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource WifiSettingsAppBarButtonStyle}" Click="OnWifiSettings" AutomationProperties.Name="Wifi"/>
+                <Button Style="{StaticResource UserAccountSettingsAppBarButtonStyle}" Click="OnUserAccountSettings"  AutomationProperties.Name="Users"/>
+                <Button Style="{StaticResource SettingsAppBarButtonStyle}"  Click="OnCameraSettings"  AutomationProperties.Name="Settings"/>
+                <Button Style="{StaticResource RotateCameraAppBarButtonStyle}"  Click="OnRotateCamera"  AutomationProperties.Name="Rotate"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Page>

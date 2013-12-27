@@ -25,16 +25,29 @@ namespace FoscamExplorer
         public LogonPage()
         {
             this.InitializeComponent();
+            this.Loaded += LogonPage_Loaded;
+            // assume cancelled state unless user clicks the logon button.
+            this.Cancelled = true;
         }
 
-        /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.  The Parameter
-        /// property is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        void LogonPage_Loaded(object sender, RoutedEventArgs e)
         {
+            TextBoxUserName.Focus(Windows.UI.Xaml.FocusState.Programmatic);
         }
+
+        public string Title
+        {
+            get { return pageTitle.Text; }
+            set { pageTitle.Text = value; }
+        }
+
+        public string SignOnButtonCaption
+        {
+            get { return ButtonLoginCaption.Text; }
+            set { ButtonLoginCaption.Text = value; }
+        }
+
+        public bool Cancelled { get; set; }
 
         public string UserName
         {
@@ -50,12 +63,31 @@ namespace FoscamExplorer
 
         private void OnLogin(object sender, RoutedEventArgs e)
         {
+            this.Cancelled = false;
             this.CloseCurrentFlyout();
         }
 
         private void GoBack(object sender, RoutedEventArgs e)
         {
             SettingsPane.Show();
+        }
+
+        private void OnUserNameGotFocus(object sender, RoutedEventArgs e)
+        {
+            TextBoxUserName.SelectAll();
+        }
+
+        private void OnPasswordGotFocus(object sender, RoutedEventArgs e)
+        {
+            TextBoxPassword.SelectAll();
+        }
+
+        private void OnPasswordKeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                this.OnLogin(sender, e);
+            }
         }
     }
 }
