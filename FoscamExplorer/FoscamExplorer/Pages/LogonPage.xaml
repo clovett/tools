@@ -54,6 +54,8 @@
                                      IsPasswordRevealButtonEnabled="True" GotFocus="OnPasswordGotFocus"
                                      KeyDown="OnPasswordKeyDown"/>
 
+                        <CheckBox x:Name="CheckBoxAll" Margin="0,20">Logon for all cameras</CheckBox>
+                        
                         <Button x:Name="ButtonLogin" Margin="0,20,0,0" Click="OnLogin"  >
                             <TextBlock x:Name="ButtonLoginCaption" Text="Login"/></Button>
 

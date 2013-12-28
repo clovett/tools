@@ -35,8 +35,35 @@ namespace FoscamExplorer
             gesture.ZoomDirectionChanged += OnZoomChanged;
             gesture.Start(CameraImage);
 
-            //var manager = new Windows.Media.MediaExtensionManager();
-            //manager.RegisterSchemeHandler("AsfStreamSource", "asf");
+            this.SizeChanged += FoscamDetailsPage_SizeChanged;
+        }
+
+        void FoscamDetailsPage_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            Size newSize = e.NewSize;
+            Log.WriteLine("FoscamDetailsPage size changed to " + newSize);
+
+            double widthAvailable  = newSize.Width - ImageGrid.Margin.Left - ImageGrid.Margin.Right;
+            if (widthAvailable < CameraImage.Width)
+            {
+                double height = widthAvailable * (480.0 / 640.0);
+
+                CameraImage.Width = ImageOverlay.Width = widthAvailable;
+                CameraImage.Height = ImageOverlay.Height = height;
+            }
+            else
+            {
+                CameraImage.Width = ImageOverlay.Width = 640;
+                CameraImage.Height = ImageOverlay.Height = 480;
+            }
+
+            if (widthAvailable < 320)
+            {
+                PageTitle.FontSize = 20;
+            }
+            else {
+                PageTitle.ClearValue(TextBlock.FontSizeProperty);
+            }
         }
 
 
@@ -134,28 +161,60 @@ namespace FoscamExplorer
                 UserName = user,
                 Password = pswd 
             };
+
+            if (DataStore.Instance.Cameras.Count > 1)
+            {
+                login.CheckboxVisibility = Windows.UI.Xaml.Visibility.Visible;
+                login.CheckBoxAllCaption = "Update all cameras";
+            }
+
             login.Flyout(new Action(async () =>
             {
                 if (!login.Cancelled && user != login.UserName || pswd != login.Password)
                 {
-                    await ChangeUserNamePassword(login.UserName, login.Password);
+                    await ChangeUserNamePassword(login.UserName, login.Password, login.CheckBoxAllIsChecked);
                 }
             }));
         }
 
-        private async Task ChangeUserNamePassword(string userName, string password)
+        private async Task ChangeUserNamePassword(string userName, string password, bool updateAll)
+        {
+            if (await UpdateAccountInfo(device, userName, password, true))
+            {
+                if (updateAll)
+                {
+                    foreach (var camera in DataStore.Instance.Cameras)
+                    {
+                        if (camera != this.device.CameraInfo)
+                        {
+                            FoscamDevice temp = new FoscamDevice() { CameraInfo = camera };
+                            await UpdateAccountInfo(device, userName, password, false);
+                        }
+                    }
+                }
+            }
+        }
+
+        private async Task<bool> UpdateAccountInfo(FoscamDevice device, string userName, string password, bool showError)
         {
             var result = await device.ChangeUserPassword(userName, password);
             if (!string.IsNullOrEmpty(result))
             {
-                ShowError(result);
+                if (showError)
+                {
+                    ShowError(result);
+                }
+                return false;
             }
             else
             {
-                ShowError("updated");
-
+                if (showError)
+                {
+                    ShowError("updated");
+                }
                 device.CameraInfo.UserName = userName;
                 device.CameraInfo.Password = password;
+                return true;
             }
         }
 
@@ -229,7 +288,7 @@ namespace FoscamExplorer
             Frame.GoBack();
         }
 
-        async void OnCameraPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        void OnCameraPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
@@ -241,10 +300,14 @@ namespace FoscamExplorer
                 case "Flipped":
                     OnRotationChanged();
                     break;
+                case "LastFrameTime":
+                case "LastPingTime":
+                    // no save in this case.
+                    return;
             }
-
+            
             // save the changes
-            await Save();
+            var nowait = Save();
         }
 
         int lastFrameTime;
@@ -327,7 +390,7 @@ namespace FoscamExplorer
             string newName = TextBoxName.Text.Trim();
             if (newName.Length > 20)
             {
-                newName = newName.Substring(0, 20);
+                newName = newName.Substring(0, 20);                
             }
             CameraInfo camera = this.device.CameraInfo;
             if (camera.Name != newName)
@@ -591,6 +654,44 @@ namespace FoscamExplorer
         public void OnSuspending()
         {
             Disconnect();
+        }
+
+        private void OnRenameCamera(object sender, RoutedEventArgs e)
+        {
+            ShowEditBox();
+        }
+
+        private void ShowEditBox()
+        {
+            TextBoxName.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            PageTitle.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            TextBoxName.Focus(Windows.UI.Xaml.FocusState.Programmatic);
+            TextBoxName.SelectAll();
+        }
+
+        private void HideEditBox()
+        {
+            TextBoxName.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            PageTitle.Visibility = Windows.UI.Xaml.Visibility.Visible;
+        }
+
+        private void OnTextBoxNameLostFocus(object sender, RoutedEventArgs e)
+        {
+            HideEditBox();
+        }
+
+        private void OnTextBoxNameKeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+        {
+            if (e.Key == Windows.System.VirtualKey.Enter)
+            {
+                e.Handled = true;
+                HideEditBox();
+            }
+        }
+
+        private void OnPageTitlePointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
+        {
+            ShowEditBox();
         }
     }
 }

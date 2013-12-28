@@ -58,6 +58,8 @@
                              Password="{Binding WifiPassword, Mode=TwoWay}"
                              PasswordChanged="OnWifiPasswordChanged"/>
 
+                        <CheckBox x:Name="CheckBoxAll" Margin="10">Update all cameras</CheckBox>
+                        
                         <Button x:Name="ButtonUpdate" Click="OnUpdateButtonClick" FontSize="18" Margin="10">
                             Update
                         </Button>

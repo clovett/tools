@@ -71,6 +71,15 @@
         <Setter Property="Typography.CaseSensitiveForms" Value="True"/>
     </Style>
 
+    <Style x:Key="BasicTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FontSize" Value="{StaticResource ControlContentThemeFontSize}"/>
+        <Setter Property="FontFamily" Value="{StaticResource ContentControlThemeFontFamily}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="Typography.StylisticSet20" Value="True"/>
+        <Setter Property="Typography.DiscretionaryLigatures" Value="True"/>
+        <Setter Property="Typography.CaseSensitiveForms" Value="True"/>
+    </Style>
+
     <Style x:Key="BaselineTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BasicTextStyle}">
         <Setter Property="LineHeight" Value="20"/>
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
@@ -82,6 +91,10 @@
         </Setter>
     </Style>
 
+    <Style x:Key="BaselineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BasicTextBoxStyle}">
+        <!-- Properly align text along its baseline -->
+    </Style>
+    
     <Style x:Key="HeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaselineTextStyle}">
         <Setter Property="FontSize" Value="56"/>
         <Setter Property="FontWeight" Value="Light"/>
@@ -93,6 +106,16 @@
         </Setter>
     </Style>
 
+    <Style x:Key="HeaderTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BaselineTextBoxStyle}">
+        <Setter Property="FontSize" Value="56"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform X="-14" Y="20"/>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
     <Style x:Key="SubheaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BaselineTextStyle}">
         <Setter Property="FontSize" Value="26.667"/>
         <Setter Property="FontWeight" Value="Light"/>
@@ -1040,13 +1063,13 @@
 
     -->
 
-    <!--
 
     <Style x:Key="RenameAppBarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource AppBarButtonStyle}">
         <Setter Property="AutomationProperties.AutomationId" Value="RenameAppBarButton"/>
         <Setter Property="AutomationProperties.Name" Value="Rename"/>
         <Setter Property="Content" Value="&#xE13E;"/>
     </Style>
+    <!--
     <Style x:Key="PinAppBarButtonStyle" TargetType="ButtonBase" BasedOn="{StaticResource AppBarButtonStyle}">
         <Setter Property="AutomationProperties.AutomationId" Value="PinAppBarButton"/>
         <Setter Property="AutomationProperties.Name" Value="Pin"/>
@@ -1723,6 +1746,12 @@
         <Setter Property="Margin" Value="0,0,30,40"/>
     </Style>
 
+    <Style x:Key="PageHeaderTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource HeaderTextBoxStyle}">
+        <Setter Property="TextWrapping" Value="NoWrap"/>
+        <Setter Property="VerticalAlignment" Value="Bottom"/>
+        <Setter Property="Margin" Value="0,0,30,40"/>
+    </Style>
+    
     <Style x:Key="PageSubheaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource SubheaderTextStyle}">
         <Setter Property="TextWrapping" Value="NoWrap"/>
         <Setter Property="VerticalAlignment" Value="Bottom"/>

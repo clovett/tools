@@ -22,41 +22,21 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Button x:Name="backButton" Click="GoBack" IsEnabled="{Binding Frame.CanGoBack, ElementName=pageRoot}" Style="{StaticResource BackButtonStyle}"/>
-            <TextBlock x:Name="PageTitle" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextStyle}"/>
+            <TextBlock x:Name="PageTitle" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextStyle}" PointerPressed="OnPageTitlePointerPressed"/>
+            <TextBox x:Name="TextBoxName" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextBoxStyle}" Visibility="Collapsed"
+                     TextChanged="OnNameChanged" LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"/>
         </Grid>
 
         <local:WrapPanel Grid.Row="1">
-            <Grid Width="640" Height="480" HorizontalAlignment="Left" Margin="30,0" VerticalAlignment="top">
+            <Grid x:Name="ImageGrid" HorizontalAlignment="Left" Margin="30,0" VerticalAlignment="top">
                 <Image x:Name="CameraImage" Width="640" Height="480" HorizontalAlignment="Left" VerticalAlignment="top"/>
                 <!--<MediaElement x:Name="Player" RealTimePlayback="True" />-->
                 <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
             </Grid>
             <Grid Margin="30,10">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Name -->
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" Margin="10" />
                 
-                <TextBox x:Name="TextBoxName"  Grid.Row="0" Grid.Column="1" Width="300" HorizontalAlignment="Left" Text="{Binding Name}" FontSize="20" VerticalAlignment="Center"
-                         TextChanged="OnNameChanged" />
-
-                <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
+                <TextBlock Grid.Row="0" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" 
+                           HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
             </Grid>
         </local:WrapPanel>
@@ -65,8 +45,9 @@
             <StackPanel Orientation="Horizontal">
                 <Button Style="{StaticResource WifiSettingsAppBarButtonStyle}" Click="OnWifiSettings" AutomationProperties.Name="Wifi"/>
                 <Button Style="{StaticResource UserAccountSettingsAppBarButtonStyle}" Click="OnUserAccountSettings"  AutomationProperties.Name="Users"/>
-                <Button Style="{StaticResource SettingsAppBarButtonStyle}"  Click="OnCameraSettings"  AutomationProperties.Name="Settings"/>
                 <Button Style="{StaticResource RotateCameraAppBarButtonStyle}"  Click="OnRotateCamera"  AutomationProperties.Name="Rotate"/>
+                <Button Style="{StaticResource RenameAppBarButtonStyle}"  Click="OnRenameCamera"  AutomationProperties.Name="Rename"/>
+                <Button Style="{StaticResource SettingsAppBarButtonStyle}"  Click="OnCameraSettings"  AutomationProperties.Name="Settings"/>
             </StackPanel>
         </Grid>
     </Grid>

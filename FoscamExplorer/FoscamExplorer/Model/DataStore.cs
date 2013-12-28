@@ -126,6 +126,7 @@ namespace FoscamExplorer
         private byte contrast;
         private byte fps;
         private int lastPing;
+        private int lastFrame;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -319,6 +320,20 @@ namespace FoscamExplorer
                 {
                     this.lastPing = value;
                     OnPropertyChanged("LastPingTime");
+                }
+            }
+        }
+
+        [DataMember]
+        public int LastFrameTime
+        {
+            get { return this.lastFrame; }
+            set
+            {
+                if (this.lastFrame != value)
+                {
+                    this.lastFrame = value;
+                    OnPropertyChanged("LastFrameTime");
                 }
             }
         }

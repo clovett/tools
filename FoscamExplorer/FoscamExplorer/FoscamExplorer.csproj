@@ -155,6 +155,7 @@
     <None Include="FoscamExplorer_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\Wide.png" />
     <Content Include="Assets\Logo.png" />
     <Content Include="Assets\Padlock.png" />
     <Content Include="Assets\SmallLogo.png" />

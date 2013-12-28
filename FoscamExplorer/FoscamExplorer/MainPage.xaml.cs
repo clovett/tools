@@ -46,7 +46,7 @@ namespace FoscamExplorer
 
         private void OnCameraPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName != "LastPingTime")
+            if (e.PropertyName != "LastPingTime" && e.PropertyName != "LastFrameTime")
             {
                 Save();
             }
@@ -138,12 +138,20 @@ namespace FoscamExplorer
             if (info.Unauthorized)
             {
                 LogonPage login = new LogonPage() { UserName = info.UserName, Password = info.Password };
+                if (store.Cameras.Count > 1)
+                {
+                    login.CheckboxVisibility = Windows.UI.Xaml.Visibility.Visible;
+                }
                 login.Flyout(new Action(() =>
                 {
                     if (!login.Cancelled)
                     {
                         info.UserName = login.UserName;
                         info.Password = login.Password;
+                        if (login.CheckBoxAllIsChecked)
+                        {
+                            PropagateLogonToAllCameras(info);
+                        }
                         Save();
                     }
                 }));
@@ -151,6 +159,18 @@ namespace FoscamExplorer
             else
             {
                 this.Frame.Navigate(typeof(FoscamDetailsPage), info);
+            }
+        }
+
+        private void PropagateLogonToAllCameras(CameraInfo info)
+        {
+            foreach (CameraInfo i in this.store.Cameras)
+            {
+                if (i != info )
+                {
+                    i.UserName = info.UserName;
+                    i.Password = info.Password;
+                }
             }
         }
 

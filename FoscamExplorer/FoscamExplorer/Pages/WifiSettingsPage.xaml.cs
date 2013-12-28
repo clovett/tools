@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.ApplicationSettings;
@@ -57,6 +58,7 @@ namespace FoscamExplorer
             
             ShowParameters(deviceParams);
 
+            CheckBoxAll.Visibility = (DataStore.Instance.Cameras.Count < 2) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void ShowParameters(PropertyBag props)
@@ -170,8 +172,30 @@ namespace FoscamExplorer
                 ShowError(error);
                 return;
             }
+            
+            if (CheckBoxAll.IsChecked == true)
+            {
+                await UpdateWifiOnAllCameras(info);
+            }
 
             this.CloseCurrentFlyout();
+        }
+
+        private async Task UpdateWifiOnAllCameras(WifiNetworkInfo info)
+        {
+            foreach (var camera in DataStore.Instance.Cameras)
+            {
+                if (camera != this.device.CameraInfo)
+                {
+                    FoscamDevice temp = new FoscamDevice() { CameraInfo = camera };
+                    if (temp.CameraInfo.WifiNetwork == null || temp.CameraInfo.WifiNetwork.SSID != info.SSID || camera.WifiPassword != device.CameraInfo.WifiPassword)
+                    {
+                        camera.WifiPassword = device.CameraInfo.WifiPassword;
+                        temp.CameraInfo.WifiNetwork = info;
+                        await device.UpdateWifiSettings();
+                    }
+                }
+            }
         }
     }
 }

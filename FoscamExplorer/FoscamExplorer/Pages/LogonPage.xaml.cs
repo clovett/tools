@@ -28,11 +28,28 @@ namespace FoscamExplorer
             this.Loaded += LogonPage_Loaded;
             // assume cancelled state unless user clicks the logon button.
             this.Cancelled = true;
+            CheckBoxAll.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         void LogonPage_Loaded(object sender, RoutedEventArgs e)
         {
             TextBoxUserName.Focus(Windows.UI.Xaml.FocusState.Programmatic);
+        }
+
+        public Visibility CheckboxVisibility
+        {
+            get { return CheckBoxAll.Visibility; }
+            set { CheckBoxAll.Visibility = value; }
+        }
+
+        public string CheckBoxAllCaption
+        {
+            set { CheckBoxAll.Content = value; }
+        }
+
+        public bool CheckBoxAllIsChecked
+        {
+            get { return CheckBoxAll.IsChecked == true; }
         }
 
         public string Title

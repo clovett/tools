@@ -45,7 +45,10 @@ namespace FoscamExplorer
                 storyboard.Begin();
                 storyboard.Completed += (s, e) =>
                 {
-                    currentPopup.IsOpen = false;
+                    if (currentPopup != null)
+                    {
+                        currentPopup.IsOpen = false;
+                    }
                 };
             }
         }
