@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking;
 using Windows.Networking.Sockets;
@@ -54,26 +55,56 @@ namespace FoscamExplorer
                 , 0x00, 0x00, 0x01
             };
 
-        public static async void FindDevices()
+        public static void StartFindDevices()
         {
-            Guid adapter = Guid.Empty;
-            foreach (var hostName in Windows.Networking.Connectivity.NetworkInformation.GetHostNames())
+            if (cancellationSource == null || cancellationSource.IsCancellationRequested)
             {
-                if (hostName.IPInformation != null)
+                cancellationSource = new CancellationTokenSource();
+                var result = Task.Run(new Action(FindDevices));
+            }
+        }
+
+        static CancellationTokenSource cancellationSource;
+
+        private static void FindDevices()
+        {
+            var cancellationToken = cancellationSource.Token;
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // send out the UDP ping every few seconds.
+                Guid adapter = Guid.Empty;
+                foreach (var hostName in Windows.Networking.Connectivity.NetworkInformation.GetHostNames())
                 {
-                    // blast it out on all local hosts, since user may be connected to the network in multiple ways
-                    // and some of these hostnames might be virtual ethernets that go no where, like 169.254.80.80.
-                    try
+                    if (hostName.IPInformation != null)
                     {
-                        await SendUdpPing(hostName);
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Ping failed: " + ex.Message);
+                        // blast it out on all local hosts, since user may be connected to the network in multiple ways
+                        // and some of these hostnames might be virtual ethernets that go no where, like 169.254.80.80.
+                        try
+                        {
+                            SendUdpPing(hostName).Wait();
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.WriteLine("Ping failed: " + ex.Message);
+                        }
                     }
                 }
+                try
+                {
+                    Task.Delay(3000).Wait(cancellationToken);
+                }
+                catch
+                {
+                }
             }
+        }
 
+        public static void StopFindingDevices()
+        {
+            if (cancellationSource != null)
+            {
+                cancellationSource.Cancel();
+            }
         }
 
         private static async Task SendUdpPing(HostName hostName)
@@ -119,8 +150,6 @@ namespace FoscamExplorer
             var macAddress = GetString(response, m_offset_MAC, m_length_MAC);
             var cameraIP = GetIPAddressString(response, m_offset_Camera_IP);
             var routerIP = GetIPAddressString(response, m_offset_router_IP);
-
-            Debug.WriteLine("Foscam scout found device at " + cameraIP.ToString());
 
             var device = new FoscamDevice()
             {
@@ -193,7 +222,7 @@ namespace FoscamExplorer
             catch (Exception e)
             {
                 OnError(this, new ErrorEventArgs() { Message = e.Message });
-                Debug.WriteLine("{0}: couldn't talk to the camera. are the arguments correct?\n exception details: {1}", this.ToString(), e.ToString());
+                Log.WriteLine("{0}: couldn't talk to the camera. are the arguments correct?\n exception details: {1}", this.ToString(), e.ToString());
                 throw;
             }
         }

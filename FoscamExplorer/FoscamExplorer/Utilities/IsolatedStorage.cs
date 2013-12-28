@@ -47,7 +47,8 @@ namespace FoscamExplorer
             {
                 StorageFile storageFile = cacheFolder.LoadFile(fileName);
                 if (storageFile != null)
-                {        
+                {
+                    Log.WriteLine("Loading file: " + storageFile.Path);
                     using (Stream myFileStream = await storageFile.OpenStreamForReadAsync())
                     {
                         // Call the Deserialize method and cast to the object type.
@@ -75,12 +76,12 @@ namespace FoscamExplorer
         /// <param name="fileName">Name of the file to write to</param>
         /// <param name="data">The data to save</param>
         public async Task SaveToFileAsync(string fileName, T data)
-        {            
-           using (var stream = await cacheFolder.SaveFileAsync(fileName))
-           {               
-               XmlSerializer mySerializer = new XmlSerializer(typeof(T));
-               mySerializer.Serialize(stream.AsStreamForWrite(), data);
-            }           
+        {
+            using (var stream = await cacheFolder.SaveFileAsync(fileName))
+            {
+                XmlSerializer mySerializer = new XmlSerializer(typeof(T));
+                mySerializer.Serialize(stream.AsStreamForWrite(), data);
+            }         
         }
 
     }

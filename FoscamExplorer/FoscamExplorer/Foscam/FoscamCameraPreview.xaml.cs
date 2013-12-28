@@ -72,6 +72,15 @@ namespace FoscamExplorer
             }
         }
 
+        void Reconnect()
+        {
+            if (this.device != null)
+            {
+                device.StopStream();
+                device.StartJpegStream();
+            }
+        }
+
         private void OnRotationChanged()
         {
             bool flip = device.CameraInfo.Flipped;
@@ -116,12 +125,21 @@ namespace FoscamExplorer
                 case "Flipped":
                     OnRotationChanged();
                     break;
+                case "LastPingTime":
+                    if (ErrorBorder.Visibility == Windows.UI.Xaml.Visibility.Visible && lastFrameTime + 1000 < device.CameraInfo.LastPingTime)
+                    {
+                        DelayStartVideo(TimeSpan.FromMilliseconds(250));
+                    }
+                    break;
             }
             
         }
 
+        int lastFrameTime;
+
         void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
+            lastFrameTime = Environment.TickCount;
             HideError();
             CameraImage.Source = e.BitmapSource;
         }
@@ -131,6 +149,12 @@ namespace FoscamExplorer
             if (e.HttpResponse == System.Net.HttpStatusCode.Unauthorized)
             {
                 CameraImage.Source = new BitmapImage(new Uri("ms-appx:/Assets/Padlock.png", UriKind.RelativeOrAbsolute));
+            }
+            else if (e.HttpResponse == System.Net.HttpStatusCode.ServiceUnavailable && lastFrameTime != 0 && lastFrameTime + 1000 < Environment.TickCount)
+            {
+                // one retry - this handles the case where the computer comes out of sleep since we get no other events telling us this.
+                lastFrameTime = Environment.TickCount;
+                Reconnect();
             }
             else
             {

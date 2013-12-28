@@ -44,7 +44,7 @@ namespace FoscamExplorer
             set { cameras = value; OnPropertyChanged("Cameras"); }
         }
 
-        public void MergeNewCamera(CameraInfo cam)
+        public CameraInfo MergeNewCamera(CameraInfo cam)
         {
             foreach (CameraInfo i in Cameras)
             {
@@ -57,12 +57,15 @@ namespace FoscamExplorer
                     // and take the name in case someone renamed it.
                     i.Name = cam.Name;
 
-                    return;
+                    return i;
                 }
             }
 
+            Log.WriteLine("Found new Foscam Camera at " + cam.IpAddress.ToString());
+
             // new camera
             Cameras.Add(cam);
+            return cam;
         }
 
         private void OnPropertyChanged(string name)
@@ -85,17 +88,24 @@ namespace FoscamExplorer
             return data;
         }
 
+        bool saving;
+
         public async Task SaveAsync(CacheFolder cache)
         {
             try
             {
-                Debug.WriteLine("Saving DataStore at time : " + DateTime.Now.ToString());
-                IsolatedStorage<DataStore> store = new IsolatedStorage<DataStore>(cache);
-                await store.SaveToFileAsync(DataFile, this);
+                if (!saving)
+                {
+                    saving = true;
+                    Log.WriteLine("Saving DataStore at time : " + DateTime.Now.ToString());
+                    IsolatedStorage<DataStore> store = new IsolatedStorage<DataStore>(cache);
+                    await store.SaveToFileAsync(DataFile, this);
+                    saving = false;
+                }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Error saving DataStore: " + ex.Message);
+                Log.WriteLine("Error saving DataStore: " + ex.Message);
             }
         }
 
@@ -115,6 +125,7 @@ namespace FoscamExplorer
         private byte brightness;
         private byte contrast;
         private byte fps;
+        private int lastPing;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -297,5 +308,20 @@ namespace FoscamExplorer
                 }
             }
         }
+
+        [DataMember]
+        public int LastPingTime
+        {
+            get { return this.lastPing; }
+            set
+            {
+                if (this.lastPing != value)
+                {
+                    this.lastPing = value;
+                    OnPropertyChanged("LastPingTime");
+                }
+            }
+        }
+
     }
 }

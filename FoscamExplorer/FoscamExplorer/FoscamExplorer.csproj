@@ -134,6 +134,8 @@
     </Compile>
     <Compile Include="Utilities\GeometryUtilities.cs" />
     <Compile Include="Utilities\ImageManipulationGesture.cs" />
+    <Compile Include="Utilities\ISuspendable.cs" />
+    <Compile Include="Utilities\Log.cs" />
     <Compile Include="Utilities\MjpegDecoder.cs" />
     <Compile Include="Utilities\NumericExtensions.cs" />
     <Compile Include="Utilities\OrientedSize.cs" />

@@ -31,6 +31,41 @@ namespace FoscamExplorer
         {
             this.InitializeComponent();
             this.Suspending += OnSuspending;
+            this.Resuming += OnResuming;
+
+            this.UnhandledException += OnUnhandledException;
+        }
+
+        void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            Log.WriteLine("UnhandledException: " + e.Message);
+        }
+
+        private void OnResuming(object sender, object e)
+        {
+            Log.WriteLine("OnResuming");
+            return;
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            Log.WriteLine("OnActivated");
+            base.OnActivated(args);
+        }
+
+        protected override void OnWindowCreated(WindowCreatedEventArgs args)
+        {
+            Log.WriteLine("OnWindowCreated");
+
+            base.OnWindowCreated(args);
+
+            args.Window.Closed += OnWindowClosed;
+        }
+
+        void OnWindowClosed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
+        {
+            Log.WriteLine("OnWindowClosed");
+            return;
         }
 
         /// <summary>
@@ -58,8 +93,11 @@ namespace FoscamExplorer
             CacheFolder folder = new CacheFolder("Data");
             CacheFolder = folder;
             await folder.PopulateCache();
+            await Log.OpenLog(folder);
             await DataStore.LoadAsync(folder);
 
+
+            Log.WriteLine("OnLaunched {0}", args.Kind);
 
             // Do not repeat app initialization when the Window already has content,
             // just ensure that the window is active
@@ -100,9 +138,33 @@ namespace FoscamExplorer
         /// <param name="e">Details about the suspend request.</param>
         private void OnSuspending(object sender, SuspendingEventArgs e)
         {
+            Log.WriteLine("App OnSuspending");
+
             var deferral = e.SuspendingOperation.GetDeferral();
 
+            if (Window.Current != null)
+            {
+                Frame frame = Window.Current.Content as Frame;
+                if (frame  != null && frame.Content != null)
+                {
+                    Log.WriteLine("Frame content found: " + frame.Content.GetType().FullName);
+
+                    ISuspendable sus = frame.Content as ISuspendable;
+                    if (sus != null)
+                    {
+                        sus.OnSuspending();
+                    }
+                }
+                else
+                {
+                    Log.WriteLine("no frame or no frame content");
+                }
+            }
+
+            Log.CloseLog();
+
             deferral.Complete();
+            
         }
     }
 }

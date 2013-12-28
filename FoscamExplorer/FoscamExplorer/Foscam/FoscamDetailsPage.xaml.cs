@@ -19,7 +19,7 @@ namespace FoscamExplorer
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class FoscamDetailsPage : Page
+    public sealed partial class FoscamDetailsPage : Page, ISuspendable
     {
         FoscamDevice device;
         ImageManipulationGesture gesture;
@@ -48,6 +48,7 @@ namespace FoscamExplorer
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             // bring up camera details page...
+            Log.WriteLine("FoscamDetailsPage OnNavigatedTo");
 
             CameraInfo camera = (CameraInfo)e.Parameter;
             device = new FoscamDevice() { CameraInfo = camera };
@@ -80,17 +81,35 @@ namespace FoscamExplorer
 
         private void Reconnect()
         {
-            device.StopStream();
-            device.StartJpegStream();
+            if (device != null)
+            {
+                device.StopStream();
+                device.StartJpegStream();
+            }
         }
 
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            Disconnect();
+            base.OnNavigatedFrom(e);
+        }
+
+        private void Disconnect()
+        {
+            Log.WriteLine("FoscamDetailsPage disconnecting");
             SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
             FinishUpdate();
             StopMoving();
-            base.OnNavigatedFrom(e);
+            StopUpdate();
+
+            if (device != null)
+            {
+                device.Error -= OnDeviceError;
+                device.FrameAvailable -= OnFrameAvailable;                
+                device.CameraInfo.PropertyChanged -= OnCameraPropertyChanged;
+                device.StopStream();
+            }
         }
 
         void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
@@ -228,8 +247,11 @@ namespace FoscamExplorer
             await Save();
         }
 
+        int lastFrameTime;
+
         void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
+            lastFrameTime = Environment.TickCount;
             CameraImage.Source = e.BitmapSource;
         }
 
@@ -238,6 +260,12 @@ namespace FoscamExplorer
             if (e.HttpResponse == System.Net.HttpStatusCode.Unauthorized)
             {
                 CameraImage.Source = new BitmapImage(new Uri("ms-appx:/Assets/Padlock.png", UriKind.RelativeOrAbsolute));
+            }
+            else if (e.HttpResponse == System.Net.HttpStatusCode.ServiceUnavailable && lastFrameTime != 0 && lastFrameTime + 1000 < Environment.TickCount)
+            {
+                // one retry - this handles the case where the computer comes out of sleep since we get no other events telling us this.
+                lastFrameTime = Environment.TickCount;
+                Reconnect();
             }
             else
             {
@@ -486,7 +514,7 @@ namespace FoscamExplorer
                     var error = result.GetValue<string>("error");
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Debug.WriteLine("Error moving camera: " + error);
+                        Log.WriteLine("Error moving camera: " + error);
                     }
                 }
                 else
@@ -559,5 +587,10 @@ namespace FoscamExplorer
             }));
         }
 
+
+        public void OnSuspending()
+        {
+            Disconnect();
+        }
     }
 }

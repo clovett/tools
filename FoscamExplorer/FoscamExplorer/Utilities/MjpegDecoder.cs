@@ -157,9 +157,16 @@ namespace FoscamExplorer
 
         void OnError(ErrorEventArgs e)
         {
+            if (dispatcher == null)
+            {
+                return;
+            }
             var quiet = dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() => 
             {
-                Error(this, e);
+                if (Error != null)
+                {
+                    Error(this, e);
+                }
             }));
         }
 

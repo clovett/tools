@@ -18,23 +18,30 @@
     </Page.Resources>
     
     <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
-
-        <GridView
-            x:Name="CameraGrid" Grid.Row="1"
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+            <GridView x:Name="CameraGrid" Grid.Row="0"
             ItemTemplate="{StaticResource CameraTemplate}"              
             SelectionMode="Single"
             IsItemClickEnabled="True"
             ItemClick="OnItemClick"
+            SelectionChanged="OnCameraSelectionChanged"
             IsSwipeEnabled="false">
 
             <GridView.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <local:WrapPanel Orientation="Vertical" Margin="20" />
+                    <local:WrapPanel Orientation="Horizontal" Margin="20" />
                 </ItemsPanelTemplate>
             </GridView.ItemsPanel>
 
         </GridView>
 
-        <TextBlock x:Name="Prompt" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50" Text=""/>
+        <TextBlock x:Name="Prompt" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50" Text="" Grid.Row="0"/>
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <Button Style="{StaticResource DeleteAppBarButtonStyle}" AutomationProperties.Name="Delete" Click="OnDeleteSelection" x:Name="DeleteButton"></Button>            
+        </StackPanel>
     </Grid>
 </Page>
