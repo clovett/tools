@@ -3,8 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if WINDOWS_PHONE
+using System.Windows.Media;
+using System.Windows;
+#else
 using Windows.Foundation;
 using Windows.UI.Xaml.Media;
+#endif
 
 namespace FoscamExplorer
 {

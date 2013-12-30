@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -33,6 +34,13 @@ namespace FoscamExplorer
             }
             // not found
             return -1;
+        }
+
+        // this adapter fakes out something we do on Win8 to convert IRandomAccessStream to Stream.
+        // We don't need that on windows phone (yet)
+        public static Stream AsStreamForWrite(this Stream stream)
+        {
+            return stream;
         }
 
     }

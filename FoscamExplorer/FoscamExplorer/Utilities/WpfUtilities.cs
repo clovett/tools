@@ -4,6 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#if WINDOWS_PHONE
+using Windows.Storage;
+using System.Windows.Controls;
+using Windows.Storage.Streams;
+using System.Windows.Media.Imaging;
+using System.Windows;
+using System.Windows.Media;
+using Windows.ApplicationModel;
+#else
 using Windows.Graphics.Imaging;
 using Windows.Storage.FileProperties;
 using Windows.Storage.Streams;
@@ -12,36 +22,14 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml.Controls;
-using Windows.Storage;
 using Windows.ApplicationModel;
 using Windows.Foundation;
+#endif
 
 namespace FoscamExplorer
 {
     public static class WpfUtilities
     {
-        public static void Beep(MediaElement player)
-        {
-            PlaySound(player, "Beep.wav");
-        }
-
-        public static async void PlaySound(MediaElement player, string soundFileName)
-        {
-            StorageFolder folder = await Package.Current.InstalledLocation.GetFolderAsync("Assets");
-            StorageFile file = await folder.GetFileAsync(soundFileName);
-            using (IRandomAccessStream stream = await file.OpenAsync(FileAccessMode.Read))
-            {
-                player.SetSource(stream, file.ContentType);
-                player.Play();
-            }
-
-        }
-
-        public static BitmapSource LoadImage(string relativeName)
-        {
-            Uri uri = new Uri(App.BaseUri, relativeName);
-            return new BitmapImage(uri);            
-        }
 
         public async static Task<BitmapSource> LoadImageAsync(Stream imageStream)
         {
@@ -50,6 +38,11 @@ namespace FoscamExplorer
                 return null;
             }
 
+#if WINDOWS_PHONE
+            BitmapImage bmp = new BitmapImage();
+            bmp.SetSource(imageStream);
+            await Task.Delay(1);
+#else
             var stream = await ConvertStream(imageStream);
 
             BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
@@ -66,6 +59,7 @@ namespace FoscamExplorer
             bmp.SetSource(stream);
 
             imageStream.Dispose();
+#endif
             return bmp;
         }
 
@@ -80,42 +74,6 @@ namespace FoscamExplorer
             MemoryStream stream = new MemoryStream(bytes);
 
             return await LoadImageAsync(stream);
-        }
-
-        internal async static Task<string> Base64EncodeImageAsync(WriteableBitmap image)
-        {
-            using (InMemoryRandomAccessStream stm = new InMemoryRandomAccessStream())
-            {
-                await stm.WriteAsync(image.PixelBuffer);
-                await stm.FlushAsync();
-                stm.Seek(0);
-
-                // see what format we have
-                BitmapPixelFormat format = PixelBufferObject.GetBitmapPixelFormat(image);
-                BitmapAlphaMode alpha = PixelBufferObject.GetBitmapAlphaMode(image);
-
-                using (var stream = stm.AsStreamForRead())
-                {
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        stream.CopyTo(ms);
-                        byte[] pixels = ms.ToArray();
-
-                        // now re-encode these pixels.
-                        InMemoryRandomAccessStream encoded = new InMemoryRandomAccessStream();
-                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, encoded);
-                        encoder.SetPixelData(format, alpha, (uint)image.PixelWidth, (uint)image.PixelHeight, 96, 96, pixels);
-                        await encoder.FlushAsync();
-
-                        using (MemoryStream output = new MemoryStream())
-                        {
-                            encoded.Seek(0);
-                            encoded.AsStreamForRead().CopyTo(output);
-                            return Convert.ToBase64String(output.ToArray());
-                        }
-                    }
-                }
-            }
         }
 
         internal static T FindResource<T>(this FrameworkElement e, string name)
@@ -143,6 +101,14 @@ namespace FoscamExplorer
             return default(T);
         }
 
+#if WINDOWS_PHONE
+        internal static bool TryGetValue(this ResourceDictionary dictionary, string key, out object value)
+        {
+            return dictionary.TryGetValue(key, out value);
+        }
+#endif
+
+#if !WINDOWS_PHONE
         internal static async Task<IRandomAccessStream> ConvertStream(Stream stream)
         {
             // note: randomAccessStream.AsStreamForWrite is broken, so I use iBuffer instead.
@@ -161,66 +127,12 @@ namespace FoscamExplorer
 
             return ras;
         }
-
-        internal async static Task<BitmapSource> CreateThumbnail(Stream stream, uint maxWidth, uint maxHeight)
-        {
-            var randomAccessStream = await ConvertStream(stream);
-
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(randomAccessStream);
-
-            uint width = decoder.PixelWidth;
-            uint height = decoder.PixelHeight;
-            double scale = 1;
-            if (width > maxWidth || height > maxHeight)
-            {
-                scale = Math.Min((double)maxWidth / (double)width, (double)maxHeight / (double)height);
-            }
-            else
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-                return await LoadImageAsync(stream);
-            }
-
-            width = (uint)(scale * width);
-            height = (uint)(scale * height);
-
-            BitmapTransform transform = new BitmapTransform()
-            {
-                ScaledWidth = width,
-                ScaledHeight = height
-            };
-
-            var pixelData = await decoder.GetPixelDataAsync(
-                decoder.BitmapPixelFormat,
-                decoder.BitmapAlphaMode,
-                transform,
-                ExifOrientationMode.RespectExifOrientation,
-                ColorManagementMode.ColorManageToSRgb);
-
-            byte[] pixelDataByte = pixelData.DetachPixelData();
-            
-            InMemoryRandomAccessStream resizedStream = new InMemoryRandomAccessStream();
-
-            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, resizedStream);
-            encoder.SetPixelData(decoder.BitmapPixelFormat, decoder.BitmapAlphaMode, width, height, 96, 96, pixelDataByte);            
-            await encoder.FlushAsync();
-
-            // convert to a writable bitmap so we can get the PixelBuffer back out later...
-            // in case we need to edit and/or re-encode the image.
-            WriteableBitmap bmp = new WriteableBitmap((int)width, (int)height);
-            // remember the format of this image
-            PixelBufferObject.SetBitmapPixelFormat(bmp, decoder.BitmapPixelFormat);
-            PixelBufferObject.SetBitmapAlphaMode(bmp, decoder.BitmapAlphaMode);
-
-            resizedStream.Seek(0);
-            bmp.SetSource(resizedStream);
-
-            return bmp;
-        }
-
+#endif
 
     }
 
+#if !WINDOWS_PHONE
+    
     public class PixelBufferObject : DependencyObject
     {
 
@@ -254,8 +166,7 @@ namespace FoscamExplorer
         // Using a DependencyProperty as the backing store for BitmapAlphaMode.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty BitmapAlphaModeProperty =
             DependencyProperty.RegisterAttached("BitmapAlphaMode", typeof(BitmapAlphaMode), typeof(PixelBufferObject), new PropertyMetadata(BitmapAlphaMode.Ignore));
-
-        
-        
+               
     }
+#endif
 }

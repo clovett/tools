@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="37e7d252-0804-4f61-9901-73bda87d7b59" Publisher="CN=Chris" Version="1.0.0.5"  />
+  <Identity Name="37e7d252-0804-4f61-9901-73bda87d7b59" Publisher="CN=Chris" Version="1.0.0.6" />
   <Properties>
     <DisplayName>Foscam Explorer</DisplayName>
     <PublisherDisplayName>Lovett Software</PublisherDisplayName>
@@ -17,7 +17,7 @@
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="FoscamExplorer.App">
       <VisualElements DisplayName="Foscam Explorer" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="Foscam Explorer automatically discovers Foscam cameras on your local network and provides simple and elegant control over them.  You can watch the video stream, rename your cameras, set brightness, contrast, FPS, camera position, and wifi settings." ForegroundText="light" BackgroundColor="#464646">
         <DefaultTile ShowName="allLogos" WideLogo="Assets\Wide.png" />
-        <SplashScreen Image="Assets\SplashScreen.png" />        
+        <SplashScreen Image="Assets\SplashScreen.png" />
       </VisualElements>
     </Application>
   </Applications>

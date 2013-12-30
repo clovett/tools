@@ -31,10 +31,16 @@ using System.IO;
 
 using System.Threading;
 using System.Windows;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.Storage.Streams;
+#if WINDOWS_PHONE
+using System.Windows.Threading;
+using System.Windows.Media.Imaging;
+using CoreDispatcher = System.Windows.Threading.Dispatcher;
+#else
+using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml;
 using Windows.UI.Core;
+#endif
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -60,9 +66,9 @@ namespace FoscamExplorer
 
         CoreDispatcher dispatcher;
 
-        public MjpegDecoder()
+        public MjpegDecoder(CoreDispatcher dispatcher)
         {
-            this.dispatcher = Window.Current.CoreWindow.Dispatcher;
+            this.dispatcher = dispatcher;
         }
 
         HttpClient videoHttp;

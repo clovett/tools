@@ -12,6 +12,12 @@ using Windows.Networking;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 
+#if WINDOWS_PHONE
+using CoreDispatcher = System.Windows.Threading.Dispatcher;
+#else
+using Windows.UI.Core;
+#endif
+
 namespace FoscamExplorer
 {
     public enum CameraDirection
@@ -205,13 +211,13 @@ namespace FoscamExplorer
         /// Start receiving jpeg frames via the FrameAvailable event.
         /// </summary>
         /// <param name="sizeHint">The size you plan to display, this is just a hint</param>
-        public void StartJpegStream(int sizeHint = 640)
+        public void StartJpegStream(CoreDispatcher dispatcher, int sizeHint = 640)
         {
             int resolution = (sizeHint <= 320) ? 8 : 32; 
 
             try
             {
-                mjpeg = new MjpegDecoder();
+                mjpeg = new MjpegDecoder(dispatcher);
                 mjpeg.FrameReady += OnFrameReady;
                 mjpeg.Error += OnError;
 

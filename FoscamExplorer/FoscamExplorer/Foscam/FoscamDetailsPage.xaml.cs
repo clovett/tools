@@ -83,7 +83,7 @@ namespace FoscamExplorer
             device.Error += OnDeviceError;
             device.FrameAvailable += OnFrameAvailable;
             camera.PropertyChanged += OnCameraPropertyChanged;
-            device.StartJpegStream();
+            device.StartJpegStream(this.Dispatcher);
                         
             this.DataContext = camera;
 
@@ -111,7 +111,7 @@ namespace FoscamExplorer
             if (device != null)
             {
                 device.StopStream();
-                device.StartJpegStream();
+                device.StartJpegStream(this.Dispatcher);
             }
         }
 

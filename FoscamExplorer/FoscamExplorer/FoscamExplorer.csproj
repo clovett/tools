@@ -111,7 +111,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Extensions.cs" />
+    <Compile Include="Utilities\Extensions.cs" />
     <Compile Include="Foscam\FoscamCameraPreview.xaml.cs">
       <DependentUpon>FoscamCameraPreview.xaml</DependentUpon>
     </Compile>

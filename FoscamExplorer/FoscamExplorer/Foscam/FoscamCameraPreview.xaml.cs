@@ -67,7 +67,7 @@ namespace FoscamExplorer
                 device.Error += OnDeviceError;
                 device.FrameAvailable += OnFrameAvailable;
                 newCamera.PropertyChanged += OnCameraPropertyChanged;
-                device.StartJpegStream();
+                device.StartJpegStream(this.Dispatcher);
                 OnRotationChanged();
             }
         }
@@ -77,7 +77,7 @@ namespace FoscamExplorer
             if (this.device != null)
             {
                 device.StopStream();
-                device.StartJpegStream();
+                device.StartJpegStream(this.Dispatcher);
             }
         }
 
@@ -105,7 +105,7 @@ namespace FoscamExplorer
                 delayVideoTimer.Tick += new EventHandler<object>((s, e) =>
                 {
                     delayVideoTimer.Stop();
-                    device.StartJpegStream();
+                    device.StartJpegStream(this.Dispatcher);
                     delayVideoTimer = null;
                 });
             }
