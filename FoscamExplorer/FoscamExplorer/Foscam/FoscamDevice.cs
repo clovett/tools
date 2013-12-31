@@ -28,8 +28,60 @@ namespace FoscamExplorer
         Right = 6
     };
 
+    public enum CameraFps
+    {
+        Max = 0,
+        Fps20 = 1,
+        Fps15 = 3,
+        Fps10 = 6,
+        Fps5 = 11,
+        Fps4 = 12,
+        Fps3 = 13,
+        Fps2 = 14,
+        Fps1 = 15,
+        FpsHalf = 17,
+        FpsThird = 19,
+        FpsQuarter = 21,
+        FpsFifth = 23
+    }
+    
+    public class FpsInfo
+    {
+        public string Caption;
+        public CameraFps Value;
+        public double MillisecondsPerFrame;
+
+        public FpsInfo(string caption, CameraFps value, double msPerFrame)
+        {
+            Caption = caption;
+            Value = value;
+            MillisecondsPerFrame = msPerFrame;
+        }
+
+        public override string ToString()
+        {
+            return Caption;
+        }
+    };
+
     public class FoscamDevice
     {
+        public static FpsInfo[] FpsItems = new FpsInfo[] 
+        {
+            new FpsInfo("Max", CameraFps.Max, 1000/20),
+            new FpsInfo("20 fps", CameraFps.Fps20, 1000/20),
+            new FpsInfo("15 fps", CameraFps.Fps15, 1000/15),
+            new FpsInfo("10 fps", CameraFps.Fps10, 1000/10),
+            new FpsInfo("5 fps", CameraFps.Fps5, 1000/5),
+            new FpsInfo("4 fps",CameraFps.Fps4, 1000/4),
+            new FpsInfo("3 fps", CameraFps.Fps3, 1000/3),
+            new FpsInfo("2 fps", CameraFps.Fps2, 1000/2),
+            new FpsInfo("1 fps", CameraFps.Fps1, 1000/1),
+            new FpsInfo("1/2 fps", CameraFps.FpsHalf, 1000*2),
+            new FpsInfo("1/3 fps", CameraFps.FpsThird, 1000*3),
+            new FpsInfo("1/4 fps", CameraFps.FpsQuarter, 1000*4),
+            new FpsInfo("1/5 fps", CameraFps.FpsFifth, 1000*5)
+        };
 
         public CameraInfo CameraInfo { get; set; }
 
@@ -71,6 +123,7 @@ namespace FoscamExplorer
         }
 
         static CancellationTokenSource cancellationSource;
+        static ManualResetEvent cancelled = new ManualResetEvent(false);
 
         private static void FindDevices()
         {
@@ -87,7 +140,10 @@ namespace FoscamExplorer
                         // and some of these hostnames might be virtual ethernets that go no where, like 169.254.80.80.
                         try
                         {
-                            SendUdpPing(hostName).Wait();
+                            if (hostName.IPInformation.NetworkAdapter != null && !hostName.CanonicalName.StartsWith("169."))
+                            {
+                                SendUdpPing(hostName).Wait();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -98,6 +154,10 @@ namespace FoscamExplorer
                 try
                 {
                     Task.Delay(3000).Wait(cancellationToken);
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        cancelled.Set();
+                    }
                 }
                 catch
                 {
@@ -110,17 +170,36 @@ namespace FoscamExplorer
             if (cancellationSource != null)
             {
                 cancellationSource.Cancel();
+                // wait for FindDevices to terminate so we can tear down the sockets cleanly.
+                cancelled.WaitOne(5000);
             }
+            foreach (var socket in sockets.Values)
+            {
+                // dispose the socket.
+                using (socket)
+                {                    
+                }
+            }
+            sockets.Clear();
         }
+
+        static Dictionary<string, DatagramSocket> sockets = new Dictionary<string, DatagramSocket>();
 
         private static async Task SendUdpPing(HostName hostName)
         {
-            DatagramSocket datagramSocket = new DatagramSocket();
-            datagramSocket.MessageReceived += OnDatagramMessageReceived;
-            // the foscam only responds when the source port is also m_portNumber.
-            await datagramSocket.BindEndpointAsync(hostName, m_portNumber.ToString());
+            string ipAddress = hostName.CanonicalName;
+            DatagramSocket socket;
+            if(!sockets.TryGetValue(ipAddress, out socket))
+            {
+                // setup the socket for this network adapter.
+                socket = new DatagramSocket();
+                socket.MessageReceived += OnDatagramMessageReceived;
+                sockets[ipAddress] = socket;
+                // the foscam only responds when the source port is also m_portNumber.
+                await socket.BindEndpointAsync(hostName, m_portNumber.ToString());
+            }
 
-            using (IOutputStream os = await datagramSocket.GetOutputStreamAsync(new HostName("255.255.255.255"), m_portNumber.ToString()))
+            using (IOutputStream os = await socket.GetOutputStreamAsync(new HostName("255.255.255.255"), m_portNumber.ToString()))
             {
                 DataWriter writer = new DataWriter(os);
                 writer.WriteBytes(m_request);
@@ -210,8 +289,10 @@ namespace FoscamExplorer
         /// <summary>
         /// Start receiving jpeg frames via the FrameAvailable event.
         /// </summary>
+        /// <param name="dispatcher">The UI dispatcher</param>
         /// <param name="sizeHint">The size you plan to display, this is just a hint</param>
-        public void StartJpegStream(CoreDispatcher dispatcher, int sizeHint = 640)
+        /// <param name="fps">The fps setting, defaults to maximum FPS</param>
+        public void StartJpegStream(CoreDispatcher dispatcher, int sizeHint = 640, CameraFps fps = CameraFps.Max)
         {
             int resolution = (sizeHint <= 320) ? 8 : 32; 
 
@@ -221,9 +302,11 @@ namespace FoscamExplorer
                 mjpeg.FrameReady += OnFrameReady;
                 mjpeg.Error += OnError;
 
-                string requestStr = String.Format("{0}videostream.cgi?resolution={1}&rate={2}", CameraUrl, resolution, CameraInfo.Fps);
+                string requestStr = String.Format("{0}videostream.cgi?resolution={1}&rate={2}", CameraUrl, resolution, (byte)fps);
 
-                mjpeg.GetVideoStream(new Uri(requestStr), GetCredentials());
+                int msPerFrames = GetMillisecondsPerFrame(fps);
+
+                mjpeg.GetVideoStream(new Uri(requestStr), msPerFrames, GetCredentials());
             }
             catch (Exception e)
             {
@@ -231,6 +314,22 @@ namespace FoscamExplorer
                 Log.WriteLine("{0}: couldn't talk to the camera. are the arguments correct?\n exception details: {1}", this.ToString(), e.ToString());
                 throw;
             }
+        }
+
+        private int GetMillisecondsPerFrame(CameraFps fps)
+        {
+            double milliseconds = 50;
+
+            foreach (FpsInfo i in FpsItems)
+            {
+                if (i.Value >= fps)
+                {
+                    milliseconds = i.MillisecondsPerFrame;
+                    break;
+                }
+            }
+
+            return (int)milliseconds;
         }
 
 
@@ -309,16 +408,18 @@ namespace FoscamExplorer
                 settings.Credentials = GetCredentials();
 
                 HttpClient client = new HttpClient(settings);
-                HttpResponseMessage msg = await client.GetAsync(new Uri(url), HttpCompletionOption.ResponseHeadersRead);
-                if (msg.StatusCode == HttpStatusCode.OK)
+                using (HttpResponseMessage msg = await client.GetAsync(new Uri(url), HttpCompletionOption.ResponseHeadersRead))
                 {
-                    HttpContent content = msg.Content;
-                    string text = await content.ReadAsStringAsync();
-                    result = ParseCgiResult(text);
-                }
-                else
-                {
-                    result["Error"] = msg.StatusCode.ToString();
+                    if (msg.StatusCode == HttpStatusCode.OK)
+                    {
+                        HttpContent content = msg.Content;
+                        string text = await content.ReadAsStringAsync();
+                        result = ParseCgiResult(text);
+                    }
+                    else
+                    {
+                        result["Error"] = msg.StatusCode.ToString();
+                    }
                 }
             }
             catch (Exception ex)

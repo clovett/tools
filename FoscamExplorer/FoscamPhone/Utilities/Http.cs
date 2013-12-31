@@ -63,7 +63,7 @@ namespace System.Net.Http
         }
     }
 
-    class HttpResponseMessage
+    class HttpResponseMessage : IDisposable
     {
         HttpWebResponse response;
         Exception error;
@@ -99,6 +99,15 @@ namespace System.Net.Http
         }
 
         public HttpStatusCode StatusCode { get; set; }
+
+        public void Dispose()
+        {
+            using (Content)
+            {
+                Content = null;
+            }
+            this.response = null;
+        }
     }
 
     enum HttpCompletionOption
@@ -123,6 +132,7 @@ namespace System.Net.Http
                 response.Close();
                 response = null;
             }
+            this.Headers = null;
         }
 
         public HttpHeaderCollection Headers { get; set; }

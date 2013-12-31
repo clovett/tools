@@ -58,6 +58,8 @@ namespace FoscamExplorer
         // used to cancel reading the stream
         private bool _streamActive;
 
+        // number of milliseconds expected between frames.
+        private int millisecondsPerFrame;
 
         // event to get the buffer above handed to you
         public event EventHandler<FrameReadyEventArgs> FrameReady;
@@ -72,11 +74,15 @@ namespace FoscamExplorer
         }
 
         HttpClient videoHttp;
+        static int nextStream;
+        int id = nextStream++;
 
-        public async void GetVideoStream(Uri uri, NetworkCredential credential)
+        public async void GetVideoStream(Uri uri, int millisecondsPerFrame, NetworkCredential credential)
         {
             try
             {
+                Log.WriteLine("GetVideoStream id=" + id);
+                this.millisecondsPerFrame = millisecondsPerFrame; 
                 HttpClientHandler settings = new HttpClientHandler();
                 settings.Credentials = credential;
 
@@ -88,12 +94,12 @@ namespace FoscamExplorer
                     {
                         ParseStream(msg);
                     }));
-                    
+
                     StartWatchdog();
                 }
                 else
                 {
-                    OnError(new ErrorEventArgs() { Message = msg.StatusCode.ToString(), HttpResponse = msg.StatusCode});
+                    OnError(new ErrorEventArgs() { Message = msg.StatusCode.ToString(), HttpResponse = msg.StatusCode });
                 }
             }
             catch (Exception ex)
@@ -145,7 +151,7 @@ namespace FoscamExplorer
 
         private void OnWatchDogTick(object sender, object args)
         {
-            if (lastFrameTime + 1000 < Environment.TickCount)
+            if (lastFrameTime + (millisecondsPerFrame * 5) < Environment.TickCount)
             {
                 timeoutCount++;
 
@@ -189,11 +195,6 @@ namespace FoscamExplorer
                 }));
             }
 
-            using (videoStream)
-            {
-                videoStream = null;
-            }
-            
             using (content)
             {
                 content = null;
@@ -203,7 +204,6 @@ namespace FoscamExplorer
         }
 
         HttpContent content;
-        Stream videoStream;
         ManualResetEvent terminated;
 
         private async void ParseStream(HttpResponseMessage response)
@@ -213,76 +213,85 @@ namespace FoscamExplorer
             // get the response
             try
             {
-                terminated = new ManualResetEvent(false);
-                content = response.Content;
-
-                // find our magic boundary value
-                string contentType = content.Headers.ContentType.MediaType;
-
-                if (contentType != "multipart/x-mixed-replace")
+                using (response)
                 {
-                    throw new Exception("Invalid content-type header.  The camera is likely not returning a proper MJPEG stream.");
-                }
+                    terminated = new ManualResetEvent(false);
+                    content = response.Content;
 
-                string boundary = null;
-                foreach (var param in content.Headers.ContentType.Parameters)
-                {
-                    if (param.Name == "boundary")
+                    // find our magic boundary value
+                    string contentType = content.Headers.ContentType.MediaType;
+                    if (contentType == "text/plain")
                     {
-                        boundary = param.Value;
+                        // getting an error ?
+                        string message = await content.ReadAsStringAsync();
+                        throw new Exception(message);
                     }
-                }
-                byte[] boundaryBytes = Encoding.UTF8.GetBytes(boundary.StartsWith("--") ? boundary : "--" + boundary);
 
-                using (videoStream = await content.ReadAsStreamAsync())
-                {
-                    BinaryReader br = new BinaryReader(videoStream);
-
-                    _streamActive = true;
-
-                    byte[] buff = br.ReadBytes(ChunkSize);
-
-                    while (_streamActive)
+                    if (contentType != "multipart/x-mixed-replace")
                     {
-                        // find the JPEG header
-                        int imageStart = buff.Find(JpegHeader);
+                        throw new Exception("Invalid content-type header.  The camera is likely not returning a proper MJPEG stream.");
+                    }
 
-                        if (imageStart != -1)
+                    string boundary = null;
+                    foreach (var param in content.Headers.ContentType.Parameters)
+                    {
+                        if (param.Name == "boundary")
                         {
-                            // copy the start of the JPEG image to the imageBuffer
-                            int size = buff.Length - imageStart;
-                            Array.Copy(buff, imageStart, imageBuffer, 0, size);
+                            boundary = param.Value;
+                        }
+                    }
+                    byte[] boundaryBytes = Encoding.UTF8.GetBytes(boundary.StartsWith("--") ? boundary : "--" + boundary);
 
-                            while (_streamActive)
+                    using (var videoStream = await content.ReadAsStreamAsync())
+                    {
+                        BinaryReader br = new BinaryReader(videoStream);
+
+                        _streamActive = true;
+
+                        byte[] buff = br.ReadBytes(ChunkSize);
+
+                        while (_streamActive)
+                        {
+                            // find the JPEG header
+                            int imageStart = buff.Find(JpegHeader);
+
+                            if (imageStart != -1)
                             {
-                                buff = br.ReadBytes(ChunkSize);
+                                // copy the start of the JPEG image to the imageBuffer
+                                int size = buff.Length - imageStart;
+                                Array.Copy(buff, imageStart, imageBuffer, 0, size);
 
-                                // find the boundary text
-                                int imageEnd = buff.Find(boundaryBytes);
-                                if (imageEnd != -1)
+                                while (_streamActive)
                                 {
-                                    // copy the remainder of the JPEG to the imageBuffer
-                                    Array.Copy(buff, 0, imageBuffer, size, imageEnd);
-                                    size += imageEnd;
+                                    buff = br.ReadBytes(ChunkSize);
 
-                                    byte[] frame = new byte[size];
-                                    Array.Copy(imageBuffer, 0, frame, 0, size);
+                                    // find the boundary text
+                                    int imageEnd = buff.Find(boundaryBytes);
+                                    if (imageEnd != -1)
+                                    {
+                                        // copy the remainder of the JPEG to the imageBuffer
+                                        Array.Copy(buff, 0, imageBuffer, size, imageEnd);
+                                        size += imageEnd;
 
-                                    ProcessFrame(frame);
+                                        byte[] frame = new byte[size];
+                                        Array.Copy(imageBuffer, 0, frame, 0, size);
 
-                                    // copy the leftover data to the start
-                                    Array.Copy(buff, imageEnd, buff, 0, buff.Length - imageEnd);
+                                        ProcessFrame(frame);
 
-                                    // fill the remainder of the buffer with new data and start over
-                                    byte[] temp = br.ReadBytes(imageEnd);
+                                        // copy the leftover data to the start
+                                        Array.Copy(buff, imageEnd, buff, 0, buff.Length - imageEnd);
 
-                                    Array.Copy(temp, 0, buff, buff.Length - imageEnd, temp.Length);
-                                    break;
+                                        // fill the remainder of the buffer with new data and start over
+                                        byte[] temp = br.ReadBytes(imageEnd);
+
+                                        Array.Copy(temp, 0, buff, buff.Length - imageEnd, temp.Length);
+                                        break;
+                                    }
+
+                                    // copy all of the data to the imageBuffer
+                                    Array.Copy(buff, 0, imageBuffer, size, buff.Length);
+                                    size += buff.Length;
                                 }
-
-                                // copy all of the data to the imageBuffer
-                                Array.Copy(buff, 0, imageBuffer, size, buff.Length);
-                                size += buff.Length;
                             }
                         }
                     }
@@ -314,14 +323,9 @@ namespace FoscamExplorer
                 }
             }
 
-            using (videoStream)
-            {
-                videoStream = null;
-            }
-            using (content)
-            {
-                content = null;
-            }
+            // response has been disposed, so clear the content also
+            content = null;
+            Log.WriteLine("Closing VideoStream id=" + id);
             terminated.Set();
         }
 

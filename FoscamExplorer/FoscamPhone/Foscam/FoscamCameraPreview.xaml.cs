@@ -16,10 +16,12 @@ namespace FoscamExplorer.Foscam
     public partial class FoscamCameraPreview : UserControl
     {
         FoscamDevice device;
+        const int videoSize = 320;
+        const CameraFps videoFps = CameraFps.Fps1; // 1 fps on the start page since we are showing all cameras at once.
 
         public FoscamCameraPreview()
         {
-            InitializeComponent();
+            InitializeComponent();            
             this.Unloaded += FoscamCameraPreview_Unloaded;
         }
 
@@ -55,11 +57,12 @@ namespace FoscamExplorer.Foscam
                 device.Error += OnDeviceError;
                 device.FrameAvailable += OnFrameAvailable;
                 device.CameraInfo.PropertyChanged += OnCameraPropertyChanged;
-                device.StartJpegStream(this.Dispatcher);
+                device.StartJpegStream(this.Dispatcher, videoSize, videoFps);
                 OnRotationChanged();
+                ShowError("Loading...");
             }
         }
-
+        
         private void Disconnect()
         {
             if (device != null)
@@ -76,7 +79,7 @@ namespace FoscamExplorer.Foscam
             if (this.device != null)
             {
                 device.StopStream();
-                device.StartJpegStream(this.Dispatcher);
+                device.StartJpegStream(this.Dispatcher, videoSize, videoFps);
             }
         }
 
@@ -104,7 +107,7 @@ namespace FoscamExplorer.Foscam
                 delayVideoTimer.Tick += new EventHandler((s, e) =>
                 {
                     delayVideoTimer.Stop();
-                    device.StartJpegStream(this.Dispatcher);
+                    device.StartJpegStream(this.Dispatcher, videoSize, videoFps);
                     delayVideoTimer = null;
                 });
             }

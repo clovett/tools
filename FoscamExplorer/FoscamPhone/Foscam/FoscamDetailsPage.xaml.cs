@@ -71,7 +71,7 @@ namespace FoscamExplorer.Foscam
             device.Error += OnDeviceError;
             device.FrameAvailable += OnFrameAvailable;
             camera.PropertyChanged += OnCameraPropertyChanged;
-            device.StartJpegStream(this.Dispatcher);
+            device.StartJpegStream(this.Dispatcher, 640, (CameraFps)device.CameraInfo.Fps);
 
             this.DataContext = camera;
 
@@ -97,7 +97,7 @@ namespace FoscamExplorer.Foscam
             if (device != null)
             {
                 device.StopStream();
-                device.StartJpegStream(this.Dispatcher);
+                device.StartJpegStream(this.Dispatcher, 640, (CameraFps)device.CameraInfo.Fps);
             }
         }
 

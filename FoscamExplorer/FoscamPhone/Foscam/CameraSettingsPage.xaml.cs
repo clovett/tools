@@ -17,40 +17,6 @@ namespace FoscamExplorer.Foscam
         FoscamDevice device;
         PropertyBag deviceParams;
 
-        class FpsItem
-        {
-            public string Caption;
-            public byte Value;
-
-            public FpsItem(string caption, byte value)
-            {
-                Caption = caption;
-                Value = value;
-            }
-
-            public override string ToString()
-            {
-                return Caption;
-            }
-        };
-
-        static FpsItem[] FpsItems = new FpsItem[] 
-        {
-            new FpsItem("Max", 0),
-            new FpsItem("20 fps", 1),
-            new FpsItem("15 fps", 3),
-            new FpsItem("10 fps", 6),
-            new FpsItem("5 fps", 11),
-            new FpsItem("4 fps", 12),
-            new FpsItem("3 fps", 13),
-            new FpsItem("2 fps", 14),
-            new FpsItem("1 fps", 15),
-            new FpsItem("1/2 fps", 17),
-            new FpsItem("1/3 fps", 19),
-            new FpsItem("1/4 fps", 21),
-            new FpsItem("1/5 fps", 23)
-        };
-
         public CameraSettingsPage()
         {
             this.InitializeComponent();
@@ -58,7 +24,7 @@ namespace FoscamExplorer.Foscam
             ErrorMessage.Text = "";
 
             updating = true;
-            foreach (var fps in FpsItems)
+            foreach (var fps in FoscamDevice.FpsItems)
             {
                 ComboBoxFps.Items.Add(fps.Caption);
             }
@@ -116,13 +82,13 @@ namespace FoscamExplorer.Foscam
 
         bool updating;
 
-        FpsItem GetFpsItem(int fps)
+        FpsInfo GetFpsItem(byte fps)
         {
-            FpsItem found = null;
-            foreach (var item in FpsItems)
+            FpsInfo found = null;
+            foreach (var item in FoscamDevice.FpsItems)
             {
                 found = item;
-                if (item.Value >= fps)
+                if ((byte)item.Value >= fps)
                 {
                     break;
                 }
@@ -130,10 +96,10 @@ namespace FoscamExplorer.Foscam
             return found;
         }
 
-        private FpsItem FindFpsItem(string caption)
+        private FpsInfo FindFpsItem(string caption)
         {
-            FpsItem found = null;
-            foreach (var item in FpsItems)
+            FpsInfo found = null;
+            foreach (var item in FoscamDevice.FpsItems)
             {
                 found = item;
                 if (item.Caption == caption)
@@ -174,8 +140,8 @@ namespace FoscamExplorer.Foscam
             {
                 // this one we just update locally, this is not a "setting", instead it is the parameter to the request for
                 // video stream which has to be passed to StartJpegStream.
-                FpsItem fps = FindFpsItem((string)ComboBoxFps.SelectedItem);
-                this.FoscamDevice.CameraInfo.Fps = fps.Value;
+                FpsInfo fps = FindFpsItem((string)ComboBoxFps.SelectedItem);
+                this.FoscamDevice.CameraInfo.Fps = (byte)fps.Value;
             }
         }
 
