@@ -117,7 +117,11 @@ namespace System.Net.Http
 
         public void Dispose()
         {
-            response.Dispose();
+            using (response)
+            {
+                response.Close();
+                response = null;
+            }
         }
 
         public HttpHeaderCollection Headers { get; set; }
@@ -125,7 +129,12 @@ namespace System.Net.Http
 
         internal async Task<Stream> ReadAsStreamAsync()
         {
-            Stream stream = response.GetResponseStream();
+            Stream stream = null;
+
+            if (response != null)
+            {
+                stream = response.GetResponseStream();
+            }
 
             await Task.Delay(1);
 
@@ -135,23 +144,28 @@ namespace System.Net.Http
 
         internal async Task<string> ReadAsStringAsync()
         {
-            string encodingName = response.Headers[HttpRequestHeader.ContentEncoding];
-            if (encodingName == null) 
-            {
-                encodingName = "UTF-8";
-            }
-            Encoding encoding = Encoding.GetEncoding(encodingName);
             string result = null;
-
-            using (Stream stream = response.GetResponseStream())
+            if (response != null)
             {
-                using (StreamReader reader = new StreamReader(stream, encoding))
-                {
-                    result = reader.ReadToEnd();
-                }
-            }
 
-            await Task.Delay(1);
+                await Task.Run(new Action(() =>
+                {
+                    string encodingName = response.Headers[HttpRequestHeader.ContentEncoding];
+                    if (encodingName == null)
+                    {
+                        encodingName = "UTF-8";
+                    }
+                    Encoding encoding = Encoding.GetEncoding(encodingName);
+
+                    using (Stream stream = response.GetResponseStream())
+                    {
+                        using (StreamReader reader = new StreamReader(stream, encoding))
+                        {
+                            result = reader.ReadToEnd();
+                        }
+                    }
+                }));
+            }
 
             return result;
         }

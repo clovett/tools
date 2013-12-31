@@ -14,8 +14,18 @@ namespace FoscamExplorer
 
         public static async Task OpenLog(CacheFolder cache)
         {
-            var stream = await cache.SaveFileAsync("log.txt");
-            log = new StreamWriter(stream.AsStreamForWrite());                
+            if (log == null)
+            {
+                try
+                {
+                    var stream = await cache.SaveFileAsync("log.txt");
+                    log = new StreamWriter(stream.AsStreamForWrite());
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Error opening log: " + ex.Message);
+                }
+            }
         }
 
         public static void CloseLog()

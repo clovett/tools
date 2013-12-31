@@ -106,6 +106,9 @@
     <Compile Include="..\FoscamExplorer\Utilities\GeometryUtilities.cs">
       <Link>Utilities\GeometryUtilities.cs</Link>
     </Compile>
+    <Compile Include="..\FoscamExplorer\Utilities\ImageManipulationGesture.cs">
+      <Link>Utilities\ImageManipulationGesture.cs</Link>
+    </Compile>
     <Compile Include="..\FoscamExplorer\Utilities\Log.cs">
       <Link>Utilities\Log.cs</Link>
     </Compile>
@@ -126,6 +129,9 @@
     </Compile>
     <Compile Include="Foscam\FoscamCameraPreview.xaml.cs">
       <DependentUpon>FoscamCameraPreview.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Foscam\FoscamDetailsPage.xaml.cs">
+      <DependentUpon>FoscamDetailsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="LocalizedStrings.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -154,6 +160,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Foscam\FoscamDetailsPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -174,6 +184,9 @@
     <Content Include="Assets\ApplicationIcon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\Rename.png" />
+    <Content Include="Assets\Rotate.png" />
+    <Content Include="Assets\Settings.png" />
     <Content Include="Assets\Padlock.png" />
     <Content Include="Assets\Tiles\FlipCycleTileLarge.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -190,6 +203,8 @@
     <Content Include="Assets\Tiles\IconicTileSmall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Assets\User.png" />
+    <Content Include="Assets\Wifi.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\AppResources.resx">

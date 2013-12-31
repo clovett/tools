@@ -9,6 +9,7 @@ using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using FoscamExplorer.Resources;
 using FoscamExplorer.Pages;
+using FoscamExplorer.Foscam;
 
 namespace FoscamExplorer
 {
@@ -112,6 +113,12 @@ namespace FoscamExplorer
                 }
                 login.LoginClicked += OnCompleteLogin;
                 
+            }
+
+            FoscamDetailsPage details = e.Content as FoscamDetailsPage;
+            if (details != null)
+            {
+                details.DataContext = this.selected;
             }
 
             base.OnNavigatedFrom(e);

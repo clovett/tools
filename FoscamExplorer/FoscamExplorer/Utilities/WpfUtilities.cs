@@ -39,8 +39,16 @@ namespace FoscamExplorer
             }
 
 #if WINDOWS_PHONE
-            BitmapImage bmp = new BitmapImage();
-            bmp.SetSource(imageStream);
+            BitmapImage bmp = null;
+            try
+            {
+                bmp = new BitmapImage();
+                bmp.SetSource(imageStream);
+            }
+            catch (Exception ex)
+            {
+                Log.WriteLine("LoadImageAsync failed: " + ex.Message);
+            }
             await Task.Delay(1);
 #else
             var stream = await ConvertStream(imageStream);

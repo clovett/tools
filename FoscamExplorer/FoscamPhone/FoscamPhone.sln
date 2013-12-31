@@ -1,9 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoscamExplorer", "FoscamExplorer\FoscamExplorer.csproj", "{97764B40-E3E9-4901-B926-F2C6F7C001BD}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoscamPhone", "FoscamPhone\FoscamPhone.csproj", "{581E6CD4-5F7A-450B-A285-F631FB004B5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoscamPhone", "FoscamPhone.csproj", "{581E6CD4-5F7A-450B-A285-F631FB004B5F}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution

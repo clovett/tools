@@ -294,7 +294,7 @@ namespace FoscamExplorer
         {
             string requestStr = String.Format("http://{0}/camera_control.cgi?param={1}&value={2}", CameraInfo.IpAddress, (int)paramType, value);
             var result = await SendCgiRequest(requestStr);
-            return result.GetValue<string>("error");
+            return result.GetValue<string>("Error");
         }
 
         private async Task<PropertyBag> SendCgiRequest(string url)
@@ -318,7 +318,7 @@ namespace FoscamExplorer
                 }
                 else
                 {
-                    result["error"] = msg.StatusCode.ToString();
+                    result["Error"] = msg.StatusCode.ToString();
                 }
             }
             catch (Exception ex)
@@ -414,7 +414,7 @@ namespace FoscamExplorer
 
             if (text.StartsWith("error:"))
             {
-                result["error"] = text;
+                result["Error"] = text;
                 return result;
             }
 
@@ -510,7 +510,7 @@ namespace FoscamExplorer
         {
             string requestStr = String.Format("http://{0}/set_alias.cgi?alias={1}", CameraInfo.IpAddress, newName);
             PropertyBag result = await SendCgiRequest(requestStr);
-            string rc = result.GetValue<string>("error");
+            string rc = result.GetValue<string>("Error");
             if (!string.IsNullOrEmpty(rc))
             {
                 return rc;
@@ -542,7 +542,7 @@ namespace FoscamExplorer
 
             string requestStr = String.Format("http://{0}/get_wifi_scan_result.cgi", CameraInfo.IpAddress);
             var    properties = await SendCgiRequest(requestStr);
-            var error = properties.GetValue<string>("error");
+            var error = properties.GetValue<string>("Error");
             if (!string.IsNullOrEmpty(error))
             {
                 // not ready yet...
@@ -588,7 +588,7 @@ namespace FoscamExplorer
 
             var properties = await SendCgiRequest(requestStr);
 
-            string error = properties.GetValue<string>("error");
+            string error = properties.GetValue<string>("Error");
             return error;
         }
 
@@ -623,7 +623,7 @@ namespace FoscamExplorer
             }
 
             var properties = await SendCgiRequest(sb.ToString());
-            string error = properties.GetValue<string>("error");
+            string error = properties.GetValue<string>("Error");
             return error;
         }
     }

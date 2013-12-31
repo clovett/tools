@@ -20,20 +20,26 @@
         </DataTemplate>
     </phone:PhoneApplicationPage.Resources>
 
-    <Grid Margin="10">
+    <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <ListBox x:Name="CameraList" Grid.Row="0"
+        <!--TitlePanel contains the name of the application and page title-->
+        <StackPanel Grid.Row="0" Margin="12,17,0,28">
+            <TextBlock Text="FOSCAM EXPLORER" Style="{StaticResource PhoneTextNormalStyle}"/>
+        </StackPanel>
+        
+        <ListBox x:Name="CameraList" Grid.Row="1"
             ItemTemplate="{StaticResource CameraTemplate}"              
             SelectionMode="Single"
             SelectionChanged="OnCameraSelectionChanged"
-                 >
+            Margin="10">
         </ListBox>
 
-        <TextBlock x:Name="Prompt" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50" Text="" Grid.Row="0"/>
+        <TextBlock x:Name="Prompt" FontSize="48" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50" Text="" Grid.Row="1"/>
 
         <!--<StackPanel Grid.Row="1" Orientation="Horizontal">
             <Button Style="{StaticResource DeleteAppBarButtonStyle}" AutomationProperties.Name="Delete" Click="OnDeleteSelection" x:Name="DeleteButton"></Button>
