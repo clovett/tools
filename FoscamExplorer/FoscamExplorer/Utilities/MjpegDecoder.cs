@@ -176,22 +176,35 @@ namespace FoscamExplorer
             }));
         }
 
-        public void StopStream()
+        public async void StopStream()
         {
             _streamActive = false;
+
+            ManualResetEvent evt = this.terminated;
+            if (evt != null)
+            {
+                await Task.Run(new Action(() =>
+                {
+                    evt.WaitOne(3000);
+                }));
+            }
+
             using (videoStream)
             {
                 videoStream = null;
             }
+            
             using (content)
             {
                 content = null;
             }
+
             StopWatchdog();
         }
 
         HttpContent content;
         Stream videoStream;
+        ManualResetEvent terminated;
 
         private async void ParseStream(HttpResponseMessage response)
         {
@@ -200,6 +213,7 @@ namespace FoscamExplorer
             // get the response
             try
             {
+                terminated = new ManualResetEvent(false);
                 content = response.Content;
 
                 // find our magic boundary value
@@ -272,28 +286,43 @@ namespace FoscamExplorer
                             }
                         }
                     }
-                }                
+                }
             }
             catch (Exception ex)
             {
                 if (Error != null)
                 {
                     HttpStatusCode code = HttpStatusCode.ServiceUnavailable;
-                    WebException we = ex as WebException;
-                    if (we != null)
+                    try
                     {
-                        HttpWebResponse httpResponse = we.Response as HttpWebResponse;
-                        if (httpResponse != null)
+                        WebException we = ex as WebException;
+                        if (we != null)
                         {
-                            code = httpResponse.StatusCode;
+                            HttpWebResponse httpResponse = we.Response as HttpWebResponse;
+                            if (httpResponse != null)
+                            {
+                                code = httpResponse.StatusCode;
+                            }
                         }
+                    }
+                    catch
+                    {
+                        // response is in a bad state..
                     }
 
                     OnError(new ErrorEventArgs() { Message = ex.Message, HttpResponse = code });
                 }
             }
-            videoStream = null;
-            content = null;
+
+            using (videoStream)
+            {
+                videoStream = null;
+            }
+            using (content)
+            {
+                content = null;
+            }
+            terminated.Set();
         }
 
         private void ProcessFrame(byte[] frame)

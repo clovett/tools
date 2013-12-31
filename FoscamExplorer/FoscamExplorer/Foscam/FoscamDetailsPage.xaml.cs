@@ -225,6 +225,11 @@ namespace FoscamExplorer
 
         private void ShowParameters(PropertyBag props)
         {
+            if (props.GetValue<string>("Error") != null)
+            {
+                return;
+            }
+
             string alias = props.GetValue<string>("alias");
             if (alias != device.CameraInfo.Name)
             {

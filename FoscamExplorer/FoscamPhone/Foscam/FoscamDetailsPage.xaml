@@ -26,10 +26,12 @@
                 <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
             </Grid>
             
-            <Grid Margin="30,50" HorizontalAlignment="Left" VerticalAlignment="top">
+            <Grid x:Name="ErrorGrid" Margin="30,50" HorizontalAlignment="Left" VerticalAlignment="top"
+                  Background="#80000000" Visibility="Collapsed">
 
                 <TextBlock Grid.Row="0" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" 
-                           TextWrapping="Wrap"  HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                           TextWrapping="Wrap"  HorizontalAlignment="Left" VerticalAlignment="Top"
+                           />
 
             </Grid>
         </Grid>
@@ -40,7 +42,7 @@
                        MouseLeftButtonDown="OnPageTitleMouseDown"/>
             <TextBox x:Name="TextBoxName" Text="{Binding Name, Mode=TwoWay}" FontSize="20" Margin="-16,-16,0,0"
                      Visibility="Collapsed"
-                     Padding="0" TextChanged="OnNameChanged" LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"
+                     Padding="0" LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"
                      VerticalAlignment="Top"/>
         </Grid>
 
@@ -49,7 +51,7 @@
     <!--Sample code showing usage of ApplicationBar-->
     <phone:PhoneApplicationPage.ApplicationBar >
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton x:Name="UserButton" IconUri="/Assets/User.png" Text="Account" Click="OnUserPasswordClick" />
+            <shell:ApplicationBarIconButton x:Name="WifiButton" IconUri="/Assets/Wifi.png" Text="Wifi" Click="OnWifiButtonClick" />
             <shell:ApplicationBarIconButton x:Name="RotateButton" IconUri="/Assets/Rotate.png" Text="Rotate" Click="OnRotateClick" />
             <shell:ApplicationBarIconButton x:Name="RenameButton" IconUri="/Assets/Rename.png" Text="Rename" Click="OnRenameClick" />
             <shell:ApplicationBarIconButton x:Name="SettingsButton" IconUri="/Assets/Settings.png" Text="Settings" Click="OnSettingsClick" />

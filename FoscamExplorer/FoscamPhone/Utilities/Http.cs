@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -150,19 +151,26 @@ namespace System.Net.Http
 
                 await Task.Run(new Action(() =>
                 {
-                    string encodingName = response.Headers[HttpRequestHeader.ContentEncoding];
-                    if (encodingName == null)
+                    try
                     {
-                        encodingName = "UTF-8";
-                    }
-                    Encoding encoding = Encoding.GetEncoding(encodingName);
-
-                    using (Stream stream = response.GetResponseStream())
-                    {
-                        using (StreamReader reader = new StreamReader(stream, encoding))
+                        string encodingName = response.Headers[HttpRequestHeader.ContentEncoding];
+                        if (encodingName == null)
                         {
-                            result = reader.ReadToEnd();
+                            encodingName = "UTF-8";
                         }
+                        Encoding encoding = Encoding.GetEncoding(encodingName);
+
+                        using (Stream stream = response.GetResponseStream())
+                        {
+                            using (StreamReader reader = new StreamReader(stream, encoding))
+                            {
+                                result = reader.ReadToEnd();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.WriteLine("ReadAsStringAsync failed: " + ex.Message);
                     }
                 }));
             }

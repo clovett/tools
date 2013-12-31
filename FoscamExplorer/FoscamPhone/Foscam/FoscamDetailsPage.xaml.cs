@@ -104,16 +104,28 @@ namespace FoscamExplorer.Foscam
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            HideEditBox();
             Disconnect();
+
+            WifiSettingsPage page = e.Content as WifiSettingsPage;
+            if (page != null)
+            {
+                page.FoscamDevice = this.device;
+            };
+
+            CameraSettingsPage settings = e.Content as CameraSettingsPage;
+            if (settings != null)
+            {
+                settings.FoscamDevice = this.device;
+            };
+
             base.OnNavigatedFrom(e);
         }
 
         private void Disconnect()
         {
             Log.WriteLine("FoscamDetailsPage disconnecting");
-            FinishUpdate();
             StopMoving();
-            StopUpdate();
 
             if (device != null)
             {
@@ -121,80 +133,6 @@ namespace FoscamExplorer.Foscam
                 device.FrameAvailable -= OnFrameAvailable;
                 device.CameraInfo.PropertyChanged -= OnCameraPropertyChanged;
                 device.StopStream();
-            }
-        }
-
-        private void OnUserPasswordClick(object sender, EventArgs e)
-        {
-            ChangeUserPassword();
-        }
-
-        void ChangeUserPassword()
-        {
-            string user = deviceParams.GetValue<string>("user1_name");
-            string pswd = deviceParams.GetValue<string>("user1_pwd");
-
-            LogonPage login = new LogonPage()
-            {
-                Title = "Camera Account",
-                SignOnButtonCaption = "Update",
-                UserName = user,
-                Password = pswd
-            };
-
-            if (DataStore.Instance.Cameras.Count > 1)
-            {
-                login.CheckboxVisibility = Visibility.Visible;
-                login.CheckBoxAllCaption = "Update all cameras";
-            }
-
-            //login.Flyout(new Action(async () =>
-            //{
-            //    if (!login.Cancelled && user != login.UserName || pswd != login.Password)
-            //    {
-            //        await ChangeUserNamePassword(login.UserName, login.Password, login.CheckBoxAllIsChecked);
-            //    }
-            //}));
-        }
-
-        private async Task ChangeUserNamePassword(string userName, string password, bool updateAll)
-        {
-            if (await UpdateAccountInfo(device, userName, password, true))
-            {
-                if (updateAll)
-                {
-                    foreach (var camera in DataStore.Instance.Cameras)
-                    {
-                        if (camera != this.device.CameraInfo)
-                        {
-                            FoscamDevice temp = new FoscamDevice() { CameraInfo = camera };
-                            await UpdateAccountInfo(device, userName, password, false);
-                        }
-                    }
-                }
-            }
-        }
-
-        private async Task<bool> UpdateAccountInfo(FoscamDevice device, string userName, string password, bool showError)
-        {
-            var result = await device.ChangeUserPassword(userName, password);
-            if (!string.IsNullOrEmpty(result))
-            {
-                if (showError)
-                {
-                    ShowError(result);
-                }
-                return false;
-            }
-            else
-            {
-                if (showError)
-                {
-                    ShowError("updated");
-                }
-                device.CameraInfo.UserName = userName;
-                device.CameraInfo.Password = password;
-                return true;
             }
         }
 
@@ -316,57 +254,29 @@ namespace FoscamExplorer.Foscam
             }
         }
 
-        void ShowError(string text)
+        void ShowError(string text, bool fade = false)
         {
             var quiet = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, new DispatchedHandler(() =>
             {
+                ErrorGrid.Opacity = 1;
+                ErrorGrid.Visibility = System.Windows.Visibility.Visible;
                 ErrorMessage.Text = text;
+
+                if (fade)
+                {
+                    var storyboard = ErrorGrid.CreateFadeAnimation(TimeSpan.FromSeconds(5), 1, 0);
+                    storyboard.Completed += (s, e) =>
+                    {
+                        ErrorGrid.Visibility = System.Windows.Visibility.Collapsed;
+                    };
+                    storyboard.Begin();
+                }
+
             }));
         }
 
-        private void OnNameChanged(object sender, TextChangedEventArgs e)
+        private async void RenameCamera()
         {
-            // send new name to the camera 
-            StartDelayedUpdate();
-        }
-
-        DispatcherTimer updateTimer;
-
-        private void StartDelayedUpdate()
-        {
-            if (updateTimer == null)
-            {
-                updateTimer = new DispatcherTimer();
-                updateTimer.Interval = TimeSpan.FromSeconds(3);
-                updateTimer.Tick += OnUpdateTick;
-            }
-            updateTimer.Stop();
-            updateTimer.Start();
-        }
-
-        private void StopUpdate()
-        {
-            if (updateTimer != null)
-            {
-                updateTimer.Tick -= OnUpdateTick;
-                updateTimer.Stop();
-                updateTimer = null;
-            }
-        }
-
-        private void FinishUpdate()
-        {
-            if (updateTimer != null)
-            {
-                // do it now then!
-                OnUpdateTick(this, null);
-            }
-        }
-
-        private async void OnUpdateTick(object sender, object e)
-        {
-            StopUpdate();
-
             string newName = TextBoxName.Text.Trim();
             if (newName.Length > 20)
             {
@@ -381,9 +291,12 @@ namespace FoscamExplorer.Foscam
                     ShowError(rc);
                     return;
                 }
+                else
+                {
+                    ShowError("updated", true);
+                }
             }
 
-            ShowError("updated");
         }
 
         Vector moveDirection;
@@ -583,21 +496,10 @@ namespace FoscamExplorer.Foscam
             }
         }
 
-        private void OnWifiSettings(object sender, RoutedEventArgs e)
-        {
-            //WifiSettingsPage page = new WifiSettingsPage()
-            //{
-            //    FoscamDevice = this.device
-            //};
 
-            //page.Flyout(new Action(() =>
-            //{
-            //}));
-        }
-
-        private void OnUserAccountSettings(object sender, RoutedEventArgs e)
+        private void OnWifiButtonClick(object sender, EventArgs e)
         {
-            ChangeUserPassword();
+            this.NavigationService.Navigate(new Uri("/Pages/WifiSettingsPage.xaml", UriKind.RelativeOrAbsolute));            
         }
 
         private void OnRotateClick(object sender, EventArgs e)
@@ -620,15 +522,7 @@ namespace FoscamExplorer.Foscam
 
         private void OnSettingsClick(object sender, EventArgs e)
         {
-
-            //CameraSettingsPage page = new CameraSettingsPage()
-            //{
-            //    FoscamDevice = this.device
-            //};
-
-            //page.Flyout(new Action(() =>
-            //{
-            //}));
+            this.NavigationService.Navigate(new Uri("/Foscam/CameraSettingsPage.xaml", UriKind.RelativeOrAbsolute));
         }
 
 
@@ -652,6 +546,11 @@ namespace FoscamExplorer.Foscam
 
         private void HideEditBox()
         {
+            if (TextBoxName.Visibility == System.Windows.Visibility.Visible)
+            {
+                RenameCamera();
+            }
+            // send new name to the camera 
             TextBoxName.Visibility = Visibility.Collapsed;
             PageTitle.Visibility = Visibility.Visible;
         }
@@ -679,7 +578,5 @@ namespace FoscamExplorer.Foscam
         {
             ShowEditBox();
         }
-
-
     }
 }

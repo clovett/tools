@@ -13,6 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using Windows.ApplicationModel;
+using System.Windows.Media.Animation;
 #else
 using Windows.Graphics.Imaging;
 using Windows.Storage.FileProperties;
@@ -30,6 +31,35 @@ namespace FoscamExplorer
 {
     public static class WpfUtilities
     {
+
+#if WINDOWS_PHONE
+
+        internal static Storyboard CreateFadeAnimation(this FrameworkElement element, TimeSpan duration, double from, double to)
+        {
+            ExponentialEase ee = new ExponentialEase()
+            {
+                EasingMode = EasingMode.EaseOut,
+                Exponent = 1.5,
+            };
+
+            DoubleAnimation anim = new DoubleAnimation()
+            {
+                Duration = new Duration(duration),
+                From = from,
+                To = to,
+                EasingFunction = ee,
+            };
+
+            Storyboard.SetTarget(anim, element);
+            Storyboard.SetTargetProperty(anim, new PropertyPath("Opacity"));
+
+            Storyboard storyboard = new Storyboard();
+            storyboard.Children.Add(anim);
+
+            return storyboard;
+        }
+
+#endif
 
         public async static Task<BitmapSource> LoadImageAsync(Stream imageStream)
         {

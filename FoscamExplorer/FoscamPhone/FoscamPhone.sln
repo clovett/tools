@@ -3,18 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FoscamPhone", "FoscamPhone.csproj", "{581E6CD4-5F7A-450B-A285-F631FB004B5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlimToolkit", "..\..\..\FunChores\FunChores\SlimToolkit\SlimToolkit.csproj", "{C2FCAD7A-0735-43DE-BB28-B2F107715712}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 3
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = FoscamExplorer\\FoscamExplorer.csproj
-		SccProjectName1 = FoscamExplorer
-		SccLocalPath1 = FoscamExplorer
-		SccProjectUniqueName2 = FoscamPhone\\FoscamPhone.csproj
-		SccProjectName2 = FoscamPhone
-		SccLocalPath2 = FoscamPhone
+		SccProjectUniqueName1 = FoscamPhone.csproj
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = ..\\..\\..\\FunChores\\FunChores\\SlimToolkit\\SlimToolkit.csproj
+		SccProjectName2 = ../../../FunChores/FunChores/SlimToolkit
+		SccLocalPath2 = ..\\..\\..\\FunChores\\FunChores\\SlimToolkit
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,30 +28,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|ARM.ActiveCfg = Debug|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|ARM.Build.0 = Debug|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|ARM.Deploy.0 = Debug|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x64.ActiveCfg = Debug|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x64.Build.0 = Debug|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x64.Deploy.0 = Debug|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x86.ActiveCfg = Debug|x86
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x86.Build.0 = Debug|x86
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Debug|x86.Deploy.0 = Debug|x86
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|ARM.ActiveCfg = Release|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|ARM.Build.0 = Release|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|ARM.Deploy.0 = Release|ARM
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x64.ActiveCfg = Release|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x64.Build.0 = Release|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x64.Deploy.0 = Release|x64
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x86.ActiveCfg = Release|x86
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x86.Build.0 = Release|x86
-		{97764B40-E3E9-4901-B926-F2C6F7C001BD}.Release|x86.Deploy.0 = Release|x86
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
@@ -71,6 +48,16 @@ Global
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Release|x86.ActiveCfg = Release|x86
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Release|x86.Build.0 = Release|x86
 		{581E6CD4-5F7A-450B-A285-F631FB004B5F}.Release|x86.Deploy.0 = Release|x86
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Release|ARM.ActiveCfg = Release|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Release|x64.ActiveCfg = Release|Any CPU
+		{C2FCAD7A-0735-43DE-BB28-B2F107715712}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
