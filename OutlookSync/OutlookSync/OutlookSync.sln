@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookSync", "OutlookSync.csproj", "{5E527284-8068-4FE5-B638-1CB3CD7BC781}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartSocketServer", "..\SmartSocketServer\SmartSocketServer.csproj", "{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = OutlookSync.csproj
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = ..\\SmartSocketServer\\SmartSocketServer.csproj
+		SccProjectName2 = ../SmartSocketServer
+		SccLocalPath2 = ..\\SmartSocketServer
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|ARM = Debug|ARM
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|ARM = Release|ARM
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Release|ARM.ActiveCfg = Release|Any CPU
+		{5E527284-8068-4FE5-B638-1CB3CD7BC781}.Release|x86.ActiveCfg = Release|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|ARM.ActiveCfg = Release|Any CPU
+		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
