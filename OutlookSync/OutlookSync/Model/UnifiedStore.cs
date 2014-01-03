@@ -17,7 +17,7 @@ namespace OutlookSync
     /// </summary>
     public class UnifiedStore
     {
-        Dictionary<string, UnifiedContact> index;
+        Dictionary<string, UnifiedContact> index = new Dictionary<string,UnifiedContact>();
 
         public UnifiedStore()
         {

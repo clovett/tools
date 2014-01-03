@@ -46,7 +46,7 @@ namespace OutlookSync
 
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
-            store = await UnifiedStore.LoadAsync(GetStoreFileName());
+            store = new UnifiedStore();// await UnifiedStore.LoadAsync(GetStoreFileName());
 
             OutlookStoreLoader loader = new OutlookStoreLoader();
             await loader.LoadAsync(store);

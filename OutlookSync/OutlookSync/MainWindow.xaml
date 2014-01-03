@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="720" Width="1280">
     <Grid>
-        <TextBox x:Name="Prompt" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+        <TextBlock x:Name="Prompt" Margin="10" HorizontalAlignment="Center" VerticalAlignment="Top"/>
         <ProgressBar x:Name="Progress" Width="400" Height="20"/>
     </Grid>
 </Window>
