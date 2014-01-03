@@ -42,6 +42,8 @@ namespace OutlookSync
 
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
+            Prompt.Text = "Loading Outlook contacts...";
+
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
             store = await UnifiedStore.LoadAsync(GetStoreFileName());
@@ -51,6 +53,8 @@ namespace OutlookSync
 
             await store.SaveAsync(GetStoreFileName());
 
+            Prompt.Text = "Loaded " + store.Contacts.Count + " contacts from Outlook";
+            Progress.Maximum = store.Contacts.Count;
             // wait for phone to connect then sync with the phone.
         }
 
@@ -68,6 +72,11 @@ namespace OutlookSync
                     int contactIndex = 0;                    
                     if (int.TryParse(m.Parameters, out contactIndex) && contactIndex < store.Contacts.Count)
                     {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            Progress.Value = contactIndex;
+                        }));
+
                         string xml = store.Contacts[contactIndex++].ToXml();
                         e.Response = new Message() { Command = "Contact", Parameters = xml };
                     }

@@ -29,7 +29,9 @@ namespace Microsoft.Networking
         {
             stopped = false;
 
-            foreach (var address in System.Net.Dns.GetHostAddresses("ULYSSES"))
+            string machine = Environment.GetEnvironmentVariable("COMPUTERNAME");
+
+            foreach (var address in System.Net.Dns.GetHostAddresses(machine))
             {
                 string addr = address.ToString();
                 if (address.AddressFamily == AddressFamily.InterNetwork && !addr.StartsWith("169."))
