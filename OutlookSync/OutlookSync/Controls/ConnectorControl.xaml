@@ -1,0 +1,88 @@
+﻿<UserControl x:Class="OutlookSync.Controls.ConnectorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+
+    <UserControl.Resources>
+
+        <LinearGradientBrush x:Key="ActiveGreen"  StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#B0DAA3" Offset="0"/>
+            <GradientStop Color="#2C7320" Offset="1"/>
+        </LinearGradientBrush>
+
+    </UserControl.Resources>
+    <Grid x:Name="LayoutRoot" HorizontalAlignment="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=HorizontalAlignment}" 
+          VerticalAlignment="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=VerticalAlignment}">
+
+        <Path Fill="{StaticResource ActiveGreen}">
+            <Path.Data>
+                <PathGeometry>
+                    <PathGeometry.Figures>
+                        <PathFigure StartPoint="0,10" IsClosed="True" IsFilled="True" >
+                            <LineSegment Point="0,20"/>
+                            <LineSegment Point="20,20"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="30,30"/>
+                            <LineSegment Point="30,0"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="20,10"/>
+                        </PathFigure>
+                    </PathGeometry.Figures>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+        <Path Fill="{StaticResource ActiveGreen}" x:Name="PathOpen" >
+            <Path.Data>
+                <PathGeometry>
+                    <PathGeometry.Transform>
+                        <RotateTransform Angle="180" CenterX="35" CenterY="15"/>
+                    </PathGeometry.Transform>
+                    <PathGeometry.Figures>
+                        <PathFigure StartPoint="0,10" IsClosed="True" IsFilled="True"  >
+                            <LineSegment Point="0,20"/>
+                            <LineSegment Point="20,20"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="30,30"/>
+                            <LineSegment Point="30,22"/>
+                            <LineSegment Point="35,22"/>
+                            <LineSegment Point="35,18"/>
+                            <LineSegment Point="30,18"/>
+                            <LineSegment Point="30,12"/>
+                            <LineSegment Point="35,12"/>
+                            <LineSegment Point="35,8"/>
+                            <LineSegment Point="30,8"/>
+                            <LineSegment Point="30,0"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="20,10"/>
+                        </PathFigure>
+                    </PathGeometry.Figures>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+        <Path Fill="{StaticResource ActiveGreen}" x:Name="PathClosed" Visibility="Collapsed">
+            <Path.Data>
+                <PathGeometry>
+                    <PathGeometry.Transform>
+                        <RotateTransform Angle="180" CenterX="30" CenterY="15"/>
+                    </PathGeometry.Transform>
+                    <PathGeometry.Figures>
+                        <PathFigure StartPoint="0,10" IsClosed="True" IsFilled="True"  >
+                            <LineSegment Point="0,20"/>
+                            <LineSegment Point="20,20"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="30,30"/>
+                            <LineSegment Point="30,22"/>
+                            <LineSegment Point="35,22"/>
+                            <LineSegment Point="35,18"/>
+                            <LineSegment Point="30,18"/>
+                            <LineSegment Point="30,12"/>
+                            <LineSegment Point="35,12"/>
+                            <LineSegment Point="35,8"/>
+                            <LineSegment Point="30,8"/>
+                            <LineSegment Point="30,0"/>
+                            <ArcSegment SweepDirection="Counterclockwise" RotationAngle="90" Size="10,10" IsLargeArc="False" Point="20,10"/>
+                        </PathFigure>
+                    </PathGeometry.Figures>
+                </PathGeometry>
+            </Path.Data>
+        </Path>
+    </Grid>
+</UserControl>

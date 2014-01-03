@@ -16,22 +16,33 @@ using System.Xml;
 using System.IO;
 using Windows.Phone.PersonalInformation;
 using System.Threading.Tasks;
+using Microsoft.Phone.Net.NetworkInformation;
+using Microsoft.Phone.Info;
 
 namespace OutlookSyncPhone
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        ConnectionManager conmgr = new ConnectionManager(Guid.Parse("F657DBF0-AF29-408F-8F4A-B662D7EA4440"), 12777, 12778);
+        bool offline;
+        ConnectionManager conmgr;
         ServerProxy proxy;
-        ContactStore store;
+        PhoneStoreLoader loader;
         int contactIndex;
+        string phoneName;
 
         // Constructor
         public MainPage()
         {
+
             InitializeComponent();
-            conmgr.ServerFound += OnServerFound;
-            
+
+            phoneName = Windows.Networking.Proximity.PeerFinder.DisplayName;
+
+            if (Debugger.IsAttached)
+            {
+                ConnectCode.Text = "111111";
+            }
+            DeviceNetworkInformation.NetworkAvailabilityChanged += new EventHandler<NetworkNotificationEventArgs>(OnNetworkAvailabilityChanged);
         }
 
         async void OnServerFound(object sender, ServerEventArgs e)
@@ -39,193 +50,150 @@ namespace OutlookSyncPhone
             proxy = e.Server;
             proxy.MessageReceived += OnMessageReceived;
 
-            await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = contactIndex.ToString() });
+            contactIndex = 0;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessagePrompt.Text = AppResources.ConnectedMessage;
+                Connector.Connected = true;
+                SyncIndicator.Visibility = System.Windows.Visibility.Visible;
+                SyncIndicator.Current = contactIndex;
+            }));
+
+            await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName });
+
         }
+
+        private void OnServerLost(object sender, ServerExceptionEventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessagePrompt.Text = AppResources.ConnectionLost;
+                Connector.Connected = false;
+                SyncIndicator.Visibility = System.Windows.Visibility.Collapsed;
+                PrepareCodeBox();
+            }));
+        }
+
+        int contactCount;
 
         async void OnMessageReceived(object sender, MessageEventArgs e)
         {
             Message m = e.Message;
-            if (m.Command == "Contact")
+            switch (m.Command)
             {
-                await MergeContact(m.Parameters);
+                case "Count":
+                    int max = 0;
+                    int.TryParse(m.Parameters, out max);
+                    contactCount = max;
+                    await GetNextContact();
+                    break;
+                case "Contact":
+                    await loader.MergeContact(m.Parameters);
+                    await GetNextContact();
+                    break;
+                case "NoMoreContacts":
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        MessagePrompt.Text = AppResources.AllDone;
+                    }));
+                    break;
+            }
+        }
 
-                contactIndex++;
+        private async Task GetNextContact()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                SyncIndicator.Maximum = contactCount;
+                SyncIndicator.Current = contactIndex;
+            }));
+
+            if (proxy != null)
+            {
                 await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = contactIndex.ToString() });
             }
+            contactIndex++;
         }
 
-        private async Task MergeContact(string xml)
+        Microsoft.Advertising.Mobile.UI.AdControl adControl;
+
+        void SetupAds()
         {
-        
-            // parse the XML into one of our unified store contacts and save it in our ContactStore.
-            UnifiedContact contact = UnifiedContact.Parse(xml);
-
-            StoredContact sc = await store.FindContactByRemoteIdAsync(contact.OutlookEntryId);
-            if (sc != null)
+            try
             {
-                // merge
-            }
-            else
-            {
-                sc = new StoredContact(store);
-            }
-
-            if (!string.IsNullOrEmpty(contact.DisplayName))
-            {
-                sc.DisplayName = contact.DisplayName;
-            }
-
-            var fullName = contact.CompleteName;
-            if (fullName != null)
-            {
-                if (!string.IsNullOrEmpty(fullName.LastName))
+                // user has no license to remove ads, so add them dynamically.
+                // We do this after the up has launched so that the app startup is faster.
+                if (adControl == null)
                 {
-                    sc.FamilyName = fullName.LastName;
-                }
-                if (!string.IsNullOrEmpty(fullName.FirstName))
-                {
-                    sc.GivenName = fullName.FirstName;
-                }
-                if (!string.IsNullOrEmpty(fullName.Title))
-                {
-                    sc.HonorificPrefix = fullName.Title;
-                }
-                if (!string.IsNullOrEmpty(fullName.Suffix))
-                {
-                    sc.HonorificSuffix = fullName.Suffix;
+                    adControl = new Microsoft.Advertising.Mobile.UI.AdControl();
+                    adControl.Name = "bannerAd1";
+                    adControl.Width = 480;
+                    adControl.Height = 80;
+                    adControl.AdUnitId = "10338338";
+                    adControl.ApplicationId = "78e6a089-a787-42a2-9433-88c65eaa5706";
+                    adControl.ErrorOccurred += OnAdControlError;
+                    AdGrid.Children.Add(adControl);
                 }
             }
-            var dictionary = await sc.GetPropertiesAsync();
-            if (contact.Birthday != DateTime.MinValue)
+            catch (Exception)
             {
-                dictionary[KnownContactProperties.Birthdate] = new DateTimeOffset(contact.Birthday);
-            }
-            if (!string.IsNullOrEmpty(contact.SignificantOthers))
-            {
-                dictionary[KnownContactProperties.SignificantOther] = contact.SignificantOthers;
-            }
-            if (!string.IsNullOrEmpty(contact.Children))
-            {
-                dictionary[KnownContactProperties.Children] = contact.Children;
-            }
-
-            if (!string.IsNullOrEmpty(contact.Nickname))
-            {
-                dictionary[KnownContactProperties.Nickname] = contact.Nickname;
-            }
-
-            // addresses
-            UpdateAddress(KnownContactProperties.WorkAddress, AddressKind.Work, contact, dictionary);
-            UpdateAddress(KnownContactProperties.Address, AddressKind.Home, contact, dictionary);
-            UpdateAddress(KnownContactProperties.OtherAddress, AddressKind.Other, contact, dictionary);
-
-            // email addresses
-            UpdateEmailAddress(KnownContactProperties.WorkEmail, EmailAddressKind.Work, contact, dictionary);
-            UpdateEmailAddress(KnownContactProperties.Email, EmailAddressKind.Personal, contact, dictionary);
-            UpdateEmailAddress(KnownContactProperties.OtherEmail, EmailAddressKind.Other, contact, dictionary);
-
-            // phone numbers
-            UpdatePhoneNumber(KnownContactProperties.Telephone, PhoneNumberKind.Home, contact, dictionary);
-            UpdatePhoneNumber(KnownContactProperties.CompanyTelephone, PhoneNumberKind.Company, contact, dictionary);
-            UpdatePhoneNumber(KnownContactProperties.HomeFax, PhoneNumberKind.HomeFax, contact, dictionary);
-            UpdatePhoneNumber(KnownContactProperties.MobileTelephone, PhoneNumberKind.Mobile, contact, dictionary);
-            UpdatePhoneNumber(KnownContactProperties.WorkTelephone, PhoneNumberKind.Work, contact, dictionary);
-            UpdatePhoneNumber(KnownContactProperties.WorkFax, PhoneNumberKind.WorkFax, contact, dictionary);
-
-            // websites
-            if (contact.Websites != null && contact.Websites.Count > 0)
-            {
-                dictionary[KnownContactProperties.Url] = string.Join(";", contact.Websites);
-            }
-
-            sc.RemoteId = contact.OutlookEntryId;
-            await sc.SaveAsync();
-        }
-
-        private void UpdateAddress(string key, AddressKind kind, UnifiedContact contact, IDictionary<string,object> dictionary)
-        {
-            if (contact.Addresses != null)
-            {
-                var address = (from a in contact.Addresses where a.Kind == kind select a).FirstOrDefault();
-                if (address != null && address.PhysicalAddress != null)
-                {
-                    var pa = address.PhysicalAddress;
-
-                    Windows.Phone.PersonalInformation.ContactAddress ca = new Windows.Phone.PersonalInformation.ContactAddress();
-                    if (!string.IsNullOrEmpty(pa.CountryRegion))
-                    {
-                        ca.Country = pa.CountryRegion;
-                    }
-                    if (!string.IsNullOrEmpty(pa.PostalCode))
-                    {
-                        ca.PostalCode = pa.PostalCode;
-                    }
-                    if (!string.IsNullOrEmpty(pa.AddressLine1))
-                    {
-                        ca.StreetAddress = pa.AddressLine1;
-                    }
-                    if (!string.IsNullOrEmpty(pa.AddressLine2))
-                    {
-                        if (!string.IsNullOrEmpty(ca.StreetAddress))
-                        {
-                            ca.StreetAddress += ", ";
-                        }
-                        ca.StreetAddress += pa.AddressLine2;
-                    }
-
-                    if (!string.IsNullOrEmpty(pa.StateProvince))
-                    {
-                        ca.Region = pa.StateProvince;
-                    }
-
-                    if (!string.IsNullOrEmpty(pa.City))
-                    {
-                        ca.Locality = pa.City;
-                    }
-
-                    dictionary[key] = ca;
-                }
             }
         }
 
-        private void UpdateEmailAddress(string key, EmailAddressKind kind, UnifiedContact contact, IDictionary<string, object> dictionary)
+        private void OnAdControlError(object sender, Microsoft.Advertising.AdErrorEventArgs e)
         {
-            if (contact.EmailAddresses != null)
-            {
-                ContactEmailAddress email = (from a in contact.EmailAddresses where a.Kind == kind select a).FirstOrDefault();
-                if (email != null && !string.IsNullOrEmpty(email.EmailAddress))
-                {
-                    dictionary[key] = email.EmailAddress;
-                }
-            }
-        }
-
-        private void UpdatePhoneNumber(string key, PhoneNumberKind kind, UnifiedContact contact, IDictionary<string, object> dictionary)
-        {
-            if (contact.PhoneNumbers != null)
-            {
-                ContactPhoneNumber phone = (from a in contact.PhoneNumbers where a.Kind == kind select a).FirstOrDefault();
-                if (phone != null && !string.IsNullOrEmpty(phone.PhoneNumber))
-                {
-                    dictionary[key] = phone.PhoneNumber;
-                }
-            }
+            return;
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            store = await ContactStore.CreateOrOpenAsync(ContactStoreSystemAccessMode.ReadWrite,
-                ContactStoreApplicationAccessMode.ReadOnly);
-                       
-            conmgr.Start();
-
+            SetupAds();
+            loader = new PhoneStoreLoader();
+            await loader.Open();
+            PrepareCodeBox();
             base.OnNavigatedTo(e);
         }
 
-        protected override void OnNavigatedFrom(NavigationEventArgs e)
+        private void PrepareCodeBox()
         {
-            conmgr.Stop();
+            SyncIndicator.Visibility = System.Windows.Visibility.Collapsed;
+
+            this.offline = !DeviceNetworkInformation.IsNetworkAvailable;
+            if (this.offline)
+            {
+                MessagePrompt.Text = AppResources.NoNetwork;
+                CodePanel.Visibility = System.Windows.Visibility.Collapsed;
+            }
+            else
+            {
+                MessagePrompt.Text = AppResources.EnterCode;
+                CodePanel.Visibility = System.Windows.Visibility.Visible;
+            }
+        }
+
+        protected async override void OnNavigatedFrom(NavigationEventArgs e)
+        {
             base.OnNavigatedFrom(e);
+
+            if (proxy != null)
+            {
+                try
+                {
+                    await proxy.SendMessage(new Message() { Command = "Disconnect", Parameters = phoneName });
+                }
+                catch
+                {
+
+                }
+                proxy = null;
+            }
+
+            if (conmgr != null)
+            {
+                conmgr.ServerFound -= OnServerFound;
+                conmgr.ServerLost -= OnServerLost;
+                conmgr.Stop();
+            }
         }
 
         // Sample code for building a localized ApplicationBar
@@ -243,5 +211,42 @@ namespace OutlookSyncPhone
         //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
         //    ApplicationBar.MenuItems.Add(appBarMenuItem);
         //}
+
+        void OnNetworkAvailabilityChanged(object sender, NetworkNotificationEventArgs e)
+        {
+            // if we are online now then logon and catch up with pending requests
+            if (e.NotificationType == NetworkNotificationType.InterfaceConnected && this.offline)
+            {
+                this.offline = false;
+
+                MessagePrompt.Text = AppResources.EnterCode;
+                CodePanel.Visibility = System.Windows.Visibility.Visible;
+            }
+            else if (e.NotificationType == NetworkNotificationType.InterfaceDisconnected)
+            {
+                this.offline = true;
+                MessagePrompt.Text = AppResources.NoNetwork;
+                CodePanel.Visibility = System.Windows.Visibility.Collapsed;
+            }
+        }
+
+        private void OnConnectClick(object sender, RoutedEventArgs e)
+        {
+            MessagePrompt.Text = AppResources.Connecting;
+            CodePanel.Visibility = System.Windows.Visibility.Collapsed;
+
+            string code = ConnectCode.Text;
+
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440:" + code, 12777, 12778);
+            conmgr.ServerFound += OnServerFound;
+            conmgr.ServerLost += OnServerLost;
+            conmgr.Start();
+        }
+
+        private void OnSettingsClick(object sender, EventArgs e)
+        {
+            this.NavigationService.Navigate(new Uri("/Pages/SettingsPage.xaml", UriKind.RelativeOrAbsolute));
+        }
+
     }
 }

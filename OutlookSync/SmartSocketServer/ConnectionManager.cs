@@ -29,13 +29,13 @@ namespace Microsoft.Networking
         string m_udpMessage;
         string m_udpServerMessage;
 
-        public ConnectionManager(Guid application, int udpPort, int tcpPort)
+        public ConnectionManager(string applicationId, int udpPort, int tcpPort)
         {
             m_portNumber = udpPort;
             m_serverPort = tcpPort;
-            m_udpMessage = "Client:" + application.ToString();
-            m_udpServerMessage = "Server:" + application.ToString();
-            server = new Server(application, tcpPort);
+            m_udpMessage = "Client:" + applicationId;
+            m_udpServerMessage = "Server:" + applicationId;
+            server = new Server(applicationId, tcpPort);
             client = new UdpClient(m_portNumber);
             client.EnableBroadcast = true;     
         }
@@ -44,7 +44,17 @@ namespace Microsoft.Networking
         {
             server.Start();
             server.MessageReceived += OnMessageReceived;
+            server.ReadException += OnServerException;
             Task.Run(new Action(Receive));
+        }
+
+        void OnServerException(object sender, ServerExceptionEventArgs e)
+        {
+            // one of the clients went away.
+            if (ReadException != null)
+            {
+                ReadException(this, e);
+            }
         }
 
         void OnMessageReceived(object sender, MessageEventArgs e)
@@ -64,6 +74,7 @@ namespace Microsoft.Networking
         }
 
         public event EventHandler<MessageEventArgs> MessageReceived;
+        public event EventHandler<ServerExceptionEventArgs> ReadException;
 
         IAsyncResult pending;
 
@@ -81,7 +92,7 @@ namespace Microsoft.Networking
             }
             catch (Exception x)
             {
-                Debug.WriteLine("ConnectionManager Receive caught {0}: {1}", x.GetType().Name, x.Message);
+                Log.WriteException("ConnectionManager Receive caught", x);
             }
         }
 

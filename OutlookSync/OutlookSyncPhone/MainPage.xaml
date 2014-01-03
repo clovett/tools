@@ -6,6 +6,7 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:OutlookSyncPhone.Utilities"
     mc:Ignorable="d"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -13,31 +14,62 @@
     SupportedOrientations="Portrait" Orientation="Portrait"
     shell:SystemTray.IsVisible="True">
 
+
     <!--LayoutRoot is the root grid where all page content is placed-->
-    <Grid x:Name="LayoutRoot" Background="Transparent">
+    <Grid x:Name="LayoutRoot" >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="80"/>
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
-            <TextBlock Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}" Margin="12,0"/>
-            <TextBlock Text="home" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
-        </StackPanel>
+        <Grid x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-        <!--ContentPanel - place additional content here-->
-        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
+            <TextBlock Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}" Margin="12,0"/>
+
+            <Grid Grid.Column="1">
+                <local:ConnectorControl x:Name="Connector" Connected="False" Margin="0,0,5,0"/>
+            </Grid>
 
         </Grid>
 
-        <!--Uncomment to see an alignment grid to help ensure your controls are
-            aligned on common boundaries.  The image has a top margin of -32px to
-            account for the System Tray. Set this to 0 (or remove the margin altogether)
-            if the System Tray is hidden.
+        <!--ContentPanel - place additional content here-->
+        <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12">
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="MessagePrompt" Text="" TextWrapping="Wrap"/>
 
-            Before shipping remove this XAML and the image itself.-->
-        <!--<Image Source="/Assets/AlignmentGrid.png" VerticalAlignment="Top" Height="800" Width="480" Margin="0,-32,0,0" Grid.Row="0" Grid.RowSpan="2" IsHitTestVisible="False" />-->
+                <StackPanel x:Name="CodePanel" Orientation="Horizontal" Visibility="Collapsed">
+                    <TextBox x:Name="ConnectCode" Width="300">
+                        <TextBox.InputScope>
+                            <InputScope>
+                                <InputScopeName NameValue="Number" />
+                            </InputScope>
+                        </TextBox.InputScope>
+                    </TextBox>
+                    <Button Click="OnConnectClick">Connect</Button>
+                </StackPanel>
+
+                <local:SyncProgressControl x:Name="SyncIndicator" 
+                          Margin="20"  Visibility="Collapsed"/>
+                
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="2" x:Name="AdGrid">
+            
+        </Grid>
     </Grid>
 
+
+    <phone:PhoneApplicationPage.ApplicationBar >
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <shell:ApplicationBarIconButton x:Name="SettingsButton" IconUri="/Assets/Settings.png" Text="Settings" Click="OnSettingsClick" />
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
+    
 </phone:PhoneApplicationPage>

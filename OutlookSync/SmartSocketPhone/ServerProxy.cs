@@ -15,6 +15,8 @@ namespace Microsoft.Networking
 {
     public class ServerExceptionEventArgs
     {
+        public IPEndPoint RemoteEndPoint { get; set; }
+
         public Exception Exception { get; set; }
     }
 
@@ -65,22 +67,25 @@ namespace Microsoft.Networking
             {
                 while (!stopped)
                 {
-                    await reader.LoadAsync(4);
-                    int length = reader.ReadInt32();
-                    await reader.LoadAsync((uint)length);
-                    byte[] buffer = new byte[length];
-                    reader.ReadBytes(buffer);
-                    
-                    MemoryStream ms = new MemoryStream(buffer);
-                    Message msg = (Message)serializer.Deserialize(ms);
-                    var args = new MessageEventArgs(endPoint, msg);
-                    if (MessageReceived != null)
+                    uint found = await reader.LoadAsync(4);
+                    if (found != 0)
                     {
-                        MessageReceived(this, args);
-                    }
-                    if (args.Response != null)
-                    {
-                        SendMessage(args.Response).Wait();
+                        int length = reader.ReadInt32();
+                        await reader.LoadAsync((uint)length);
+                        byte[] buffer = new byte[length];
+                        reader.ReadBytes(buffer);
+
+                        MemoryStream ms = new MemoryStream(buffer);
+                        Message msg = (Message)serializer.Deserialize(ms);
+                        var args = new MessageEventArgs(endPoint, msg);
+                        if (MessageReceived != null)
+                        {
+                            MessageReceived(this, args);
+                        }
+                        if (args.Response != null)
+                        {
+                            SendMessage(args.Response).Wait();
+                        }
                     }
                 }
             }
@@ -89,7 +94,7 @@ namespace Microsoft.Networking
                 Debug.WriteLine("ServerProxy read caught {0}: {1}", x.GetType().Name, x.Message);
                 if (ReadException != null)
                 {
-                    ReadException(this, new ServerExceptionEventArgs() { Exception = x });
+                    ReadException(this, new ServerExceptionEventArgs() { Exception = x, RemoteEndPoint = this.endPoint });
                 }
             }
         }

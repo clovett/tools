@@ -1,17 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
   <DefaultLanguage xmlns="" code="en-US" />
-  <App xmlns="" ProductID="{ef94766e-2de7-405c-bfc3-63df17f96ef3}" Title="OutlookSyncPhone" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="OutlookSyncPhone author" Description="Sample description" Publisher="OutlookSyncPhone" PublisherID="{dd895e33-91ab-48d7-96f0-0abb9e1754f3}">
+  <App xmlns="" ProductID="{ef94766e-2de7-405c-bfc3-63df17f96ef3}" Title="Outlook Sync" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Chris Lovett" Description="This app synchronizes your contacts and appointments with Outlook on your PC over local wifi.  It does this with no cloud services for your added privacy." Publisher="Lovett Software" PublisherID="{dd895e33-91ab-48d7-96f0-0abb9e1754f3}">
     <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
-      <Capability Name="ID_CAP_MEDIALIB_AUDIO" />
-      <Capability Name="ID_CAP_MEDIALIB_PLAYBACK" />
-      <Capability Name="ID_CAP_SENSORS" />
       <Capability Name="ID_CAP_WEBBROWSERCOMPONENT" />
       <Capability Name="ID_CAP_IDENTITY_USER" />
       <Capability Name="ID_CAP_CONTACTS" />
       <Capability Name="ID_CAP_APPOINTMENTS" />
+      <Capability Name="ID_CAP_PROXIMITY" />
     </Capabilities>
     <Tasks>
       <DefaultTask Name="_default" NavigationPage="MainPage.xaml" />
@@ -22,7 +20,7 @@
           <SmallImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileSmall.png</SmallImageURI>
           <Count>0</Count>
           <BackgroundImageURI IsRelative="true" IsResource="false">Assets\Tiles\FlipCycleTileMedium.png</BackgroundImageURI>
-          <Title>OutlookSyncPhone</Title>
+          <Title>Outlook Sync</Title>
           <BackContent>
           </BackContent>
           <BackBackgroundImageURI>

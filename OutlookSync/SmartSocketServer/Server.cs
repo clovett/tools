@@ -18,12 +18,13 @@ namespace Microsoft.Networking
         List<ServerClient> activeClients = new List<ServerClient>();
         bool stopped;
 
-        public Server(Guid application, int port)
+        public Server(string applicationId, int port)
         {
             m_PortNumber = port;
         }
 
         public event EventHandler<MessageEventArgs> MessageReceived;
+        public event EventHandler<ServerExceptionEventArgs> ReadException;
 
         public void Start()
         {
@@ -82,12 +83,24 @@ namespace Microsoft.Networking
                     var client = listener.AcceptTcpClient();
                     ServerClient sc = new ServerClient(endPoint, client);
                     sc.MessageReceived += OnMessageReceived;
+                    sc.ReadException += OnReadException;
                     activeClients.Add(sc);
                 }
             }
             catch (Exception x)
-            { 
-                Debug.WriteLine("Listener caught {0}: {1}", x.GetType().Name, x.Message);
+            {
+                Log.WriteException("Listener caught exception", x);
+            }
+        }
+
+        private void OnReadException(object sender, ServerExceptionEventArgs e)
+        {
+            ServerClient client = (ServerClient)sender;
+            client.Stop();
+            activeClients.Remove(client);
+            if (ReadException != null)
+            {
+                ReadException(this, e);
             }
         }
 
@@ -101,6 +114,13 @@ namespace Microsoft.Networking
 
     }
 
+    public class ServerExceptionEventArgs
+    {
+        public IPEndPoint RemoteEndPoint { get; set; }
+
+        public Exception Exception { get; set; }
+    }
+
     class ServerClient
     {
         TcpClient client;
@@ -109,6 +129,7 @@ namespace Microsoft.Networking
         bool stopped;
 
         public event EventHandler<MessageEventArgs> MessageReceived;
+        public event EventHandler<ServerExceptionEventArgs> ReadException;
 
         public ServerClient(IPEndPoint endPoint, TcpClient client)
         {
@@ -158,7 +179,12 @@ namespace Microsoft.Networking
             }
             catch (Exception x)
             {
-                Debug.WriteLine("ServerClient caught {0}: {1}", x.GetType().Name, x.Message);
+                Log.WriteException("ServerClient caught exception", x);
+
+                if (ReadException != null)
+                {
+                    ReadException(this, new ServerExceptionEventArgs() { Exception = x, RemoteEndPoint = this.endPoint });
+                }
             }
         }
 

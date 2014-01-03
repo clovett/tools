@@ -30,13 +30,14 @@ namespace Microsoft.Networking
         ServerProxy server;
 
         public event EventHandler<ServerEventArgs> ServerFound;
+        public event EventHandler<ServerExceptionEventArgs> ServerLost;
 
-        public ConnectionManager(Guid application, int udpPort, int tcpPort)
+        public ConnectionManager(string applicationId, int udpPort, int tcpPort)
         {
             m_portNumber = udpPort;
             m_serverPort = tcpPort;
-            m_udpMessage = "Client:" + application.ToString();
-            m_udpServerMessage = "Server:" + application.ToString();
+            m_udpMessage = "Client:" + applicationId;
+            m_udpServerMessage = "Server:" + applicationId;
         }
 
         public void Start()
@@ -176,6 +177,10 @@ namespace Microsoft.Networking
         {
             this.server = null;
             Start();
+            if (ServerLost != null)
+            {
+                ServerLost(sender, e);
+            }
         }
 
         public void Stop()

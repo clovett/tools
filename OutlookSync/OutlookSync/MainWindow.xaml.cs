@@ -14,6 +14,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Diagnostics;
 using Microsoft.Networking;
+using OutlookSync.Model;
+using System.Collections.ObjectModel;
 
 namespace OutlookSync
 {
@@ -22,15 +24,35 @@ namespace OutlookSync
     /// </summary>
     public partial class MainWindow : Window
     {
-        ConnectionManager conmgr = new ConnectionManager(Guid.Parse("F657DBF0-AF29-408F-8F4A-B662D7EA4440"), 12777, 12778);
+        ConnectionManager conmgr;
         UnifiedStore store;
         const string StoreFolder = @"LovettSoftware\OutlookSync";
         const string StoreFileName = "store.xml";
+        const string LogFileName = "log.txt";
+        Dictionary<string, ConnectedPhone> connected = new Dictionary<string, ConnectedPhone>();
+        Random random = new Random();
+        ObservableCollection<ConnectedPhone> items = new ObservableCollection<ConnectedPhone>();
+        int code;
 
         public MainWindow()
         {
             InitializeComponent();
             this.Loaded += OnLoaded;
+
+            Log.OpenLog(GetLogFileName());
+
+            if (Debugger.IsAttached)
+            {
+                code = 111111;
+            }
+            else
+            {
+                code = random.Next(100000, 999999);
+            }
+            CodeText.Text = code.ToString();
+
+            PhoneList.ItemsSource = items;
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440:" + code, 12777, 12778);
         }
 
         string GetStoreFileName()
@@ -40,61 +62,113 @@ namespace OutlookSync
             return file;
         }
 
+        string GetLogFileName()
+        {
+            string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), StoreFolder);
+            string file = System.IO.Path.Combine(dir, LogFileName);
+            return file;
+        }
+
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            Prompt.Text = "Loading Outlook contacts...";
+            StatusMessage.Text = Properties.Resources.LoadingOutlookContacts;
 
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
-            store = new UnifiedStore();// await UnifiedStore.LoadAsync(GetStoreFileName());
+            conmgr.ReadException += OnServerException;
+            store = await UnifiedStore.LoadAsync(GetStoreFileName());
 
             OutlookStoreLoader loader = new OutlookStoreLoader();
-            await loader.LoadAsync(store);
+            await loader.UpdateAsync(store);
 
             await store.SaveAsync(GetStoreFileName());
 
-            Prompt.Text = "Loaded " + store.Contacts.Count + " contacts from Outlook";
-            Progress.Maximum = store.Contacts.Count;
+            StatusMessage.Text = string.Format(Properties.Resources.LoadedCount, store.Contacts.Count);
+            
             // wait for phone to connect then sync with the phone.
+        }
+
+        private void OnServerException(object sender, ServerExceptionEventArgs e)
+        {
+            OnDisconnect(e.RemoteEndPoint);
+        }
+
+        private void OnDisconnect(System.Net.IPEndPoint endpoint)
+        {
+            string key = endpoint.Address.ToString();
+            ConnectedPhone phone = null;
+            connected.TryGetValue(key, out phone);
+
+            if (phone != null)
+            {
+                connected.Remove(key);
+
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    items.Remove(phone);
+                    UpdateConnector();
+                }));
+            }
         }
 
 
         void OnMessageReceived(object sender, MessageEventArgs e)
         {
-            Debug.WriteLine("Message received from " + e.RemoteEndPoint.ToString());
-            Debug.WriteLine("  Command: " + e.Message.Command);
+            Log.WriteLine("Message received from " + e.RemoteEndPoint.ToString());
+            Log.WriteLine("  Command: " + e.Message.Command + "(" + e.Message.Parameters + ")");
             
-            Message m = e.Message;
-            switch (m.Command)
+            var msg = e.Message;
+            if (msg.Command == "Disconnect")
             {
-                case "GetContact":
-
-                    int contactIndex = 0;                    
-                    if (int.TryParse(m.Parameters, out contactIndex) && contactIndex < store.Contacts.Count)
-                    {
-                        Dispatcher.BeginInvoke(new Action(() =>
-                        {
-                            Progress.Value = contactIndex;
-                        }));
-
-                        string xml = store.Contacts[contactIndex++].ToXml();
-                        e.Response = new Message() { Command = "Contact", Parameters = xml };
-                    }
-                    else
-                    {
-                        e.Response = new Message() { Command = "Done" };
-                    }
-                    break;
-                default:
-                    Debug.WriteLine("Unrecognized command");
-                    break;
+                OnDisconnect(e.RemoteEndPoint);
+            }
+            else if (msg.Command == "Connect")
+            {
+                OnConnect(e);
             }
 
+            string key = e.RemoteEndPoint.Address.ToString();
+            ConnectedPhone phone = null;
+            connected.TryGetValue(key, out phone);
+            if (phone != null)
+            {
+                phone.HandleMessage(e);
+            }
+        }
+
+        private void OnConnect(MessageEventArgs e)
+        {
+            var msg = e.Message;
+            string key = e.RemoteEndPoint.Address.ToString();
+            ConnectedPhone phone = null;
+            connected.TryGetValue(key, out phone);
+
+            if (phone == null)
+            {
+                phone = new ConnectedPhone(store, this.Dispatcher);
+                connected[key] = phone;
+
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    phone.Name = msg.Parameters;
+                    items.Add(phone);
+                    UpdateConnector();
+                }));
+            }
+        }
+
+        private void UpdateConnector()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Connector.Connected = items.Count > 0;
+            }));
         }
 
         protected override void OnClosed(EventArgs e)
         {
             conmgr.StopListening();
+            Log.CloseLog();
             base.OnClosed(e);
         }
 

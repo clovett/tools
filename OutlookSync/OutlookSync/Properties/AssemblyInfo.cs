@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OutlookSync")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Outlook Sync Server")]
+[assembly: AssemblyDescription("This app synchronizes your contacts and appointments with Outlook on your PC over local wifi.  It does this with no cloud services for your added privacy.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Lovett Software")]
 [assembly: AssemblyProduct("OutlookSync")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCopyright("Copyright © Lovett Software 2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

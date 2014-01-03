@@ -9,13 +9,19 @@ using System.Xml;
 using System.Collections.Specialized;
 using System.Collections;
 using System.Reflection;
+using System.Xml.Serialization;
+using System.Diagnostics;
+
+#if WINDOWS_PHONE
+using System.IO.IsolatedStorage;
+#endif
 
 namespace OutlookSync
 {
     /// <summary>
     /// This class represents the serialized state of the unified contacts list.
     /// </summary>
-    public class UnifiedStore
+    public class UnifiedStore : IXmlSerializable
     {
         Dictionary<string, UnifiedContact> index = new Dictionary<string,UnifiedContact>();
 
@@ -24,6 +30,41 @@ namespace OutlookSync
             Contacts = new ObservableCollection<UnifiedContact>();
         }
 
+#if WINDOWS_PHONE
+        public static async Task<UnifiedStore> LoadAsync(string fileName)
+        {
+            UnifiedStore result = null;
+            try
+            {
+                await Task.Run(new Action(() =>
+                {
+                    using (var store = IsolatedStorageFile.GetUserStoreForApplication())
+                    {
+                        if (store.FileExists(fileName))
+                        {
+                            using (FileStream myFileStream = store.OpenFile(fileName, FileMode.Open))
+                            {
+                                // Call the Deserialize method and cast to the object type.
+                                using (XmlReader reader = XmlReader.Create(myFileStream))
+                                {
+                                    result = ReadStore(new UnifiedStoreSerializer(reader));
+                                }
+                            }
+                        }
+                    }
+                }));
+            }
+            catch
+            {
+                // silently rebuild data file if it got corrupted.
+            }
+            if (result == null)
+            {
+                result = new UnifiedStore();
+            }
+            return result;
+        }
+#else
         public static async Task<UnifiedStore> LoadAsync(string fileName)
         {
             UnifiedStore result = new UnifiedStore();
@@ -48,9 +89,9 @@ namespace OutlookSync
                 }
             }));
 
-            result.MakeIndex();
             return result;
         }
+#endif
 
         private static UnifiedStore ReadStore(UnifiedStoreSerializer reader)
         {
@@ -69,7 +110,14 @@ namespace OutlookSync
                 }
             }
 
+            store.OnLoaded();
+
             return store;
+        }
+
+        private void OnLoaded()
+        {
+            this.Contacts.CollectionChanged += Contacts_CollectionChanged;
         }
 
         private void ReadContacts(UnifiedStoreSerializer reader)
@@ -89,12 +137,40 @@ namespace OutlookSync
 
                         string id = contact.OutlookEntryId;
 
-                        this.Contacts.Add(contact);
+                        if (!index.ContainsKey(id))
+                        {
+                            this.Contacts.Add(contact);
+                            index[id] = contact;
+                        }
                     }
                 }
             }
         }
 
+#if WINDOWS_PHONE
+        public async Task SaveAsync(string fileName)
+        {
+            await Task.Run(new Action(() =>
+            {
+                using (var store = IsolatedStorageFile.GetUserStoreForApplication())
+                {
+                    if (store.FileExists(fileName))
+                    {
+                        store.DeleteFile(fileName);
+                    }
+
+                    using (Stream stream = store.OpenFile(fileName, FileMode.CreateNew))
+                    {
+                        XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
+                        using (XmlWriter writer = XmlWriter.Create(stream, settings))
+                        {
+                            WriteStore(writer, this);
+                        }
+                    }
+                }
+            }));
+        }
+#else
         public async Task SaveAsync(string fileName)
         {
             await Task.Run(new Action(() =>
@@ -116,6 +192,7 @@ namespace OutlookSync
                 }
             }));
         }
+#endif
 
         private void WriteStore(XmlWriter writer, UnifiedStore unifiedStore)
         {
@@ -143,19 +220,6 @@ namespace OutlookSync
             return c;
         }
 
-        private void MakeIndex()
-        {
-            if (index == null)
-            {
-                Contacts.CollectionChanged += Contacts_CollectionChanged;
-                index = new Dictionary<string, UnifiedContact>();
-                foreach (UnifiedContact c in Contacts)
-                {
-                    index[c.OutlookEntryId] = c;
-                }
-            }
-        }
-
         void Contacts_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.OldItems != null)
@@ -175,6 +239,21 @@ namespace OutlookSync
         }
 
 
+
+        public System.Xml.Schema.XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            ReadStore(new UnifiedStoreSerializer(reader));
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class UnifiedStoreSerializer

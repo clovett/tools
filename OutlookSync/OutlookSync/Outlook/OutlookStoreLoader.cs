@@ -17,7 +17,7 @@ namespace OutlookSync
         /// Update the unified store with whatever is currently in Outlook.
         /// </summary>
         /// <param name="store">The store to update</param>
-        public async Task LoadAsync(UnifiedStore store)
+        public async Task UpdateAsync(UnifiedStore store)
         {
             this.store = store;
 
@@ -29,7 +29,7 @@ namespace OutlookSync
 
                 FindContacts(mapi.Folders);
 
-                Debug.WriteLine("Found " + store.Contacts.Count + " contacts");
+                Log.WriteLine("Loaded {0} contacts", store.Contacts.Count);
             }));
         }
 
@@ -46,7 +46,6 @@ namespace OutlookSync
                         {
                             continue;
                         }
-                        Debug.WriteLine("Loading folder: " + name);
                         foreach (object item in folder.Items)
                         {
                             ContactItem contact = item as ContactItem;
@@ -75,11 +74,11 @@ namespace OutlookSync
 
             UpdateContact(uc, contact);
 
-            if (!uc.IsEmpty)
+            if (isNew && !uc.IsEmpty)
             {
                 store.Contacts.Add(uc);
             }
-            else if (!isNew)
+            else if (!isNew && uc.IsEmpty)
             {
                 store.Contacts.Remove(uc);
             }
@@ -87,44 +86,52 @@ namespace OutlookSync
 
         private void UpdateContact(UnifiedContact uc, ContactItem contact)
         {
-            UpdateAddress(uc, AddressKind.Work, contact.BusinessAddress, contact.BusinessAddressStreet, contact.BusinessAddressCity, contact.BusinessAddressState, contact.BusinessAddressPostalCode, contact.BusinessAddressCountry);
-            UpdateAddress(uc, AddressKind.Home, contact.HomeAddress, contact.HomeAddressStreet, contact.HomeAddressCity, contact.HomeAddressState, contact.HomeAddressPostalCode, contact.HomeAddressCountry);
-            UpdateAddress(uc, AddressKind.Other, contact.OtherAddress, contact.OtherAddressStreet, contact.OtherAddressCity, contact.OtherAddressState, contact.OtherAddressPostalCode, contact.OtherAddressCountry);
-
-            uc.DisplayName = contact.FullName;
-
-            if (!string.IsNullOrEmpty(contact.FirstName) || !string.IsNullOrEmpty(contact.LastName) || !string.IsNullOrEmpty(contact.MiddleName))
+            try
             {
-                PersonName pn = new PersonName();
-                pn.FirstName = contact.FirstName;
-                pn.LastName = contact.LastName;
-                pn.MiddleName = contact.MiddleName;
-                pn.Suffix = contact.Suffix;
-                pn.Title = contact.Title;
-                uc.CompleteName = pn;
+                UpdateAddress(uc, AddressKind.Work, contact.BusinessAddress, contact.BusinessAddressStreet, contact.BusinessAddressCity, contact.BusinessAddressState, contact.BusinessAddressPostalCode, contact.BusinessAddressCountry);
+                UpdateAddress(uc, AddressKind.Home, contact.HomeAddress, contact.HomeAddressStreet, contact.HomeAddressCity, contact.HomeAddressState, contact.HomeAddressPostalCode, contact.HomeAddressCountry);
+                UpdateAddress(uc, AddressKind.Other, contact.OtherAddress, contact.OtherAddressStreet, contact.OtherAddressCity, contact.OtherAddressState, contact.OtherAddressPostalCode, contact.OtherAddressCountry);
+
+                uc.DisplayName = contact.FullName;
+
+                if (!string.IsNullOrEmpty(contact.FirstName) || !string.IsNullOrEmpty(contact.LastName) || !string.IsNullOrEmpty(contact.MiddleName))
+                {
+                    PersonName pn = new PersonName();
+                    pn.FirstName = contact.FirstName;
+                    pn.LastName = contact.LastName;
+                    pn.MiddleName = contact.MiddleName;
+                    pn.Suffix = contact.Suffix;
+                    pn.Title = contact.Title;
+                    uc.CompleteName = pn;
+                }
+                else
+                {
+                    uc.CompleteName = null;
+                }
+
+                uc.SignificantOthers = contact.Spouse;
+
+                UpdateEmailAddress(uc, EmailAddressKind.Personal, contact.Email1Address);
+                UpdateEmailAddress(uc, EmailAddressKind.Work, contact.Email2Address);
+                UpdateEmailAddress(uc, EmailAddressKind.Other, contact.Email3Address);
+
+                UpdatePhoneNumber(uc, PhoneNumberKind.Home, contact.HomeTelephoneNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.Work, contact.BusinessTelephoneNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.WorkFax, contact.BusinessFaxNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.Mobile, contact.MobileTelephoneNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.Company, contact.CompanyMainTelephoneNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.HomeFax, contact.HomeFaxNumber);
+                UpdatePhoneNumber(uc, PhoneNumberKind.Pager, contact.PagerNumber);
+
+                UpdateWebSites(uc, CreateMinimalSet(new string[] { contact.BusinessHomePage, contact.PersonalHomePage, contact.WebPage }));
+                uc.Children = contact.Children;
+                uc.Nickname = contact.NickName;
+
             }
-            else
+            catch (System.Exception ex)
             {
-                uc.CompleteName = null;
+                Log.WriteException("Caught exception in UpdateContact", ex);
             }
-
-            uc.SignificantOthers = contact.Spouse;
-
-            UpdateEmailAddress(uc, EmailAddressKind.Personal, contact.Email1Address);
-            UpdateEmailAddress(uc, EmailAddressKind.Work, contact.Email2Address);
-            UpdateEmailAddress(uc, EmailAddressKind.Other, contact.Email3Address);
-
-            UpdatePhoneNumber(uc, PhoneNumberKind.Home, contact.HomeTelephoneNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.Work, contact.BusinessTelephoneNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.WorkFax, contact.BusinessFaxNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.Mobile, contact.MobileTelephoneNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.Company, contact.CompanyMainTelephoneNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.HomeFax, contact.HomeFaxNumber);
-            UpdatePhoneNumber(uc, PhoneNumberKind.Pager, contact.PagerNumber);
-
-            UpdateWebSites(uc, CreateMinimalSet(new string[] { contact.BusinessHomePage, contact.PersonalHomePage, contact.WebPage }));
-            uc.Children = contact.Children;
-            uc.Nickname = contact.NickName;
         }
 
         HashSet<string> CreateMinimalSet(IEnumerable<string> items)
@@ -145,10 +152,6 @@ namespace OutlookSync
 
         private void UpdateWebSites(UnifiedContact uc, HashSet<string> websites)
         {
-            if (websites.Count > 0)
-            {
-                Debug.WriteLine("???");
-            }
             HashSet<string> set = CreateMinimalSet(uc.Websites == null ? new List<string>() : uc.Websites);
             if (!set.SetEquals(websites))
             {
