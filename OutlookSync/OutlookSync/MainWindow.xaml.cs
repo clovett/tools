@@ -71,19 +71,10 @@ namespace OutlookSync
 
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            StatusMessage.Text = Properties.Resources.LoadingOutlookContacts;
-
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
             conmgr.ReadException += OnServerException;
             store = await UnifiedStore.LoadAsync(GetStoreFileName());
-
-            OutlookStoreLoader loader = new OutlookStoreLoader();
-            await loader.UpdateAsync(store);
-
-            await store.SaveAsync(GetStoreFileName());
-
-            StatusMessage.Text = string.Format(Properties.Resources.LoadedCount, store.Contacts.Count);
             
             // wait for phone to connect then sync with the phone.
         }
@@ -116,7 +107,12 @@ namespace OutlookSync
         {
             Log.WriteLine("Message received from " + e.RemoteEndPoint.ToString());
             Log.WriteLine("  Command: " + e.Message.Command + "(" + e.Message.Parameters + ")");
-            
+
+            e.Response = HandleMessage(e);
+        }
+
+        async Task<Message> HandleMessage(MessageEventArgs e)
+        {
             var msg = e.Message;
             if (msg.Command == "Disconnect")
             {
@@ -124,19 +120,28 @@ namespace OutlookSync
             }
             else if (msg.Command == "Connect")
             {
-                OnConnect(e);
+                await OnConnect(e);
+            }
+            else if (msg.Command == "FinishUpdate")
+            {
+                await store.SaveAsync(GetStoreFileName());
             }
 
             string key = e.RemoteEndPoint.Address.ToString();
             ConnectedPhone phone = null;
             connected.TryGetValue(key, out phone);
+
+            Message response = null;
             if (phone != null)
             {
-                phone.HandleMessage(e);
+                response = phone.HandleMessage(e);
             }
+            return response;
         }
 
-        private void OnConnect(MessageEventArgs e)
+
+
+        private async Task OnConnect(MessageEventArgs e)
         {
             var msg = e.Message;
             string key = e.RemoteEndPoint.Address.ToString();
@@ -145,16 +150,29 @@ namespace OutlookSync
 
             if (phone == null)
             {
-                phone = new ConnectedPhone(store, this.Dispatcher);
+                phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
                 connected[key] = phone;
 
-                Dispatcher.BeginInvoke(new Action(() =>
+                await Dispatcher.BeginInvoke(new Action(() =>
                 {
                     phone.Name = msg.Parameters;
                     items.Add(phone);
                     UpdateConnector();
                 }));
             }
+
+            await this.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                StatusMessage.Text = Properties.Resources.LoadingOutlookContacts;
+            }));
+
+            // get new contact info from outlook ready for syncing with this phone.
+            await phone.SyncOutlook();
+
+            await this.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                StatusMessage.Text = string.Format(Properties.Resources.LoadedCount, store.Contacts.Count);
+            }));
         }
 
         private void UpdateConnector()

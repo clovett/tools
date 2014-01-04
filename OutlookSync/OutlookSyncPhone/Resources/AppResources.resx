@@ -128,12 +128,6 @@
   <data name="ApplicationTitle" xml:space="preserve">
     <value>OUTLOOK SYNC</value>
   </data>
-  <data name="AppBarButtonText" xml:space="preserve">
-    <value>add</value>
-  </data>
-  <data name="AppBarMenuItemText" xml:space="preserve">
-    <value>Menu Item</value>
-  </data>
   <data name="NoNetwork" xml:space="preserve">
     <value>In order to connect to your PC you need to enable your Wifi network via Settings</value>
   </data>
@@ -154,5 +148,11 @@
   </data>
   <data name="ConnectionLost" xml:space="preserve">
     <value>Lost connection to server.</value>
+  </data>
+  <data name="LoadingStore" xml:space="preserve">
+    <value>Loading local contact store...</value>
+  </data>
+  <data name="SavingUpdates" xml:space="preserve">
+    <value>Saving updates...</value>
   </data>
 </root>

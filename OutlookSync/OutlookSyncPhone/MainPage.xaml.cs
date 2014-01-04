@@ -28,6 +28,7 @@ namespace OutlookSyncPhone
         ServerProxy proxy;
         PhoneStoreLoader loader;
         int contactIndex;
+        int deleteIndex;
         string phoneName;
 
         // Constructor
@@ -51,6 +52,8 @@ namespace OutlookSyncPhone
             proxy.MessageReceived += OnMessageReceived;
 
             contactIndex = 0;
+            deleteIndex = 0;
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessagePrompt.Text = AppResources.ConnectedMessage;
@@ -75,6 +78,7 @@ namespace OutlookSyncPhone
         }
 
         int contactCount;
+        int sentToServer;
 
         async void OnMessageReceived(object sender, MessageEventArgs e)
         {
@@ -85,19 +89,116 @@ namespace OutlookSyncPhone
                     int max = 0;
                     int.TryParse(m.Parameters, out max);
                     contactCount = max;
+                    sentToServer = 0;
+                    loader.StartMerge();
+                    // start by sending our deletes
+                    if (!await SendNextDelete())
+                    {
+                        // then get deletes from the server.
+                        await GetNextDelete();
+                    }
+                    break;
+                case "Deleted":
+                    if (!await SendNextDelete())
+                    {
+                        // then get deletes from the server.
+                        await GetNextDelete();
+                    }
+                    break;
+                case "ServerDelete":
+                    await loader.ServerDelete(m.Parameters);
+                    await GetNextDelete();
+                    break;
+                case "NoMoreDeletes":
+                    // now do general updates
                     await GetNextContact();
                     break;
                 case "Contact":
-                    await loader.MergeContact(m.Parameters);
+                    await loader.MergeContact(m.Parameters);                    
                     await GetNextContact();
                     break;
                 case "NoMoreContacts":
-                    Dispatcher.BeginInvoke(new Action(() =>
+                    loader.FinishMerge();
+
+                    // start sending updates to server, server responds with "Updated"
+                    if (!await SendNextUpdate())
                     {
-                        MessagePrompt.Text = AppResources.AllDone;
-                    }));
+                        await FinishUpdate();
+                    }
                     break;
+                case "Updated":
+                    // received a new outlook id for this a contact.
+                    await loader.UpdateRemoteId(e.Message.Parameters);
+
+                    if (!await SendNextUpdate())
+                    {
+                        await FinishUpdate();
+                    }
+                    break;
+
             }
+        }
+
+        private async Task FinishUpdate()
+        {
+            await proxy.SendMessage(new Message() { Command = "FinishUpdate" });
+
+            // our cache has been updated, so save it!
+            Dispatcher.BeginInvoke(new Action(async () =>
+            {
+                MessagePrompt.Text = AppResources.SavingUpdates;
+                ShowLoadProgress();
+
+                await loader.Save();
+
+                HideLoadProgress();
+                MessagePrompt.Text = AppResources.AllDone;
+            }));
+        }
+
+
+        private async Task<bool> SendNextDelete()
+        {
+            var id = loader.GetNextContactToDelete();
+            if (id != null)
+            {
+                sentToServer++;
+                await proxy.SendMessage(new Message() { Command = "DeleteContact", Parameters = id });
+                return true;
+            }
+            return false;
+        }
+
+        private async Task<bool> SendNextUpdate()
+        {
+            var c = loader.GetNextContactToSend();
+            if (c != null)
+            {
+                sentToServer++;
+                await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = c.ToXml() });
+                return true;
+            }
+            return false;
+        }
+
+        private async Task UpdateServer(UnifiedContact moreRecent)
+        {
+            sentToServer++;
+            await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = moreRecent.ToXml() });
+        }
+
+        private async Task GetNextDelete()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                SyncIndicator.Maximum = contactCount;
+            }));
+
+            if (proxy != null)
+            {
+                await proxy.SendMessage(new Message() { Command = "GetNextDelete", Parameters = deleteIndex.ToString() });
+            }
+            deleteIndex++;
         }
 
         private async Task GetNextContact()
@@ -147,11 +248,29 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            ShowLoadProgress();
+            MessagePrompt.Text = AppResources.LoadingStore;
+
             SetupAds();
+
             loader = new PhoneStoreLoader();
             await loader.Open();
             PrepareCodeBox();
+
+            HideLoadProgress();
             base.OnNavigatedTo(e);
+        }
+
+        private void ShowLoadProgress()
+        {
+            LoadProgress.Visibility = System.Windows.Visibility.Visible;
+            LoadProgress.IsIndeterminate = true;
+        }
+
+        private void HideLoadProgress()
+        {
+            LoadProgress.Visibility = System.Windows.Visibility.Collapsed;
+            LoadProgress.IsIndeterminate = false;
         }
 
         private void PrepareCodeBox()
@@ -194,23 +313,8 @@ namespace OutlookSyncPhone
                 conmgr.ServerLost -= OnServerLost;
                 conmgr.Stop();
             }
+            HideLoadProgress();
         }
-
-        // Sample code for building a localized ApplicationBar
-        //private void BuildLocalizedApplicationBar()
-        //{
-        //    // Set the page's ApplicationBar to a new instance of ApplicationBar.
-        //    ApplicationBar = new ApplicationBar();
-
-        //    // Create a new button and set the text value to the localized string from AppResources.
-        //    ApplicationBarIconButton appBarButton = new ApplicationBarIconButton(new Uri("/Assets/AppBar/appbar.add.rest.png", UriKind.Relative));
-        //    appBarButton.Text = AppResources.AppBarButtonText;
-        //    ApplicationBar.Buttons.Add(appBarButton);
-
-        //    // Create a new menu item with the localized string from AppResources.
-        //    ApplicationBarMenuItem appBarMenuItem = new ApplicationBarMenuItem(AppResources.AppBarMenuItemText);
-        //    ApplicationBar.MenuItems.Add(appBarMenuItem);
-        //}
 
         void OnNetworkAvailabilityChanged(object sender, NetworkNotificationEventArgs e)
         {

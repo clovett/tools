@@ -70,24 +70,6 @@ namespace OutlookSyncPhone.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to add.
-        /// </summary>
-        public static string AppBarButtonText {
-            get {
-                return ResourceManager.GetString("AppBarButtonText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Menu Item.
-        /// </summary>
-        public static string AppBarMenuItemText {
-            get {
-                return ResourceManager.GetString("AppBarMenuItemText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to OUTLOOK SYNC.
         /// </summary>
         public static string ApplicationTitle {
@@ -133,6 +115,15 @@ namespace OutlookSyncPhone.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading local contact store....
+        /// </summary>
+        public static string LoadingStore {
+            get {
+                return ResourceManager.GetString("LoadingStore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to In order to connect to your PC you need to enable your Wifi network via Settings.
         /// </summary>
         public static string NoNetwork {
@@ -156,6 +147,15 @@ namespace OutlookSyncPhone.Resources {
         public static string ResourceLanguage {
             get {
                 return ResourceManager.GetString("ResourceLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Saving updates....
+        /// </summary>
+        public static string SavingUpdates {
+            get {
+                return ResourceManager.GetString("SavingUpdates", resourceCulture);
             }
         }
         

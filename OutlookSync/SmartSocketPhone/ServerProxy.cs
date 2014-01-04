@@ -84,7 +84,8 @@ namespace Microsoft.Networking
                         }
                         if (args.Response != null)
                         {
-                            SendMessage(args.Response).Wait();
+                            Message m = await args.Response;
+                            SendMessage(m).Wait();
                         }
                     }
                 }

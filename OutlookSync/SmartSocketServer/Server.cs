@@ -143,12 +143,15 @@ namespace Microsoft.Networking
             stopped = true;
             using (client)
             {
-                client.Close();
+                if (client != null)
+                {
+                    client.Close();
+                }
             }
             client = null;
         }
 
-        public void ProcessCommands()
+        public async void ProcessCommands()
         {
             try
             {
@@ -161,7 +164,7 @@ namespace Microsoft.Networking
 
                         byte[] buffer = stream.ReadExactBytes(length);
 
-                        Message response = HandleMessage(buffer);
+                        Message response = await HandleMessage(buffer);
 
                         if (response != null)
                         {
@@ -188,7 +191,7 @@ namespace Microsoft.Networking
             }
         }
 
-        private Message HandleMessage(byte[] buffer)
+        private Task<Message> HandleMessage(byte[] buffer)
         {
             if (MessageReceived != null)
             {

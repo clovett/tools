@@ -26,7 +26,7 @@ namespace OutlookSyncPhone.Pages
         private void OnRateApp(object sender, RoutedEventArgs e)
         {
             MarketplaceDetailTask marketplaceDetailTask = new MarketplaceDetailTask();
-            marketplaceDetailTask.ContentIdentifier = "3527586f-751b-e011-9264-00237de2db9e"; 
+            marketplaceDetailTask.ContentIdentifier = App.AppId;
             marketplaceDetailTask.ContentType = MarketplaceContentType.Applications;
             marketplaceDetailTask.Show();
         }

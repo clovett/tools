@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,14 +19,10 @@ namespace OutlookSync
         public UnifiedContact()
         {
         }
-
-        public bool IsEmpty
-        {
-            get
-            {
-                // if we don't know their name, then this is probably an outlook auto-generated contact.
-                return CompleteName == null;
-            }
+        
+        public override bool IsEmpty 
+        { 
+            get { return CompleteName == null; } 
         }
 
         public string OutlookEntryId
@@ -34,16 +31,16 @@ namespace OutlookSync
             set { SetValue<string>("OutlookEntryId", value); }
         }
 
-        public List<ContactAddress> Addresses
+        public PropertyList<ContactAddress> Addresses
         {
-            get { return GetValue<List<ContactAddress>>("Addresses");  }
-            set { SetValue<List<ContactAddress>>("Addresses", value); }
+            get { return GetValue<PropertyList<ContactAddress>>("Addresses"); }
+            private set { SetValue<PropertyList<ContactAddress>>("Addresses", value); }
         }
 
-        public DateTime Birthday
+        public DateTimeOffset? Birthday
         {
-            get { return GetValue<DateTime>("Birthday"); }
-            set { SetValue<DateTime>("Birthday", value); }
+            get { return GetValue<DateTimeOffset?>("Birthday"); }
+            set { SetValue<DateTimeOffset?>("Birthday", value); }
         }
 
         public PersonName CompleteName
@@ -58,16 +55,16 @@ namespace OutlookSync
             set { SetValue<string>("DisplayName", value); }
         }
 
-        public List<ContactEmailAddress> EmailAddresses
+        public PropertyList<ContactEmailAddress> EmailAddresses
         {
-            get { return GetValue<List<ContactEmailAddress>>("EmailAddresses"); }
-            set { SetValue<List<ContactEmailAddress>>("EmailAddresses", value); }
+            get { return GetValue<PropertyList<ContactEmailAddress>>("EmailAddresses"); }
+            private set { SetValue<PropertyList<ContactEmailAddress>>("EmailAddresses", value); }
         }
 
-        public List<ContactPhoneNumber> PhoneNumbers
+        public PropertyList<ContactPhoneNumber> PhoneNumbers
         {
-            get { return GetValue<List<ContactPhoneNumber>>("PhoneNumbers"); }
-            set { SetValue<List<ContactPhoneNumber>>("PhoneNumbers", value); }
+            get { return GetValue<PropertyList<ContactPhoneNumber>>("PhoneNumbers"); }
+            private set { SetValue<PropertyList<ContactPhoneNumber>>("PhoneNumbers", value); }
         }
 
         public string SignificantOthers
@@ -87,30 +84,38 @@ namespace OutlookSync
             get { return GetValue<string>("Nickname"); }
             set { SetValue<string>("Nickname", value); }
         }
-        
-        public List<string> Websites
+
+        public PropertyList<string> Websites
         {
-            get { return GetValue<List<string>>("Websites"); }
-            set { SetValue<List<string>>("Websites", value); }
+            get { return GetValue<PropertyList<string>>("Websites"); }
+            set { SetValue<PropertyList<string>>("Websites", value); }
         }
 
         public static UnifiedContact Parse(string xml)
         {
             UnifiedContact contact = new UnifiedContact();
-            using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
+            try
             {
-                UnifiedStoreSerializer serializer = new UnifiedStoreSerializer(reader);
-                while (reader.Read() && reader.NodeType != XmlNodeType.EndElement)
+                using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
                 {
-                    if (reader.NodeType == XmlNodeType.Element)
+                    UnifiedStoreSerializer serializer = new UnifiedStoreSerializer(reader);
+                    while (reader.Read() && reader.NodeType != XmlNodeType.EndElement)
                     {
-                        if (reader.LocalName == "UnifiedContact")
+                        if (reader.NodeType == XmlNodeType.Element)
                         {
-                            contact.Read(serializer);
-                            break;
+                            if (reader.LocalName == "UnifiedContact")
+                            {
+                                contact.Read(serializer);
+                                break;
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception parsing contact xml: " + ex.Message);
+                return null;
             }
             return contact;
         }
@@ -125,6 +130,115 @@ namespace OutlookSync
             return buffer.ToString();
         }
 
+        internal void SetWebSites(IEnumerable<string> newSet)
+        {
+            if (Websites == null)
+            {
+                Websites = new PropertyList<string>();
+                Websites.Parent = GetPropertyValue("Websites");
+            }
+            Websites.Clear();
+            foreach (string s in newSet)
+            {
+                Websites.Add(s);
+            }
+        }
+
+
+        internal ContactAddress GetAddress(AddressKind kind)
+        {
+            if (Addresses != null)
+            {
+                return (from a in Addresses where a.Kind == kind select a).FirstOrDefault();
+            }
+            return null;
+        }
+
+        internal void AddAddress(ContactAddress address)
+        {
+            if (Addresses == null)
+            {
+                Addresses = new PropertyList<ContactAddress>();
+                Addresses.Parent = GetPropertyValue("Addresses");
+            }
+            Addresses.Add(address);
+        }
+
+        internal void RemoveAddress(AddressKind kind)
+        {
+            if (Addresses != null)
+            {
+                foreach (ContactAddress ca in (from a in Addresses.ToArray() where a.Kind == kind select a))
+                {
+                    // don't actually remove it, set the value to null so we remember this was deleted.
+                    ca.PhysicalAddress = null;
+                }
+            }
+        }
+
+        internal ContactEmailAddress GetEmailAddress(EmailAddressKind kind)
+        {
+            if (EmailAddresses != null)
+            {
+                return (from a in EmailAddresses where a.Kind == kind select a).FirstOrDefault();
+            }
+            return null;
+        }
+
+        internal void AddEmailAddress(ContactEmailAddress address)
+        {
+            if (EmailAddresses == null)
+            {
+                EmailAddresses = new PropertyList<ContactEmailAddress>();
+                EmailAddresses.Parent = GetPropertyValue("EmailAddresses");
+            }
+            EmailAddresses.Add(address);
+        }
+
+        internal void RemoveEmailAddress(EmailAddressKind kind)
+        {
+            if (EmailAddresses != null)
+            {
+                foreach (ContactEmailAddress ca in (from a in EmailAddresses.ToArray() where a.Kind == kind select a))
+                {
+                    // don't actually remove it from the list, instead set the address to null as a reminder that this was deleted.
+                    ca.EmailAddress = null;
+                }
+            }
+        }
+
+
+        internal ContactPhoneNumber GetPhoneNumber(PhoneNumberKind kind)
+        {
+            if (PhoneNumbers != null)
+            {
+                return (from a in PhoneNumbers where a.Kind == kind select a).FirstOrDefault();
+            }
+            return null;
+        }
+
+        internal void AddPhoneNumber(ContactPhoneNumber number)
+        {
+            if (PhoneNumbers == null)
+            {
+                PhoneNumbers = new PropertyList<ContactPhoneNumber>();
+                PhoneNumbers.Parent = GetPropertyValue("PhoneNumbers");
+            }
+            PhoneNumbers.Add(number);
+        }
+
+        internal void RemovePhoneNumber(PhoneNumberKind kind)
+        {
+            if (PhoneNumbers != null)
+            {
+                foreach (ContactPhoneNumber number in (from a in PhoneNumbers.ToArray() where a.Kind == kind select a))
+                {
+                    // don't actually remove it, set the value to null so we remember this was deleted.
+                    number.PhoneNumber = null;
+                }
+            }
+        }
+
     }
 
     public enum AddressKind
@@ -136,6 +250,11 @@ namespace OutlookSync
 
     public class ContactAddress : PropertyBag
     {
+        public override int? GetKey()
+        {
+            return (int)Kind;
+        }
+
         public AddressKind Kind
         {
             get { return GetValue<AddressKind>("Kind"); }
@@ -298,12 +417,17 @@ namespace OutlookSync
         {
             get { return GetValue<string>("Title"); }
             set { SetValue<string>("Title", value); }
-        }
+        }        
     }
 
     public class ContactEmailAddress : PropertyBag
     {
-        
+
+        public override int? GetKey()
+        {
+            return (int)Kind;
+        }
+
         public string EmailAddress
         {
             get { return GetValue<string>("EmailAddress"); }
@@ -336,7 +460,12 @@ namespace OutlookSync
     }
 
     public class ContactPhoneNumber : PropertyBag
-    {        
+    {
+        public override int? GetKey()
+        {
+            return (int)Kind;
+        }
+
         public PhoneNumberKind Kind
         {
             get { return GetValue<PhoneNumberKind>("Kind"); }

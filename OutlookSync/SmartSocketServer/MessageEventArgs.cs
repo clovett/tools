@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Microsoft.Networking
 {
@@ -19,6 +20,8 @@ namespace Microsoft.Networking
         public Message Message { get; set; }
 
         // if this is set it will be sent back to the remote end point.
-        public Message Response { get; set; }
+        public Task<Message> Response { get; set; }
+
+
     }
 }

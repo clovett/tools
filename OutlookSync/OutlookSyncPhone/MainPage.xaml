@@ -30,7 +30,7 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <TextBlock Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}" Margin="12,0"/>
+            <TextBlock Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}"/>
 
             <Grid Grid.Column="1">
                 <local:ConnectorControl x:Name="Connector" Connected="False" Margin="0,0,5,0"/>
@@ -40,6 +40,11 @@
 
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
             <StackPanel Orientation="Vertical">
                 <TextBlock x:Name="MessagePrompt" Text="" TextWrapping="Wrap"/>
 
@@ -54,10 +59,15 @@
                     <Button Click="OnConnectClick">Connect</Button>
                 </StackPanel>
 
-                <local:SyncProgressControl x:Name="SyncIndicator" 
-                          Margin="20"  Visibility="Collapsed"/>
-                
             </StackPanel>
+
+            <local:SyncProgressControl x:Name="SyncIndicator" 
+                                       Grid.Row="1"
+                          Margin="20"  Visibility="Collapsed"/>
+
+            <ProgressBar x:Name="LoadProgress" Margin="20"
+                         Grid.Row="2" Visibility="Collapsed"
+                          />
         </Grid>
 
         <Grid Grid.Row="2" x:Name="AdGrid">

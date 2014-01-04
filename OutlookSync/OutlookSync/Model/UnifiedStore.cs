@@ -21,13 +21,14 @@ namespace OutlookSync
     /// <summary>
     /// This class represents the serialized state of the unified contacts list.
     /// </summary>
-    public class UnifiedStore : IXmlSerializable
+    public class UnifiedStore 
     {
-        Dictionary<string, UnifiedContact> index = new Dictionary<string,UnifiedContact>();
+        SortedDictionary<string, UnifiedContact> index = new SortedDictionary<string, UnifiedContact>();
 
         public UnifiedStore()
         {
-            Contacts = new ObservableCollection<UnifiedContact>();
+            this.Contacts = new ObservableCollection<UnifiedContact>();
+            this.Contacts.CollectionChanged += Contacts_CollectionChanged;
         }
 
 #if WINDOWS_PHONE
@@ -57,7 +58,9 @@ namespace OutlookSync
             catch
             {
                 // silently rebuild data file if it got corrupted.
+                result = new UnifiedStore();
             }
+
             if (result == null)
             {
                 result = new UnifiedStore();
@@ -110,14 +113,7 @@ namespace OutlookSync
                 }
             }
 
-            store.OnLoaded();
-
             return store;
-        }
-
-        private void OnLoaded()
-        {
-            this.Contacts.CollectionChanged += Contacts_CollectionChanged;
         }
 
         private void ReadContacts(UnifiedStoreSerializer reader)
@@ -136,15 +132,31 @@ namespace OutlookSync
                         contact.Read(reader);
 
                         string id = contact.OutlookEntryId;
-
-                        if (!index.ContainsKey(id))
+                        if (!string.IsNullOrEmpty(id))
                         {
-                            this.Contacts.Add(contact);
-                            index[id] = contact;
+                            if (!index.ContainsKey(id))
+                            {
+                                this.Contacts.Add(contact);
+                            }
+                        }
+                        else
+                        {
+                            // crap, this item got corrupted, so ignore it.
                         }
                     }
                 }
             }
+        }
+
+        public string ToXml()
+        {
+            StringWriter sw = new StringWriter();
+            XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, NewLineHandling = NewLineHandling.None };
+            using (XmlWriter writer = XmlWriter.Create(sw, settings))
+            {
+                WriteStore(writer, this);
+            }
+            return sw.ToString();
         }
 
 #if WINDOWS_PHONE
@@ -161,7 +173,7 @@ namespace OutlookSync
 
                     using (Stream stream = store.OpenFile(fileName, FileMode.CreateNew))
                     {
-                        XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
+                        XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, NewLineHandling = NewLineHandling.None };
                         using (XmlWriter writer = XmlWriter.Create(stream, settings))
                         {
                             WriteStore(writer, this);
@@ -183,7 +195,7 @@ namespace OutlookSync
 
                 using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
-                    XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
+                    XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, NewLineHandling = NewLineHandling.None };
 
                     using (XmlWriter writer = XmlWriter.Create(stream, settings))
                     {
@@ -199,10 +211,11 @@ namespace OutlookSync
             writer.WriteStartElement("Data");
 
             if (this.Contacts != null)
-            {
+            {                
                 writer.WriteStartElement("Contacts");
-                foreach (var contact in this.Contacts)
+                foreach (var pair in this.index)
                 {
+                    var contact = pair.Value;
                     contact.Write(writer);
                 }
                 writer.WriteEndElement();
@@ -226,7 +239,7 @@ namespace OutlookSync
             {
                 foreach (UnifiedContact c in e.OldItems)
                 {
-                    index[c.OutlookEntryId] = c;
+                    index.Remove(c.OutlookEntryId);
                 }
             }
             if (e.NewItems != null)
@@ -238,22 +251,6 @@ namespace OutlookSync
             }
         }
 
-
-
-        public System.Xml.Schema.XmlSchema GetSchema()
-        {
-            return null;
-        }
-
-        public void ReadXml(XmlReader reader)
-        {
-            ReadStore(new UnifiedStoreSerializer(reader));
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     class UnifiedStoreSerializer
@@ -306,9 +303,25 @@ namespace OutlookSync
                 }
                 else if (type == typeof(DateTime))
                 {
+                    DateTime? result = null;
+                    // serialized as date time offset.
                     DateTime dt = DateTime.MinValue;
-                    DateTime.TryParse(value, out dt);
-                    return dt;
+                    if (!string.IsNullOrEmpty(value) && DateTime.TryParse(value, out dt) && dt != DateTime.MinValue)
+                    {
+                        result = dt;
+                    }
+                    return result;
+                }
+                else if (type == typeof(DateTimeOffset))
+                {
+                    DateTimeOffset? result = null;
+                    // serialized as date time offset.
+                    DateTimeOffset dt = DateTimeOffset.MinValue;
+                    if (!string.IsNullOrEmpty(value) && DateTimeOffset.TryParse(value, out dt) && dt != DateTimeOffset.MinValue)
+                    {
+                        result = dt;
+                    }
+                    return result;
                 }
                 else if (type == typeof(int))
                 {
@@ -341,7 +354,7 @@ namespace OutlookSync
         public IList ReadList(string listType)
         {
             string elementType = GetListElementType(listType);
-            IList list = ListConstructor.CreateGenericList(elementType);
+            IList list = PropertyListConstructor.CreateGenericList(elementType);
             if (reader.IsEmptyElement)
             {
                 return list;
@@ -406,29 +419,29 @@ namespace OutlookSync
         }
     }
 
-    static class ListConstructor
+    static class PropertyListConstructor
     {
         public static IList CreateGenericList(string elementTypeName)
         {
             if (elementTypeName == "String")
             {
-                return new List<string>();
+                return new PropertyList<string>();
             }
 
-            Type elementType = typeof(ListConstructor).Assembly.GetType("OutlookSync." + elementTypeName);
+            Type elementType = typeof(PropertyListConstructor).Assembly.GetType("OutlookSync." + elementTypeName);
             if (elementType == null)
             {
                 throw new Exception("Unknown type: " + elementTypeName);
             }
             Type[] typeArgs = new Type[] { elementType };
-            MethodInfo mi = typeof(ListConstructor).GetMethod("CreateList", BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo mi = typeof(PropertyListConstructor).GetMethod("CreateList", BindingFlags.NonPublic | BindingFlags.Static);
             object result = mi.MakeGenericMethod(typeArgs).Invoke(null, new object[0]);
             return (IList)result;
         }
 
         private static IList CreateList<T>()
         {
-            return new List<T>();
+            return new PropertyList<T>();
         }
     }
 
