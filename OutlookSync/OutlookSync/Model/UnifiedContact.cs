@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace OutlookSync
+namespace OutlookSync.Model
 {
     // This serializable class stores unified contact information across windows phone and outlook.
     // We also store last update timestamps so we know which version of the information is the most 

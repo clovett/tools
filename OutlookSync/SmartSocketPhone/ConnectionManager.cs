@@ -20,7 +20,6 @@ namespace Microsoft.Networking
     public class ConnectionManager
     {
         int m_portNumber;
-        int m_serverPort;
         string m_udpMessage;
         string m_udpServerMessage;
 
@@ -32,11 +31,10 @@ namespace Microsoft.Networking
         public event EventHandler<ServerEventArgs> ServerFound;
         public event EventHandler<ServerExceptionEventArgs> ServerLost;
 
-        public ConnectionManager(string applicationId, int udpPort, int tcpPort)
+        public ConnectionManager(string applicationId, string clientName, int udpPort)
         {
             m_portNumber = udpPort;
-            m_serverPort = tcpPort;
-            m_udpMessage = "Client:" + applicationId;
+            m_udpMessage = "Client:" + applicationId + ":" + clientName;
             m_udpServerMessage = "Server:" + applicationId;
         }
 
@@ -112,7 +110,7 @@ namespace Microsoft.Networking
             using (IOutputStream os = await socket.GetOutputStreamAsync(new HostName("255.255.255.255"), m_portNumber.ToString()))
             {
                 DataWriter writer = new DataWriter(os);
-                byte[] bytes = UTF8Encoding.UTF8.GetBytes(m_udpMessage + ":" + ipAddress);
+                byte[] bytes = UTF8Encoding.UTF8.GetBytes(m_udpMessage + "/" + ipAddress + ":" + m_portNumber);
                 writer.WriteBytes(bytes);
                 await writer.StoreAsync();
             }
@@ -136,12 +134,27 @@ namespace Microsoft.Networking
 
                 if (s.StartsWith(m_udpServerMessage))
                 {
-                    string[] addresses = s.Substring(m_udpServerMessage.Length + 1).Split(':');
+                    string[] addresses = s.Substring(m_udpServerMessage.Length + 1).Split('/');
 
                     TryConnectServer(addresses);
                 }
             }
 
+        }
+
+        IPEndPoint ParseAddress(string address)
+        {
+            int i = address.IndexOf(':');
+            if (i > 0)
+            {
+                string ipaddress = address.Substring(0, i);
+                string port = address.Substring(i + 1);
+                if (int.TryParse(port, out i))
+                {
+                    return new IPEndPoint(IPAddress.Parse(ipaddress), i);
+                }
+            }
+            return null;
         }
 
         private async void TryConnectServer(string[] addresses)
@@ -152,16 +165,19 @@ namespace Microsoft.Networking
                 {
                     try
                     {
-                        server = new ServerProxy();
-                        await server.ConnectAsync(new IPEndPoint(IPAddress.Parse(address), this.m_serverPort));
-                        server.ReadException += OnServerReadException;
-                        if (ServerFound != null)
+                        IPEndPoint ep = ParseAddress(address);
+                        if (ep != null)
                         {
-                            ServerFound(this, new ServerEventArgs() { Server = server });                            
+                            server = new ServerProxy();
+                            await server.ConnectAsync(ep);
+                            server.ReadException += OnServerReadException;
+                            if (ServerFound != null)
+                            {
+                                ServerFound(this, new ServerEventArgs() { Server = server });
+                            }
+
+                            StopFindingServer();
                         }
-
-                        StopFindingServer();
-
                         return; // done!
                     }
                     catch

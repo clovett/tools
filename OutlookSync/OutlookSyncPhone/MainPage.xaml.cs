@@ -18,6 +18,7 @@ using Windows.Phone.PersonalInformation;
 using System.Threading.Tasks;
 using Microsoft.Phone.Net.NetworkInformation;
 using Microsoft.Phone.Info;
+using OutlookSync.Model;
 
 namespace OutlookSyncPhone
 {
@@ -27,8 +28,6 @@ namespace OutlookSyncPhone
         ConnectionManager conmgr;
         ServerProxy proxy;
         PhoneStoreLoader loader;
-        int contactIndex;
-        int deleteIndex;
         string phoneName;
 
         // Constructor
@@ -39,10 +38,6 @@ namespace OutlookSyncPhone
 
             phoneName = Windows.Networking.Proximity.PeerFinder.DisplayName;
 
-            if (Debugger.IsAttached)
-            {
-                ConnectCode.Text = "111111";
-            }
             DeviceNetworkInformation.NetworkAvailabilityChanged += new EventHandler<NetworkNotificationEventArgs>(OnNetworkAvailabilityChanged);
         }
 
@@ -51,15 +46,12 @@ namespace OutlookSyncPhone
             proxy = e.Server;
             proxy.MessageReceived += OnMessageReceived;
 
-            contactIndex = 0;
-            deleteIndex = 0;
-
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessagePrompt.Text = AppResources.ConnectedMessage;
                 Connector.Connected = true;
                 SyncIndicator.Visibility = System.Windows.Visibility.Visible;
-                SyncIndicator.Current = contactIndex;
+                SyncIndicator.Current = 0;
             }));
 
             await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName });
@@ -73,12 +65,10 @@ namespace OutlookSyncPhone
                 MessagePrompt.Text = AppResources.ConnectionLost;
                 Connector.Connected = false;
                 SyncIndicator.Visibility = System.Windows.Visibility.Collapsed;
-                PrepareCodeBox();
             }));
         }
 
         int contactCount;
-        int sentToServer;
 
         async void OnMessageReceived(object sender, MessageEventArgs e)
         {
@@ -89,35 +79,31 @@ namespace OutlookSyncPhone
                     int max = 0;
                     int.TryParse(m.Parameters, out max);
                     contactCount = max;
-                    sentToServer = 0;
+                    
                     loader.StartMerge();
-                    // start by sending our deletes
-                    if (!await SendNextDelete())
+
+                    // start by sending our version information
+                    await SendSyncMessage();
+                    break;
+                case "ServerSync":
+                    await loader.HandleServerSync(m.Parameters);
+                    // then start pulling updates from server.                 
+                    if (!await GetNextContact())
                     {
-                        // then get deletes from the server.
-                        await GetNextDelete();
+                        // done pulling, start sending.
+                        goto case "StartPulling";
                     }
-                    break;
-                case "Deleted":
-                    if (!await SendNextDelete())
-                    {
-                        // then get deletes from the server.
-                        await GetNextDelete();
-                    }
-                    break;
-                case "ServerDelete":
-                    await loader.ServerDelete(m.Parameters);
-                    await GetNextDelete();
-                    break;
-                case "NoMoreDeletes":
-                    // now do general updates
-                    await GetNextContact();
                     break;
                 case "Contact":
-                    await loader.MergeContact(m.Parameters);                    
-                    await GetNextContact();
+                    // server responded to GetNextContact 
+                    await loader.MergeContact(m.Parameters);
+                    if (!await GetNextContact())
+                    {
+                        // done pulling, start sending.
+                        goto case "StartPulling";
+                    }
                     break;
-                case "NoMoreContacts":
+                case "StartPulling":
                     loader.FinishMerge();
 
                     // start sending updates to server, server responds with "Updated"
@@ -156,14 +142,12 @@ namespace OutlookSyncPhone
             }));
         }
 
-
-        private async Task<bool> SendNextDelete()
+        private async Task<bool> SendSyncMessage()
         {
-            var id = loader.GetNextContactToDelete();
-            if (id != null)
+            var syncReport = loader.GetSyncMessage();
+            if (syncReport != null)
             {
-                sentToServer++;
-                await proxy.SendMessage(new Message() { Command = "DeleteContact", Parameters = id });
+                await proxy.SendMessage(new Message() { Command = "SyncMessage", Parameters = syncReport .ToXml() });
                 return true;
             }
             return false;
@@ -174,7 +158,6 @@ namespace OutlookSyncPhone
             var c = loader.GetNextContactToSend();
             if (c != null)
             {
-                sentToServer++;
                 await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = c.ToXml() });
                 return true;
             }
@@ -182,38 +165,26 @@ namespace OutlookSyncPhone
         }
 
         private async Task UpdateServer(UnifiedContact moreRecent)
-        {
-            sentToServer++;
+        {            
             await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = moreRecent.ToXml() });
         }
 
-        private async Task GetNextDelete()
+        private async Task<bool> GetNextContact()
         {
+            string id = loader.GetNextContactToUpdate();
+            
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 SyncIndicator.Maximum = contactCount;
+                SyncIndicator.Current = contactCount - loader.RemainingContactsToUpdate;
             }));
 
-            if (proxy != null)
-            {
-                await proxy.SendMessage(new Message() { Command = "GetNextDelete", Parameters = deleteIndex.ToString() });
+            if (proxy != null && id != null)
+            {               
+                await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = id });
             }
-            deleteIndex++;
-        }
 
-        private async Task GetNextContact()
-        {
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                SyncIndicator.Maximum = contactCount;
-                SyncIndicator.Current = contactIndex;
-            }));
-
-            if (proxy != null)
-            {
-                await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = contactIndex.ToString() });
-            }
-            contactIndex++;
+            return id != null;
         }
 
         Microsoft.Advertising.Mobile.UI.AdControl adControl;
@@ -248,6 +219,11 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", phoneName, 12777);
+            conmgr.ServerFound += OnServerFound;
+            conmgr.ServerLost += OnServerLost;
+            conmgr.Start();
+
             ShowLoadProgress();
             MessagePrompt.Text = AppResources.LoadingStore;
 
@@ -255,9 +231,11 @@ namespace OutlookSyncPhone
 
             loader = new PhoneStoreLoader();
             await loader.Open();
-            PrepareCodeBox();
 
             HideLoadProgress();
+
+            MessagePrompt.Text = AppResources.LaunchPrompt;
+
             base.OnNavigatedTo(e);
         }
 
@@ -271,23 +249,6 @@ namespace OutlookSyncPhone
         {
             LoadProgress.Visibility = System.Windows.Visibility.Collapsed;
             LoadProgress.IsIndeterminate = false;
-        }
-
-        private void PrepareCodeBox()
-        {
-            SyncIndicator.Visibility = System.Windows.Visibility.Collapsed;
-
-            this.offline = !DeviceNetworkInformation.IsNetworkAvailable;
-            if (this.offline)
-            {
-                MessagePrompt.Text = AppResources.NoNetwork;
-                CodePanel.Visibility = System.Windows.Visibility.Collapsed;
-            }
-            else
-            {
-                MessagePrompt.Text = AppResources.EnterCode;
-                CodePanel.Visibility = System.Windows.Visibility.Visible;
-            }
         }
 
         protected async override void OnNavigatedFrom(NavigationEventArgs e)
@@ -322,29 +283,13 @@ namespace OutlookSyncPhone
             if (e.NotificationType == NetworkNotificationType.InterfaceConnected && this.offline)
             {
                 this.offline = false;
-
-                MessagePrompt.Text = AppResources.EnterCode;
-                CodePanel.Visibility = System.Windows.Visibility.Visible;
+                MessagePrompt.Text = AppResources.LaunchPrompt;
             }
             else if (e.NotificationType == NetworkNotificationType.InterfaceDisconnected)
             {
                 this.offline = true;
                 MessagePrompt.Text = AppResources.NoNetwork;
-                CodePanel.Visibility = System.Windows.Visibility.Collapsed;
             }
-        }
-
-        private void OnConnectClick(object sender, RoutedEventArgs e)
-        {
-            MessagePrompt.Text = AppResources.Connecting;
-            CodePanel.Visibility = System.Windows.Visibility.Collapsed;
-
-            string code = ConnectCode.Text;
-
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440:" + code, 12777, 12778);
-            conmgr.ServerFound += OnServerFound;
-            conmgr.ServerLost += OnServerLost;
-            conmgr.Start();
         }
 
         private void OnSettingsClick(object sender, EventArgs e)

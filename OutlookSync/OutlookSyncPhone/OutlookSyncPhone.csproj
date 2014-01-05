@@ -97,6 +97,9 @@
     <Compile Include="..\OutlookSync\Model\PropertyBag.cs">
       <Link>Model\PropertyBag.cs</Link>
     </Compile>
+    <Compile Include="..\OutlookSync\Model\SyncMessage.cs">
+      <Link>Model\SyncMessage.cs</Link>
+    </Compile>
     <Compile Include="..\OutlookSync\Model\UnifiedContact.cs">
       <Link>Model\UnifiedContact.cs</Link>
     </Compile>
@@ -172,6 +175,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\Artwork.png" />
+    <Content Include="Assets\folder.png" />
     <Content Include="Assets\Settings.png" />
     <Content Include="Assets\Tiles\FlipCycleTileLarge.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

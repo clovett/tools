@@ -134,8 +134,8 @@
   <data name="Connecting" xml:space="preserve">
     <value>Searching your Wifi network for your local PC running OutlookSync...</value>
   </data>
-  <data name="EnterCode" xml:space="preserve">
-    <value>Please launch the Outlook Sync Server on your PC and enter the code it shows you to connect.  You can get the server app from lovettsoftware.com.</value>
+  <data name="LaunchPrompt" xml:space="preserve">
+    <value>Please launch the Outlook Sync Server on your PC...</value>
   </data>
   <data name="ConnectedMessage" xml:space="preserve">
     <value>Connected</value>

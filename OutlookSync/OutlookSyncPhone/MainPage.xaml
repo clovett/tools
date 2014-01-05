@@ -47,18 +47,6 @@
             </Grid.RowDefinitions>
             <StackPanel Orientation="Vertical">
                 <TextBlock x:Name="MessagePrompt" Text="" TextWrapping="Wrap"/>
-
-                <StackPanel x:Name="CodePanel" Orientation="Horizontal" Visibility="Collapsed">
-                    <TextBox x:Name="ConnectCode" Width="300">
-                        <TextBox.InputScope>
-                            <InputScope>
-                                <InputScopeName NameValue="Number" />
-                            </InputScope>
-                        </TextBox.InputScope>
-                    </TextBox>
-                    <Button Click="OnConnectClick">Connect</Button>
-                </StackPanel>
-
             </StackPanel>
 
             <local:SyncProgressControl x:Name="SyncIndicator" 

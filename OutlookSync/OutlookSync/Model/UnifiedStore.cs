@@ -16,7 +16,7 @@ using System.Diagnostics;
 using System.IO.IsolatedStorage;
 #endif
 
-namespace OutlookSync
+namespace OutlookSync.Model
 {
     /// <summary>
     /// This class represents the serialized state of the unified contacts list.
@@ -429,6 +429,10 @@ namespace OutlookSync
             }
 
             Type elementType = typeof(PropertyListConstructor).Assembly.GetType("OutlookSync." + elementTypeName);
+            if (elementType == null)
+            {
+                elementType = typeof(PropertyListConstructor).Assembly.GetType("OutlookSync.Model." + elementTypeName);
+            }
             if (elementType == null)
             {
                 throw new Exception("Unknown type: " + elementTypeName);

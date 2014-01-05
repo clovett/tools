@@ -106,11 +106,11 @@ namespace OutlookSyncPhone.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please launch the Outlook Sync Server on your PC and enter the code it shows you to connect.  You can get the server app from lovettsoftware.com..
+        ///   Looks up a localized string similar to Please launch the Outlook Sync Server on your PC....
         /// </summary>
-        public static string EnterCode {
+        public static string LaunchPrompt {
             get {
-                return ResourceManager.GetString("EnterCode", resourceCulture);
+                return ResourceManager.GetString("LaunchPrompt", resourceCulture);
             }
         }
         

@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OutlookSync
+namespace OutlookSync.Model
 {
     interface IPropertyParentable
     {
@@ -39,7 +39,7 @@ namespace OutlookSync
         {
             if (Parent != null)
             {
-                Parent.VersionNumber++;
+                Parent.VersionNumber = Environment.TickCount;
             }
         }
 
@@ -235,7 +235,7 @@ namespace OutlookSync
                         Debugger.Break();
                     }
                     v.Value = value;
-                    v.VersionNumber++; // record the change
+                    v.VersionNumber = Environment.TickCount;
                 }
                 else if (value is PropertyBag)
                 {
@@ -245,7 +245,7 @@ namespace OutlookSync
                         Debugger.Break(); 
                     }
                     v.Value = value;
-                    v.VersionNumber++; 
+                    v.VersionNumber = Environment.TickCount;
                 }
                 else
                 {
@@ -254,7 +254,7 @@ namespace OutlookSync
                     if (a != b)
                     {
                         v.Value = value;
-                        v.VersionNumber++; // record the change
+                        v.VersionNumber = Environment.TickCount;
                     }
                 }
             }
@@ -337,6 +337,11 @@ namespace OutlookSync
             if (type == "DateTimeOffset") return DateTimeOffset.MinValue;
 
             Type t = this.GetType().Assembly.GetType("OutlookSync." + type);
+
+            if (t == null)
+            {
+                t = this.GetType().Assembly.GetType("OutlookSync.Model." + type);
+            }
             if (t != null)
             {
                 if (t.IsEnum)
@@ -769,6 +774,58 @@ namespace OutlookSync
             }
             return listValues;
         }
+
+        /// <summary>
+        /// Get the highest version number on any item in this bag or in any child lists.
+        /// </summary>
+        /// <returns></returns>
+        public int GetHighestVersionNumber()
+        {
+            int result = 0;
+
+            foreach (KeyValuePair<string, PropertyValue> pair in bag)
+            {
+                string key = pair.Key;
+                
+                PropertyValue pv = pair.Value;
+                if (pv != null)
+                {
+                    result = Math.Max(result, pv.VersionNumber);
+
+                    IList list = pv as IList;
+                    if (list != null)
+                    {
+                        foreach (object item in list)
+                        {
+                            PropertyBag childBag = item as PropertyBag;
+                            if (childBag != null)
+                            {
+                                int childVersion = childBag.GetHighestVersionNumber();
+                                result = Math.Max(result, childVersion);
+                            }
+                            else
+                            {
+                                // must be a scalar
+                            }
+                        }
+                    }
+                    else
+                    {
+                        PropertyBag childBag = pv.Value as PropertyBag;
+                        if (childBag != null)
+                        {
+                            int childVersion = childBag.GetHighestVersionNumber();
+                            result = Math.Max(result, childVersion);
+                        }
+                        else
+                        {
+                            // must be a scalar
+                        }
+                    }
+                }
+            }
+            return result;
+        }
     }
 
     public class PropertyValue
@@ -785,3 +842,4 @@ namespace OutlookSync
     }
 
 }
+
