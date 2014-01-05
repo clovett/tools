@@ -109,6 +109,10 @@ namespace OutlookSyncPhone
             {
                 if (!fakeIds.ContainsKey(contact.OutlookEntryId))
                 {
+                    if (contact.DisplayName == "Chris Lovett")
+                    {
+                        Debug.WriteLine("test");
+                    }
                     message.Contacts.Add(new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = contact.GetHighestVersionNumber() });
                 }
             }
@@ -295,8 +299,14 @@ namespace OutlookSyncPhone
                 sc = new StoredContact(store);
                 sc.RemoteId = contact.OutlookEntryId;
             }
-
-            await UpdateFromCache(cached, sc);
+            try
+            {
+                await UpdateFromCache(cached, sc);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception updating from cache: " + ex.Message);
+            }
 
             await sc.SaveAsync();
 
@@ -388,7 +398,7 @@ namespace OutlookSyncPhone
 
         private async Task UpdateFromCache(UnifiedContact cache, StoredContact contact)
         {
-            contact.DisplayName = cache.DisplayName;
+            contact.DisplayName = "" + cache.DisplayName;
 
             var fullName = cache.CompleteName;
             if (fullName != null)

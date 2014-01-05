@@ -33,6 +33,7 @@ namespace OutlookSyncPhone
         // Constructor
         public MainPage()
         {
+            Debug.WriteLine("Starting time " + Environment.TickCount);
 
             InitializeComponent();
 
@@ -219,11 +220,6 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", phoneName, 12777);
-            conmgr.ServerFound += OnServerFound;
-            conmgr.ServerLost += OnServerLost;
-            conmgr.Start();
-
             ShowLoadProgress();
             MessagePrompt.Text = AppResources.LoadingStore;
 
@@ -234,6 +230,11 @@ namespace OutlookSyncPhone
 
             HideLoadProgress();
 
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", phoneName, 12777);
+            conmgr.ServerFound += OnServerFound;
+            conmgr.ServerLost += OnServerLost;
+            conmgr.Start();
+            
             MessagePrompt.Text = AppResources.LaunchPrompt;
 
             base.OnNavigatedTo(e);
