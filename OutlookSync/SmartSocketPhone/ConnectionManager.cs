@@ -52,45 +52,64 @@ namespace Microsoft.Networking
         }
 
         HashSet<string> localAddresses = new HashSet<string>();
+        bool findingServer;
 
         private void FindServer()
         {
-            var cancellationToken = cancellationSource.Token;
-            while (!cancellationToken.IsCancellationRequested)
+            if (this.sockets.Count > 0)
             {
-                // send out the UDP ping every few seconds.
-                Guid adapter = Guid.Empty;
-                foreach (var hostName in Windows.Networking.Connectivity.NetworkInformation.GetHostNames())
+                // how could this be?
+                // clear out the old sockets in case they are disposed...
+                StopFindingServer();
+            }
+
+            findingServer = true;
+            try
+            {
+                var cancellationToken = cancellationSource.Token;
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    if (hostName.IPInformation != null)
+                    // send out the UDP ping every few seconds.
+                    Guid adapter = Guid.Empty;
+                    foreach (var hostName in Windows.Networking.Connectivity.NetworkInformation.GetHostNames())
                     {
-                        // blast it out on all local hosts, since user may be connected to the network in multiple ways
-                        // and some of these hostnames might be virtual ethernets that go no where, like 169.254.80.80.
-                        try
+                        if (hostName.IPInformation != null)
                         {
-                            if (hostName.IPInformation.NetworkAdapter != null && !hostName.CanonicalName.StartsWith("169."))
+                            // blast it out on all local hosts, since user may be connected to the network in multiple ways
+                            // and some of these hostnames might be virtual ethernets that go no where, like 169.254.80.80.
+                            try
                             {
-                                localAddresses.Add(hostName.CanonicalName);
-                                SendUdpPing(hostName).Wait();
+                                if (hostName.IPInformation.NetworkAdapter != null && !hostName.CanonicalName.StartsWith("169."))
+                                {
+                                    localAddresses.Add(hostName.CanonicalName);
+                                    SendUdpPing(hostName).Wait();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine("Ping failed: " + ex.Message);
                             }
                         }
-                        catch (Exception ex)
+                    }
+                    try
+                    {
+                        Task.Delay(3000).Wait(cancellationToken);
+                        if (cancellationToken.IsCancellationRequested)
                         {
-                            Debug.WriteLine("Ping failed: " + ex.Message);
+                            cancelled.Set();
                         }
                     }
-                }
-                try
-                {
-                    Task.Delay(3000).Wait(cancellationToken);
-                    if (cancellationToken.IsCancellationRequested)
+                    catch
                     {
-                        cancelled.Set();
                     }
                 }
-                catch
-                {
-                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                findingServer = false;
             }
         }
 
@@ -207,12 +226,13 @@ namespace Microsoft.Networking
 
         void StopFindingServer()
         {
-            if (cancellationSource != null)
+            if (cancellationSource != null && findingServer)
             {
-                cancellationSource.Cancel();
+                cancellationSource.Cancel();                
                 // wait for FindDevices to terminate so we can tear down the sockets cleanly.
                 cancelled.WaitOne(5000);
             }
+
             foreach (var socket in sockets.Values)
             {
                 // dispose the socket.

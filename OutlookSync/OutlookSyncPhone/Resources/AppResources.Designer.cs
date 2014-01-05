@@ -106,7 +106,7 @@ namespace OutlookSyncPhone.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please launch the Outlook Sync Server on your PC....
+        ///   Looks up a localized string similar to Please launch the Outlook Sync Server on your PC.
         /// </summary>
         public static string LaunchPrompt {
             get {

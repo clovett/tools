@@ -116,9 +116,6 @@
     <Compile Include="Utilities\ConnectorControl.xaml.cs">
       <DependentUpon>ConnectorControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utilities\CylinderControl.xaml.cs">
-      <DependentUpon>CylinderControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="LocalizedStrings.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -134,7 +131,6 @@
     <Compile Include="Utilities\SyncProgressControl.xaml.cs">
       <DependentUpon>SyncProgressControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utilities\UserContacts.cs" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
@@ -150,10 +146,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Utilities\ConnectorControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Utilities\CylinderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

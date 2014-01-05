@@ -53,20 +53,13 @@ namespace OutlookSyncPhone
             isBlueOs = (version.Major > 8) || (version.Major == 8 && version.Minor >= 10);
         }
 
+        internal UnifiedStore UnifiedStore { get { return this.cache; } }
+
         internal void StartMerge()
         {
             merged = new HashSet<string>();
             toSend = new List<string>();
             toUpdate = new List<string>();
-        }
-
-        internal void FinishMerge()
-        {
-        }
-
-        public int RemainingContactsToUpdate
-        {
-            get { return toUpdate.Count; }
         }
 
         internal string GetNextContactToUpdate()
@@ -257,11 +250,6 @@ namespace OutlookSyncPhone
             {
                 // error handling.
                 return MergeResult.ParseError;
-            }
-
-            if (contact.DisplayName == "Andrew Byrne")
-            {
-                Debugger.Break();
             }
 
             // compare this new contact from outlook with our existing one
@@ -644,21 +632,29 @@ namespace OutlookSyncPhone
                 cache.Websites = null;
             }
         }
-        
-        public async Task HandleServerSync(string xml)
+
+        public async Task<SyncResult> HandleServerSync(string xml)
         {
             SyncMessage server = SyncMessage.Parse(xml);
 
             SyncMessage phone = this.syncReport;
 
+            SyncResult result = new SyncResult();
+
             // create index of our contacts.
             Dictionary<string, ContactVersion> map = new Dictionary<string, ContactVersion>();
             foreach (var contact in phone.Contacts)
             {
-                if (!contact.Deleted && !contact.Inserted)
+                if (contact.Deleted)
                 {
-                    map[contact.Id] = contact;
+                    result.PhoneDeleted++;
                 }
+                else if (contact.Inserted)
+                {
+                    result.PhoneInserted++;
+                }
+
+                map[contact.Id] = contact;               
             }
 
 
@@ -670,11 +666,13 @@ namespace OutlookSyncPhone
                 if (contact.Deleted)
                 {
                     // deleted on the server
+                    result.ServerDeleted++;
                     await this.ServerDelete(contact.Id);
                 }
                 else if (contact.Inserted)
                 {
                     // remember to ask for this one.
+                    result.ServerInserted++;
                     toSend.Add(contact.Id);
                 }
                 else 
@@ -684,25 +682,33 @@ namespace OutlookSyncPhone
                     ContactVersion phoneVersion = null;
                     if (map.TryGetValue(contact.Id, out phoneVersion))
                     {
-                        if (phoneVersion.VersionNumber > contact.VersionNumber)
+                        if (phoneVersion.Deleted)
+                        {
+                            // let it stay deleted
+                        }
+                        else if (phoneVersion.VersionNumber > contact.VersionNumber)
                         {
                             // remember to send this one
+                            result.PhoneUpdated++;
                             toSend.Add(contact.Id);
                         }
                         else if (contact.VersionNumber > phoneVersion.VersionNumber)
                         {
                             // remember to pull this one.
+                            result.ServerUpdated++;
                             toUpdate.Add(contact.Id);
                         }
                         else
                         {
                             // they are the same! yay, this saves time...
+                            result.Unchanged++;
                         }
                     }
                     else
                     {
                         // hmmm, then phone doesn't have this one after all
                         // perhaps phone sync app was uninstalled and reinstalled.
+                        result.ServerInserted++;
                         toUpdate.Add(contact.Id);                        
                     }
                 }
@@ -716,12 +722,48 @@ namespace OutlookSyncPhone
                 {
                     // remember to send this one
                     toSend.Add(contact.Id);
+                    result.PhoneInserted++;
                 }
             }
 
-
+            return result;
 
         }
 
+
+        internal SyncResult GetLocalSyncResult()
+        {
+            int time = UnifiedStore.SyncTime;
+            var syncReport = this.GetSyncMessage();
+
+            int deleted = (from c in syncReport.Contacts where c.Deleted select c).Count();
+            int inserted = (from c in syncReport.Contacts where c.Inserted select c).Count();
+            int updated = (from c in this.UnifiedStore.Contacts where c.VersionNumber == time select c).Count();
+
+            int other = syncReport.Contacts.Count - deleted - inserted - updated;
+            if (other < 0) other = 0;
+
+            return new SyncResult()
+            {
+                 PhoneInserted = inserted,
+                 PhoneDeleted = deleted,
+                 PhoneUpdated = updated,
+                 Unchanged = other
+            };
+        }
     }
+
+    public class SyncResult
+    {
+        public int ServerInserted;
+        public int ServerDeleted;
+        public int ServerUpdated;
+
+        public int PhoneUpdated;
+        public int PhoneInserted;
+        public int PhoneDeleted;
+
+        public int Unchanged;
+    }
+        
 }

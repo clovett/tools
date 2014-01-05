@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 using Microsoft.Phone.Net.NetworkInformation;
 using Microsoft.Phone.Info;
 using OutlookSync.Model;
+using OutlookSyncPhone.Utilities;
+using System.Windows.Media.Animation;
 
 namespace OutlookSyncPhone
 {
@@ -33,13 +35,23 @@ namespace OutlookSyncPhone
         // Constructor
         public MainPage()
         {
-            Debug.WriteLine("Starting time " + Environment.TickCount);
+            Debug.WriteLine("Starting time " + UnifiedStore.SyncTime);
 
             InitializeComponent();
+
+            MessagePrompt.Text = "";
 
             phoneName = Windows.Networking.Proximity.PeerFinder.DisplayName;
 
             DeviceNetworkInformation.NetworkAvailabilityChanged += new EventHandler<NetworkNotificationEventArgs>(OnNetworkAvailabilityChanged);
+
+            this.SizeChanged += MainPage_SizeChanged;
+        }
+
+        void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            double w = e.NewSize.Width * 0.8;
+            TileGrid.Width = TileGrid.Height = w;
         }
 
         async void OnServerFound(object sender, ServerEventArgs e)
@@ -50,9 +62,7 @@ namespace OutlookSyncPhone
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessagePrompt.Text = AppResources.ConnectedMessage;
-                Connector.Connected = true;
-                SyncIndicator.Visibility = System.Windows.Visibility.Visible;
-                SyncIndicator.Current = 0;
+                Connector.Connected = true;              
             }));
 
             await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName });
@@ -64,12 +74,11 @@ namespace OutlookSyncPhone
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessagePrompt.Text = AppResources.ConnectionLost;
-                Connector.Connected = false;
-                SyncIndicator.Visibility = System.Windows.Visibility.Collapsed;
+                Connector.Connected = false;                
             }));
         }
 
-        int contactCount;
+        int outlookContactCount;
 
         async void OnMessageReceived(object sender, MessageEventArgs e)
         {
@@ -79,7 +88,7 @@ namespace OutlookSyncPhone
                 case "Count":
                     int max = 0;
                     int.TryParse(m.Parameters, out max);
-                    contactCount = max;
+                    outlookContactCount = max;
                     
                     loader.StartMerge();
 
@@ -87,7 +96,10 @@ namespace OutlookSyncPhone
                     await SendSyncMessage();
                     break;
                 case "ServerSync":
-                    await loader.HandleServerSync(m.Parameters);
+                    SyncResult result = await loader.HandleServerSync(m.Parameters);
+                    
+                    StartSyncProgress(result);
+
                     // then start pulling updates from server.                 
                     if (!await GetNextContact())
                     {
@@ -105,8 +117,6 @@ namespace OutlookSyncPhone
                     }
                     break;
                 case "StartPulling":
-                    loader.FinishMerge();
-
                     // start sending updates to server, server responds with "Updated"
                     if (!await SendNextUpdate())
                     {
@@ -126,9 +136,31 @@ namespace OutlookSyncPhone
             }
         }
 
+        SyncResult syncProgress;
+
+        private void StartSyncProgress(SyncResult result)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                UpdateTiles(result);
+
+                syncProgress = result;
+
+                // start sync progress indicator
+                LoadProgress.Visibility = System.Windows.Visibility.Visible;
+                LoadProgress.IsIndeterminate = false;
+                LoadProgress.Minimum = 0;
+                LoadProgress.Maximum = result.PhoneInserted + result.PhoneUpdated + result.ServerInserted + result.ServerUpdated;
+                LoadProgress.Value = 0;
+            }));
+        }
+
         private async Task FinishUpdate()
         {
-            await proxy.SendMessage(new Message() { Command = "FinishUpdate" });
+            if (proxy != null)
+            {
+                await proxy.SendMessage(new Message() { Command = "FinishUpdate" });
+            }
 
             // our cache has been updated, so save it!
             Dispatcher.BeginInvoke(new Action(async () =>
@@ -143,19 +175,19 @@ namespace OutlookSyncPhone
             }));
         }
 
-        private async Task<bool> SendSyncMessage()
+        private async Task SendSyncMessage()
         {
             var syncReport = loader.GetSyncMessage();
-            if (syncReport != null)
-            {
-                await proxy.SendMessage(new Message() { Command = "SyncMessage", Parameters = syncReport .ToXml() });
-                return true;
-            }
-            return false;
+            await proxy.SendMessage(new Message() { Command = "SyncMessage", Parameters = syncReport .ToXml() });
         }
 
         private async Task<bool> SendNextUpdate()
         {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadProgress.Value++;
+            }));
+
             var c = loader.GetNextContactToSend();
             if (c != null)
             {
@@ -176,8 +208,7 @@ namespace OutlookSyncPhone
             
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                SyncIndicator.Maximum = contactCount;
-                SyncIndicator.Current = contactCount - loader.RemainingContactsToUpdate;
+                LoadProgress.Value++;
             }));
 
             if (proxy != null && id != null)
@@ -228,6 +259,8 @@ namespace OutlookSyncPhone
             loader = new PhoneStoreLoader();
             await loader.Open();
 
+            UpdateTiles(loader.GetLocalSyncResult());
+
             HideLoadProgress();
 
             conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", phoneName, 12777);
@@ -238,6 +271,27 @@ namespace OutlookSyncPhone
             MessagePrompt.Text = AppResources.LaunchPrompt;
 
             base.OnNavigatedTo(e);
+        }
+
+        private void UpdateTiles(SyncResult syncResult)
+        {
+            AnimateCount(InsertIndicator, syncResult.PhoneInserted + syncResult.ServerInserted);
+            AnimateCount(UpdateIndicator, syncResult.PhoneUpdated + syncResult.ServerUpdated);
+            AnimateCount(UnchangedIndicator, syncResult.Unchanged);
+            AnimateCount(DeleteIndicator, syncResult.PhoneDeleted + syncResult.ServerDeleted);
+        }
+
+        void AnimateCount(SyncProgressControl ctrl, int count)
+        {
+            DoubleAnimation animation = new DoubleAnimation();
+            animation.To = count;
+            animation.Duration = new Duration(TimeSpan.FromSeconds(1));
+
+            Storyboard s = new Storyboard();
+            Storyboard.SetTarget(animation, ctrl);
+            Storyboard.SetTargetProperty(animation, new PropertyPath("Count"));
+            s.Children.Add(animation);
+            s.Begin();
         }
 
         private void ShowLoadProgress()

@@ -135,7 +135,7 @@
     <value>Searching your Wifi network for your local PC running OutlookSync...</value>
   </data>
   <data name="LaunchPrompt" xml:space="preserve">
-    <value>Please launch the Outlook Sync Server on your PC...</value>
+    <value>Please launch the Outlook Sync Server on your PC</value>
   </data>
   <data name="ConnectedMessage" xml:space="preserve">
     <value>Connected</value>

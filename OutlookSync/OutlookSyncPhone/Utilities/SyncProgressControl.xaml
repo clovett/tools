@@ -9,17 +9,17 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     d:DesignHeight="480" d:DesignWidth="480">
-    
-    <Grid x:Name="LayoutRoot" VerticalAlignment="Top" HorizontalAlignment="Center">
-        <local:CylinderControl x:Name="FillCylinder" CylinderHeight="0" CylinderWidth="200" 
-                               VerticalAlignment="Bottom"
-                               CylinderFill="#8080C0" CylinderStroke="Blue"/>
 
-        <local:CylinderControl x:Name="OutlineCylinder" CylinderHeight="200" CylinderWidth="200" 
-                                      CylinderStroke="Blue" />
+    <Grid x:Name="LayoutRoot" Width="100" Height="100" >
 
-        <TextBlock x:Name="ContactCount" Text="" FontSize="48" 
+        <Rectangle x:Name="BackgroundRect"                   
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <TextBlock x:Name="CaptionTextBlock"  FontSize="48" 
                           HorizontalAlignment="Center" VerticalAlignment="Center"
                           />
+
+        <TextBlock x:Name="SubTextBlock" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   FontSize="14" Margin="3"/>
     </Grid>
 </UserControl>

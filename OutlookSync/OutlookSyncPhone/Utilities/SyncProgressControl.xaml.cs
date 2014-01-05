@@ -7,80 +7,114 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using System.Windows.Media;
+using System.Diagnostics;
 
 namespace OutlookSyncPhone.Utilities
 {
+    /// <summary>
+    /// expecting DataContext of SyncProgress.
+    /// </summary>
     public partial class SyncProgressControl : UserControl
     {
         public SyncProgressControl()
         {
             InitializeComponent();
-            OnCurrentChanged();
+            this.SizeChanged += SyncProgressControl_SizeChanged;
         }
 
-        public int Maximum
+        void SyncProgressControl_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            get { return (int)GetValue(MaximumProperty); }
-            set { SetValue(MaximumProperty, value); }
+            double s = Math.Min(e.NewSize.Width, e.NewSize.Height);
+            LayoutRoot.Width = LayoutRoot.Height = s;
+            BackgroundRect.Width = BackgroundRect.Height = s;
         }
 
-        // Using a DependencyProperty as the backing store for Maximum.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty MaximumProperty =
-            DependencyProperty.Register("Maximum", typeof(int), typeof(SyncProgressControl), new PropertyMetadata(0, new PropertyChangedCallback(OnMaximumChanged)));
-
-        private static void OnMaximumChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public string SubText
         {
-            ((SyncProgressControl)d).OnMaximumChanged();
+            get { return (string)GetValue(SubTextProperty); }
+            set { SetValue(SubTextProperty, value); }
         }
 
-        private void OnMaximumChanged()
+        // Using a DependencyProperty as the backing store for SubText.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty SubTextProperty =
+            DependencyProperty.Register("SubText", typeof(string), typeof(SyncProgressControl), new PropertyMetadata(null, new PropertyChangedCallback(OnSubTextChanged)));
+
+        private static void OnSubTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ContactCount.Text = Maximum.ToString();
-            UpdateFillHeight();
+            ((SyncProgressControl)d).OnSubTextChanged();
         }
 
-        void UpdateFillHeight()
+        private void OnSubTextChanged()
         {
-            double fullHeight = OutlineCylinder.CylinderHeight;
-            if (Maximum > 0)
-            {
-                if (Current == Maximum)
-                {
-                    FillCylinder.CylinderHeight = fullHeight;
-                }
-                else
-                {
-                    FillCylinder.CylinderHeight = (double)Current * fullHeight  / (double)Maximum;
-                }
-            }
-            else
-            {
-                FillCylinder.CylinderHeight = 0;
-            }
+            SubTextBlock.Text = "" + SubText;
         }
 
 
-
-        public int Current
+        public double Count
         {
-            get { return (int)GetValue(CurrentProperty); }
-            set { SetValue(CurrentProperty, value); }
+            get { return (double)GetValue(CountProperty); }
+            set { SetValue(CountProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Current.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty CurrentProperty =
-            DependencyProperty.Register("Current", typeof(int), typeof(SyncProgressControl), new PropertyMetadata(0, new PropertyChangedCallback(OnCurrentChanged)));
+        // Using a DependencyProperty as the backing store for Caption.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty CountProperty =
+            DependencyProperty.Register("Count", typeof(double), typeof(SyncProgressControl), new PropertyMetadata(0.0, new PropertyChangedCallback(OnCountChanged)));
 
-        private static void OnCurrentChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnCountChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ((SyncProgressControl)d).OnCurrentChanged();
+            ((SyncProgressControl)d).OnCountChanged();
         }
 
-        private void OnCurrentChanged()
+        private void OnCountChanged()
         {
-            UpdateFillHeight();
+            int c = (int)this.Count;
+            CaptionTextBlock.Text = c.ToString();
         }
 
+
+        public Brush TileBackground
+        {
+            get { return (Brush)GetValue(TileBackgroundProperty); }
+            set { SetValue(TileBackgroundProperty, value); }
+        }
+
+
+        // Using a DependencyProperty as the backing store for Caption.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty TileBackgroundProperty =
+            DependencyProperty.Register("TileBackground", typeof(Brush), typeof(SyncProgressControl), new PropertyMetadata(null, new PropertyChangedCallback(OnTileBackgroundChanged)));
+
+        private static void OnTileBackgroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SyncProgressControl)d).OnTileBackgroundChanged();
+        }
+
+        private void OnTileBackgroundChanged()
+        {
+            BackgroundRect.Fill = TileBackground;
+        }
+
+        public Brush TileForeground
+        {
+            get { return (Brush)GetValue(TileForegroundProperty); }
+            set { SetValue(TileForegroundProperty, value); }
+        }
+
+
+        // Using a DependencyProperty as the backing store for Caption.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty TileForegroundProperty =
+            DependencyProperty.Register("TileForeground", typeof(Brush), typeof(SyncProgressControl), new PropertyMetadata(null, new PropertyChangedCallback(OnTileForegroundChanged)));
+
+        private static void OnTileForegroundChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((SyncProgressControl)d).OnTileForegroundChanged();
+        }
+
+        private void OnTileForegroundChanged()
+        {
+            CaptionTextBlock.Foreground = TileForeground;
+            SubTextBlock.Foreground = TileForeground;
+        }
 
         
     }
