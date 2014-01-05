@@ -595,7 +595,7 @@ namespace OutlookSync.Model
 
             // Ok, now if the phone has deleted stuff, let's take care of that
             foreach (var contact in msg.Contacts)
-            {
+            {                
                 if (contact.Deleted)
                 {
                     DeleteContact(contact.Id);
@@ -611,6 +611,11 @@ namespace OutlookSync.Model
             {
                 string id = contact.OutlookEntryId;
                 Debug.Assert(!deletedLocally.Contains(id), "Should have been deleted???");
+
+                if (contact.DisplayName == "Chris Lovett")
+                {
+                    Debug.WriteLine("debug me");
+                }
 
                 int version = contact.GetHighestVersionNumber();
 

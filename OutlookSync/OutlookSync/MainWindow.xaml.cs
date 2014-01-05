@@ -40,6 +40,8 @@ namespace OutlookSync
 
             Log.OpenLog(GetLogFileName());
 
+            Debug.WriteLine("Starting time " + Environment.TickCount);
+
             PhoneList.ItemsSource = items;
             conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", 12777);
         }

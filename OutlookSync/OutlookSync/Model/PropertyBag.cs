@@ -229,22 +229,11 @@ namespace OutlookSync.Model
             {
                 if (value is IList)
                 {
-                    if (v.Value != null)
-                    {
-                        // why wasn't this list diff done?
-                        Debugger.Break();
-                    }
                     v.Value = value;
                     v.VersionNumber = Environment.TickCount;
                 }
                 else if (value is PropertyBag)
                 {
-                    if (v.Value != null)
-                    {
-                        // why wasn't this a property bag merge instead?
-                        Debugger.Break(); 
-                    }
-                    v.Value = value;
                     v.VersionNumber = Environment.TickCount;
                 }
                 else
@@ -835,7 +824,7 @@ namespace OutlookSync.Model
         public object Value
         {
             get { return value; }
-            set { this.value = value; if (value is PropertyValue) Debugger.Break(); }
+            set { this.value = value; }
         }
 
         public int VersionNumber { get; set; }
