@@ -79,7 +79,7 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Waiting for phone to connect over Wifi UDP protocol....
+        ///   Looks up a localized string similar to Waiting for phone to connect over Wifi .
         /// </summary>
         internal static string WaitingForPhone {
             get {

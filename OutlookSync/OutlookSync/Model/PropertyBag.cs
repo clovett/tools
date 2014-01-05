@@ -39,7 +39,7 @@ namespace OutlookSync.Model
         {
             if (Parent != null)
             {
-                Parent.VersionNumber = Environment.TickCount;
+                Parent.VersionNumber = UnifiedStore.SyncTime;
             }
         }
 
@@ -222,19 +222,37 @@ namespace OutlookSync.Model
             return bag.ContainsKey(key);
         }
 
-        public void SetValue(string key, object value)
+        internal void InnerSetValue(string key, object value, bool rememberNull = false)
         {
             PropertyValue v = GetPropertyValue(key);
             if (v != null)
             {
-                if (value is IList)
+                if (value == null)
                 {
+                    // nulling out the value then to remember a delete.
+                    if (v.Value != null)
+                    {
+                        v.Value = value;
+                        v.VersionNumber = UnifiedStore.SyncTime;
+                    }
+                }
+                else if (value is IList)
+                {
+                    if (v.Value != null)
+                    {
+                        Debug.WriteLine("Why wasn't this list diffed?");
+                    }
                     v.Value = value;
-                    v.VersionNumber = Environment.TickCount;
+                    v.VersionNumber = UnifiedStore.SyncTime;
                 }
                 else if (value is PropertyBag)
                 {
-                    v.VersionNumber = Environment.TickCount;
+                    if (v.Value != null)
+                    {
+                        Debug.WriteLine("Why wasn't this property bag diffed?");
+                    }
+                    v.Value = value;
+                    v.VersionNumber = UnifiedStore.SyncTime;
                 }
                 else
                 {
@@ -243,9 +261,14 @@ namespace OutlookSync.Model
                     if (a != b)
                     {
                         v.Value = value;
-                        v.VersionNumber = Environment.TickCount;
+                        v.VersionNumber = UnifiedStore.SyncTime;
                     }
                 }
+            }
+            else if (value == null && !rememberNull)
+            {
+                // we don't have the property, and the caller doesn't want one, so
+                // there is no delete to remember here, just skip it!
             }
             else
             {
@@ -254,14 +277,14 @@ namespace OutlookSync.Model
                     // don't add empty strings
                     return;
                 }
-                v = new PropertyValue() { Value = value };
+                v = new PropertyValue() { Value = value, VersionNumber = UnifiedStore.SyncTime };
                 bag[key] = v;
             }
         }
 
         public void SetValue<T>(string key, T value)
         {
-            SetValue(key, (object)value);
+            InnerSetValue(key, (object)value, false);
         }
 
         internal void Read(UnifiedStoreSerializer reader)
@@ -291,7 +314,7 @@ namespace OutlookSync.Model
                     else if (type == "null")
                     {
                         // we got a null, so we are trying to remember a delete operation
-                        this.SetValue(name, null);
+                        this.InnerSetValue(name, null, true);
                     }
                     else 
                     {
@@ -300,18 +323,23 @@ namespace OutlookSync.Model
                         if (bag != null)
                         {
                             bag.Read(reader);
-                            this.SetValue(name, bag);
+                            this.InnerSetValue(name, bag);
                         }
                         else
                         {
                             typedValue = reader.ReadElementContentAs(typedValue.GetType());
-                            this.SetValue(name, typedValue);
+                            this.InnerSetValue(name, typedValue);
                         }
                     }
 
                     int v = 0;
                     if (int.TryParse(version, out v))
                     {
+                        if (v > UnifiedStore.SyncTime)
+                        {
+                            // fix bogus timestamps from before.
+                            v = UnifiedStore.SyncTime;
+                        }
                         this.GetPropertyValue(name).VersionNumber = v;
                     }
                 }
@@ -764,6 +792,8 @@ namespace OutlookSync.Model
             return listValues;
         }
 
+        public int VersionNumber { get; set; }
+
         /// <summary>
         /// Get the highest version number on any item in this bag or in any child lists.
         /// </summary>
@@ -813,6 +843,12 @@ namespace OutlookSync.Model
                     }
                 }
             }
+
+            if (result == UnifiedStore.SyncTime)
+            {
+                Debug.WriteLine("???");
+            }
+            VersionNumber = result;
             return result;
         }
     }

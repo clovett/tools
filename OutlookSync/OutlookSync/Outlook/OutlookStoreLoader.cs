@@ -600,6 +600,10 @@ namespace OutlookSync.Model
                 {
                     DeleteContact(contact.Id);
                 }
+                else if (contact.Inserted)
+                {
+                    Debug.WriteLine("new contact on phone");
+                }
                 else if (!contact.Inserted)
                 {
                     map[contact.Id] = contact;
@@ -611,11 +615,6 @@ namespace OutlookSync.Model
             {
                 string id = contact.OutlookEntryId;
                 Debug.Assert(!deletedLocally.Contains(id), "Should have been deleted???");
-
-                if (contact.DisplayName == "Chris Lovett")
-                {
-                    Debug.WriteLine("debug me");
-                }
 
                 int version = contact.GetHighestVersionNumber();
 

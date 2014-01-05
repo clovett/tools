@@ -31,6 +31,30 @@ namespace OutlookSync.Model
             this.Contacts.CollectionChanged += Contacts_CollectionChanged;
         }
 
+
+        static int _syncTime;
+
+        public static void UpdateSyncTime()
+        {
+            _syncTime = 0;
+        }
+
+        public static int SyncTime
+        {
+            get
+            {
+                if (_syncTime == 0)
+                {
+                    TimeSpan from2013 = DateTime.UtcNow - new DateTime(2013, 1, 1);
+                    // this should fit in a 32 bit integer, and be able to count 
+                    // time out about 150 years which should be plenty for this app :-) 
+                    _syncTime = (int)from2013.TotalSeconds;
+                }
+                return _syncTime;
+            }
+        }
+
+
 #if WINDOWS_PHONE
         public static async Task<UnifiedStore> LoadAsync(string fileName)
         {

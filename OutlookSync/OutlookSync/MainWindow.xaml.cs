@@ -40,7 +40,7 @@ namespace OutlookSync
 
             Log.OpenLog(GetLogFileName());
 
-            Debug.WriteLine("Starting time " + Environment.TickCount);
+            Debug.WriteLine("Starting time " + UnifiedStore.SyncTime);
 
             PhoneList.ItemsSource = items;
             conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", 12777);
@@ -87,6 +87,8 @@ namespace OutlookSync
 
             if (phone != null)
             {
+                phone.Connected = false;
+
                 connected.Remove(key);
 
                 Dispatcher.BeginInvoke(new Action(() =>
@@ -178,7 +180,10 @@ namespace OutlookSync
                 await Dispatcher.BeginInvoke(new Action(() =>
                 {
                     // phone reconnected, so start over.
-                    phone.Allowed = false;
+                    if (!phone.Connected)
+                    {
+                        phone.Allowed = false;
+                    }
                 }));
             }
         }
@@ -208,6 +213,7 @@ namespace OutlookSync
 
             await this.Dispatcher.BeginInvoke(new Action(() =>
             {
+                phone.Connected = true;
                 StatusMessage.Text = Properties.Resources.LoadingOutlookContacts;
             }));
 

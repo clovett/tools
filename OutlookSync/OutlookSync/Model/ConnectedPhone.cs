@@ -23,6 +23,7 @@ namespace OutlookSync.Model
         string fileName;
         bool allowed;
         string ipEndPoint;
+        bool connected;
 
         public ConnectedPhone(UnifiedStore store, Dispatcher dispatcher, string fileName)
         {
@@ -39,12 +40,14 @@ namespace OutlookSync.Model
 
         public async Task SyncOutlook()
         {
+            UnifiedStore.UpdateSyncTime();
             loader = new OutlookStoreLoader();
             await loader.UpdateAsync(store);
             await Save();
         }
         
-        public string IPEndPoint {
+        public string IPEndPoint
+        {
             get { return ipEndPoint; }
             set
             {
@@ -56,7 +59,21 @@ namespace OutlookSync.Model
             }
         }
 
-        public string Name {
+        public bool Connected
+        {
+            get { return connected; }
+            set
+            {
+                if (connected != value)
+                {
+                    connected = value;
+                    OnPropertyChanged("Connected");
+                }
+            }
+        }
+
+        public string Name 
+        {
             get { return name; }
             set
             {
@@ -127,6 +144,9 @@ namespace OutlookSync.Model
             var m = e.Message;
             switch (m.Command)
             {
+                case "Hello":
+                    break;
+
                 case "Connect":
                     Name = m.Parameters;
                     response = new Message() { Command = "Count", Parameters = store.Contacts.Count.ToString() };
@@ -218,5 +238,6 @@ namespace OutlookSync.Model
 
             return new Message() { Command = "Updated", Parameters = "Parse error or missing id" };
         }
+
     }
 }

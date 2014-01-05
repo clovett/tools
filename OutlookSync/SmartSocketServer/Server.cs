@@ -71,13 +71,15 @@ namespace Microsoft.Networking
             }
             listeners.Clear();
 
-            foreach (ServerClient sc in activeClients)
+            lock (activeClients)
             {
-                sc.Stop();
-                sc.MessageReceived -= OnMessageReceived;
+                foreach (ServerClient sc in activeClients)
+                {
+                    sc.Stop();
+                    sc.MessageReceived -= OnMessageReceived;
+                }
+                activeClients.Clear();
             }
-
-            activeClients.Clear();
 
         }
 
@@ -94,7 +96,10 @@ namespace Microsoft.Networking
                     ServerClient sc = new ServerClient((IPEndPoint)listener.LocalEndpoint, client);
                     sc.MessageReceived += OnMessageReceived;
                     sc.ReadException += OnReadException;
-                    activeClients.Add(sc);
+                    lock (activeClients)
+                    {
+                        activeClients.Add(sc);
+                    }
                 }
             }
             catch (Exception x)
@@ -107,7 +112,13 @@ namespace Microsoft.Networking
         {
             ServerClient client = (ServerClient)sender;
             client.Stop();
-            activeClients.Remove(client);
+            lock (activeClients)
+            {
+                if (activeClients.Contains(client))
+                {
+                    activeClients.Remove(client);
+                }
+            }
             if (ReadException != null)
             {
                 ReadException(this, e);
