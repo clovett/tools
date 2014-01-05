@@ -1,6 +1,7 @@
 ﻿using OutlookSync.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,6 +72,10 @@ namespace OutlookSync.Controls
             CylinderBody.Fill = brush;
             CylinderBase.Fill = brush;
             CylinderTop.Fill = fill;
+
+            CylinderBody.InvalidateVisual();
+            CylinderBase.InvalidateVisual();
+            CylinderTop.InvalidateVisual();
         }
 
 
@@ -99,6 +104,9 @@ namespace OutlookSync.Controls
             CylinderBody.Stroke = brush;
             CylinderBase.Stroke = brush;
             CylinderTop.Stroke = brush;
+            CylinderBody.InvalidateVisual();
+            CylinderBase.InvalidateVisual();
+            CylinderTop.InvalidateVisual();
         }
 
 
@@ -174,6 +182,8 @@ namespace OutlookSync.Controls
         {
             double w = this.CylinderWidth;
             double h = this.CylinderHeight;
+
+            Debug.WriteLine("Cylinder " + this.Name + " height = " + h);
             double stroke = this.CylinderBody.StrokeThickness;
             double twostroke = stroke * 2;
             if (h < twostroke)
@@ -182,17 +192,27 @@ namespace OutlookSync.Controls
             }
             CylinderBody.Width = w;
             CylinderBody.Height = h + stroke + stroke;
-            RectangleGeometry clip = (RectangleGeometry)CylinderBody.Clip;
-            clip.Rect = new Rect(0, stroke, w, h - twostroke);
-
+            if (CylinderBody.Fill != null)
+            {
+                RectangleGeometry clip = (RectangleGeometry)CylinderBody.Clip;
+                clip.Rect = new Rect(0, stroke, w, h - twostroke);
+            }
             CylinderBase.Width = w;
             CylinderBase.Height = (CylinderLidHeight * 2);
             Canvas.SetTop(CylinderBase, h - stroke - 1);
-            clip = (RectangleGeometry)CylinderBase.Clip;
-            clip.Rect = new Rect(0, CylinderLidHeight, w, CylinderLidHeight);
+            if (CylinderBase.Fill != null)
+            {
+                RectangleGeometry clip = (RectangleGeometry)CylinderBase.Clip;
+                clip.Rect = new Rect(0, CylinderLidHeight, w, CylinderLidHeight);
+            }
 
             CylinderTop.Width = w;
             CylinderTop.Height = (CylinderLidHeight * 2);
+
+            CylinderTop.InvalidateVisual();
+            CylinderBase.InvalidateVisual();
+            CylinderBody.InvalidateVisual();
+            InvalidateVisual();
 
             return base.ArrangeOverride(finalSize);
         }

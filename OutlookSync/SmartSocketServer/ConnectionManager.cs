@@ -22,20 +22,18 @@ namespace Microsoft.Networking
     public class ConnectionManager
     {
         int m_portNumber;
-        int m_serverPort;
         UdpClient client;
         bool stopped;
         Server server;
         string m_udpMessage;
         string m_udpServerMessage;
 
-        public ConnectionManager(string applicationId, int udpPort, int tcpPort)
+        public ConnectionManager(string applicationId, int udpPort)
         {
             m_portNumber = udpPort;
-            m_serverPort = tcpPort;
             m_udpMessage = "Client:" + applicationId;
             m_udpServerMessage = "Server:" + applicationId;
-            server = new Server(applicationId, tcpPort);
+            server = new Server(applicationId);
             client = new UdpClient(m_portNumber);
             client.EnableBroadcast = true;     
         }
@@ -102,25 +100,54 @@ namespace Microsoft.Networking
         {
             if (pending == ar)
             {
-                UdpState state = (UdpState)ar.AsyncState;
-                UdpClient u = state.Client;
-                IPEndPoint remoteEndPoint = state.EndPoint;
-
-                byte[] message = client.EndReceive(ar, ref remoteEndPoint);
-                string receiveString = UTF8Encoding.UTF8.GetString(message);
-
-                if (receiveString.StartsWith(m_udpMessage))
+                try
                 {
-                    string remoteAddress = receiveString.Substring(m_udpMessage.Length + 1);
+                    UdpState state = (UdpState)ar.AsyncState;
+                    UdpClient u = state.Client;
+                    IPEndPoint remoteEndPoint = state.EndPoint;
 
-                    // tell this client how to connect!
-                    BroadcastEndPoints(remoteAddress, server.ListeningEndPoints);
+                    byte[] message = client.EndReceive(ar, ref remoteEndPoint);
+                    string receiveString = UTF8Encoding.UTF8.GetString(message);
+
+                    if (receiveString.StartsWith(m_udpMessage))
+                    {
+                        string parameter = receiveString.Substring(m_udpMessage.Length + 1);
+
+                        if (MessageReceived != null)
+                        {
+                            MessageReceived(this, new MessageEventArgs(remoteEndPoint, new Message() { Command = "Hello", Parameters = parameter }));
+                        }
+                    }
+                }
+                catch { 
+                    // happens during shutdown sometimes if client is disposed 
                 }
             }
             if (!stopped)
             {
                 Task.Run(new Action(Receive));
             }
+        }
+
+        public void AllowRemoteMachine(string remoteAddress)
+        {
+            // tell this client how to connect!
+            BroadcastEndPoints(remoteAddress, server.ListeningEndPoints);
+        }
+
+        IPEndPoint ParseAddress(string address)
+        {
+            int i = address.IndexOf(':');
+            if (i > 0)
+            {
+                string ipaddress = address.Substring(0, i);
+                string port = address.Substring(i + 1);
+                if (int.TryParse(port, out i))
+                {
+                    return new IPEndPoint(IPAddress.Parse(ipaddress), i);
+                }
+            }
+            return null;
         }
 
         void BroadcastEndPoints(string remoteAddress, IEnumerable<string> endPoints)
@@ -132,14 +159,16 @@ namespace Microsoft.Networking
 
                 foreach (string ip in endPoints)
                 {
-                    sb.Append(":");
+                    sb.Append("/");
                     sb.Append(ip);
                 }
 
                 byte[] buffer = UTF8Encoding.UTF8.GetBytes(sb.ToString());
 
+                IPEndPoint remoteEndPoint = ParseAddress(remoteAddress);
+
                 // hey, we got a ping, so respond with our IP addresses so they can connect to us.
-                client.Send(buffer, buffer.Length, new IPEndPoint(IPAddress.Parse(remoteAddress), m_portNumber));
+                client.Send(buffer, buffer.Length, remoteEndPoint);
             }
         }
 

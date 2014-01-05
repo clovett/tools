@@ -77,5 +77,14 @@ namespace OutlookSync.Properties {
                 return ResourceManager.GetString("LoadingOutlookContacts", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for phone to connect over Wifi UDP protocol....
+        /// </summary>
+        internal static string WaitingForPhone {
+            get {
+                return ResourceManager.GetString("WaitingForPhone", resourceCulture);
+            }
+        }
     }
 }

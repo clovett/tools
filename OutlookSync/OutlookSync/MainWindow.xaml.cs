@@ -16,6 +16,7 @@ using System.Diagnostics;
 using Microsoft.Networking;
 using OutlookSync.Model;
 using System.Collections.ObjectModel;
+using OutlookSync.Utilities;
 
 namespace OutlookSync
 {
@@ -30,9 +31,7 @@ namespace OutlookSync
         const string StoreFileName = "store.xml";
         const string LogFileName = "log.txt";
         Dictionary<string, ConnectedPhone> connected = new Dictionary<string, ConnectedPhone>();
-        Random random = new Random();
         ObservableCollection<ConnectedPhone> items = new ObservableCollection<ConnectedPhone>();
-        int code;
 
         public MainWindow()
         {
@@ -41,18 +40,8 @@ namespace OutlookSync
 
             Log.OpenLog(GetLogFileName());
 
-            if (Debugger.IsAttached)
-            {
-                code = 111111;
-            }
-            else
-            {
-                code = random.Next(100000, 999999);
-            }
-            CodeText.Text = code.ToString();
-
             PhoneList.ItemsSource = items;
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440:" + code, 12777, 12778);
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", 12777);
         }
 
         string GetStoreFileName()
@@ -71,12 +60,16 @@ namespace OutlookSync
 
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
+            StatusMessage.Text = OutlookSync.Properties.Resources.WaitingForPhone;
+
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
             conmgr.ReadException += OnServerException;
             store = await UnifiedStore.LoadAsync(GetStoreFileName());
             
             // wait for phone to connect then sync with the phone.
+            FirewallConfig fc = new FirewallConfig();
+            await fc.CheckSettings();
         }
 
         private void OnServerException(object sender, ServerExceptionEventArgs e)
@@ -114,17 +107,20 @@ namespace OutlookSync
         async Task<Message> HandleMessage(MessageEventArgs e)
         {
             var msg = e.Message;
-            if (msg.Command == "Disconnect")
+            switch (msg.Command)
             {
-                OnDisconnect(e.RemoteEndPoint);
-            }
-            else if (msg.Command == "Connect")
-            {
-                await OnConnect(e);
-            }
-            else if (msg.Command == "FinishUpdate")
-            {
-                await store.SaveAsync(GetStoreFileName());
+                case "Hello":
+                    await OnCreatePhone(e);
+                    break;
+                case "Disconnect":
+                    OnDisconnect(e.RemoteEndPoint);
+                    break;
+                case "Connect":
+                    await OnConnect(e);
+                    break;
+                case "FinishUpdate":
+                    await store.SaveAsync(GetStoreFileName());
+                    break;
             }
 
             string key = e.RemoteEndPoint.Address.ToString();
@@ -139,7 +135,61 @@ namespace OutlookSync
             return response;
         }
 
+        private async Task OnCreatePhone(MessageEventArgs e)
+        {
+            if (this.store == null)
+            {
+                // still loading, not done yet!
+                return;
+            }
+            var msg = e.Message;
+            string key = e.RemoteEndPoint.Address.ToString();
+            ConnectedPhone phone = null;
+            connected.TryGetValue(key, out phone);
 
+            if (phone == null)
+            {
+                phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
+                phone.IPEndPoint = e.RemoteEndPoint.ToString();
+                phone.PropertyChanged += OnPhonePropertyChanged;
+                connected[key] = phone;
+
+                string phoneName = "Unknown";
+                if (msg.Parameters != null)
+                {
+                    string[] parts = msg.Parameters.Split('/');
+                    if (parts.Length > 0)
+                    {
+                        phoneName = parts[0];
+                    }
+                }
+
+                await Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    phone.Name = phoneName;
+                    items.Add(phone);
+                    UpdateConnector();
+                }));
+            }
+            else
+            {
+                await Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    // phone reconnected, so start over.
+                    phone.Allowed = false;
+                }));
+            }
+        }
+
+        private void OnPhonePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            ConnectedPhone phone = (ConnectedPhone)sender;
+            if (e.PropertyName == "Allowed" && phone.Allowed)
+            {
+                // ok, user has given us the green light to connect this phone.
+                conmgr.AllowRemoteMachine(phone.IPEndPoint);
+            }
+        }
 
         private async Task OnConnect(MessageEventArgs e)
         {
@@ -150,15 +200,8 @@ namespace OutlookSync
 
             if (phone == null)
             {
-                phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
-                connected[key] = phone;
-
-                await Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    phone.Name = msg.Parameters;
-                    items.Add(phone);
-                    UpdateConnector();
-                }));
+                // sorry, this phone is not allowed...
+                return;
             }
 
             await this.Dispatcher.BeginInvoke(new Action(() =>
@@ -189,7 +232,6 @@ namespace OutlookSync
             Log.CloseLog();
             base.OnClosed(e);
         }
-
 
     }
 }

@@ -13,14 +13,12 @@ namespace Microsoft.Networking
 {
     class Server
     {
-        int m_PortNumber = 12778;
         Dictionary<string, TcpListener> listeners = new Dictionary<string, TcpListener>();
         List<ServerClient> activeClients = new List<ServerClient>();
         bool stopped;
 
-        public Server(string applicationId, int port)
+        public Server(string applicationId)
         {
-            m_PortNumber = port;
         }
 
         public event EventHandler<MessageEventArgs> MessageReceived;
@@ -40,10 +38,10 @@ namespace Microsoft.Networking
                     TcpListener listener;
                     if (!listeners.TryGetValue(addr, out listener))
                     {
-                        IPEndPoint endPoint = new IPEndPoint(address, m_PortNumber);
+                        IPEndPoint endPoint = new IPEndPoint(address, 0);
                         listener = new TcpListener(endPoint);
                         listeners[addr] = listener;
-                        Task.Run(new Action(() => RunListener(endPoint, listener)));
+                        Task.Run(new Action(() => RunListener(listener)));
                     }
                 }
             }
@@ -51,7 +49,17 @@ namespace Microsoft.Networking
 
         public IEnumerable<string> ListeningEndPoints
         {
-            get { return listeners.Keys; }
+            get
+            {
+                List<string> endPoints = new List<string>();
+                foreach (TcpListener listener in listeners.Values)
+                {
+                    // get endpoint including tcp port number
+                    string s = listener.LocalEndpoint.ToString();
+                    endPoints.Add(s);
+                }
+                return endPoints;
+            }
         }
 
         public void Stop()
@@ -73,15 +81,17 @@ namespace Microsoft.Networking
 
         }
 
-        private void RunListener(IPEndPoint endPoint, TcpListener listener)
+        private void RunListener(TcpListener listener)
         {
             try
             {
                 listener.Start();
+                IPEndPoint ip = listener.LocalEndpoint as IPEndPoint;
+
                 while (!stopped)
                 {
                     var client = listener.AcceptTcpClient();
-                    ServerClient sc = new ServerClient(endPoint, client);
+                    ServerClient sc = new ServerClient((IPEndPoint)listener.LocalEndpoint, client);
                     sc.MessageReceived += OnMessageReceived;
                     sc.ReadException += OnReadException;
                     activeClients.Add(sc);
@@ -124,16 +134,18 @@ namespace Microsoft.Networking
     class ServerClient
     {
         TcpClient client;
-        IPEndPoint endPoint;
+        IPEndPoint localEndPoint;
+        IPEndPoint remoteEndPoint;
         XmlSerializer serializer = new XmlSerializer(typeof(Message));
         bool stopped;
 
         public event EventHandler<MessageEventArgs> MessageReceived;
         public event EventHandler<ServerExceptionEventArgs> ReadException;
 
-        public ServerClient(IPEndPoint endPoint, TcpClient client)
+        public ServerClient(IPEndPoint localEndPoint, TcpClient client)
         {
-            this.endPoint = endPoint;
+            this.localEndPoint = localEndPoint;
+            this.remoteEndPoint = (IPEndPoint)client.Client.RemoteEndPoint;
             this.client = client;
             Task.Run(new Action(ProcessCommands));
         }
@@ -186,7 +198,7 @@ namespace Microsoft.Networking
 
                 if (ReadException != null)
                 {
-                    ReadException(this, new ServerExceptionEventArgs() { Exception = x, RemoteEndPoint = this.endPoint });
+                    ReadException(this, new ServerExceptionEventArgs() { Exception = x, RemoteEndPoint = remoteEndPoint });
                 }
             }
         }
@@ -197,7 +209,7 @@ namespace Microsoft.Networking
             {
                 MemoryStream ms = new MemoryStream(buffer);
                 Message msg = (Message)serializer.Deserialize(ms);
-                var args = new MessageEventArgs(endPoint, msg);
+                var args = new MessageEventArgs((IPEndPoint)this.client.Client.RemoteEndPoint, msg);
                 MessageReceived(this, args);
                 return args.Response;
             }

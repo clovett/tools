@@ -8,13 +8,13 @@
              d:DesignHeight="300" d:DesignWidth="300">
 
     <Grid x:Name="LayoutRoot" VerticalAlignment="Top" HorizontalAlignment="Center">
-        <local:CylinderControl x:Name="FillCylinder" CylinderHeight="50" CylinderWidth="200" 
+        <local:CylinderControl x:Name="FillCylinder" CylinderHeight="100" CylinderWidth="200" 
                                VerticalAlignment="Bottom" CylinderFill="#8080C0" CylinderStroke="Blue"/>
 
         <local:CylinderControl x:Name="OutlineCylinder" CylinderHeight="100" CylinderWidth="200" 
                                       CylinderStroke="Blue" />
 
-        <TextBlock x:Name="ContactCount" Text="96" FontSize="48" Foreground="White" Margin="0,30,0,0"
+        <TextBlock x:Name="ContactCount" Text="96" FontSize="48" Margin="0,30,0,0"
                                HorizontalAlignment="Center" VerticalAlignment="Center"/>
     </Grid>
 </UserControl>

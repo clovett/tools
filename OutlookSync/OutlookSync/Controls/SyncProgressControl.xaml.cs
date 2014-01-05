@@ -11,6 +11,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
@@ -56,22 +57,27 @@ namespace OutlookSync.Controls
             
             if (Maximum > 0)
             {
-                if (Current == Maximum)
+                if (Current >= Maximum)
                 {
                     // make sure we have no rounding errors.
-                    FillCylinder.CylinderHeight = fullHeight;
+                    AnimateFillCylinder(fullHeight);
                 }
                 else
                 {
-                    FillCylinder.CylinderHeight = ((double)Current * fullHeight) / (double)Maximum;
+                    AnimateFillCylinder(((double)Current * fullHeight) / (double)Maximum);
                 }
             }
             else
             {
-                FillCylinder.CylinderHeight = 0;
+                AnimateFillCylinder(0);
             }
         }
 
+        private void AnimateFillCylinder(double newHeight)
+        {
+            FillCylinder.BeginAnimation(CylinderControl.CylinderHeightProperty, 
+                new DoubleAnimation(newHeight, new Duration(TimeSpan.FromSeconds(0.2))));
+        }
 
 
         public int Current

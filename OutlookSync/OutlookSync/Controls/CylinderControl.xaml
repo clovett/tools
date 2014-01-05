@@ -7,22 +7,21 @@
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid x:Name="LayoutRoot">
         <Canvas>
-
-            <Rectangle x:Name="CylinderBody" Width="200" Height="100" 
+            <Rectangle x:Name="CylinderBody" Width="200" Height="100" Fill="#8080FF" Stroke="White"
                        Canvas.Top="40" StrokeThickness="2">
                 <Rectangle.Clip>
                     <RectangleGeometry Rect="0,2,200,96"/>
                 </Rectangle.Clip>
             </Rectangle>
 
-            <Ellipse x:Name="CylinderBase" Width="200" Height="80" 
+            <Ellipse x:Name="CylinderBase" Width="200" Height="80"   Fill="#8080FF" Stroke="White"
                      Canvas.Top="98" StrokeThickness="2">
                 <Ellipse.Clip>
                     <RectangleGeometry Rect="0,40,200,40"/>
                 </Ellipse.Clip>
             </Ellipse>
 
-            <Ellipse x:Name="CylinderTop" Width="200" Height="80" 
+            <Ellipse x:Name="CylinderTop" Width="200" Height="80"  Fill="#8080FF" Stroke="White"
                      StrokeThickness="2"/>
         </Canvas>
     </Grid>

@@ -18,10 +18,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Please enter the following code on your phone to connect: " Margin="10" VerticalAlignment="Center"/>
-                <TextBlock x:Name="CodeText" Text="154976" Margin="10" FontSize="18" Background="LemonChiffon"/>
-            </StackPanel>
             <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0">
                 <ListBox.ItemTemplate>
                     <DataTemplate>

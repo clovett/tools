@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Office.Interop.Outlook;
 using System.Diagnostics;
 
-namespace OutlookSync
+namespace OutlookSync.Model
 {
     class OutlookStoreLoader
     {
@@ -16,6 +16,7 @@ namespace OutlookSync
         MAPIFolder contactFolder;
         Dictionary<string, ContactItem> index = new Dictionary<string, ContactItem>();
         HashSet<string> deletedLocally = new HashSet<string>();
+        HashSet<string> addedLocally = new HashSet<string>();
 
         /// <summary>
         /// Update the unified store with whatever is currently in Outlook.
@@ -53,12 +54,7 @@ namespace OutlookSync
 
             }));
         }
-
-        public IEnumerable<string> GetLocalDeletes()
-        {
-            return deletedLocally;
-        }
-
+        
         private void FindContacts(Folders folders, HashSet<string> found)
         {
             if (folders != null)
@@ -118,6 +114,7 @@ namespace OutlookSync
             if (uc == null)
             {
                 isNew = true;
+                addedLocally.Add(id);
                 uc = new UnifiedContact();
                 uc.OutlookEntryId = id;         
             }
@@ -575,5 +572,65 @@ namespace OutlookSync
             }
         }
 
+
+        internal SyncMessage PhoneSync(SyncMessage msg, out int identical)
+        {
+            int same = 0;
+            SyncMessage response = new SyncMessage();
+
+            // first, out local deletes take precedence...
+            foreach (string id in this.deletedLocally)
+            {
+                response.Contacts.Add(new ContactVersion() { Id = id, Deleted = true });
+            }
+
+            // and our local inserts the phone won't know about yet
+            foreach (string id in this.addedLocally)
+            {
+                response.Contacts.Add(new ContactVersion() { Id = id, Inserted = true });
+            }
+
+            // create index of our contacts.
+            Dictionary<string, ContactVersion> map = new Dictionary<string, ContactVersion>();
+
+            // Ok, now if the phone has deleted stuff, let's take care of that
+            foreach (var contact in msg.Contacts)
+            {
+                if (contact.Deleted)
+                {
+                    DeleteContact(contact.Id);
+                }
+                else if (!contact.Inserted)
+                {
+                    map[contact.Id] = contact;
+                }
+            }
+
+            // Ok, send back what has changed on the server.
+            foreach (var contact in this.store.Contacts)
+            {
+                string id = contact.OutlookEntryId;
+                Debug.Assert(!deletedLocally.Contains(id), "Should have been deleted???");
+
+                int version = contact.GetHighestVersionNumber();
+
+                ContactVersion phone = null;
+                if (map.TryGetValue(id, out phone))
+                {
+                    if (phone.VersionNumber == version)
+                    {
+                        same++;
+                    }
+                }
+
+                ContactVersion cv = new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = version };
+                response.Contacts.Add(cv);
+
+            }
+
+            identical = same;
+
+            return response;
+        }
     }
 }

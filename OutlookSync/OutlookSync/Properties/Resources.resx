@@ -123,4 +123,7 @@
   <data name="LoadingOutlookContacts" xml:space="preserve">
     <value>Loading Outlook contacts...</value>
   </data>
+  <data name="WaitingForPhone" xml:space="preserve">
+    <value>Waiting for phone to connect over Wifi UDP protocol...</value>
+  </data>
 </root>

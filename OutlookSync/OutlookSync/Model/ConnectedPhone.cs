@@ -21,7 +21,8 @@ namespace OutlookSync.Model
         int current;
         Dispatcher dispatcher;
         string fileName;
-        List<string> localDeletes;
+        bool allowed;
+        string ipEndPoint;
 
         public ConnectedPhone(UnifiedStore store, Dispatcher dispatcher, string fileName)
         {
@@ -40,8 +41,19 @@ namespace OutlookSync.Model
         {
             loader = new OutlookStoreLoader();
             await loader.UpdateAsync(store);
-            localDeletes = new List<string>(loader.GetLocalDeletes());
             await Save();
+        }
+        
+        public string IPEndPoint {
+            get { return ipEndPoint; }
+            set
+            {
+                if (ipEndPoint != value)
+                {
+                    ipEndPoint = value;
+                    OnPropertyChanged("IPEndPoint");
+                }
+            }
         }
 
         public string Name {
@@ -52,6 +64,19 @@ namespace OutlookSync.Model
                 {
                     name = value;
                     OnPropertyChanged("Name");
+                }
+            }
+        }
+
+        public bool Allowed
+        {
+            get { return allowed; }
+            set
+            {
+                if (allowed != value)
+                {
+                    allowed = value;
+                    OnPropertyChanged("Allowed");
                 }
             }
         }
@@ -111,29 +136,38 @@ namespace OutlookSync.Model
                     response = new Message() { Command = "Disconnect" };
                     break;
 
-                case  "DeleteContact":
-                    return DeleteContact(m.Parameters);
-
-                case "UpdateContact":
+                case "UpdateContact":                    
+                    Current++;
+                    Maximum = Math.Max(Current, Maximum);
                     return UpdateContact(m.Parameters);
 
-                case "GetNextDelete":
-                    return GetNextDelete();
+                case "SyncMessage":
+                    return HandleSync(m.Parameters);
 
                 case "GetContact":
 
-                    int contactIndex = 0;
-                    if (int.TryParse(m.Parameters, out contactIndex) && contactIndex < store.Contacts.Count)
+                    string contactId = m.Parameters;
+                    if (!string.IsNullOrEmpty(contactId))
                     {
-                        Current = contactIndex;
-                        string xml = store.Contacts[contactIndex].ToXml();
+                        Current++;
+                        Maximum = Math.Max(Current, Maximum);
+                        UnifiedContact uc = store.FindOutlookEntry(contactId);
+                        string xml = "null";
+                        if (uc != null)
+                        {
+                            xml = uc.ToXml();
+                        }
                         response = new Message() { Command = "Contact", Parameters = xml };
                     }
                     else
                     {
-                        response = new Message() { Command = "NoMoreContacts" };
+                        response = new Message() { Command = "Contact", Parameters = null };
                     }
                     break;
+
+                case "FinishUpdate":
+                    break;
+
                 default:
                     Log.WriteLine("Unrecognized command: {0}", m.Command);
                     break;
@@ -141,27 +175,19 @@ namespace OutlookSync.Model
             return response;
         }
 
-        private Message GetNextDelete()
+        private Message HandleSync(string xml)
         {
-            if (localDeletes != null && localDeletes.Count > 0)
-            {
-                string id = localDeletes[0];
-                localDeletes.RemoveAt(0);
-                return new Message() { Command = "ServerDelete", Parameters = id };
-            }
-            return new Message() { Command = "NoMoreDeletes" };
-        }
+            // this message tells us what happened on the phone, what was deleted, inserted, and 
+            // the latest version numbers on phone contacts.
+            SyncMessage msg = SyncMessage.Parse(xml);
 
+            int identical;
+            SyncMessage response = loader.PhoneSync(msg, out identical);
 
-        private Message DeleteContact(string id)
-        {
-            if (!string.IsNullOrEmpty(id))
-            {
-                loader.DeleteContact(id);
-            }
+            Current += identical;
 
-            return new Message() { Command = "Deleted" };
-        }
+            return new Message() { Command = "ServerSync", Parameters = response.ToXml() };
+        }        
 
         private Message UpdateContact(string xml)
         {
