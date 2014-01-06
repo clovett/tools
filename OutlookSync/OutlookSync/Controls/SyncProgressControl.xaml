@@ -7,14 +7,17 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
 
-    <Grid x:Name="LayoutRoot" VerticalAlignment="Top" HorizontalAlignment="Center">
-        <local:CylinderControl x:Name="FillCylinder" CylinderHeight="100" CylinderWidth="200" 
-                               VerticalAlignment="Bottom" CylinderFill="#8080C0" CylinderStroke="Blue"/>
 
-        <local:CylinderControl x:Name="OutlineCylinder" CylinderHeight="100" CylinderWidth="200" 
-                                      CylinderStroke="Blue" />
+    <Grid x:Name="LayoutRoot" Width="100" Height="100" >
 
-        <TextBlock x:Name="ContactCount" Text="96" FontSize="48" Margin="0,30,0,0"
-                               HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Rectangle x:Name="BackgroundRect"                   
+                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+        <TextBlock x:Name="CaptionTextBlock"  FontSize="36" 
+                          HorizontalAlignment="Center" VerticalAlignment="Center"
+                          />
+
+        <TextBlock x:Name="SubTextBlock" HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                   FontSize="14" Margin="3"/>
     </Grid>
 </UserControl>

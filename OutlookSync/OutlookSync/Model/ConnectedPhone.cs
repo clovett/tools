@@ -24,6 +24,8 @@ namespace OutlookSync.Model
         bool allowed;
         string ipEndPoint;
         bool connected;
+        string id;
+        SyncResult result;
 
         public ConnectedPhone(UnifiedStore store, Dispatcher dispatcher, string fileName)
         {
@@ -44,6 +46,7 @@ namespace OutlookSync.Model
             loader = new OutlookStoreLoader();
             await loader.UpdateAsync(store);
             await Save();
+            this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
         }
         
         public string IPEndPoint
@@ -59,6 +62,19 @@ namespace OutlookSync.Model
             }
         }
 
+        public SyncResult SyncStatus
+        {
+            get { return result; }
+            set
+            {
+                if (result != value)
+                {
+                    result = value;
+                    OnPropertyChanged("SyncStatus");
+                }
+            }
+        }
+
         public bool Connected
         {
             get { return connected; }
@@ -68,6 +84,19 @@ namespace OutlookSync.Model
                 {
                     connected = value;
                     OnPropertyChanged("Connected");
+                }
+            }
+        }
+
+        public string Id
+        {
+            get { return id; }
+            set
+            {
+                if (id != value)
+                {
+                    id = value;
+                    OnPropertyChanged("Id");
                 }
             }
         }
@@ -148,7 +177,20 @@ namespace OutlookSync.Model
                     break;
 
                 case "Connect":
-                    Name = m.Parameters;
+                    string phoneName = null;
+                    string phoneId = null;
+                    if (m.Parameters != null)
+                    {
+                        phoneName = m.Parameters;
+                        int i = m.Parameters.IndexOf('/');
+                        if (i > 0)
+                        {
+                            phoneName = m.Parameters.Substring(0, i);
+                            phoneId = m.Parameters.Substring(i + 1);
+                        }
+                    }
+                    this.Name = phoneName;
+                    this.Id = phoneId;
                     response = new Message() { Command = "Count", Parameters = store.Contacts.Count.ToString() };
                     break;
 
@@ -157,7 +199,7 @@ namespace OutlookSync.Model
                     break;
 
                 case "UpdateContact":                    
-                    Current++;
+                    Current++;                    
                     Maximum = Math.Max(Current, Maximum);
                     return UpdateContact(m.Parameters);
 
@@ -202,7 +244,9 @@ namespace OutlookSync.Model
             SyncMessage msg = SyncMessage.Parse(xml);
 
             int identical;
-            SyncMessage response = loader.PhoneSync(msg, out identical);
+            SyncMessage response = loader.PhoneSync(msg, SyncStatus, out identical);
+
+            OnPropertyChanged("SyncStatus");
 
             Current += identical;
 
@@ -228,9 +272,15 @@ namespace OutlookSync.Model
                     {
                         cached.Merge(fromPhone);
                     }
+                    
+                    // update the total version number.
+                    cached.VersionNumber = cached.GetHighestVersionNumber();
 
                     // push this to Outlook.
                     string newId = loader.UpdateContact(cached);
+
+                    SyncStatus.PhoneUpdated.Add(new ContactVersion(cached));
+                    OnPropertyChanged("SyncStatus");
 
                     return new Message() { Command = "Updated", Parameters = id + "=>" + newId };
                 }

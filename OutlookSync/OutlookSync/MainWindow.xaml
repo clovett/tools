@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:OutlookSync.Controls"
         Title="Outlook Sync Server" Height="500" Width="800" Icon="AppIcon.ico">
+    <Window.Resources>
+    </Window.Resources>
     <DockPanel>
         <Grid DockPanel.Dock="Bottom" Height="30" Background="#E0E0E0">
             <Grid.ColumnDefinitions>
@@ -13,12 +15,14 @@
             <local:ConnectorControl x:Name="Connector" Grid.Column="1" Width="45" Height="20" VerticalAlignment="Center"/>
         </Grid>
         <Grid>
-            <Grid.RowDefinitions>
+              <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0">
+            <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0" Background="{StaticResource MainBackgroundBrush}"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch"
+                     >
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <local:PhoneControl/>

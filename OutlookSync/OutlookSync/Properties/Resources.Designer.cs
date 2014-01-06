@@ -79,11 +79,65 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Congratulations your phone is now in sync!.
+        /// </summary>
+        internal static string SyncComplete {
+            get {
+                return ResourceManager.GetString("SyncComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your phone is running version {0} and the lovettsoftware.com site has incompatible version {1} of the OutlookSyncServer.  Please contact chris@lovettsoftware.com for a suggested fix..
+        /// </summary>
+        internal static string UpdateMismatch {
+            get {
+                return ResourceManager.GetString("UpdateMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your phone is running version {0} and the lovettsoftware.com site has no new update for Outlook Sync Server to match.  Please contact chris@lovettsoftware.com for a suggested fix..
+        /// </summary>
+        internal static string UpdateMissing {
+            get {
+                return ResourceManager.GetString("UpdateMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Update Required.
+        /// </summary>
+        internal static string UpdatePrompt {
+            get {
+                return ResourceManager.GetString("UpdatePrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your phone is running a newer version, so this app needs to install an update.\r\nPress OK and restart the app.
+        /// </summary>
+        internal static string UpdateRequired {
+            get {
+                return ResourceManager.GetString("UpdateRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting for phone to connect over Wifi .
         /// </summary>
         internal static string WaitingForPhone {
             get {
                 return ResourceManager.GetString("WaitingForPhone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for app update from lovettsoftware.com.
+        /// </summary>
+        internal static string WaitingForUpdate {
+            get {
+                return ResourceManager.GetString("WaitingForUpdate", resourceCulture);
             }
         }
     }

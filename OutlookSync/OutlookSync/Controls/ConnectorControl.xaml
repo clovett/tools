@@ -8,16 +8,16 @@
 
     <UserControl.Resources>
 
-        <LinearGradientBrush x:Key="ActiveGreen"  StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#B0DAA3" Offset="0"/>
-            <GradientStop Color="#2C7320" Offset="1"/>
+        <LinearGradientBrush x:Key="ConnectorBrush"  StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#56A2D8" Offset="0"/>
+            <GradientStop Color="#1E3849" Offset="1"/>
         </LinearGradientBrush>
 
     </UserControl.Resources>
     <Grid x:Name="LayoutRoot" HorizontalAlignment="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=HorizontalAlignment}" 
           VerticalAlignment="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=VerticalAlignment}">
 
-        <Path Fill="{StaticResource ActiveGreen}">
+        <Path Fill="{StaticResource ConnectorBrush}">
             <Path.Data>
                 <PathGeometry>
                     <PathGeometry.Figures>
@@ -32,7 +32,7 @@
                 </PathGeometry>
             </Path.Data>
         </Path>
-        <Path Fill="{StaticResource ActiveGreen}" x:Name="PathOpen" >
+        <Path Fill="{StaticResource ConnectorBrush}" x:Name="PathOpen" >
             <Path.Data>
                 <PathGeometry>
                     <PathGeometry.Transform>
@@ -58,7 +58,7 @@
                 </PathGeometry>
             </Path.Data>
         </Path>
-        <Path Fill="{StaticResource ActiveGreen}" x:Name="PathClosed" Visibility="Collapsed">
+        <Path Fill="{StaticResource ConnectorBrush}" x:Name="PathClosed" Visibility="Collapsed">
             <Path.Data>
                 <PathGeometry>
                     <PathGeometry.Transform>

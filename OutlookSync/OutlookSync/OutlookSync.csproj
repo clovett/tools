@@ -21,7 +21,7 @@
     <PublishUrl>ftp://www.lovettsoftware.com/LovettSoftware/Downloads/OutlookSync/</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
+    <UpdateEnabled>false</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
@@ -29,8 +29,8 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>http://www.lovettsoftware.com/Downloads/OutlookSync/</InstallUrl>
-    <ApplicationRevision>5</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -86,6 +86,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -106,9 +107,6 @@
     <Compile Include="Controls\ConnectorControl.xaml.cs">
       <DependentUpon>ConnectorControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\CylinderControl.xaml.cs">
-      <DependentUpon>CylinderControl.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\SyncProgressControl.xaml.cs">
       <DependentUpon>SyncProgressControl.xaml</DependentUpon>
     </Compile>
@@ -121,11 +119,9 @@
     <Compile Include="Utilities\FirewallConfig.cs" />
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\Log.cs" />
+    <Compile Include="Utilities\Settings.cs" />
+    <Compile Include="Utilities\Updater.cs" />
     <Page Include="Controls\ConnectorControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\CylinderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -146,6 +142,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Controls\PhoneControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\generic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -205,6 +205,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\SecurityLock.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

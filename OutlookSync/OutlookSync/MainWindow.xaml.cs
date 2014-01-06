@@ -27,11 +27,13 @@ namespace OutlookSync
     {
         ConnectionManager conmgr;
         UnifiedStore store;
-        const string StoreFolder = @"LovettSoftware\OutlookSync";
-        const string StoreFileName = "store.xml";
-        const string LogFileName = "log.txt";
+        public const string StoreFolder = @"LovettSoftware\OutlookSync";
+        public const string StoreFileName = "store.xml";
+        public const string SettingsFileName = "settings.xml";
+        public const string LogFileName = "log.txt";
         Dictionary<string, ConnectedPhone> connected = new Dictionary<string, ConnectedPhone>();
         ObservableCollection<ConnectedPhone> items = new ObservableCollection<ConnectedPhone>();
+        Settings settings;
 
         public MainWindow()
         {
@@ -53,6 +55,14 @@ namespace OutlookSync
             return file;
         }
 
+
+        string GetSettingsFileName()
+        {
+            string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), StoreFolder);
+            string file = System.IO.Path.Combine(dir, SettingsFileName);
+            return file;
+        }
+
         string GetLogFileName()
         {
             string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), StoreFolder);
@@ -62,7 +72,9 @@ namespace OutlookSync
 
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            StatusMessage.Text = OutlookSync.Properties.Resources.WaitingForPhone;
+            settings = await Settings.LoadAsync(GetSettingsFileName());
+
+            ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
 
             conmgr.StartListening();
             conmgr.MessageReceived += OnMessageReceived;
@@ -94,6 +106,14 @@ namespace OutlookSync
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     items.Remove(phone);
+                    if (items.Count == 0)
+                    {
+                        ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
+                    }
+                    else
+                    {
+                        ShowStatus("");
+                    }
                     UpdateConnector();
                 }));
             }
@@ -110,6 +130,7 @@ namespace OutlookSync
 
         async Task<Message> HandleMessage(MessageEventArgs e)
         {
+            Debug.WriteLine(e.Message.Command);
             var msg = e.Message;
             switch (msg.Command)
             {
@@ -120,10 +141,11 @@ namespace OutlookSync
                     OnDisconnect(e.RemoteEndPoint);
                     break;
                 case "Connect":
-                    await OnConnect(e);
+                    OnConnect(e);
                     break;
-                case "FinishUpdate":
+                case "FinishUpdate":                    
                     await store.SaveAsync(GetStoreFileName());
+                    ShowStatus(Properties.Resources.SyncComplete);
                     break;
             }
 
@@ -136,55 +158,152 @@ namespace OutlookSync
             {
                 response = phone.HandleMessage(e);
             }
+
             return response;
         }
 
+        private void ShowStatus(string msg)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                StatusMessage.Text = msg;
+            }));
+        }
+
+        bool busy;
+        HashSet<string> hosedPhones = new HashSet<string>();
+
         private async Task OnCreatePhone(MessageEventArgs e)
         {
+            if (busy)
+            {
+                // ignore this hello
+                return;
+            }
+
             if (this.store == null)
             {
                 // still loading, not done yet!
                 return;
             }
-            var msg = e.Message;
-            string key = e.RemoteEndPoint.Address.ToString();
-            ConnectedPhone phone = null;
-            connected.TryGetValue(key, out phone);
 
-            if (phone == null)
+            busy = true;
+            try
             {
-                phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
-                phone.IPEndPoint = e.RemoteEndPoint.ToString();
-                phone.PropertyChanged += OnPhonePropertyChanged;
-                connected[key] = phone;
+                var msg = e.Message;
 
+                string phoneAppVersion = "";
                 string phoneName = "Unknown";
-                if (msg.Parameters != null)
+                string phoneId = "";
+                string parameters = msg.Parameters;
+                if (parameters != null)
                 {
                     string[] parts = msg.Parameters.Split('/');
                     if (parts.Length > 0)
                     {
-                        phoneName = parts[0];
+                        phoneAppVersion = parts[0];
+                    }
+                    if (parts.Length > 1)
+                    {
+                        phoneName = parts[1];
+                    }
+                    if (parts.Length > 2)
+                    {
+                        phoneId = Uri.UnescapeDataString(parts[2]);
                     }
                 }
 
-                await Dispatcher.BeginInvoke(new Action(() =>
+                if (hosedPhones.Contains(phoneId))
                 {
-                    phone.Name = phoneName;
-                    items.Add(phone);
-                    UpdateConnector();
-                }));
-            }
-            else
-            {
-                await Dispatcher.BeginInvoke(new Action(() =>
+                    return;
+                }
+
+                string currentAppVersion = Updater.GetCurrentVersion().ToString();
+                if (phoneAppVersion != currentAppVersion)
                 {
-                    // phone reconnected, so start over.
-                    if (!phone.Connected)
+                    // version mismatch!! time to check for updates...
+                    var info = await Updater.CheckForUpdate();
+                    if (info != null && info.AvailableVersion.ToString() == phoneAppVersion)
                     {
-                        phone.Allowed = false;
+                        await Updater.Update();
+
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            MessageBox.Show(Properties.Resources.UpdateRequired, Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
+                            this.Close();
+                        }));
                     }
-                }));
+                    else if (info != null)
+                    {
+                        // update is not available you are hosed!!
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            MessageBox.Show(string.Format(Properties.Resources.UpdateMismatch, phoneAppVersion, currentAppVersion), Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
+                        }));
+                        ShowStatus(Properties.Resources.WaitingForUpdate);
+                        hosedPhones.Add(phoneId);
+                        return;
+                    }
+                    else
+                    {
+                        // update is not available you are hosed!!
+                        Dispatcher.Invoke(new Action(() =>
+                        {
+                            MessageBox.Show(string.Format(Properties.Resources.UpdateMissing, phoneAppVersion), Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
+                        }));
+                        hosedPhones.Add(phoneId);
+                        ShowStatus(Properties.Resources.WaitingForUpdate);
+                        return;
+                    }
+                }
+
+                string key = e.RemoteEndPoint.Address.ToString();
+
+                ConnectedPhone phone = null;
+                connected.TryGetValue(key, out phone);
+
+                if (phone == null)
+                {
+                    phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
+                    phone.IPEndPoint = e.RemoteEndPoint.ToString();
+                    phone.PropertyChanged += OnPhonePropertyChanged;
+                    connected[key] = phone;
+
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        phone.Name = phoneName;
+                        phone.Id = phoneId;
+                        items.Add(phone);
+                        UpdateConnector();
+                    }));
+
+                    ShowStatus(Properties.Resources.LoadingOutlookContacts);
+
+                    // get new contact info from outlook ready for syncing with this phone.
+                    await phone.SyncOutlook();
+
+                    ShowStatus(string.Format(Properties.Resources.LoadedCount, store.Contacts.Count));
+
+                }
+                else
+                {
+                    await Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        // phone reconnected, so start over.
+                        if (!phone.Connected)
+                        {
+                            phone.Allowed = false;
+                        }
+                        if (settings.TrustedPhones.Contains(phone.Id))
+                        {
+                            phone.Allowed = true;
+                        }
+                    }));
+                }
+            }
+            finally
+            {
+                busy = false;
             }
         }
 
@@ -193,12 +312,20 @@ namespace OutlookSync
             ConnectedPhone phone = (ConnectedPhone)sender;
             if (e.PropertyName == "Allowed" && phone.Allowed)
             {
+                if (!string.IsNullOrEmpty(phone.Id))
+                {
+                    if (!settings.TrustedPhones.Contains(phone.Id))
+                    {
+                        settings.TrustedPhones.Add(phone.Id);
+                    }
+                }
+
                 // ok, user has given us the green light to connect this phone.
                 conmgr.AllowRemoteMachine(phone.IPEndPoint);
             }
         }
 
-        private async Task OnConnect(MessageEventArgs e)
+        private void OnConnect(MessageEventArgs e)
         {
             var msg = e.Message;
             string key = e.RemoteEndPoint.Address.ToString();
@@ -211,19 +338,7 @@ namespace OutlookSync
                 return;
             }
 
-            await this.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                phone.Connected = true;
-                StatusMessage.Text = Properties.Resources.LoadingOutlookContacts;
-            }));
-
-            // get new contact info from outlook ready for syncing with this phone.
-            await phone.SyncOutlook();
-
-            await this.Dispatcher.BeginInvoke(new Action(() =>
-            {
-                StatusMessage.Text = string.Format(Properties.Resources.LoadedCount, store.Contacts.Count);
-            }));
+            phone.Connected = true;
         }
 
         private void UpdateConnector()
@@ -234,9 +349,10 @@ namespace OutlookSync
             }));
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected async override void OnClosed(EventArgs e)
         {
             conmgr.StopListening();
+            await settings.SaveAsync();
             Log.CloseLog();
             base.OnClosed(e);
         }

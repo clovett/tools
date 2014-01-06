@@ -15,8 +15,8 @@ namespace OutlookSync.Model
         UnifiedStore store;
         MAPIFolder contactFolder;
         Dictionary<string, ContactItem> index = new Dictionary<string, ContactItem>();
-        HashSet<string> deletedLocally = new HashSet<string>();
-        HashSet<string> addedLocally = new HashSet<string>();
+        Dictionary<string, UnifiedContact> deletedLocally = new Dictionary<string, UnifiedContact>();
+        Dictionary<string, UnifiedContact> addedLocally = new Dictionary<string, UnifiedContact>();
 
         /// <summary>
         /// Update the unified store with whatever is currently in Outlook.
@@ -43,7 +43,7 @@ namespace OutlookSync.Model
                     {
                         if (!string.IsNullOrEmpty(c.OutlookEntryId))
                         {
-                            deletedLocally.Add(c.OutlookEntryId);
+                            deletedLocally[c.OutlookEntryId] = c;
                         }
                         store.Contacts.Remove(c);
                     }
@@ -114,12 +114,15 @@ namespace OutlookSync.Model
             if (uc == null)
             {
                 isNew = true;
-                addedLocally.Add(id);
                 uc = new UnifiedContact();
+                addedLocally[id] = uc;
                 uc.OutlookEntryId = id;         
             }
 
             UpdateContact(uc, contact);
+
+            // update the total version number.
+            uc.VersionNumber = uc.GetHighestVersionNumber();
 
             if (isNew && !uc.IsEmpty)
             {
@@ -572,22 +575,48 @@ namespace OutlookSync.Model
             }
         }
 
+        internal SyncMessage GetLocalSyncMessage()
+        {
+            SyncMessage response = new SyncMessage();
 
-        internal SyncMessage PhoneSync(SyncMessage msg, out int identical)
+            // first, out local deletes take precedence...
+            foreach (var pair in this.deletedLocally)
+            {
+                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
+            }
+
+            // and our local inserts the phone won't know about yet
+            foreach (var pair in this.addedLocally)
+            {
+                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
+            }
+
+            foreach (var contact in this.store.Contacts)
+            {
+                if (!this.addedLocally.ContainsKey(contact.OutlookEntryId))
+                {
+                    Debug.Assert(contact.VersionNumber == contact.GetHighestVersionNumber(), "version is not up to date");
+                    response.Contacts.Add(new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = contact.VersionNumber, Name = contact.DisplayName });
+                }
+            }
+            return response;
+        }
+
+        internal SyncMessage PhoneSync(SyncMessage msg, SyncResult status, out int identical)
         {
             int same = 0;
             SyncMessage response = new SyncMessage();
 
             // first, out local deletes take precedence...
-            foreach (string id in this.deletedLocally)
+            foreach (var pair in this.deletedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = id, Deleted = true });
+                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
             }
 
             // and our local inserts the phone won't know about yet
-            foreach (string id in this.addedLocally)
+            foreach (var pair in this.addedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = id, Inserted = true });
+                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
             }
 
             // create index of our contacts.
@@ -598,13 +627,16 @@ namespace OutlookSync.Model
             {                
                 if (contact.Deleted)
                 {
+                    status.PhoneDeleted.Add(contact);
                     DeleteContact(contact.Id);
                 }
                 else if (contact.Inserted)
                 {
+                    // wait for actual upload
+                    //status.PhoneInserted.Add(contact);
                     Debug.WriteLine("new contact on phone");
                 }
-                else if (!contact.Inserted)
+                else
                 {
                     map[contact.Id] = contact;
                 }
@@ -614,22 +646,36 @@ namespace OutlookSync.Model
             foreach (var contact in this.store.Contacts)
             {
                 string id = contact.OutlookEntryId;
-                Debug.Assert(!deletedLocally.Contains(id), "Should have been deleted???");
 
-                int version = contact.GetHighestVersionNumber();
+                Debug.Assert(!deletedLocally.ContainsKey(id), "Should have been deleted???");
 
-                ContactVersion phone = null;
-                if (map.TryGetValue(id, out phone))
+                if (!this.addedLocally.ContainsKey(id))
                 {
-                    if (phone.VersionNumber == version)
+                    int version = contact.VersionNumber;
+
+                    Debug.Assert(version == contact.GetHighestVersionNumber(), "version is not up to date");
+
+                    ContactVersion phone = null;
+                    if (map.TryGetValue(id, out phone))
                     {
-                        same++;
+                        if (phone.VersionNumber == version)
+                        {
+                            same++;
+                        }
+                        else if (phone.VersionNumber > version)
+                        {
+                            // wait for actual upload
+                            //status.PhoneUpdated.Add(phone);
+                        }
+                        else if (phone.VersionNumber < version)
+                        {
+                            status.ServerUpdated.Add(phone);
+                        }
                     }
+
+                    ContactVersion cv = new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = version, Name = contact.DisplayName };
+                    response.Contacts.Add(cv);
                 }
-
-                ContactVersion cv = new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = version };
-                response.Contacts.Add(cv);
-
             }
 
             identical = same;

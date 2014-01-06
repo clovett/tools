@@ -123,7 +123,25 @@
   <data name="LoadingOutlookContacts" xml:space="preserve">
     <value>Loading Outlook contacts...</value>
   </data>
+  <data name="SyncComplete" xml:space="preserve">
+    <value>Congratulations your phone is now in sync!</value>
+  </data>
+  <data name="UpdateMismatch" xml:space="preserve">
+    <value>Your phone is running version {0} and the lovettsoftware.com site has incompatible version {1} of the OutlookSyncServer.  Please contact chris@lovettsoftware.com for a suggested fix.</value>
+  </data>
+  <data name="UpdateMissing" xml:space="preserve">
+    <value>Your phone is running version {0} and the lovettsoftware.com site has no new update for Outlook Sync Server to match.  Please contact chris@lovettsoftware.com for a suggested fix.</value>
+  </data>
+  <data name="UpdatePrompt" xml:space="preserve">
+    <value>Update Required</value>
+  </data>
+  <data name="UpdateRequired" xml:space="preserve">
+    <value>Your phone is running a newer version, so this app needs to install an update.\r\nPress OK and restart the app</value>
+  </data>
   <data name="WaitingForPhone" xml:space="preserve">
     <value>Waiting for phone to connect over Wifi </value>
+  </data>
+  <data name="WaitingForUpdate" xml:space="preserve">
+    <value>Waiting for app update from lovettsoftware.com</value>
   </data>
 </root>
