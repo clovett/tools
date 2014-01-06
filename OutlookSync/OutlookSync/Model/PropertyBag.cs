@@ -844,10 +844,6 @@ namespace OutlookSync.Model
                 }
             }
 
-            if (result == UnifiedStore.SyncTime)
-            {
-                Debug.WriteLine("???");
-            }
             VersionNumber = result;
             return result;
         }

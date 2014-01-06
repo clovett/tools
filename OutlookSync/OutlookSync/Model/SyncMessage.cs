@@ -19,6 +19,7 @@ namespace OutlookSync.Model
             contacts = new List<ContactVersion>();
         }
 
+        [XmlArrayItem(ElementName = "cv", Type = typeof(ContactVersion))]
         public List<ContactVersion> Contacts
         {
             get { return contacts; }
@@ -29,13 +30,13 @@ namespace OutlookSync.Model
         public string ToXml()
         {
             StringWriter sw = new StringWriter();
-            XmlWriterSettings settings = new XmlWriterSettings() { Indent = true };
-            using (XmlWriter writer = XmlWriter.Create(sw, settings))
+            using (XmlWriter writer = XmlWriter.Create(sw))
             {
                 XmlSerializer s = new XmlSerializer(typeof(SyncMessage));
                 s.Serialize(writer, this);
             }
-            return sw.ToString();
+            string xml = sw.ToString();
+            return xml;
         }
 
         public static SyncMessage Parse(string xml)
@@ -62,10 +63,129 @@ namespace OutlookSync.Model
         {
         }
 
+        public ContactVersion(UnifiedContact contact)
+        {
+            this.Id = contact.OutlookEntryId;
+            this.Name = contact.DisplayName;
+            this.VersionNumber = contact.VersionNumber;
+        }
+
+        [XmlAttribute]
+        public string Name { get; set; }
+
+        [XmlAttribute]
         public string Id { get; set; }
+
+        [XmlElement(ElementName = "v")]
         public int VersionNumber { get; set; }
+
+        [XmlElement(ElementName = "d")]
         public bool Deleted { get; set; }
+
+        [XmlElement(ElementName = "i")]
         public bool Inserted { get; set; }
+    }
+
+    public class SyncResult
+    {
+        public List<ContactVersion> ServerInserted = new List<ContactVersion>();
+        public List<ContactVersion> ServerDeleted = new List<ContactVersion>();
+        public List<ContactVersion> ServerUpdated = new List<ContactVersion>();
+
+        public List<ContactVersion> PhoneUpdated = new List<ContactVersion>();
+        public List<ContactVersion> PhoneInserted = new List<ContactVersion>();
+        public List<ContactVersion> PhoneDeleted = new List<ContactVersion>();
+
+        public List<ContactVersion> Unchanged = new List<ContactVersion>();
+
+        public List<ContactVersion> GetTotalInserted()
+        {
+            return Concat(ServerInserted, PhoneInserted);
+        }
+        
+        public List<ContactVersion> GetTotalUpdated()
+        {
+            return Concat(ServerUpdated, PhoneUpdated);
+        }
+
+        public List<ContactVersion> GetTotalDeleted()
+        {
+            return Concat(ServerDeleted, PhoneDeleted);
+        }
+
+        // for progress bar
+        public double TotalChanges { get; set; }
+        
+        public SyncResult()
+        {
+        }
+
+        public SyncResult(SyncMessage phoneReport, bool phone)
+        {
+            int time = UnifiedStore.SyncTime;
+            List<ContactVersion> updated = new List<ContactVersion>();
+            List<ContactVersion> deleted = new List<ContactVersion>();
+            List<ContactVersion> inserted = new List<ContactVersion>();
+            List<ContactVersion> unchanged = new List<ContactVersion>();
+
+            foreach (var cv in phoneReport.Contacts)
+            {
+                if (cv.Deleted)
+                {
+                    deleted.Add(cv);
+                }
+                else if (cv.Inserted)
+                {
+                    inserted.Add(cv);
+                }
+                else if (cv.VersionNumber == time)
+                {
+                    updated.Add(cv);
+                }
+                else
+                {
+                    unchanged.Add(cv);
+                }
+            }
+
+            if (phone)
+            {
+                this.PhoneInserted = inserted;
+                this.PhoneDeleted = deleted;
+                this.PhoneUpdated = updated;
+            }
+            else
+            {
+                this.ServerInserted = inserted;
+                this.ServerDeleted = deleted;
+                this.ServerUpdated = updated;
+            }
+
+            // deletes are instant
+            this.TotalChanges = updated.Count + inserted.Count; 
+
+            this.Unchanged = unchanged;
+        }
+
+        List<ContactVersion> Concat(List<ContactVersion> list1, List<ContactVersion> list2)
+        {
+            if (list1 == null && list2 == null)
+            {
+                return null;
+            }
+            else if (list1 == null)
+            {
+                return list2;
+            }
+            else if (list2 == null)
+            {
+                return list1;
+            }
+            List<ContactVersion> combined = new List<ContactVersion>(list1);
+            combined.AddRange(list2);
+            return combined;
+        }
+
     }
 
 }

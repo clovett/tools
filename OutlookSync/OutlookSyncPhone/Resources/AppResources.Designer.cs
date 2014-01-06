@@ -167,5 +167,14 @@ namespace OutlookSyncPhone.Resources {
                 return ResourceManager.GetString("SyncCountPrompt", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Synchronizing....
+        /// </summary>
+        public static string SyncPrompt {
+            get {
+                return ResourceManager.GetString("SyncPrompt", resourceCulture);
+            }
+        }
     }
 }

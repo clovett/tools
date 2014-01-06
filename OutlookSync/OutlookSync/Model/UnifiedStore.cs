@@ -69,6 +69,7 @@ namespace OutlookSync.Model
                         {
                             using (FileStream myFileStream = store.OpenFile(fileName, FileMode.Open))
                             {
+                                Debug.WriteLine("Loading store: " + myFileStream.Length + " bytes");
                                 // Call the Deserialize method and cast to the object type.
                                 using (XmlReader reader = XmlReader.Create(myFileStream))
                                 {

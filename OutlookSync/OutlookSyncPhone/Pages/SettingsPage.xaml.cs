@@ -30,5 +30,10 @@ namespace OutlookSyncPhone.Pages
             marketplaceDetailTask.ContentType = MarketplaceContentType.Applications;
             marketplaceDetailTask.Show();
         }
+
+        private void OnBackPressed(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            NavigationService.GoBack();
+        }
     }
 }

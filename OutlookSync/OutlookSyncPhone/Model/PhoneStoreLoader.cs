@@ -10,7 +10,7 @@ using Windows.Phone.PersonalInformation;
 
 namespace OutlookSyncPhone
 {
-    enum MergeResult 
+    enum MergeResult
     {
         None,
         DeletedLocally,
@@ -32,20 +32,20 @@ namespace OutlookSyncPhone
         HashSet<string> merged = new HashSet<string>();
 
         // contacts to send back to the server
-        List<string> toSend = new List<string>();
+        HashSet<string> toSend = new HashSet<string>();
 
         // contacts to pull from the server
-        List<string> toUpdate = new List<string>();
+        HashSet<string> toUpdate = new HashSet<string>();
 
 
         // this is the list of new contact we found in the local store.  We have to maintain this because
         // when we update the RemoteId, the stupid FindContactByRemoteIdAsync method fails to find it.
-        Dictionary<string, StoredContact> fakeIds = new Dictionary<string, StoredContact>();
+        Dictionary<string, StoredContact> addedLocally = new Dictionary<string, StoredContact>();
 
         /// <summary>
         /// Contacts that were deleted on the phone.
         /// </summary>
-        HashSet<string> deletedLocally = new HashSet<string>();
+        Dictionary<string, UnifiedContact> deletedLocally = new Dictionary<string, UnifiedContact>();
 
         public PhoneStoreLoader()
         {
@@ -53,13 +53,16 @@ namespace OutlookSyncPhone
             isBlueOs = (version.Major > 8) || (version.Major == 8 && version.Minor >= 10);
         }
 
+
+        internal ContactStore ContactStore { get { return this.store; } }
+
         internal UnifiedStore UnifiedStore { get { return this.cache; } }
 
         internal void StartMerge()
         {
             merged = new HashSet<string>();
-            toSend = new List<string>();
-            toUpdate = new List<string>();
+            toSend = new HashSet<string>();
+            toUpdate = new HashSet<string>();
         }
 
         internal string GetNextContactToUpdate()
@@ -67,8 +70,8 @@ namespace OutlookSyncPhone
             string id = null;
             while (toUpdate.Count > 0 && id == null)
             {
-                id = toUpdate[0];
-                toUpdate.RemoveAt(0);
+                id = toUpdate.FirstOrDefault();
+                toUpdate.Remove(id);
             }
             return id;
         }
@@ -78,9 +81,9 @@ namespace OutlookSyncPhone
             UnifiedContact uc = null;
             while (toSend.Count > 0 && uc == null)
             {
-                string id = toSend[0];
+                string id = toSend.FirstOrDefault();
                 uc = cache.FindOutlookEntry(id);
-                toSend.RemoveAt(0);
+                toSend.Remove(id);
             }
             return uc;
         }
@@ -88,25 +91,22 @@ namespace OutlookSyncPhone
         internal SyncMessage GetSyncMessage()
         {
             SyncMessage message = new SyncMessage();
-            foreach (string id in deletedLocally)
+            foreach (var pair in deletedLocally)
             {
-                message.Contacts.Add(new ContactVersion() { Id = id, Deleted = true });
+                string id = pair.Key;
+                message.Contacts.Add(new ContactVersion() { Id = id, Deleted = true, Name = pair.Value.DisplayName });
             }
 
-            foreach (var pair in fakeIds)
+            foreach (var pair in addedLocally)
             {
-                message.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true });
+                message.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
             }
 
             foreach (var contact in cache.Contacts)
             {
-                if (!fakeIds.ContainsKey(contact.OutlookEntryId))
+                if (!addedLocally.ContainsKey(contact.OutlookEntryId))
                 {
-                    if (contact.DisplayName == "Chris Lovett")
-                    {
-                        Debug.WriteLine("test");
-                    }
-                    message.Contacts.Add(new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = contact.GetHighestVersionNumber() });
+                    message.Contacts.Add(new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = contact.GetHighestVersionNumber(), Name = contact.DisplayName });
                 }
             }
 
@@ -140,7 +140,7 @@ namespace OutlookSyncPhone
                 {
                     if (!string.IsNullOrEmpty(c.OutlookEntryId))
                     {
-                        deletedLocally.Add(c.OutlookEntryId);
+                        deletedLocally[c.OutlookEntryId] = c;
                     }
                     cache.Contacts.Remove(c);
                 }
@@ -179,10 +179,10 @@ namespace OutlookSyncPhone
             {
                 // user added this one manually?  Then we need to invent an OutlookId until we add this to outlook.
                 id = Guid.NewGuid().ToString();
-                fakeIds[id] = contact;
+                addedLocally[id] = contact;
                 found.Add(id);
             }
-            
+
             UnifiedContact uc = cache.FindOutlookEntry(id);
             if (uc == null)
             {
@@ -213,7 +213,7 @@ namespace OutlookSyncPhone
                 }
 
                 StoredContact sc = null;
-                fakeIds.TryGetValue(oldId, out sc); 
+                addedLocally.TryGetValue(oldId, out sc);
                 if (sc == null)
                 {
                     sc = await store.FindContactByRemoteIdAsync(oldId);
@@ -235,11 +235,11 @@ namespace OutlookSyncPhone
         /// Merge the given contact from Outlook
         /// </summary>
         /// <param name="xml">The serialized contact</param>        
-        public async Task<MergeResult> MergeContact(string xml)
+        public async Task<Tuple<MergeResult,UnifiedContact>> MergeContact(string xml)
         {
             if (xml == "null")
             {
-                return MergeResult.None;
+                return new Tuple<MergeResult, UnifiedContact>(MergeResult.None, null);
             }
 
             bool changedLocally = false;
@@ -249,11 +249,11 @@ namespace OutlookSyncPhone
             if (contact == null)
             {
                 // error handling.
-                return MergeResult.ParseError;
+                return new Tuple<MergeResult, UnifiedContact>(MergeResult.ParseError, null);
             }
 
             // compare this new contact from outlook with our existing one
-            UnifiedContact cached = cache.FindOutlookEntry(contact.OutlookEntryId);
+            UnifiedContact cached = cache.FindOutlookEntry(contact.OutlookEntryId);            
             if (cached != null)
             {
                 changedLocally |= cached.Merge(contact);
@@ -261,9 +261,9 @@ namespace OutlookSyncPhone
             else
             {
                 // new contact from outlook, unless it was deleted locally.
-                if (deletedLocally.Contains(contact.OutlookEntryId))
+                if (deletedLocally.ContainsKey(contact.OutlookEntryId))
                 {
-                    return MergeResult.DeletedLocally;
+                    return new Tuple<MergeResult, UnifiedContact>(MergeResult.DeletedLocally, cached);
                 }
                 cached = contact;
                 cache.Contacts.Add(cached);
@@ -274,7 +274,7 @@ namespace OutlookSyncPhone
 
             // Now see if user has made any changes on the phone using People Hub
 
-            var result = MergeResult.Merged;
+            var rc = MergeResult.Merged;
 
             StoredContact sc = await store.FindContactByRemoteIdAsync(contact.OutlookEntryId);
             if (sc != null)
@@ -283,7 +283,7 @@ namespace OutlookSyncPhone
             }
             else
             {
-                result = MergeResult.NewContact;
+                rc = MergeResult.NewContact;
                 sc = new StoredContact(store);
                 sc.RemoteId = contact.OutlookEntryId;
             }
@@ -304,7 +304,7 @@ namespace OutlookSyncPhone
                 // toSend.Add(cached);
             }
 
-            return result;
+            return new Tuple<MergeResult, UnifiedContact>(rc, cached);
         }
 
         private async Task UpdateFromStore(UnifiedContact cache, StoredContact contact)
@@ -326,7 +326,7 @@ namespace OutlookSyncPhone
             if (dictionary.ContainsKey(KnownContactProperties.Birthdate))
             {
                 DateTimeOffset dt = (DateTimeOffset)dictionary[KnownContactProperties.Birthdate];
-                
+
                 // bugbug: there is a bug in how the phone handles the time zone, they are 
                 // adding it the wrong way, which results date being off by (2*timezone).
                 // This bug is not fixed in blue.
@@ -416,8 +416,8 @@ namespace OutlookSyncPhone
 
             UpdateDictionary(KnownContactProperties.SignificantOther, cache.SignificantOthers, dictionary);
             UpdateDictionary(KnownContactProperties.Children, cache.Children, dictionary);
-            UpdateDictionary(KnownContactProperties.Nickname, cache.Nickname, dictionary);           
-            
+            UpdateDictionary(KnownContactProperties.Nickname, cache.Nickname, dictionary);
+
             // addresses
             UpdateAddressFromCache(KnownContactProperties.WorkAddress, AddressKind.Work, cache, dictionary);
             UpdateAddressFromCache(KnownContactProperties.Address, AddressKind.Home, cache, dictionary);
@@ -466,7 +466,7 @@ namespace OutlookSyncPhone
                     var pa = address.PhysicalAddress;
 
                     Windows.Phone.PersonalInformation.ContactAddress ca = new Windows.Phone.PersonalInformation.ContactAddress();
-                    ca.Country = ""+ pa.CountryRegion;
+                    ca.Country = "" + pa.CountryRegion;
                     ca.PostalCode = "" + pa.PostalCode;
                     ca.StreetAddress = "" + pa.AddressLine1;
                     if (!string.IsNullOrEmpty(pa.AddressLine2))
@@ -633,30 +633,18 @@ namespace OutlookSyncPhone
             }
         }
 
-        public async Task<SyncResult> HandleServerSync(string xml)
+        public async Task HandleServerSync(string xml, SyncResult status)
         {
             SyncMessage server = SyncMessage.Parse(xml);
 
             SyncMessage phone = this.syncReport;
-
-            SyncResult result = new SyncResult();
-
+            
             // create index of our contacts.
             Dictionary<string, ContactVersion> map = new Dictionary<string, ContactVersion>();
             foreach (var contact in phone.Contacts)
             {
-                if (contact.Deleted)
-                {
-                    result.PhoneDeleted++;
-                }
-                else if (contact.Inserted)
-                {
-                    result.PhoneInserted++;
-                }
-
-                map[contact.Id] = contact;               
+                map[contact.Id] = contact;
             }
-
 
             Dictionary<string, ContactVersion> serverMap = new Dictionary<string, ContactVersion>();
 
@@ -666,16 +654,18 @@ namespace OutlookSyncPhone
                 if (contact.Deleted)
                 {
                     // deleted on the server
-                    result.ServerDeleted++;
+                    status.ServerDeleted.Add(contact);
                     await this.ServerDelete(contact.Id);
                 }
                 else if (contact.Inserted)
                 {
                     // remember to ask for this one.
-                    result.ServerInserted++;
+                    // NOTE: delay updating this until item is actually received oso user sees the progress
+                    // status.ServerInserted.Add(contact);
+                    status.TotalChanges++;
                     toSend.Add(contact.Id);
                 }
-                else 
+                else
                 {
                     serverMap[contact.Id] = contact;
 
@@ -689,27 +679,31 @@ namespace OutlookSyncPhone
                         else if (phoneVersion.VersionNumber > contact.VersionNumber)
                         {
                             // remember to send this one
-                            result.PhoneUpdated++;
+                            // NOTE: delay updating this until item is actually received oso user sees the progress
+                            // status.PhoneUpdated.Add(contact);
                             toSend.Add(contact.Id);
                         }
                         else if (contact.VersionNumber > phoneVersion.VersionNumber)
                         {
                             // remember to pull this one.
-                            result.ServerUpdated++;
+                            // NOTE: delay updating this until item is actually received oso user sees the progress
+                            //status.ServerUpdated.Add(contact);
+                            status.TotalChanges++;
                             toUpdate.Add(contact.Id);
                         }
                         else
                         {
-                            // they are the same! yay, this saves time...
-                            result.Unchanged++;
+                            // they are the same! yay, this saves time...                            
                         }
                     }
                     else
                     {
                         // hmmm, then phone doesn't have this one after all
                         // perhaps phone sync app was uninstalled and reinstalled.
-                        result.ServerInserted++;
-                        toUpdate.Add(contact.Id);                        
+                        // NOTE: delay updating this until item is actually received oso user sees the progress
+                        // status.ServerInserted.Add(contact);
+                        status.TotalChanges++;
+                        toUpdate.Add(contact.Id);
                     }
                 }
             }
@@ -722,48 +716,17 @@ namespace OutlookSyncPhone
                 {
                     // remember to send this one
                     toSend.Add(contact.Id);
-                    result.PhoneInserted++;
                 }
             }
-
-            return result;
 
         }
 
 
         internal SyncResult GetLocalSyncResult()
         {
-            int time = UnifiedStore.SyncTime;
             var syncReport = this.GetSyncMessage();
-
-            int deleted = (from c in syncReport.Contacts where c.Deleted select c).Count();
-            int inserted = (from c in syncReport.Contacts where c.Inserted select c).Count();
-            int updated = (from c in this.UnifiedStore.Contacts where c.VersionNumber == time select c).Count();
-
-            int other = syncReport.Contacts.Count - deleted - inserted - updated;
-            if (other < 0) other = 0;
-
-            return new SyncResult()
-            {
-                 PhoneInserted = inserted,
-                 PhoneDeleted = deleted,
-                 PhoneUpdated = updated,
-                 Unchanged = other
-            };
+            return new SyncResult(syncReport, true);
         }
     }
 
-    public class SyncResult
-    {
-        public int ServerInserted;
-        public int ServerDeleted;
-        public int ServerUpdated;
-
-        public int PhoneUpdated;
-        public int PhoneInserted;
-        public int PhoneDeleted;
-
-        public int Unchanged;
-    }
-        
 }

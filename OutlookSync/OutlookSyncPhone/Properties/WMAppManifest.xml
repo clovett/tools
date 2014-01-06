@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
   <DefaultLanguage xmlns="" code="en-US" />
-  <App xmlns="" ProductID="{ef94766e-2de7-405c-bfc3-63df17f96ef3}" Title="Outlook Sync" RuntimeType="Silverlight" Version="1.1.0.0" Genre="apps.normal" Author="Chris Lovett" Description="This app synchronizes your contacts and appointments with Outlook on your PC over local wifi.  It does this with no cloud services for your added privacy." Publisher="Lovett Software" PublisherID="{dd895e33-91ab-48d7-96f0-0abb9e1754f3}">
+  <App xmlns="" ProductID="{ef94766e-2de7-405c-bfc3-63df17f96ef3}" Title="Outlook Sync" RuntimeType="Silverlight" Version="1.2.0.0" Genre="apps.normal" Author="Chris Lovett" Description="This app synchronizes your contacts and appointments with Outlook on your PC over local wifi.  It does this without sending any data to the cloud for your added privacy." Publisher="Lovett Software" PublisherID="{dd895e33-91ab-48d7-96f0-0abb9e1754f3}">
     <IconPath IsRelative="true" IsResource="false">Assets\ApplicationIcon.png</IconPath>
     <Capabilities>
       <Capability Name="ID_CAP_NETWORKING" />
@@ -10,6 +10,7 @@
       <Capability Name="ID_CAP_CONTACTS" />
       <Capability Name="ID_CAP_APPOINTMENTS" />
       <Capability Name="ID_CAP_PROXIMITY" />
+      <Capability Name="ID_CAP_IDENTITY_DEVICE" />
     </Capabilities>
     <Tasks>
       <DefaultTask Name="_default" NavigationPage="MainPage.xaml" />

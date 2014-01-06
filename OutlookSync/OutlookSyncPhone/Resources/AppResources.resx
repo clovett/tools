@@ -155,4 +155,7 @@
   <data name="SavingUpdates" xml:space="preserve">
     <value>Saving updates...</value>
   </data>
+  <data name="SyncPrompt" xml:space="preserve">
+    <value>Synchronizing...</value>
+  </data>
 </root>

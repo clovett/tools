@@ -23,8 +23,7 @@
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <Grid x:Name="TitlePanel" Grid.Row="0" 
-              Background="#006BC2">
+        <Grid x:Name="TitlePanel" Grid.Row="0" Background="#006BC2">
             <Grid Margin="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -64,24 +63,28 @@
                           Grid.Row="0" Grid.Column="0" Margin="20" 
                          SubText="inserted" TileBackground="Green"
                          TileForeground="LightGreen" Count="0"
+                         MouseLeftButtonDown="OnIndicatorClick"
                          />
 
                 <local:SyncProgressControl x:Name="UpdateIndicator" 
-                          Grid.Row="0" Grid.Column="1" Margin="20" 
+                         Grid.Row="0" Grid.Column="1" Margin="20" 
                          SubText="updated" TileBackground="SteelBlue"
                          TileForeground="LightBlue" Count="0"
+                         MouseLeftButtonDown="OnIndicatorClick"
                          />
                 
                 <local:SyncProgressControl x:Name="UnchangedIndicator" 
                           Grid.Row="1" Grid.Column="0" Margin="20"
                          SubText="unchanged" TileBackground="Gray"                         
                          TileForeground="{StaticResource PhoneForegroundBrush}" Count="0"
+                         MouseLeftButtonDown="OnIndicatorClick"
                          />
 
                 <local:SyncProgressControl x:Name="DeleteIndicator" 
                           Grid.Row="1" Grid.Column="1" Margin="20" 
                          SubText="deleted" TileBackground="Maroon"
                          TileForeground="LightCoral" Count="0"
+                         MouseLeftButtonDown="OnIndicatorClick"
                          />
 
             </Grid>

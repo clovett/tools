@@ -21,6 +21,9 @@ using Microsoft.Phone.Info;
 using OutlookSync.Model;
 using OutlookSyncPhone.Utilities;
 using System.Windows.Media.Animation;
+using OutlookSyncPhone.Pages;
+using Windows.Phone.System.Analytics;
+using System.Reflection;
 
 namespace OutlookSyncPhone
 {
@@ -31,6 +34,8 @@ namespace OutlookSyncPhone
         ServerProxy proxy;
         PhoneStoreLoader loader;
         string phoneName;
+        string phoneId;
+        SyncResult syncStatus;
 
         // Constructor
         public MainPage()
@@ -40,6 +45,8 @@ namespace OutlookSyncPhone
             InitializeComponent();
 
             MessagePrompt.Text = "";
+
+            phoneId = HostInformation.PublisherHostId;
 
             phoneName = Windows.Networking.Proximity.PeerFinder.DisplayName;
 
@@ -65,7 +72,7 @@ namespace OutlookSyncPhone
                 Connector.Connected = true;              
             }));
 
-            await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName });
+            await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName + "/" + phoneId});
 
         }
 
@@ -92,31 +99,47 @@ namespace OutlookSyncPhone
                     
                     loader.StartMerge();
 
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        MessagePrompt.Text = AppResources.SyncPrompt;
+                    }));
+
                     // start by sending our version information
                     await SendSyncMessage();
                     break;
                 case "ServerSync":
-                    SyncResult result = await loader.HandleServerSync(m.Parameters);
+                    await loader.HandleServerSync(m.Parameters, syncStatus);
                     
-                    StartSyncProgress(result);
+                    StartSyncProgress();
 
                     // then start pulling updates from server.                 
                     if (!await GetNextContact())
                     {
                         // done pulling, start sending.
-                        goto case "StartPulling";
+                        goto case "StartPushing";
                     }
                     break;
                 case "Contact":
                     // server responded to GetNextContact 
-                    await loader.MergeContact(m.Parameters);
+                    var result = await loader.MergeContact(m.Parameters);
+                    if (result.Item1 == MergeResult.NewContact)
+                    {
+                        syncStatus.ServerInserted.Add(new ContactVersion(result.Item2));
+                        UpdateTiles();
+                    }
+                    else if (result.Item1 == MergeResult.Merged)
+                    {
+                        syncStatus.ServerUpdated.Add(new ContactVersion(result.Item2));
+                        UpdateTiles();
+                    }
+
                     if (!await GetNextContact())
                     {
                         // done pulling, start sending.
-                        goto case "StartPulling";
+                        goto case "StartPushing";
                     }
                     break;
-                case "StartPulling":
+                case "StartPushing":
                     // start sending updates to server, server responds with "Updated"
                     if (!await SendNextUpdate())
                     {
@@ -136,21 +159,17 @@ namespace OutlookSyncPhone
             }
         }
 
-        SyncResult syncProgress;
-
-        private void StartSyncProgress(SyncResult result)
+        private void StartSyncProgress()
         {
             Dispatcher.BeginInvoke(new Action(() =>
             {
-                UpdateTiles(result);
-
-                syncProgress = result;
+                UpdateTiles();
 
                 // start sync progress indicator
                 LoadProgress.Visibility = System.Windows.Visibility.Visible;
                 LoadProgress.IsIndeterminate = false;
                 LoadProgress.Minimum = 0;
-                LoadProgress.Maximum = result.PhoneInserted + result.PhoneUpdated + result.ServerInserted + result.ServerUpdated;
+                LoadProgress.Maximum = syncStatus.TotalChanges;
                 LoadProgress.Value = 0;
             }));
         }
@@ -251,41 +270,59 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ShowLoadProgress();
-            MessagePrompt.Text = AppResources.LoadingStore;
 
             SetupAds();
 
-            loader = new PhoneStoreLoader();
-            await loader.Open();
+            if (loader == null)
+            {
+                MessagePrompt.Text = AppResources.LoadingStore;
+                ShowLoadProgress();
+                loader = new PhoneStoreLoader();
+                await loader.Open();
 
-            UpdateTiles(loader.GetLocalSyncResult());
+                syncStatus = loader.GetLocalSyncResult();
+                UpdateTiles();
+                HideLoadProgress();
 
-            HideLoadProgress();
+                MessagePrompt.Text = AppResources.LaunchPrompt;
+            }
 
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", phoneName, 12777);
-            conmgr.ServerFound += OnServerFound;
-            conmgr.ServerLost += OnServerLost;
-            conmgr.Start();
-            
-            MessagePrompt.Text = AppResources.LaunchPrompt;
+            if (conmgr == null)
+            {
+                var nameHelper = new AssemblyName(Assembly.GetExecutingAssembly().FullName);
+                var version = nameHelper.Version;
+
+                // sometimes the phoneId contains slashes which confuses our uri format here.
+                phoneId = Uri.EscapeDataString(phoneId);
+
+                conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", version.ToString() + "/" + phoneName + "/" + phoneId, 12777);
+                conmgr.ServerFound += OnServerFound;
+                conmgr.ServerLost += OnServerLost;
+                conmgr.Start();
+            }
+
 
             base.OnNavigatedTo(e);
         }
 
-        private void UpdateTiles(SyncResult syncResult)
+        private void UpdateTiles()
         {
-            AnimateCount(InsertIndicator, syncResult.PhoneInserted + syncResult.ServerInserted);
-            AnimateCount(UpdateIndicator, syncResult.PhoneUpdated + syncResult.ServerUpdated);
-            AnimateCount(UnchangedIndicator, syncResult.Unchanged);
-            AnimateCount(DeleteIndicator, syncResult.PhoneDeleted + syncResult.ServerDeleted);
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                AnimateCount(InsertIndicator, syncStatus.GetTotalInserted());
+                AnimateCount(UpdateIndicator, syncStatus.GetTotalUpdated());
+                AnimateCount(UnchangedIndicator, syncStatus.Unchanged);
+                AnimateCount(DeleteIndicator, syncStatus.GetTotalDeleted());
+            }));
         }
 
-        void AnimateCount(SyncProgressControl ctrl, int count)
+        void AnimateCount(SyncProgressControl ctrl, List<ContactVersion> list)
         {
             DoubleAnimation animation = new DoubleAnimation();
-            animation.To = count;
-            animation.Duration = new Duration(TimeSpan.FromSeconds(1));
+            animation.To = list == null ? 0 : list.Count;
+            animation.Duration = new Duration(TimeSpan.FromSeconds(.3));
+
+            ctrl.Tag = list;
 
             Storyboard s = new Storyboard();
             Storyboard.SetTarget(animation, ctrl);
@@ -310,6 +347,26 @@ namespace OutlookSyncPhone
         {
             base.OnNavigatedFrom(e);
 
+            HideLoadProgress();
+
+            ReportPage page = e.Content as ReportPage;
+            if (page != null)
+            {
+                page.ContactList = selectedList;
+                page.PageTitle = selectedTile.SubText;
+                page.TitleBackground = selectedTile.TileBackground;
+                return;
+            }
+
+            SettingsPage settings = e.Content as SettingsPage;
+            if (settings != null)
+            {
+                return;
+            }
+
+            // going elsewhere? Then we need to unload.
+            this.loader = null;
+
             if (proxy != null)
             {
                 try
@@ -329,7 +386,6 @@ namespace OutlookSyncPhone
                 conmgr.ServerLost -= OnServerLost;
                 conmgr.Stop();
             }
-            HideLoadProgress();
         }
 
         void OnNetworkAvailabilityChanged(object sender, NetworkNotificationEventArgs e)
@@ -350,6 +406,20 @@ namespace OutlookSyncPhone
         private void OnSettingsClick(object sender, EventArgs e)
         {
             this.NavigationService.Navigate(new Uri("/Pages/SettingsPage.xaml", UriKind.RelativeOrAbsolute));
+        }
+
+        SyncProgressControl selectedTile;
+        List<ContactVersion> selectedList;
+
+        private void OnIndicatorClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            SyncProgressControl ctrl = (SyncProgressControl)sender;
+            selectedTile = ctrl;
+            selectedList = (List<ContactVersion>)ctrl.Tag;
+            if (selectedList != null && selectedList.Count > 0)
+            {
+                this.NavigationService.Navigate(new Uri("/Pages/ReportPage.xaml", UriKind.RelativeOrAbsolute));
+            }
         }
 
     }

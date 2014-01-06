@@ -1,5 +1,5 @@
 ﻿<phone:PhoneApplicationPage
-    x:Class="OutlookSyncPhone.Pages.SettingsPage"
+    x:Class="OutlookSyncPhone.Pages.ReportPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
@@ -21,47 +21,27 @@
         </Grid.RowDefinitions>
 
         <!--TitlePanel contains the name of the application and page title-->
-        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="#006BC2"
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="Green"
                     Orientation="Horizontal">
             <Grid Margin="5,2">
                 <Image Source="/Assets/basecircle.png" Width="56" Height="56"/>
                 <Image Source="/Assets/back.png" Width="64" Height="64"
                        MouseLeftButtonDown="OnBackPressed"/>
             </Grid>
-            <TextBlock x:Name="VersionText" Text="Outlook Sync Version {0}"
-                       Style="{StaticResource PhoneTextNormalStyle}"
+            <TextBlock x:Name="PageTitleText" Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12" VerticalAlignment="Center"/>
         </StackPanel>
 
-        
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-
-
-            <StackPanel Margin="12,0,12,0" Orientation="Vertical" Grid.Row="1">
-
-                <TextBlock TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle3Style}"
-                               Margin="0,10,0,0"
-                       Text="This application works in concert with Outlook Sync Server running on your PC.  You you can get the PC app from the following website:"/>
-
-                <HyperlinkButton NavigateUri="http://www.lovettsoftware.com" 
-                             Content="www.lovettsoftware.com" TargetName="_blank" Margin="0,10,0,0" />
-
-                <TextBlock TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle3Style}" Margin="0,20,0,0"
-                       Text="To remove all contacts added by this app simply uninstall it."/>
-
-                <TextBlock TextWrapping="Wrap" Style="{StaticResource PhoneTextTitle3Style}" Margin="0,20,0,0"
-                       Text="If you have any issues with this app, please send email to: "/>
-
-                <HyperlinkButton NavigateUri="mailto://lovettchris@hotmail.com" 
-                             Content="lovettchris@hotmail.com" TargetName="_blank" Margin="0,10,0,0" />
-
-                <Button Content="Rate This App" HorizontalAlignment="Center" Click="OnRateApp" Margin="0,30,0,0"/>
-
-
-            </StackPanel>
-            
-            
+            <ListBox x:Name="ReportList" SelectionChanged="OnListItemSelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" Margin="10,5"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
         </Grid>
     </Grid>
+
 </phone:PhoneApplicationPage>
