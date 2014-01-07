@@ -31,7 +31,7 @@ namespace OutlookSyncPhone.Pages
             marketplaceDetailTask.Show();
         }
 
-        private void OnBackPressed(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void OnBackPressed(object sender, EventArgs e)
         {
             NavigationService.GoBack();
         }

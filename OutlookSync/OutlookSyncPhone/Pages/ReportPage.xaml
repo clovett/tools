@@ -6,6 +6,7 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:OutlookSyncPhone.Utilities"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
@@ -23,11 +24,7 @@
         <!--TitlePanel contains the name of the application and page title-->
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Background="Green"
                     Orientation="Horizontal">
-            <Grid Margin="5,2">
-                <Image Source="/Assets/basecircle.png" Width="56" Height="56"/>
-                <Image Source="/Assets/back.png" Width="64" Height="64"
-                       MouseLeftButtonDown="OnBackPressed"/>
-            </Grid>
+            <local:BackButton Click="OnBackPressed"/>
             <TextBlock x:Name="PageTitleText" Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12" VerticalAlignment="Center"/>
         </StackPanel>

@@ -31,6 +31,7 @@ namespace OutlookSyncPhone
     {
         bool offline;
         ConnectionManager conmgr;
+        bool conmgrStarted;
         ServerProxy proxy;
         PhoneStoreLoader loader;
         string phoneName;
@@ -53,6 +54,8 @@ namespace OutlookSyncPhone
             DeviceNetworkInformation.NetworkAvailabilityChanged += new EventHandler<NetworkNotificationEventArgs>(OnNetworkAvailabilityChanged);
 
             this.SizeChanged += MainPage_SizeChanged;
+
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", GetHelloMessage(), 12777);            
         }
 
         void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -66,13 +69,15 @@ namespace OutlookSyncPhone
             proxy = e.Server;
             proxy.MessageReceived += OnMessageReceived;
 
+            App.Settings.ServerAddress = proxy.RemoteEndPoint.ToString();
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessagePrompt.Text = AppResources.ConnectedMessage;
                 Connector.Connected = true;              
             }));
 
-            await proxy.SendMessage(new Message() { Command = "Connect", Parameters = phoneName + "/" + phoneId});
+            await proxy.SendMessage(new Message() { Command = "Connect", Parameters = GetHelloMessage() });
 
         }
 
@@ -287,15 +292,9 @@ namespace OutlookSyncPhone
                 MessagePrompt.Text = AppResources.LaunchPrompt;
             }
 
-            if (conmgr == null)
+            if (!conmgrStarted)
             {
-                var nameHelper = new AssemblyName(Assembly.GetExecutingAssembly().FullName);
-                var version = nameHelper.Version;
-
-                // sometimes the phoneId contains slashes which confuses our uri format here.
-                phoneId = Uri.EscapeDataString(phoneId);
-
-                conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", version.ToString() + "/" + phoneName + "/" + phoneId, 12777);
+                conmgrStarted = true;
                 conmgr.ServerFound += OnServerFound;
                 conmgr.ServerLost += OnServerLost;
                 conmgr.Start();
@@ -303,6 +302,17 @@ namespace OutlookSyncPhone
 
 
             base.OnNavigatedTo(e);
+        }
+
+        string GetHelloMessage()
+        {
+            var nameHelper = new AssemblyName(Assembly.GetExecutingAssembly().FullName);
+            var version = nameHelper.Version;
+
+            // sometimes the phoneId contains slashes which confuses our uri format here.
+            phoneId = Uri.EscapeDataString(phoneId);
+
+            return version.ToString() + "/" + phoneName + "/" + phoneId;
         }
 
         private void UpdateTiles()
@@ -358,9 +368,16 @@ namespace OutlookSyncPhone
                 return;
             }
 
-            SettingsPage settings = e.Content as SettingsPage;
-            if (settings != null)
+            SettingsPage settingsPage = e.Content as SettingsPage;
+            if (settingsPage != null)
             {
+                return;
+            }
+
+            ManualConnectPage mcp = e.Content as ManualConnectPage;
+            if (mcp != null)
+            {
+                mcp.ConnectionManager = this.conmgr;
                 return;
             }
 
@@ -380,12 +397,14 @@ namespace OutlookSyncPhone
                 proxy = null;
             }
 
-            if (conmgr != null)
+            if (conmgrStarted)
             {
+                conmgrStarted = false;
                 conmgr.ServerFound -= OnServerFound;
                 conmgr.ServerLost -= OnServerLost;
                 conmgr.Stop();
             }
+
         }
 
         void OnNetworkAvailabilityChanged(object sender, NetworkNotificationEventArgs e)
@@ -403,11 +422,6 @@ namespace OutlookSyncPhone
             }
         }
 
-        private void OnSettingsClick(object sender, EventArgs e)
-        {
-            this.NavigationService.Navigate(new Uri("/Pages/SettingsPage.xaml", UriKind.RelativeOrAbsolute));
-        }
-
         SyncProgressControl selectedTile;
         List<ContactVersion> selectedList;
 
@@ -420,6 +434,16 @@ namespace OutlookSyncPhone
             {
                 this.NavigationService.Navigate(new Uri("/Pages/ReportPage.xaml", UriKind.RelativeOrAbsolute));
             }
+        }
+
+        private void OnAboutClick(object sender, EventArgs e)
+        {
+            this.NavigationService.Navigate(new Uri("/Pages/AboutPage.xaml", UriKind.RelativeOrAbsolute));
+        }
+
+        private void OnSettingsClick(object sender, EventArgs e)
+        {
+            this.NavigationService.Navigate(new Uri("/Pages/ManualConnectPage.xaml", UriKind.RelativeOrAbsolute));
         }
 
     }

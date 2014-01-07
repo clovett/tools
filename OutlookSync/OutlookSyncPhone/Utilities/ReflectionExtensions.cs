@@ -5,7 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 
-namespace OutlookSync
+//must be in the same namespace as PropertBag.
+namespace OutlookSync.Model
 {
     static class ReflectionExtensions
     {

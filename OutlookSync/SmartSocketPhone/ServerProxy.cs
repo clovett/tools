@@ -31,6 +31,8 @@ namespace Microsoft.Networking
 
         public event EventHandler<MessageEventArgs> MessageReceived;
 
+        public IPEndPoint RemoteEndPoint { get { return this.endPoint; } }
+
         internal async Task ConnectAsync(IPEndPoint endPoint)
         {
             this.endPoint = endPoint;

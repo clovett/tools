@@ -22,6 +22,5 @@ namespace Microsoft.Networking
         // if this is set it will be sent back to the remote end point.
         public Task<Message> Response { get; set; }
 
-
     }
 }

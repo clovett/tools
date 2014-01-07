@@ -110,11 +110,17 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\PhoneStoreLoader.cs" />
+    <Compile Include="Pages\ManualConnectPage.xaml.cs">
+      <DependentUpon>ManualConnectPage.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Pages\ReportPage.xaml.cs">
       <DependentUpon>ReportPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Pages\SettingsPage.xaml.cs">
-      <DependentUpon>SettingsPage.xaml</DependentUpon>
+    <Compile Include="Pages\AboutPage.xaml.cs">
+      <DependentUpon>AboutPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\BackButton.xaml.cs">
+      <DependentUpon>BackButton.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utilities\ConnectorControl.xaml.cs">
       <DependentUpon>ConnectorControl.xaml</DependentUpon>
@@ -130,7 +136,9 @@
       <DependentUpon>AppResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Utilities\HlsColor.cs" />
+    <Compile Include="Utilities\IsolatedStorage.cs" />
     <Compile Include="Utilities\ReflectionExtensions.cs" />
+    <Compile Include="Utilities\Settings.cs" />
     <Compile Include="Utilities\SyncProgressControl.xaml.cs">
       <DependentUpon>SyncProgressControl.xaml</DependentUpon>
     </Compile>
@@ -144,11 +152,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Pages\ManualConnectPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Pages\ReportPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Pages\SettingsPage.xaml">
+    <Page Include="Pages\AboutPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Utilities\BackButton.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -177,6 +193,7 @@
     <Content Include="Assets\back.png" />
     <Content Include="Assets\basecircle.png" />
     <Content Include="Assets\folder.png" />
+    <Content Include="Assets\questionmark.png" />
     <Content Include="Assets\Settings.png" />
     <Content Include="Assets\Tiles\FlipCycleTileLarge.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

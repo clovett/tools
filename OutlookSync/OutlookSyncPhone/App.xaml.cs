@@ -7,6 +7,7 @@ using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using OutlookSyncPhone.Resources;
+using OutlookSyncPhone.Utilities;
 
 namespace OutlookSyncPhone
 {
@@ -59,10 +60,17 @@ namespace OutlookSyncPhone
 
         }
 
+        const string SettingsFile = "settings.xml";
+
+        public static Settings Settings { get { return _settings; } }
+
+        static Settings _settings;
+
         // Code to execute when the application is launching (eg, from Start)
         // This code will not execute when the application is reactivated
-        private void Application_Launching(object sender, LaunchingEventArgs e)
+        private async void Application_Launching(object sender, LaunchingEventArgs e)
         {
+            _settings = await Settings.LoadAsync(SettingsFile);
         }
 
         // Code to execute when the application is activated (brought to foreground)
@@ -79,8 +87,9 @@ namespace OutlookSyncPhone
 
         // Code to execute when the application is closing (eg, user hit Back)
         // This code will not execute when the application is deactivated
-        private void Application_Closing(object sender, ClosingEventArgs e)
+        private async void Application_Closing(object sender, ClosingEventArgs e)
         {
+            await App.Settings.SaveAsync();
         }
 
         // Code to execute if a navigation fails

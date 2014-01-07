@@ -22,6 +22,7 @@ namespace Microsoft.Networking
         int m_portNumber;
         string m_udpMessage;
         string m_udpServerMessage;
+        bool stopped;
 
         CancellationTokenSource cancellationSource;
         ManualResetEvent cancelled = new ManualResetEvent(false);
@@ -40,6 +41,7 @@ namespace Microsoft.Networking
 
         public void Start()
         {
+            stopped = false;
             if (server != null)
             {
                 server.Stop();
@@ -155,37 +157,40 @@ namespace Microsoft.Networking
                 {
                     string[] addresses = s.Substring(m_udpServerMessage.Length + 1).Split('/');
 
-                    TryConnectServer(addresses);
+                    var nowait = TryConnectServer(addresses);
                 }
             }
 
         }
 
-        IPEndPoint ParseAddress(string address)
+        public static bool TryParseEndPoint(string address, out IPEndPoint ep)
         {
+            ep = null;
             int i = address.IndexOf(':');
             if (i > 0)
             {
                 string ipaddress = address.Substring(0, i);
                 string port = address.Substring(i + 1);
-                if (int.TryParse(port, out i))
+                IPAddress addr = null;
+                if (int.TryParse(port, out i) && IPAddress.TryParse(ipaddress, out addr))
                 {
-                    return new IPEndPoint(IPAddress.Parse(ipaddress), i);
+                    ep = new IPEndPoint(addr, i);
+                    return true;
                 }
             }
-            return null;
+            return false;
         }
 
-        private async void TryConnectServer(string[] addresses)
+        public async Task TryConnectServer(string[] addresses, bool forceReconnect = false)
         {
-            if (server == null)
+            if (server == null || forceReconnect)
             {
                 foreach (string address in addresses)
                 {
                     try
                     {
-                        IPEndPoint ep = ParseAddress(address);
-                        if (ep != null)
+                        IPEndPoint ep;
+                        if (TryParseEndPoint(address, out ep))
                         {
                             server = new ServerProxy();
                             await server.ConnectAsync(ep);
@@ -201,7 +206,14 @@ namespace Microsoft.Networking
                     }
                     catch
                     {
-                        server = null;
+                        if (!forceReconnect)
+                        {
+                            server = null;
+                        }
+                        else
+                        {
+                            throw;
+                        }
                     }
                 }
                 
@@ -210,16 +222,20 @@ namespace Microsoft.Networking
 
         private void OnServerReadException(object sender, ServerExceptionEventArgs e)
         {
-            this.server = null;
-            Start();
-            if (ServerLost != null)
+            if (!stopped)
             {
-                ServerLost(sender, e);
+                this.server = null;
+                Start();
+                if (ServerLost != null)
+                {
+                    ServerLost(sender, e);
+                }
             }
         }
 
         public void Stop()
         {
+            stopped = true;
             server = null;
             StopFindingServer();
         }

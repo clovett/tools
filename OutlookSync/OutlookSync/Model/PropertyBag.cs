@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace OutlookSync.Model
 {
     interface IPropertyParentable

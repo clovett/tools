@@ -104,6 +104,7 @@
     <phone:PhoneApplicationPage.ApplicationBar >
         <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
             <shell:ApplicationBarIconButton x:Name="SettingsButton" IconUri="/Assets/Settings.png" Text="Settings" Click="OnSettingsClick" />
+            <shell:ApplicationBarIconButton x:Name="AboutButton" IconUri="/Assets/QuestionMark.png" Text="About" Click="OnAboutClick" />
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>
     
