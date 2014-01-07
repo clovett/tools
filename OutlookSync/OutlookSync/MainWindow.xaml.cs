@@ -34,6 +34,7 @@ namespace OutlookSync
         Dictionary<string, ConnectedPhone> connected = new Dictionary<string, ConnectedPhone>();
         ObservableCollection<ConnectedPhone> items = new ObservableCollection<ConnectedPhone>();
         Settings settings;
+        Updater updater = new Updater();
 
         public MainWindow()
         {
@@ -46,6 +47,8 @@ namespace OutlookSync
 
             PhoneList.ItemsSource = items;
             conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", 12777);
+
+            VersionNumber.Text = string.Format(VersionNumber.Text, updater.GetCurrentVersion().ToString());
         }
 
         string GetStoreFileName()
@@ -170,11 +173,35 @@ namespace OutlookSync
             }));
         }
 
+        public void ShowMessage(string text)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessageBorder.Width = this.Width * 0.5;
+                MessageBorder.Visibility = System.Windows.Visibility.Visible;
+                MessageText.Text = text;
+            }));
+        }
+
+        public void HideMessage()
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                MessageBorder.Visibility = System.Windows.Visibility.Collapsed;
+                MessageText.Text = "";
+            }));
+        }
+
         bool busy;
-        HashSet<string> hosedPhones = new HashSet<string>();
+        bool mustRestart;
 
         private async Task OnCreatePhone(MessageEventArgs e)
         {
+            if (mustRestart) 
+            {
+                return;
+            }
+
             if (busy)
             {
                 // ignore this hello
@@ -184,6 +211,11 @@ namespace OutlookSync
             if (this.store == null)
             {
                 // still loading, not done yet!
+                return;
+            }
+
+            if (updater.IsWaitingForUpdate)
+            {
                 return;
             }
 
@@ -213,50 +245,6 @@ namespace OutlookSync
                     }
                 }
 
-                if (hosedPhones.Contains(phoneId))
-                {
-                    return;
-                }
-
-                string currentAppVersion = Updater.GetCurrentVersion().ToString();
-                if (phoneAppVersion != currentAppVersion)
-                {
-                    // version mismatch!! time to check for updates...
-                    var info = await Updater.CheckForUpdate();
-                    if (info != null && info.AvailableVersion.ToString() == phoneAppVersion)
-                    {
-                        await Updater.Update();
-
-                        Dispatcher.Invoke(new Action(() =>
-                        {
-                            MessageBox.Show(Properties.Resources.UpdateRequired, Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
-                            this.Close();
-                        }));
-                    }
-                    else if (info != null)
-                    {
-                        // update is not available you are hosed!!
-                        Dispatcher.Invoke(new Action(() =>
-                        {
-                            MessageBox.Show(string.Format(Properties.Resources.UpdateMismatch, phoneAppVersion, currentAppVersion), Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
-                        }));
-                        ShowStatus(Properties.Resources.WaitingForUpdate);
-                        hosedPhones.Add(phoneId);
-                        return;
-                    }
-                    else
-                    {
-                        // update is not available you are hosed!!
-                        Dispatcher.Invoke(new Action(() =>
-                        {
-                            MessageBox.Show(string.Format(Properties.Resources.UpdateMissing, phoneAppVersion), Properties.Resources.UpdatePrompt, MessageBoxButton.OK);
-                        }));
-                        hosedPhones.Add(phoneId);
-                        ShowStatus(Properties.Resources.WaitingForUpdate);
-                        return;
-                    }
-                }
-
                 string key = e.RemoteEndPoint.Address.ToString();
 
                 ConnectedPhone phone = null;
@@ -264,6 +252,14 @@ namespace OutlookSync
 
                 if (phone == null)
                 {
+                    bool result = await CheckVersions(phoneAppVersion);
+
+                    if (!result)
+                    {
+                        return;
+                    }
+
+                    HideMessage();
                     phone = new ConnectedPhone(store, this.Dispatcher, GetStoreFileName());
                     phone.IPEndPoint = e.RemoteEndPoint.ToString();
                     phone.PropertyChanged += OnPhonePropertyChanged;
@@ -287,6 +283,9 @@ namespace OutlookSync
                 }
                 else
                 {
+
+                    HideMessage();
+
                     await Dispatcher.BeginInvoke(new Action(() =>
                     {
                         // phone reconnected, so start over.
@@ -306,6 +305,46 @@ namespace OutlookSync
                 busy = false;
             }
         }
+
+        private async Task<bool> CheckVersions(string phoneAppVersion)
+        {
+            bool result = true;
+            Version phoneVersion = null;
+            Version.TryParse(phoneAppVersion, out phoneVersion);
+            Version currentAppVersion = this.updater.GetCurrentVersion();
+
+            // only care about major/minor version numbers, the build numbers should be "compatible".
+            if (phoneVersion.Major < currentAppVersion.Major || (phoneVersion.Minor < currentAppVersion.Minor))
+            {                
+                // PC version is newer...
+                ShowMessage(string.Format(Properties.Resources.PhoneUpdateRequired, phoneAppVersion, currentAppVersion.ToString()));
+                ShowStatus(Properties.Resources.WaitingForNewPhoneVersion);
+                result = false;
+            }
+            else if (phoneVersion.Major > currentAppVersion.Major || (phoneVersion.Major == currentAppVersion.Major && phoneVersion.Minor > currentAppVersion.Minor))
+            {
+                // phone version is newer
+                var info = await this.updater.CheckForUpdate();
+                if (info != null && info.UpdateAvailable && info.AvailableVersion >= phoneVersion)
+                {
+                    await updater.Update();
+
+                    ShowMessage(string.Format(Properties.Resources.UpdateRequired, phoneAppVersion, currentAppVersion.ToString()));
+                    ShowStatus(Properties.Resources.WaitingForRestart);
+                    result = false;
+                    mustRestart = true;
+                }
+                else 
+                {
+                    ShowMessage(string.Format(Properties.Resources.UpdateMissing, phoneAppVersion, currentAppVersion.ToString()));
+                    ShowStatus(Properties.Resources.WaitingForUpdate);
+                    updater.BeginWatchForUpdate();
+                    result = false;
+                }
+            }
+            return result;
+        }
+
 
         private void OnPhonePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {

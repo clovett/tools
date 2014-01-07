@@ -79,6 +79,15 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your phone is running version {0} and your Outlook Sync Server version is {1}.  Please check to see if there is an update available for the app on your phone..
+        /// </summary>
+        internal static string PhoneUpdateRequired {
+            get {
+                return ResourceManager.GetString("PhoneUpdateRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Congratulations your phone is now in sync!.
         /// </summary>
         internal static string SyncComplete {
@@ -88,16 +97,7 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Your phone is running version {0} and the lovettsoftware.com site has incompatible version {1} of the OutlookSyncServer.  Please contact chris@lovettsoftware.com for a suggested fix..
-        /// </summary>
-        internal static string UpdateMismatch {
-            get {
-                return ResourceManager.GetString("UpdateMismatch", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Your phone is running version {0} and the lovettsoftware.com site has no new update for Outlook Sync Server to match.  Please contact chris@lovettsoftware.com for a suggested fix..
+        ///   Looks up a localized string similar to Your phone is running version {0} and your Outlook Sync Server version is {1} and no new update for Outlook Sync Server seems to be available yet.  Please contact chris@lovettsoftware.com for a suggested fix..
         /// </summary>
         internal static string UpdateMissing {
             get {
@@ -106,20 +106,20 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Update Required.
-        /// </summary>
-        internal static string UpdatePrompt {
-            get {
-                return ResourceManager.GetString("UpdatePrompt", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Your phone is running a newer version, so this app needs to install an update.\r\nPress OK and restart the app.
+        ///   Looks up a localized string similar to Your phone is running a newer version, and there is a matching update for Outlook Sync Server.  Please restart this app to install the update..
         /// </summary>
         internal static string UpdateRequired {
             get {
                 return ResourceManager.GetString("UpdateRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for new phone app version.
+        /// </summary>
+        internal static string WaitingForNewPhoneVersion {
+            get {
+                return ResourceManager.GetString("WaitingForNewPhoneVersion", resourceCulture);
             }
         }
         
@@ -129,6 +129,15 @@ namespace OutlookSync.Properties {
         internal static string WaitingForPhone {
             get {
                 return ResourceManager.GetString("WaitingForPhone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for you to restart this app.
+        /// </summary>
+        internal static string WaitingForRestart {
+            get {
+                return ResourceManager.GetString("WaitingForRestart", resourceCulture);
             }
         }
         

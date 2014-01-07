@@ -15,11 +15,6 @@
             <local:ConnectorControl x:Name="Connector" Grid.Column="1" Width="45" Height="20" VerticalAlignment="Center"/>
         </Grid>
         <Grid>
-              <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
             <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0" Background="{StaticResource MainBackgroundBrush}"
                      ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch"
                      >
@@ -29,6 +24,16 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            
+            <Border Background="White" CornerRadius="3" x:Name="MessageBorder" HorizontalAlignment="Center" VerticalAlignment="Center" Width="300" Visibility="Collapsed">
+                <Border.Effect>
+                    <DropShadowEffect Color="Gray"/>
+                </Border.Effect>
+                <TextBlock x:Name="MessageText" Text=""
+                           TextWrapping="Wrap" FontSize="14" Margin="20"/>
+            </Border>
+            
+            <TextBlock x:Name="VersionNumber" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="#7090B0" Text="Version {0}"/>
             
         </Grid>
     </DockPanel>
