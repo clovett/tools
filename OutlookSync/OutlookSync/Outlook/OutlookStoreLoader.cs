@@ -416,15 +416,22 @@ namespace OutlookSync.Model
             contact.FullName = uc.DisplayName;
 
             PersonName pn = uc.CompleteName;
-            if (pn == null)
+            if (pn == null || (string.IsNullOrEmpty(pn.FirstName) && 
+                string.IsNullOrEmpty(pn.LastName) && string.IsNullOrEmpty(pn.MiddleName) &&
+                string.IsNullOrEmpty(pn.Suffix) && string.IsNullOrEmpty(pn.Title)))
             {
                 contact.FirstName   = "";
                 contact.LastName    = "";
                 contact.MiddleName  = "";
                 contact.Suffix      = "";
                 contact.Title = "";
+                // maybe it is an unparsable full name...
+                if (!string.IsNullOrEmpty(uc.DisplayName))
+                {
+                    contact.FullName = uc.DisplayName;
+                }
             }
-            else
+            else 
             {
                 contact.FirstName = pn.FirstName;
                 contact.LastName = pn.LastName;
