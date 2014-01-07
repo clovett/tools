@@ -64,10 +64,13 @@ namespace OutlookSync.Controls
 
         private void UpdateTiles(SyncResult syncResult)
         {
-            AnimateCount(InsertIndicator, syncResult.GetTotalInserted());
-            AnimateCount(UpdateIndicator, syncResult.GetTotalUpdated());
-            AnimateCount(UnchangedIndicator, syncResult.Unchanged);
-            AnimateCount(DeleteIndicator, syncResult.GetTotalDeleted());
+            if (syncResult != null)
+            {
+                AnimateCount(InsertIndicator, syncResult.GetTotalInserted());
+                AnimateCount(UpdateIndicator, syncResult.GetTotalUpdated());
+                AnimateCount(UnchangedIndicator, syncResult.Unchanged);
+                AnimateCount(DeleteIndicator, syncResult.GetTotalDeleted());
+            }
         }
 
         void AnimateCount(SyncProgressControl ctrl, List<ContactVersion> list)

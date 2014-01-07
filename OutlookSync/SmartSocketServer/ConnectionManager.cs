@@ -46,6 +46,14 @@ namespace Microsoft.Networking
             Task.Run(new Action(Receive));
         }
 
+        public IEnumerable<string> ServerEndPoints
+        {
+            get
+            {
+                return server.ListeningEndPoints;
+            }
+        }
+
         void OnServerException(object sender, ServerExceptionEventArgs e)
         {
             // one of the clients went away.

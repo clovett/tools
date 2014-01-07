@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Office.Interop.Outlook;
 using System.Diagnostics;
+using System.Threading;
 
 namespace OutlookSync.Model
 {
@@ -17,6 +18,10 @@ namespace OutlookSync.Model
         Dictionary<string, ContactItem> index = new Dictionary<string, ContactItem>();
         Dictionary<string, UnifiedContact> deletedLocally = new Dictionary<string, UnifiedContact>();
         Dictionary<string, UnifiedContact> addedLocally = new Dictionary<string, UnifiedContact>();
+
+        public OutlookStoreLoader()
+        {
+        }
 
         /// <summary>
         /// Update the unified store with whatever is currently in Outlook.
@@ -51,8 +56,8 @@ namespace OutlookSync.Model
 
                 Log.WriteLine("Loaded {0} contacts", store.Contacts.Count);
 
-
             }));
+
         }
         
         private void FindContacts(Folders folders, HashSet<string> found)

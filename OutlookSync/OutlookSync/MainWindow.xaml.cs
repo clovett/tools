@@ -51,6 +51,16 @@ namespace OutlookSync
             VersionNumber.Text = string.Format(VersionNumber.Text, updater.GetCurrentVersion().ToString());
         }
 
+        protected override void OnPreviewKeyDown(KeyEventArgs e)
+        {
+            if (e.Key == Key.F6)
+            {
+                ShowMessage("Server is listening on the following addresses:\n" +
+                    string.Join("\n", conmgr.ServerEndPoints.ToArray()));
+            }
+            base.OnPreviewKeyDown(e);
+        }
+
         string GetStoreFileName()
         {
             string dir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), StoreFolder);
@@ -106,7 +116,7 @@ namespace OutlookSync
 
                 connected.Remove(key);
 
-                Dispatcher.BeginInvoke(new Action(() =>
+                Dispatcher.Invoke(new Action(() =>
                 {
                     items.Remove(phone);
                     if (items.Count == 0)
@@ -144,7 +154,7 @@ namespace OutlookSync
                     OnDisconnect(e.RemoteEndPoint);
                     break;
                 case "Connect":
-                    OnConnect(e);
+                    await OnConnect(e);
                     break;
                 case "FinishUpdate":                    
                     await store.SaveAsync(GetStoreFileName());
@@ -159,6 +169,10 @@ namespace OutlookSync
             Message response = null;
             if (phone != null)
             {
+                if (!phone.InSync)
+                {
+                    Debug.WriteLine("??? async wait bug someplace...");
+                }
                 response = phone.HandleMessage(e);
             }
 
@@ -167,7 +181,7 @@ namespace OutlookSync
 
         private void ShowStatus(string msg)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 StatusMessage.Text = msg;
             }));
@@ -175,7 +189,7 @@ namespace OutlookSync
 
         public void ShowMessage(string text)
         {
-            Dispatcher.BeginInvoke(new Action(() =>
+            Dispatcher.Invoke(new Action(() =>
             {
                 MessageBorder.Width = this.Width * 0.5;
                 MessageBorder.Visibility = System.Windows.Visibility.Visible;
@@ -265,7 +279,7 @@ namespace OutlookSync
                     phone.PropertyChanged += OnPhonePropertyChanged;
                     connected[key] = phone;
 
-                    await Dispatcher.BeginInvoke(new Action(() =>
+                    Dispatcher.Invoke(new Action(() =>
                     {
                         phone.Name = phoneName;
                         phone.Id = phoneId;
@@ -286,7 +300,7 @@ namespace OutlookSync
 
                     HideMessage();
 
-                    await Dispatcher.BeginInvoke(new Action(() =>
+                    Dispatcher.Invoke(new Action(() =>
                     {
                         // phone reconnected, so start over.
                         if (!phone.Connected)
@@ -304,6 +318,7 @@ namespace OutlookSync
             {
                 busy = false;
             }
+
         }
 
         private async Task<bool> CheckVersions(string phoneAppVersion)
@@ -364,7 +379,7 @@ namespace OutlookSync
             }
         }
 
-        private void OnConnect(MessageEventArgs e)
+        private async Task OnConnect(MessageEventArgs e)
         {
             var msg = e.Message;
             string key = e.RemoteEndPoint.Address.ToString();
@@ -373,8 +388,13 @@ namespace OutlookSync
 
             if (phone == null)
             {
-                // sorry, this phone is not allowed...
-                return;
+                await OnCreatePhone(e);
+
+                if (!connected.TryGetValue(key, out phone))
+                {
+                    // phone not allowed.
+                    return;
+                }
             }
 
             phone.Connected = true;

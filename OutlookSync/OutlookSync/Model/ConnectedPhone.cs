@@ -26,6 +26,7 @@ namespace OutlookSync.Model
         bool connected;
         string id;
         SyncResult result;
+        bool synced;
 
         public ConnectedPhone(UnifiedStore store, Dispatcher dispatcher, string fileName)
         {
@@ -47,7 +48,10 @@ namespace OutlookSync.Model
             await loader.UpdateAsync(store);
             await Save();
             this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
+            synced = true;
         }
+
+        public bool InSync { get { return synced; } }
         
         public string IPEndPoint
         {
@@ -176,19 +180,28 @@ namespace OutlookSync.Model
                 case "Hello":
                     break;
 
-                case "Connect":
-                    string phoneName = null;
-                    string phoneId = null;
-                    if (m.Parameters != null)
+                case "Connect":                    
+                    string phoneAppVersion = "";
+                    string phoneName = "Unknown";
+                    string phoneId = "";
+                    string parameters = m.Parameters;
+                    if (parameters != null)
                     {
-                        phoneName = m.Parameters;
-                        int i = m.Parameters.IndexOf('/');
-                        if (i > 0)
+                        string[] parts = m.Parameters.Split('/');
+                        if (parts.Length > 0)
                         {
-                            phoneName = m.Parameters.Substring(0, i);
-                            phoneId = m.Parameters.Substring(i + 1);
+                            phoneAppVersion = parts[0];
+                        }
+                        if (parts.Length > 1)
+                        {
+                            phoneName = parts[1];
+                        }
+                        if (parts.Length > 2)
+                        {
+                            phoneId = Uri.UnescapeDataString(parts[2]);
                         }
                     }
+
                     this.Name = phoneName;
                     this.Id = phoneId;
                     response = new Message() { Command = "Count", Parameters = store.Contacts.Count.ToString() };
