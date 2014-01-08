@@ -63,7 +63,7 @@ namespace OutlookSync
         {
             if (e.FirewallEntryMissing || e.FirewallSettingsIncorrect)
             {
-                if (!updater.IsFirstLaunch && !isShowingFirewallError)
+                if (!isShowingFirewallError)
                 {
                     isShowingFirewallError = true;
 

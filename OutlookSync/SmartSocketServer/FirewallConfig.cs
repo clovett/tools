@@ -86,15 +86,20 @@ namespace Microsoft.Networking
                 bool firewallenabled = false;
 
                 int profileTypes = policy.CurrentProfileTypes;
-                if ((profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_DOMAIN) != 0)
+
+                bool hasPublicProfile = (profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PUBLIC) != 0;
+                bool hasPrivateProfile = (profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PRIVATE) != 0;
+                bool hasDomainProfile = (profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_DOMAIN) != 0;
+
+                if (hasDomainProfile)
                 {
                     firewallenabled = policy.get_FirewallEnabled(NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_DOMAIN);
                 }
-                else if ((profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PRIVATE) != 0)
+                else if (hasPrivateProfile)
                 {
                     firewallenabled = policy.get_FirewallEnabled(NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PRIVATE);
                 }
-                else if ((profileTypes & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PUBLIC) != 0)
+                else if (hasPublicProfile)
                 {
                     firewallenabled = policy.get_FirewallEnabled(NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PUBLIC);
                 }
@@ -104,60 +109,69 @@ namespace Microsoft.Networking
                     // check our app is configured correctly.
                     IEnumerator enumerator = policy.Rules.GetEnumerator();
                     bool found = false;
-                    bool privateIncomingUdp = false;
-                    bool privateIncomingTcp = false;
+                    bool incomingUdp = false;
+                    bool incomingTcp = false;
 
                     while (enumerator.MoveNext())
                     {
                         INetFwRule rule = (INetFwRule)enumerator.Current;
-                        if ((rule.Profiles & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PRIVATE) != 0)
+                        NET_FW_IP_PROTOCOL_ protocol = (NET_FW_IP_PROTOCOL_)rule.Protocol;
+                        NET_FW_RULE_DIRECTION_ direction = (NET_FW_RULE_DIRECTION_)rule.Direction;
+                        if (direction == NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN)
                         {
-                            // this rule applies to the current profile.
+                            string name = rule.ApplicationName;
 
-                            NET_FW_IP_PROTOCOL_ protocol = (NET_FW_IP_PROTOCOL_)rule.Protocol;
-                            NET_FW_RULE_DIRECTION_ direction = (NET_FW_RULE_DIRECTION_)rule.Direction;
-                            if (direction == NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN)
+                            if (!string.IsNullOrEmpty(name))
                             {
-                                string name = rule.ApplicationName;
-
-                                if (!string.IsNullOrEmpty(name))
+                                try
                                 {
-                                    try
+                                    Uri uri = new Uri(name, UriKind.RelativeOrAbsolute);
+                                    if (uri == assemblyUri)
                                     {
-                                        Uri uri = new Uri(name, UriKind.RelativeOrAbsolute);
-                                        if (uri == assemblyUri)
+                                        found = true;
+                                        if (rule.Enabled && 
+                                            rule.InterfaceTypes == "All" && 
+                                            rule.LocalPorts == "*" && 
+                                            rule.RemoteAddresses == "*")
                                         {
-                                            found = true;
-                                            if (rule.Enabled && rule.InterfaceTypes == "All" && rule.LocalPorts == "*" && rule.RemoteAddresses == "*")
+
+                                            if ((rule.Profiles & (int)NET_FW_PROFILE_TYPE2_.NET_FW_PROFILE2_PRIVATE) != 0)
                                             {
+                                                // great
+
                                                 switch (protocol)
                                                 {
                                                     case NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_ANY:
-                                                        privateIncomingUdp = true;
-                                                        privateIncomingTcp = true;
+                                                        incomingUdp = true;
+                                                        incomingTcp = true;
                                                         break;
                                                     case NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP:
-                                                        privateIncomingTcp = true;
+                                                        incomingTcp = true;
                                                         break;
                                                     case NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP:
-                                                        privateIncomingUdp = true;
+                                                        incomingUdp = true;
                                                         break;
                                                     default:
                                                         break;
                                                 }
                                             }
+                                            else
+                                            {
+                                                // required profile is missing.  For example, user is on a private network and the rule 
+                                                // is not enabled for private networks...
+                                            }
                                         }
                                     }
-                                    catch
-                                    {
-                                    }
+                                }
+                                catch
+                                {
                                 }
                             }
                         }
                     }
 
                     e.FirewallEntryMissing = !found;
-                    e.FirewallSettingsIncorrect = !privateIncomingUdp || !privateIncomingTcp;
+                    e.FirewallSettingsIncorrect = !incomingUdp || !incomingTcp;
                 }
                 else
                 {
