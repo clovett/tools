@@ -61,6 +61,33 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Your Windows Firewall settings appear to be missing a rule to allow TCP and UDP network connections to this app over your private network. .
+        /// </summary>
+        internal static string FirewallNotRight {
+            get {
+                return ResourceManager.GetString("FirewallNotRight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to When this app is first launched you need to check both boxes on the Windows Firewall Security Alert dialog allowing Private and Public networks then click &quot;Allow Access&quot;.  If you already dismissed the dialog then you will need to click the link below..
+        /// </summary>
+        internal static string FirstLaunchFirewallSettings {
+            get {
+                return ResourceManager.GetString("FirstLaunchFirewallSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Click here to fix your firewall..
+        /// </summary>
+        internal static string FixFirewallLinkCaption {
+            get {
+                return ResourceManager.GetString("FixFirewallLinkCaption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loaded {0} contacts from Outlook.
         /// </summary>
         internal static string LoadedCount {
@@ -70,11 +97,29 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Loading Outlook contacts....
+        ///   Looks up a localized string similar to Checking Outlook for changes....
         /// </summary>
         internal static string LoadingOutlookContacts {
             get {
                 return ResourceManager.GetString("LoadingOutlookContacts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your computer does not appear to have any network available, so it will not be able to communicate with your phone over wifi..
+        /// </summary>
+        internal static string NoNetwork {
+            get {
+                return ResourceManager.GetString("NoNetwork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to All TCP ports are being used, please close any other instances of this program..
+        /// </summary>
+        internal static string NoPortsAvailable {
+            get {
+                return ResourceManager.GetString("NoPortsAvailable", resourceCulture);
             }
         }
         
@@ -93,6 +138,15 @@ namespace OutlookSync.Properties {
         internal static string SyncComplete {
             get {
                 return ResourceManager.GetString("SyncComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unknown networking error has occured, the reason is &apos;{0}&apos;.
+        /// </summary>
+        internal static string UnknownNetworkingError {
+            get {
+                return ResourceManager.GetString("UnknownNetworkingError", resourceCulture);
             }
         }
         
@@ -124,7 +178,7 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Waiting for phone to connect over Wifi .
+        ///   Looks up a localized string similar to Waiting for you to launch Outlook Sync on your phone.
         /// </summary>
         internal static string WaitingForPhone {
             get {

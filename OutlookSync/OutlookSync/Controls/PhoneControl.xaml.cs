@@ -27,8 +27,9 @@ namespace OutlookSync.Controls
         public PhoneControl()
         {
             InitializeComponent();
-            TrustedPhoneImage.Visibility = System.Windows.Visibility.Collapsed;
             this.DataContextChanged += PhoneControl_DataContextChanged;
+            this.TrustedPhoneImage.Visibility = System.Windows.Visibility.Collapsed;
+            this.InSyncImage.Visibility = System.Windows.Visibility.Collapsed;
         }
 
         void PhoneControl_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -40,6 +41,7 @@ namespace OutlookSync.Controls
             phone = (ConnectedPhone)e.NewValue;
             if (phone != null)
             {
+                UpdateImages();
                 phone.PropertyChanged += OnPhonePropertyChanged;
                 ConnectButton.Visibility = (phone.Allowed ? Visibility.Collapsed : System.Windows.Visibility.Visible);
             }
@@ -53,12 +55,38 @@ namespace OutlookSync.Controls
                 {
                     case "Allowed":
                         ConnectButton.Visibility = phone.Allowed ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
-                        TrustedPhoneImage.Visibility = phone.Allowed ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+                        UpdateImages();
                         break;
                     case "SyncStatus":
                         UpdateTiles(phone.SyncStatus);
                         break;
+                    case "InSync":
+                        UpdateImages();
+                        break;
                 }
+            }
+        }
+
+        private void UpdateImages()
+        {
+            if (phone != null)
+            {
+                if (phone.InSync)
+                {
+                    this.InSyncImage.Visibility = System.Windows.Visibility.Visible;
+                    this.TrustedPhoneImage.Visibility = System.Windows.Visibility.Collapsed;
+                }
+                else if (phone.Allowed)
+                {
+                    this.InSyncImage.Visibility = System.Windows.Visibility.Collapsed;
+                    TrustedPhoneImage.Visibility = System.Windows.Visibility.Visible;
+                }
+                else
+                {
+                    this.TrustedPhoneImage.Visibility = System.Windows.Visibility.Collapsed;
+                    this.InSyncImage.Visibility = System.Windows.Visibility.Collapsed;
+                }
+
             }
         }
 

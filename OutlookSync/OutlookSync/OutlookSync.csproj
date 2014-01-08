@@ -29,7 +29,7 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>http://www.lovettsoftware.com/Downloads/OutlookSync/</InstallUrl>
-    <ApplicationRevision>4</ApplicationRevision>
+    <ApplicationRevision>8</ApplicationRevision>
     <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -80,10 +80,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.Office.Tools.Outlook.v4.0.Utilities, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="NetFwTypeLib">
-      <HintPath>COM\NetFwTypeLib.dll</HintPath>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -116,7 +112,6 @@
     <Compile Include="Model\PropertyBag.cs" />
     <Compile Include="Model\UnifiedContact.cs" />
     <Compile Include="Model\UnifiedStore.cs" />
-    <Compile Include="Utilities\FirewallConfig.cs" />
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\Log.cs" />
     <Compile Include="Utilities\Settings.cs" />
@@ -208,6 +203,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\SecurityLock.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Checkmark.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

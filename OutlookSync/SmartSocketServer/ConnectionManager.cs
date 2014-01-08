@@ -19,6 +19,10 @@ namespace Microsoft.Networking
         public string RemoteAddress { get; set; }
     }
 
+    public class NoPortsAvailableException : Exception
+    {
+    }
+
     public class ConnectionManager
     {
         int m_portNumber;
@@ -28,18 +32,69 @@ namespace Microsoft.Networking
         string m_udpMessage;
         string m_udpServerMessage;
 
-        public ConnectionManager(string applicationId, int udpPort)
+        public ConnectionManager(string applicationId)
         {
-            m_portNumber = udpPort;
             m_udpMessage = "Client:" + applicationId;
             m_udpServerMessage = "Server:" + applicationId;
-            server = new Server(applicationId);
-            client = new UdpClient(m_portNumber);
-            client.EnableBroadcast = true;     
+
+            server = new Server(applicationId);            
         }
 
-        public void StartListening()
+        public bool HasInternet()
         {
+            bool internet = false;
+            foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+            {
+                switch (adapter.NetworkInterfaceType)
+                {
+                    case System.Net.NetworkInformation.NetworkInterfaceType.Loopback:
+                    case System.Net.NetworkInformation.NetworkInterfaceType.Tunnel:
+                        break;
+                    default:
+                        var props = adapter.GetIPProperties();
+                        var stats = adapter.GetIPStatistics();
+                        if (adapter.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && 
+                            props.DhcpServerAddresses.Count > 0)
+                        {
+                            internet = true;
+                        }
+                        break;
+                }
+            }
+            return internet;
+        }
+
+        public void StartListening(params int[] udpPortsToTry)
+        {
+            foreach (int port in udpPortsToTry)
+            {
+                try
+                {
+                    client = new UdpClient(port);
+                    m_portNumber = port;
+                    client.EnableBroadcast = true;
+                    break;
+                }
+                catch (SocketException se)
+                {
+                    client = null;
+                    if (se.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                    {
+                        // try again!
+                    }
+                    else
+                    {
+                        // something else is wrong...
+                        throw;
+                    }
+                }
+            }
+
+            if (client == null)
+            {
+                throw new NoPortsAvailableException();
+            }
+
             server.Start();
             server.MessageReceived += OnMessageReceived;
             server.ReadException += OnServerException;
@@ -75,7 +130,10 @@ namespace Microsoft.Networking
         {
             server.Stop();
             stopped = true;
-            client.Close();
+            if (client != null)
+            {
+                client.Close();
+            }
             pending = null;
         }
 

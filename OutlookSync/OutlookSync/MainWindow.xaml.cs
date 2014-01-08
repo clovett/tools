@@ -17,6 +17,8 @@ using Microsoft.Networking;
 using OutlookSync.Model;
 using System.Collections.ObjectModel;
 using OutlookSync.Utilities;
+using System.Windows.Threading;
+using System.Runtime.InteropServices;
 
 namespace OutlookSync
 {
@@ -35,6 +37,7 @@ namespace OutlookSync
         ObservableCollection<ConnectedPhone> items = new ObservableCollection<ConnectedPhone>();
         Settings settings;
         Updater updater = new Updater();
+        FirewallConfig firewall;
 
         public MainWindow()
         {
@@ -46,14 +49,68 @@ namespace OutlookSync
             Debug.WriteLine("Starting time " + UnifiedStore.SyncTime);
 
             PhoneList.ItemsSource = items;
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", 12777);
 
+            firewall = new FirewallConfig(this.ExePath);
+            firewall.FirewallErrorDetected += OnFirewallErrorDetected;
+            
             VersionNumber.Text = string.Format(VersionNumber.Text, updater.GetCurrentVersion().ToString());
+
+        }
+
+        bool isShowingFirewallError;
+
+        private void OnFirewallErrorDetected(object sender, FirewallEventArgs e)
+        {
+            if (e.FirewallEntryMissing || e.FirewallSettingsIncorrect)
+            {
+                if (!updater.IsFirstLaunch && !isShowingFirewallError)
+                {
+                    isShowingFirewallError = true;
+
+                    ShowMessage(new Action<FlowDocument>((doc) =>{
+
+                        Paragraph p = new Paragraph();
+                        p.Inlines.Add(new Run(settings.FirstLoad ? Properties.Resources.FirstLaunchFirewallSettings : Properties.Resources.FirewallNotRight));
+
+                        Hyperlink link = new Hyperlink();
+                        link.Inlines.Add(Properties.Resources.FixFirewallLinkCaption);
+                        link.Cursor = Cursors.Arrow;
+                        link.PreviewMouseLeftButtonDown += OnFixFirewall;
+                        
+                        Paragraph p2 = new Paragraph();
+                        p2.Inlines.Add(link);
+
+                        doc.Blocks.Add(p);
+                        doc.Blocks.Add(p2);
+
+                    }));
+                }
+            }
+            else
+            {
+                HideMessage();
+            }
+        }
+
+        string ExePath
+        {
+            get
+            {
+                Process p = Process.GetCurrentProcess();
+                return  p.MainModule.FileName;
+            }
+        }
+
+        void OnFixFirewall(object sender, MouseButtonEventArgs e)
+        {
+            firewall.FixFirewallSettings(this.ExePath, false);
+
+
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
         {
-            if (e.Key == Key.F6)
+            if (e.Key == Key.F6 && conmgr != null)
             {
                 ShowMessage("Server is listening on the following addresses:\n" +
                     string.Join("\n", conmgr.ServerEndPoints.ToArray()));
@@ -85,18 +142,46 @@ namespace OutlookSync
 
         async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            settings = await Settings.LoadAsync(GetSettingsFileName());
+            try
+            {
+                RichMessageDocument.FontFamily = this.FontFamily;
 
-            ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
+                settings = await Settings.LoadAsync(GetSettingsFileName());
 
-            conmgr.StartListening();
-            conmgr.MessageReceived += OnMessageReceived;
-            conmgr.ReadException += OnServerException;
-            store = await UnifiedStore.LoadAsync(GetStoreFileName());
-            
-            // wait for phone to connect then sync with the phone.
-            FirewallConfig fc = new FirewallConfig();
-            await fc.CheckSettings();
+                if (updater.IsFirstLaunch)
+                {
+                    settings.FirstLoad = true;
+                }
+
+                conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440");
+                if (!conmgr.HasInternet())
+                {
+                    ShowMessage(Properties.Resources.NoNetwork);
+                }
+                else
+                {
+                    conmgr.StartListening(12777, 57365, 59650, 63203, 53889, 65238, 55264, 51764, 59305, 57979, 53993);
+
+                    conmgr.MessageReceived += OnMessageReceived;
+                    conmgr.ReadException += OnServerException;
+                    if (conmgr != null)
+                    {
+                        ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
+                        store = await UnifiedStore.LoadAsync(GetStoreFileName());
+                    }
+
+                    firewall.StartCheckingFirewall();
+                }
+            }
+            catch (NoPortsAvailableException)
+            {
+                ShowMessage(Properties.Resources.NoPortsAvailable);
+            } 
+            catch (Exception ex)
+            {
+                ShowMessage(string.Format(Properties.Resources.UnknownNetworkingError, ex.Message));
+            }      
+
         }
 
         private void OnServerException(object sender, ServerExceptionEventArgs e)
@@ -169,10 +254,6 @@ namespace OutlookSync
             Message response = null;
             if (phone != null)
             {
-                if (!phone.InSync)
-                {
-                    Debug.WriteLine("??? async wait bug someplace...");
-                }
                 response = phone.HandleMessage(e);
             }
 
@@ -193,7 +274,20 @@ namespace OutlookSync
             {
                 MessageBorder.Width = this.Width * 0.5;
                 MessageBorder.Visibility = System.Windows.Visibility.Visible;
-                MessageText.Text = text;
+                RichMessageDocument.Blocks.Clear();
+                Paragraph p = new Paragraph(new Run(text));
+                RichMessageDocument.Blocks.Add(p);
+            }));
+        }
+
+        public void ShowMessage(Action<FlowDocument> messageCreator)
+        {
+            Dispatcher.Invoke(new Action(() =>
+            {
+                MessageBorder.Width = this.Width * 0.5;
+                MessageBorder.Visibility = System.Windows.Visibility.Visible;
+                RichMessageDocument.Blocks.Clear();
+                messageCreator(RichMessageDocument);
             }));
         }
 
@@ -202,7 +296,7 @@ namespace OutlookSync
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 MessageBorder.Visibility = System.Windows.Visibility.Collapsed;
-                MessageText.Text = "";
+                RichMessageDocument.Blocks.Clear();
             }));
         }
 
@@ -375,7 +469,10 @@ namespace OutlookSync
                 }
 
                 // ok, user has given us the green light to connect this phone.
-                conmgr.AllowRemoteMachine(phone.IPEndPoint);
+                if (conmgr != null)
+                {
+                    conmgr.AllowRemoteMachine(phone.IPEndPoint);
+                }
             }
         }
 
@@ -410,7 +507,13 @@ namespace OutlookSync
 
         protected async override void OnClosed(EventArgs e)
         {
-            conmgr.StopListening();
+            if (conmgr != null)
+            {
+                conmgr.StopListening();
+            }
+            firewall.StopCheckingFirewall();
+
+            settings.FirstLoad = false;
             await settings.SaveAsync();
             Log.CloseLog();
             base.OnClosed(e);

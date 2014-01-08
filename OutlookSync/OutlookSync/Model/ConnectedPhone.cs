@@ -1,5 +1,4 @@
 ﻿using Microsoft.Networking;
-using Microsoft.Office.Interop.Outlook;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -48,11 +47,21 @@ namespace OutlookSync.Model
             await loader.UpdateAsync(store);
             await Save();
             this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
-            synced = true;
         }
 
-        public bool InSync { get { return synced; } }
-        
+        public bool InSync
+        {
+            get { return synced; }
+            set
+            {
+                if (synced != value)
+                {
+                    synced = value;
+                    OnPropertyChanged("InSync");
+                }
+            }
+        }
+
         public string IPEndPoint
         {
             get { return ipEndPoint; }
@@ -241,6 +250,7 @@ namespace OutlookSync.Model
                     break;
 
                 case "FinishUpdate":
+                    this.InSync = true;
                     break;
 
                 default:

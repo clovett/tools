@@ -413,8 +413,6 @@ namespace OutlookSync.Model
                 contact.OtherAddressCountry = "";
             }
 
-            contact.FullName = uc.DisplayName;
-
             PersonName pn = uc.CompleteName;
             if (pn == null || (string.IsNullOrEmpty(pn.FirstName) && 
                 string.IsNullOrEmpty(pn.LastName) && string.IsNullOrEmpty(pn.MiddleName) &&
@@ -425,14 +423,14 @@ namespace OutlookSync.Model
                 contact.MiddleName  = "";
                 contact.Suffix      = "";
                 contact.Title = "";
-                // maybe it is an unparsable full name...
-                if (!string.IsNullOrEmpty(uc.DisplayName))
-                {
-                    contact.FullName = uc.DisplayName;
-                }
+
+                // must set this AFTER clearing the above fields because if it is an unparsable full name this makes sure we 
+                // don't lose the DisplayName which happens when you clear the above fields for some odd reason.
+                contact.FullName = uc.DisplayName;
             }
-            else 
+            else
             {
+                contact.FullName = uc.DisplayName;
                 contact.FirstName = pn.FirstName;
                 contact.LastName = pn.LastName;
                 contact.MiddleName = pn.MiddleName;

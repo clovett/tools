@@ -24,13 +24,15 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            
+
             <Border Background="White" CornerRadius="3" x:Name="MessageBorder" HorizontalAlignment="Center" VerticalAlignment="Center" Width="300" Visibility="Collapsed">
                 <Border.Effect>
                     <DropShadowEffect Color="Gray"/>
                 </Border.Effect>
-                <TextBlock x:Name="MessageText" Text=""
-                           TextWrapping="Wrap" FontSize="14" Margin="20"/>
+                <RichTextBox x:Name="MessageText" FontSize="14" Margin="10" BorderThickness="0">
+                    <FlowDocument x:Name="RichMessageDocument">
+                    </FlowDocument>
+                </RichTextBox>
             </Border>
             
             <TextBlock x:Name="VersionNumber" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="#7090B0" Text="Version {0}"/>

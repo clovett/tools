@@ -31,7 +31,12 @@
                 <Button HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="80" MinHeight="30" x:Name="ConnectButton" Grid.Row="1" Margin="10"
                     Click="OnConnectClick" Padding="5,0">Sync this phone</Button>
 
-                <Image x:Name="TrustedPhoneImage" Source="/Assets/SecurityLock.png" Width="48" Height="48" Grid.Row="2" HorizontalAlignment="Left" Margin="10"/>
+                <Grid Grid.Row="2" >
+                    <Image x:Name="TrustedPhoneImage" Source="/Assets/SecurityLock.png" Width="48" Height="48" HorizontalAlignment="Left" Margin="10"
+                           ToolTip="This is a trusted phone."/>
+                    <Image x:Name="InSyncImage" Source="/Assets/CheckMark.png" Width="48" Height="48" Grid.Row="2" HorizontalAlignment="Left" Margin="10"
+                           ToolTip="Congratulations this phone is now in sync."/>
+                </Grid>
             </Grid>
 
             <local:SyncProgressControl x:Name="InsertIndicator" 

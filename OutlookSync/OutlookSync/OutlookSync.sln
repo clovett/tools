@@ -2,12 +2,20 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookSync", "OutlookSync.csproj", "{5E527284-8068-4FE5-B638-1CB3CD7BC781}"
+	ProjectSection(ProjectDependencies) = postProject
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6} = {57C60929-B770-43F2-9EFA-EF592A59A4D6}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartSocketServer", "..\SmartSocketServer\SmartSocketServer.csproj", "{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6} = {57C60929-B770-43F2-9EFA-EF592A59A4D6}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OutlookSyncAdmin", "..\OutlookSyncAdmin\OutlookSyncAdmin.csproj", "{57C60929-B770-43F2-9EFA-EF592A59A4D6}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
+		SccNumberOfProjects = 4
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
 		SccLocalPath0 = .
@@ -16,6 +24,9 @@ Global
 		SccProjectUniqueName2 = ..\\SmartSocketServer\\SmartSocketServer.csproj
 		SccProjectName2 = ../SmartSocketServer
 		SccLocalPath2 = ..\\SmartSocketServer
+		SccProjectUniqueName3 = ..\\OutlookSyncAdmin\\OutlookSyncAdmin.csproj
+		SccProjectName3 = ../OutlookSyncAdmin
+		SccLocalPath3 = ..\\OutlookSyncAdmin
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +53,14 @@ Global
 		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|ARM.ActiveCfg = Release|Any CPU
 		{5D8AEE9C-D839-40E6-8BB6-7335E8C0647A}.Release|x86.ActiveCfg = Release|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Release|ARM.ActiveCfg = Release|Any CPU
+		{57C60929-B770-43F2-9EFA-EF592A59A4D6}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

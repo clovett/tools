@@ -18,6 +18,7 @@ namespace OutlookSync.Utilities
 
         public Settings()
         {
+            FirstLoad = true;
         }
 
         public List<string> TrustedPhones
@@ -25,6 +26,8 @@ namespace OutlookSync.Utilities
             get { return trustedPhones; }
             set { trustedPhones = value; }
         }
+
+        public bool FirstLoad { get; set; }
 
         public static async Task<Settings> LoadAsync(string fileName)
         {

@@ -117,17 +117,35 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FirewallNotRight" xml:space="preserve">
+    <value>Your Windows Firewall settings appear to be missing a rule to allow TCP and UDP network connections to this app over your private network. </value>
+  </data>
+  <data name="FirstLaunchFirewallSettings" xml:space="preserve">
+    <value>When this app is first launched you need to check both boxes on the Windows Firewall Security Alert dialog allowing Private and Public networks then click "Allow Access".  If you already dismissed the dialog then you will need to click the link below.</value>
+  </data>
+  <data name="FixFirewallLinkCaption" xml:space="preserve">
+    <value>Click here to fix your firewall.</value>
+  </data>
   <data name="LoadedCount" xml:space="preserve">
     <value>Loaded {0} contacts from Outlook</value>
   </data>
   <data name="LoadingOutlookContacts" xml:space="preserve">
-    <value>Loading Outlook contacts...</value>
+    <value>Checking Outlook for changes...</value>
+  </data>
+  <data name="NoNetwork" xml:space="preserve">
+    <value>Your computer does not appear to have any network available, so it will not be able to communicate with your phone over wifi.</value>
+  </data>
+  <data name="NoPortsAvailable" xml:space="preserve">
+    <value>All TCP ports are being used, please close any other instances of this program.</value>
   </data>
   <data name="PhoneUpdateRequired" xml:space="preserve">
     <value>Your phone is running version {0} and your Outlook Sync Server version is {1}.  Please check to see if there is an update available for the app on your phone.</value>
   </data>
   <data name="SyncComplete" xml:space="preserve">
     <value>Congratulations your phone is now in sync!</value>
+  </data>
+  <data name="UnknownNetworkingError" xml:space="preserve">
+    <value>An unknown networking error has occured, the reason is '{0}'</value>
   </data>
   <data name="UpdateMissing" xml:space="preserve">
     <value>Your phone is running version {0} and your Outlook Sync Server version is {1} and no new update for Outlook Sync Server seems to be available yet.  Please contact chris@lovettsoftware.com for a suggested fix.</value>
@@ -139,7 +157,7 @@
     <value>Waiting for new phone app version</value>
   </data>
   <data name="WaitingForPhone" xml:space="preserve">
-    <value>Waiting for phone to connect over Wifi </value>
+    <value>Waiting for you to launch Outlook Sync on your phone</value>
   </data>
   <data name="WaitingForRestart" xml:space="preserve">
     <value>Waiting for you to restart this app</value>

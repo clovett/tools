@@ -40,6 +40,22 @@ namespace OutlookSync.Utilities
             }
         }
 
+        public bool IsFirstLaunch
+        {
+            get
+            {
+                try
+                {
+                    return ApplicationDeployment.CurrentDeployment.IsFirstRun;
+                }
+                catch (Exception)
+                {
+                    // must be debugging, or task was cancelled.
+                    return false;
+                }
+            }
+        }
+
         private async void WatchForUpdateTask()
         {
             waiting = true;
