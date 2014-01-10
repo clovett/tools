@@ -115,6 +115,8 @@ namespace Microsoft.Networking
             }
         }
 
+        int udpPing;
+
         private async Task SendUdpPing(HostName hostName)
         {
             string ipAddress = hostName.CanonicalName;
@@ -134,16 +136,18 @@ namespace Microsoft.Networking
                 byte[] bytes = UTF8Encoding.UTF8.GetBytes(m_udpMessage + "/" + ipAddress + ":" + m_portNumber);
                 writer.WriteBytes(bytes);
                 await writer.StoreAsync();
+                Debug.WriteLine("Sent UDP ping " + udpPing++);
             }
         }
 
         private void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
-        {
-            var remoteHost = args.RemoteAddress.CanonicalName
-;
+        {            
+            var remoteHost = args.RemoteAddress.CanonicalName;
+
             // don't receive our own datagrams...
             if (!localAddresses.Contains(remoteHost))
             {
+                Debug.WriteLine("OnDatagramMessageReceived from " + remoteHost);
 
                 var reader = args.GetDataReader();
                 uint bytesRead = reader.UnconsumedBufferLength;
@@ -192,8 +196,10 @@ namespace Microsoft.Networking
                         IPEndPoint ep;
                         if (TryParseEndPoint(address, out ep))
                         {
+                            Debug.WriteLine("Trying to connect to server: " + address);
                             server = new ServerProxy();
                             await server.ConnectAsync(ep);
+                            Debug.WriteLine("Connected to server : " + address);
                             server.ReadException += OnServerReadException;
                             if (ServerFound != null)
                             {

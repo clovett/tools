@@ -280,10 +280,12 @@ namespace OutlookSyncPhone
 
             if (loader == null)
             {
-                MessagePrompt.Text = AppResources.LoadingStore;
+                MessagePrompt.Text = AppResources.LoadingContacts;
                 ShowLoadProgress();
                 loader = new PhoneStoreLoader();
-                await loader.Open();
+                await loader.LoadContacts();
+                MessagePrompt.Text = AppResources.LoadingAppointments;
+                await loader.LoadAppointments();
 
                 syncStatus = loader.GetLocalSyncResult();
                 UpdateTiles();
@@ -292,6 +294,21 @@ namespace OutlookSyncPhone
                 MessagePrompt.Text = AppResources.LaunchPrompt;
             }
 
+            if (!DeviceNetworkInformation.IsNetworkAvailable)
+            {
+                MessagePrompt.Text = AppResources.NoNetwork;
+            }
+            else
+            {
+                StartConnectionManager();
+            }
+
+
+            base.OnNavigatedTo(e);
+        }
+
+        void StartConnectionManager()
+        {
             if (!conmgrStarted)
             {
                 conmgrStarted = true;
@@ -299,9 +316,6 @@ namespace OutlookSyncPhone
                 conmgr.ServerLost += OnServerLost;
                 conmgr.Start();
             }
-
-
-            base.OnNavigatedTo(e);
         }
 
         string GetHelloMessage()
@@ -396,6 +410,10 @@ namespace OutlookSyncPhone
                 }
                 proxy = null;
             }
+            else
+            {
+                Debug.WriteLine("closing, not connected");
+            }
 
             if (conmgrStarted)
             {
@@ -405,6 +423,7 @@ namespace OutlookSyncPhone
                 conmgr.Stop();
             }
 
+            DeviceNetworkInformation.NetworkAvailabilityChanged -= new EventHandler<NetworkNotificationEventArgs>(OnNetworkAvailabilityChanged);
         }
 
         void OnNetworkAvailabilityChanged(object sender, NetworkNotificationEventArgs e)
@@ -419,6 +438,7 @@ namespace OutlookSyncPhone
             {
                 this.offline = true;
                 MessagePrompt.Text = AppResources.NoNetwork;
+                StartConnectionManager();
             }
         }
 

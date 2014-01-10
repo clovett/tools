@@ -100,11 +100,17 @@
     <Compile Include="..\OutlookSync\Model\SyncMessage.cs">
       <Link>Model\SyncMessage.cs</Link>
     </Compile>
+    <Compile Include="..\OutlookSync\Model\UnifiedAppointment.cs">
+      <Link>Model\UnifiedAppointment.cs</Link>
+    </Compile>
     <Compile Include="..\OutlookSync\Model\UnifiedContact.cs">
       <Link>Model\UnifiedContact.cs</Link>
     </Compile>
     <Compile Include="..\OutlookSync\Model\UnifiedStore.cs">
       <Link>Model\UnifiedStore.cs</Link>
+    </Compile>
+    <Compile Include="..\OutlookSync\Utilities\MD5.cs">
+      <Link>Utilities\MD5.cs</Link>
     </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>

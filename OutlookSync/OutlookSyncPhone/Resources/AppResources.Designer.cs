@@ -115,11 +115,20 @@ namespace OutlookSyncPhone.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loading local appointments....
+        /// </summary>
+        public static string LoadingAppointments {
+            get {
+                return ResourceManager.GetString("LoadingAppointments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading local contact store....
         /// </summary>
-        public static string LoadingStore {
+        public static string LoadingContacts {
             get {
-                return ResourceManager.GetString("LoadingStore", resourceCulture);
+                return ResourceManager.GetString("LoadingContacts", resourceCulture);
             }
         }
         

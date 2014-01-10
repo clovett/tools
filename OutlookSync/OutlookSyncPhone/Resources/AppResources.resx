@@ -149,7 +149,7 @@
   <data name="ConnectionLost" xml:space="preserve">
     <value>Lost connection to server.</value>
   </data>
-  <data name="LoadingStore" xml:space="preserve">
+  <data name="LoadingContacts" xml:space="preserve">
     <value>Loading local contact store...</value>
   </data>
   <data name="SavingUpdates" xml:space="preserve">
@@ -157,5 +157,8 @@
   </data>
   <data name="SyncPrompt" xml:space="preserve">
     <value>Synchronizing...</value>
+  </data>
+  <data name="LoadingAppointments" xml:space="preserve">
+    <value>Loading local appointments...</value>
   </data>
 </root>
