@@ -31,6 +31,11 @@ namespace OutlookSync.Model
         {
         }
 
+        public void StartOutlook()
+        {
+            outlook = new Microsoft.Office.Interop.Outlook.Application();
+        }
+
         /// <summary>
         /// Update the unified store with whatever is currently in Outlook.
         /// </summary>
@@ -39,10 +44,13 @@ namespace OutlookSync.Model
         {
             this.store = store;
             this.syncTime = DateTime.Now;
+            if (outlook == null)
+            {
+                throw new System.Exception(Properties.Resources.NoOutlook);
+            }
 
             await Task.Run(new System.Action(() =>
             {
-                outlook = new Microsoft.Office.Interop.Outlook.Application();
 
                 var mapi = outlook.GetNamespace("MAPI");
 

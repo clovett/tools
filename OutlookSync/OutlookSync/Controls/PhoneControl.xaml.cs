@@ -43,8 +43,13 @@ namespace OutlookSync.Controls
             {
                 UpdateImages();
                 phone.PropertyChanged += OnPhonePropertyChanged;
-                ConnectButton.Visibility = (phone.Allowed ? Visibility.Collapsed : System.Windows.Visibility.Visible);
+                UpdateButtonState();
             }
+        }
+
+        void UpdateButtonState()
+        {
+            ConnectButton.Visibility = (phone.Allowed || phone.SyncError != null) ? Visibility.Collapsed : System.Windows.Visibility.Visible;
         }
 
         void UpdateSyncError()
@@ -54,10 +59,12 @@ namespace OutlookSync.Controls
             {
                 ErrorBorder.Visibility = System.Windows.Visibility.Visible;
                 ErrorMessage.Text = message;
+                UpdateButtonState();
             }
             else
             {
                 ErrorBorder.Visibility = System.Windows.Visibility.Collapsed;
+                UpdateButtonState();
             }
         }
 
@@ -68,7 +75,7 @@ namespace OutlookSync.Controls
                 switch (e.PropertyName)
                 {
                     case "Allowed":
-                        ConnectButton.Visibility = phone.Allowed ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
+                        UpdateButtonState();
                         UpdateImages();
                         break;
                     case "SyncStatus":

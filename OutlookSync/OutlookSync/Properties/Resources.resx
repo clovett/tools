@@ -135,6 +135,9 @@
   <data name="NoNetwork" xml:space="preserve">
     <value>Your computer does not appear to have any network available, so it will not be able to communicate with your phone over wifi.</value>
   </data>
+  <data name="NoOutlook" xml:space="preserve">
+    <value>Outlook does not appear to be installed on this machine.  </value>
+  </data>
   <data name="NoPortsAvailable" xml:space="preserve">
     <value>All TCP ports are being used, please close any other instances of this program.</value>
   </data>

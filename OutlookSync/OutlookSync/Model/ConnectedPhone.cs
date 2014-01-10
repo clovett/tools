@@ -53,7 +53,7 @@ namespace OutlookSync.Model
             }
             catch (Exception ex)
             {
-                syncError = ex.Message;
+                SyncError = ex.Message;
             }
         }
 

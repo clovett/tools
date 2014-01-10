@@ -85,7 +85,7 @@ namespace OutlookSync
                     }));
                 }
             }
-            else
+            else if (isShowingFirewallError)
             {
                 HideMessage();
             }
@@ -172,7 +172,20 @@ namespace OutlookSync
 
                 // get new contact info from outlook ready for syncing with this phone.
                 var loader = new OutlookStoreLoader();
-                await loader.UpdateAsync(store);
+                bool started = false;
+                try
+                {
+                    loader.StartOutlook();
+                    started = true;
+                }
+                catch (Exception)
+                {
+                    ShowMessage(Properties.Resources.NoOutlook);
+                }
+                if (started)
+                {
+                    await loader.UpdateAsync(store);
+                }
 
             }
             catch (NoPortsAvailableException)
