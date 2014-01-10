@@ -18,7 +18,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            
+
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto"/>
@@ -38,7 +38,6 @@
                            ToolTip="Congratulations this phone is now in sync."/>
                 </Grid>
             </Grid>
-
             <local:SyncProgressControl x:Name="InsertIndicator" 
                           Grid.Row="0" Grid.Column="1" Margin="20" 
                          SubText="inserted" TileBackground="Green"
@@ -67,7 +66,13 @@
                          MouseLeftButtonDown="OnIndicatorClick"
                          />
 
-            
+
+            <Border x:Name="ErrorBorder" Grid.Column="1" Grid.ColumnSpan="4" Background="#E0FFFFFF" Visibility="Collapsed">
+                <TextBlock Text="this is an error" x:Name="ErrorMessage" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           TextWrapping="Wrap" Margin="10"/>
+            </Border>
+
+
         </Grid>
     </Border>
 </UserControl>

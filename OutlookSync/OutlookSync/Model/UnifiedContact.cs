@@ -18,17 +18,19 @@ namespace OutlookSync.Model
     {
         public UnifiedContact()
         {
+            RenameProperty("OutlookEntryId", "Id");
+            RenameProperty("CompleteName", "Name");
         }
         
         public override bool IsEmpty 
         { 
-            get { return CompleteName == null; } 
+            get { return Name == null; } 
         }
 
-        public string OutlookEntryId
+        public string Id
         {
-            get { return GetValue<string>("OutlookEntryId"); }
-            set { SetValue<string>("OutlookEntryId", value); }
+            get { return GetValue<string>("Id"); }
+            set { SetValue<string>("Id", value); }
         }
 
         public PropertyList<ContactAddress> Addresses
@@ -43,10 +45,10 @@ namespace OutlookSync.Model
             set { SetValue<DateTimeOffset?>("Birthday", value); }
         }
 
-        public PersonName CompleteName
+        public PersonName Name
         {
-            get { return GetValue<PersonName>("CompleteName"); }
-            set { SetValue<PersonName>("CompleteName", value); }
+            get { return GetValue<PersonName>("Name"); }
+            set { SetValue<PersonName>("Name", value); }
         }
 
         public string DisplayName
@@ -168,7 +170,7 @@ namespace OutlookSync.Model
         {
             if (Addresses != null)
             {
-                foreach (ContactAddress ca in (from a in Addresses.ToArray() where a.Kind == kind select a))
+                foreach (ContactAddress ca in (from a in Addresses where a.Kind == kind select a))
                 {
                     // don't actually remove it, set the value to null so we remember this was deleted.
                     ca.PhysicalAddress = null;
@@ -199,7 +201,7 @@ namespace OutlookSync.Model
         {
             if (EmailAddresses != null)
             {
-                foreach (ContactEmailAddress ca in (from a in EmailAddresses.ToArray() where a.Kind == kind select a))
+                foreach (ContactEmailAddress ca in (from a in EmailAddresses where a.Kind == kind select a))
                 {
                     // don't actually remove it from the list, instead set the address to null as a reminder that this was deleted.
                     ca.EmailAddress = null;
@@ -231,7 +233,7 @@ namespace OutlookSync.Model
         {
             if (PhoneNumbers != null)
             {
-                foreach (ContactPhoneNumber number in (from a in PhoneNumbers.ToArray() where a.Kind == kind select a))
+                foreach (ContactPhoneNumber number in (from a in PhoneNumbers where a.Kind == kind select a))
                 {
                     // don't actually remove it, set the value to null so we remember this was deleted.
                     number.PhoneNumber = null;

@@ -47,6 +47,20 @@ namespace OutlookSync.Controls
             }
         }
 
+        void UpdateSyncError()
+        {
+            string message = phone.SyncError;
+            if (!string.IsNullOrEmpty(message))
+            {
+                ErrorBorder.Visibility = System.Windows.Visibility.Visible;
+                ErrorMessage.Text = message;
+            }
+            else
+            {
+                ErrorBorder.Visibility = System.Windows.Visibility.Collapsed;
+            }
+        }
+
         private void OnPhonePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (phone != null)
@@ -62,6 +76,9 @@ namespace OutlookSync.Controls
                         break;
                     case "InSync":
                         UpdateImages();
+                        break;
+                    case "SyncError":
+                        UpdateSyncError();
                         break;
                 }
             }

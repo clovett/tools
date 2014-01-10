@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Office.Interop.Outlook;
 using System.Diagnostics;
 using System.Threading;
+using System.Security;
 
 namespace OutlookSync.Model
 {
@@ -14,10 +15,17 @@ namespace OutlookSync.Model
     {
         Microsoft.Office.Interop.Outlook.Application outlook;
         UnifiedStore store;
-        MAPIFolder contactFolder;
-        Dictionary<string, ContactItem> index = new Dictionary<string, ContactItem>();
-        Dictionary<string, UnifiedContact> deletedLocally = new Dictionary<string, UnifiedContact>();
-        Dictionary<string, UnifiedContact> addedLocally = new Dictionary<string, UnifiedContact>();
+        DateTime syncTime;
+        Dictionary<string, ContactItem> contactIndex = new Dictionary<string, ContactItem>();
+        Dictionary<string, AppointmentItem> appointmentIndex = new Dictionary<string, AppointmentItem>();
+
+        Dictionary<string, UnifiedContact> contactsDeletedLocally = new Dictionary<string, UnifiedContact>();
+        Dictionary<string, UnifiedContact> contactsAddedLocally = new Dictionary<string, UnifiedContact>();
+
+
+        Dictionary<string, UnifiedAppointment> appointmentsDeletedLocally = new Dictionary<string, UnifiedAppointment>();
+        Dictionary<string, UnifiedAppointment> appointmentsAddedLocally = new Dictionary<string, UnifiedAppointment>();
+
 
         public OutlookStoreLoader()
         {
@@ -30,6 +38,7 @@ namespace OutlookSync.Model
         public async Task UpdateAsync(UnifiedStore store)
         {
             this.store = store;
+            this.syncTime = DateTime.Now;
 
             await Task.Run(new System.Action(() =>
             {
@@ -39,16 +48,17 @@ namespace OutlookSync.Model
 
                 HashSet<string> found = new HashSet<string>();
 
-                FindContacts(mapi.Folders, found);
+                LoadOutlookContactsAndAppointments(mapi.Folders, found);
 
                 // see if user has deleted contacts in outlook
                 foreach (UnifiedContact c in store.Contacts.ToArray())
                 {
-                    if (string.IsNullOrEmpty(c.OutlookEntryId) || !found.Contains(c.OutlookEntryId))
+                    string id = c.Id;
+                    if (string.IsNullOrEmpty(id) || !found.Contains(id))
                     {
-                        if (!string.IsNullOrEmpty(c.OutlookEntryId))
+                        if (!string.IsNullOrEmpty(id))
                         {
-                            deletedLocally[c.OutlookEntryId] = c;
+                            contactsDeletedLocally[id] = c;
                         }
                         store.Contacts.Remove(c);
                     }
@@ -56,72 +66,205 @@ namespace OutlookSync.Model
 
                 Log.WriteLine("Loaded {0} contacts", store.Contacts.Count);
 
+                // see if user has deleted appointments in outlook
+                foreach (UnifiedAppointment a in store.Appointments.ToArray())
+                {
+                    string id = a.Id;
+                    if (string.IsNullOrEmpty(id) || !found.Contains(id))
+                    {
+                        if (!string.IsNullOrEmpty(id))
+                        {
+                            appointmentsDeletedLocally[id] = a;
+                        }
+                        store.Appointments.Remove(a);
+                    }
+                }
+
             }));
 
         }
-        
-        private void FindContacts(Folders folders, HashSet<string> found)
+
+        private void LoadOutlookContactsAndAppointments(Folders folders, HashSet<string> found)
         {
             if (folders != null)
             {
                 foreach (MAPIFolder folder in folders)
-                {                                        
-                    if (folder.DefaultItemType == OlItemType.olContactItem)
-                    {
-                        string name = folder.Name;
-                        if (name == "Suggested Contacts")
-                        {
-                            continue;
-                        }
+                {
+                    string name = folder.Name;
 
-                        foreach (object item in folder.Items)
-                        {
-                            ContactItem contact = item as ContactItem;
-                            if (contact != null)
+                    switch (folder.DefaultItemType)
+                    {
+                        case OlItemType.olAppointmentItem:
+                            //LoadAppointments(folder, found);
+                            break;
+
+                        case OlItemType.olContactItem:
+                            if (name == "Suggested Contacts")
                             {
-                                if (contact.EntryID != null)
-                                {
-                                    found.Add(contact.EntryID);
-                                }
-                                contactFolder = folder;
-                                MergeContact(contact);
+                                continue;
                             }
-                        }
+                            LoadContacts(folder, found);
+                            break;
+
+                        case OlItemType.olDistributionListItem:
+                        case OlItemType.olJournalItem:
+                        case OlItemType.olMailItem:
+                        case OlItemType.olMobileItemMMS:
+                        case OlItemType.olMobileItemSMS:
+                        case OlItemType.olNoteItem:
+                        case OlItemType.olPostItem:
+                        case OlItemType.olTaskItem:
+                        default:
+                            break;
                     }
-                    FindContacts(folder.Folders, found);
+
+                    LoadOutlookContactsAndAppointments(folder.Folders, found);
+                }
+            }
+        }
+
+        private void LoadAppointments(MAPIFolder folder, HashSet<string> found)
+        {
+            foreach (object item in folder.Items)
+            {
+                AppointmentItem appointment = item as AppointmentItem;
+                if (appointment != null)
+                {
+                    if (appointment.EntryID != null)
+                    {
+                        found.Add(appointment.EntryID);
+                    }
+                    MergeAppointment(appointment);
+                }
+            }
+        }
+
+        private void LoadContacts(MAPIFolder folder, HashSet<string> found)
+        {
+
+            foreach (object item in folder.Items)
+            {
+                ContactItem contact = item as ContactItem;
+                if (contact != null)
+                {
+                    if (contact.EntryID != null)
+                    {
+                        found.Add(contact.EntryID);
+                    }
+                    MergeContact(contact);
                 }
             }
         }
 
         internal void DeleteContact(string id)
         {
-            UnifiedContact cached = this.store.FindOutlookEntry(id);
+            UnifiedContact cached = this.store.FindContactById(id);
             if (cached != null)
             {
                 this.store.Contacts.Remove(cached);
             }
             
             ContactItem item = null;
-            if (this.index.TryGetValue(id, out item))
+            if (this.contactIndex.TryGetValue(id, out item))
             {
                 item.Delete();
-                index.Remove(id);
+                contactIndex.Remove(id);
             }
+        }
+
+        private void MergeAppointment(AppointmentItem appointment)
+        {
+            DateTime endTime = appointment.End;
+            DateTime startTime = appointment.Start;
+
+            if (endTime < this.syncTime)
+            {
+                return;
+                // not interested in bloating the phone with past history...
+            }
+
+            string id = appointment.EntryID;
+            appointmentIndex[id] = appointment;
+
+            UnifiedAppointment uc = store.FindAppointmentById(id);
+            bool isNew = false;
+            if (uc == null)
+            {
+                isNew = true;
+                uc = new UnifiedAppointment();
+                appointmentsAddedLocally[id] = uc;
+                uc.Id = id;
+            }
+
+            UpdateAppointment(uc, appointment);
+
+            // update the total version number.
+            uc.VersionNumber = uc.GetHighestVersionNumber();
+
+            if (isNew && !uc.IsEmpty)
+            {
+                store.Appointments.Add(uc);
+            }
+            else if (!isNew && uc.IsEmpty)
+            {
+                store.Appointments.Remove(uc);
+            }
+
+        }
+
+        private void UpdateAppointment(UnifiedAppointment uc, AppointmentItem appointment)
+        {
+            uc.Start = appointment.StartUTC;
+            uc.End = appointment.EndUTC;
+            uc.Subject = appointment.Subject;
+            uc.IsAllDayEvent = appointment.AllDayEvent;
+            uc.DetailsMd5Hash = MD5.GetMd5String(appointment.Body);
+            uc.Location = appointment.Location;
+
+            switch (appointment.BusyStatus)
+            {
+                case OlBusyStatus.olBusy:
+                    uc.Status = AppointmentStatus.Busy;
+                    break;
+                case OlBusyStatus.olFree:
+                    uc.Status = AppointmentStatus.Free;
+                    break;
+                case OlBusyStatus.olOutOfOffice:
+                    uc.Status = AppointmentStatus.OutOfOffice;
+                    break;
+                case OlBusyStatus.olTentative:
+                    uc.Status = AppointmentStatus.Tentative;
+                    break;
+            }
+
+            foreach (Recipient r in appointment.Recipients)
+            {
+                string name = r.Name;
+                string address = r.Address;
+                Debug.WriteLine(name);
+            }
+
+            // todo: how to setup occurrences on the phone, the API doesn't seem to allow it...
+            if (appointment.RecurrenceState == OlRecurrenceState.olApptOccurrence)
+            {
+                // skip it...
+            }
+
         }
 
         private void MergeContact(ContactItem contact)
         {
             string id = contact.EntryID;
-            index[id] = contact;
+            contactIndex[id] = contact;
 
-            UnifiedContact uc = store.FindOutlookEntry(id);
+            UnifiedContact uc = store.FindContactById(id);
             bool isNew = false;
             if (uc == null)
             {
                 isNew = true;
                 uc = new UnifiedContact();
-                addedLocally[id] = uc;
-                uc.OutlookEntryId = id;         
+                contactsAddedLocally[id] = uc;
+                uc.Id = id;         
             }
 
             UpdateContact(uc, contact);
@@ -149,7 +292,7 @@ namespace OutlookSync.Model
 
                 uc.DisplayName = contact.FullName;
 
-                PersonName pn = uc.CompleteName;
+                PersonName pn = uc.Name;
                 if (pn == null) 
                 {
                     pn = new PersonName();
@@ -161,9 +304,9 @@ namespace OutlookSync.Model
                 pn.Suffix = contact.Suffix;
                 pn.Title = contact.Title;
 
-                if (uc.CompleteName != pn && !pn.IsEmpty)
+                if (uc.Name != pn && !pn.IsEmpty)
                 {
-                    uc.CompleteName = pn;
+                    uc.Name = pn;
                 }
                 
                 uc.SignificantOthers = contact.Spouse;
@@ -330,7 +473,7 @@ namespace OutlookSync.Model
             try
             {
                 ContactItem item = null;
-                if (!index.TryGetValue(cached.OutlookEntryId, out item))
+                if (!contactIndex.TryGetValue(cached.Id, out item))
                 {
                     // new contact then!
                     item = outlook.CreateItem(OlItemType.olContactItem);
@@ -413,7 +556,7 @@ namespace OutlookSync.Model
                 contact.OtherAddressCountry = "";
             }
 
-            PersonName pn = uc.CompleteName;
+            PersonName pn = uc.Name;
             if (pn == null || (string.IsNullOrEmpty(pn.FirstName) && 
                 string.IsNullOrEmpty(pn.LastName) && string.IsNullOrEmpty(pn.MiddleName) &&
                 string.IsNullOrEmpty(pn.Suffix) && string.IsNullOrEmpty(pn.Title)))
@@ -590,23 +733,23 @@ namespace OutlookSync.Model
             SyncMessage response = new SyncMessage();
 
             // first, out local deletes take precedence...
-            foreach (var pair in this.deletedLocally)
+            foreach (var pair in this.contactsDeletedLocally)
             {
                 response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
             }
 
             // and our local inserts the phone won't know about yet
-            foreach (var pair in this.addedLocally)
+            foreach (var pair in this.contactsAddedLocally)
             {
                 response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
             }
 
             foreach (var contact in this.store.Contacts)
             {
-                if (!this.addedLocally.ContainsKey(contact.OutlookEntryId))
+                if (!this.contactsAddedLocally.ContainsKey(contact.Id))
                 {
                     Debug.Assert(contact.VersionNumber == contact.GetHighestVersionNumber(), "version is not up to date");
-                    response.Contacts.Add(new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = contact.VersionNumber, Name = contact.DisplayName });
+                    response.Contacts.Add(new ContactVersion() { Id = contact.Id, VersionNumber = contact.VersionNumber, Name = contact.DisplayName });
                 }
             }
             return response;
@@ -618,13 +761,13 @@ namespace OutlookSync.Model
             SyncMessage response = new SyncMessage();
 
             // first, out local deletes take precedence...
-            foreach (var pair in this.deletedLocally)
+            foreach (var pair in this.contactsDeletedLocally)
             {
                 response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
             }
 
             // and our local inserts the phone won't know about yet
-            foreach (var pair in this.addedLocally)
+            foreach (var pair in this.contactsAddedLocally)
             {
                 response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
             }
@@ -655,11 +798,11 @@ namespace OutlookSync.Model
             // Ok, send back what has changed on the server.
             foreach (var contact in this.store.Contacts)
             {
-                string id = contact.OutlookEntryId;
+                string id = contact.Id;
 
-                Debug.Assert(!deletedLocally.ContainsKey(id), "Should have been deleted???");
+                Debug.Assert(!contactsDeletedLocally.ContainsKey(id), "Should have been deleted???");
 
-                if (!this.addedLocally.ContainsKey(id))
+                if (!this.contactsAddedLocally.ContainsKey(id))
                 {
                     int version = contact.VersionNumber;
 
@@ -683,7 +826,7 @@ namespace OutlookSync.Model
                         }
                     }
 
-                    ContactVersion cv = new ContactVersion() { Id = contact.OutlookEntryId, VersionNumber = version, Name = contact.DisplayName };
+                    ContactVersion cv = new ContactVersion() { Id = contact.Id, VersionNumber = version, Name = contact.DisplayName };
                     response.Contacts.Add(cv);
                 }
             }

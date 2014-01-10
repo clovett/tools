@@ -10,15 +10,6 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Networking
 {
-    class UdpReceiveEventArgs : EventArgs
-    {
-        public UdpReceiveEventArgs(string addr)
-        {
-            RemoteAddress = addr;
-        }
-        public string RemoteAddress { get; set; }
-    }
-
     public class NoPortsAvailableException : Exception
     {
     }
@@ -152,7 +143,7 @@ namespace Microsoft.Networking
 
             try
             {
-                pending = client.BeginReceive(new AsyncCallback(OnReceive), state);
+                pending = client.BeginReceive(new AsyncCallback(OnReceiveUdpBroadcast), state);
             }
             catch (Exception x)
             {
@@ -162,7 +153,7 @@ namespace Microsoft.Networking
 
         ManualResetEvent received = new ManualResetEvent(false);
 
-        private void OnReceive(IAsyncResult ar)
+        private void OnReceiveUdpBroadcast(IAsyncResult ar)
         {
             if (pending == ar)
             {
@@ -197,6 +188,7 @@ namespace Microsoft.Networking
 
         public void AllowRemoteMachine(string remoteAddress)
         {
+            Log.WriteLine("AllowRemoteMachine: " + remoteAddress);
             // tell this client how to connect!
             BroadcastEndPoints(remoteAddress, server.ListeningEndPoints);
         }

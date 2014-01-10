@@ -65,7 +65,7 @@ namespace OutlookSync.Model
 
         public ContactVersion(UnifiedContact contact)
         {
-            this.Id = contact.OutlookEntryId;
+            this.Id = contact.Id;
             this.Name = contact.DisplayName;
             this.VersionNumber = contact.VersionNumber;
         }

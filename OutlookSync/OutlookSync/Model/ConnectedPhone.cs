@@ -26,6 +26,7 @@ namespace OutlookSync.Model
         string id;
         SyncResult result;
         bool synced;
+        string syncError;
 
         public ConnectedPhone(UnifiedStore store, Dispatcher dispatcher, string fileName)
         {
@@ -42,11 +43,18 @@ namespace OutlookSync.Model
 
         public async Task SyncOutlook()
         {
-            UnifiedStore.UpdateSyncTime();
-            loader = new OutlookStoreLoader();
-            await loader.UpdateAsync(store);
-            await Save();
-            this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
+            try
+            {
+                UnifiedStore.UpdateSyncTime();
+                loader = new OutlookStoreLoader();
+                await loader.UpdateAsync(store);
+                await Save();
+                this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
+            }
+            catch (Exception ex)
+            {
+                syncError = ex.Message;
+            }
         }
 
         public bool InSync
@@ -58,6 +66,19 @@ namespace OutlookSync.Model
                 {
                     synced = value;
                     OnPropertyChanged("InSync");
+                }
+            }
+        }
+
+        public string SyncError
+        {
+            get { return syncError; }
+            set
+            {
+                if (syncError != value)
+                {
+                    syncError = value;
+                    OnPropertyChanged("SyncError");
                 }
             }
         }
@@ -235,7 +256,7 @@ namespace OutlookSync.Model
                     {
                         Current++;
                         Maximum = Math.Max(Current, Maximum);
-                        UnifiedContact uc = store.FindOutlookEntry(contactId);
+                        UnifiedContact uc = store.FindContactById(contactId);
                         string xml = "null";
                         if (uc != null)
                         {
@@ -281,10 +302,10 @@ namespace OutlookSync.Model
             UnifiedContact fromPhone = UnifiedContact.Parse(xml);
             if (fromPhone != null)
             {
-                string id = fromPhone.OutlookEntryId;
+                string id = fromPhone.Id;
                 if (!string.IsNullOrEmpty(id))
                 {
-                    UnifiedContact cached = this.store.FindOutlookEntry(fromPhone.OutlookEntryId);
+                    UnifiedContact cached = this.store.FindContactById(fromPhone.Id);
                     if (cached == null)
                     {
                         // Oh, user added a new contact then!

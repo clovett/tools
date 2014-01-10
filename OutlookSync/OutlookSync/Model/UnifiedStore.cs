@@ -23,12 +23,17 @@ namespace OutlookSync.Model
     /// </summary>
     public class UnifiedStore 
     {
-        SortedDictionary<string, UnifiedContact> index = new SortedDictionary<string, UnifiedContact>();
+        Dictionary<string, UnifiedContact> contactIndex = new Dictionary<string, UnifiedContact>();
+        Dictionary<string, UnifiedAppointment> appointmentOutlookIndex = new Dictionary<string, UnifiedAppointment>();
+        Dictionary<string, UnifiedAppointment> appointmentPhoneIndex = new Dictionary<string, UnifiedAppointment>();
 
         public UnifiedStore()
         {
             this.Contacts = new ObservableCollection<UnifiedContact>();
             this.Contacts.CollectionChanged += Contacts_CollectionChanged;
+
+            this.Appointments = new ObservableCollection<UnifiedAppointment>();
+            this.Appointments.CollectionChanged += Appointments_CollectionChanged;
         }
 
 
@@ -131,9 +136,14 @@ namespace OutlookSync.Model
             {
                 if (reader.NodeType == XmlNodeType.Element)
                 {
-                    if (reader.LocalName == "Contacts")
+                    switch (reader.LocalName)
                     {
-                        store.ReadContacts(reader);
+                        case "Contacts":
+                            store.ReadContacts(reader);
+                            break;
+                        case "Appointments":
+                            store.ReadAppointments(reader);
+                            break;
                     }
                 }
             }
@@ -156,10 +166,10 @@ namespace OutlookSync.Model
                         UnifiedContact contact = new UnifiedContact();
                         contact.Read(reader);
 
-                        string id = contact.OutlookEntryId;
+                        string id = contact.Id;
                         if (!string.IsNullOrEmpty(id))
                         {
-                            if (!index.ContainsKey(id))
+                            if (!contactIndex.ContainsKey(id))
                             {
                                 this.Contacts.Add(contact);
                             }
@@ -167,6 +177,31 @@ namespace OutlookSync.Model
                         else
                         {
                             // crap, this item got corrupted, so ignore it.
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ReadAppointments(UnifiedStoreSerializer reader)
+        {
+            if (reader.IsEmptyElement)
+            {
+                return;
+            }
+            while (reader.Read() && reader.NodeType != XmlNodeType.EndElement)
+            {
+                if (reader.NodeType == XmlNodeType.Element)
+                {
+                    if (reader.LocalName == "UnifiedAppointment")
+                    {
+                        UnifiedAppointment appointment = new UnifiedAppointment();
+                        appointment.Read(reader);
+
+                        string id = appointment.Id;                        
+                        if (!appointmentOutlookIndex.ContainsKey(id))
+                        {
+                            this.Appointments.Add(appointment);
                         }
                     }
                 }
@@ -231,6 +266,57 @@ namespace OutlookSync.Model
         }
 #endif
 
+        private class ContactComparer : IComparer<UnifiedContact>
+        {
+            public int Compare(UnifiedContact x, UnifiedContact y)
+            {
+                if (x.DisplayName == y.DisplayName)
+                {
+                    return 0;
+                }
+                else if (x.DisplayName == null)
+                {
+                    return -1;
+                }
+                else if (y.DisplayName == null)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return string.Compare(x.DisplayName, y.DisplayName);
+                }
+            }
+        }
+        private class AppointmentComparer : IComparer<UnifiedAppointment>
+        {
+            public int Compare(UnifiedAppointment x, UnifiedAppointment y)
+            {
+                if (x.Start == y.Start)
+                {
+                    if (x.End == y.End)
+                    {
+                        if (x.Subject == y.Subject)
+                        {
+                            return 0;
+                        }
+                        else if (x.Subject == null) 
+                        {
+                            return -1;
+                        }
+                        else if (y.Subject == null)
+                        {
+                            return 1;
+                        }
+                        return string.Compare(x.Subject, y.Subject);
+                    }
+                    DateTimeOffset.Compare(x.End, y.End);
+                }
+                return DateTimeOffset.Compare(x.Start, y.Start);
+            }
+        }
+        
+
         private void WriteStore(XmlWriter writer, UnifiedStore unifiedStore)
         {
             writer.WriteStartElement("Data");
@@ -238,24 +324,55 @@ namespace OutlookSync.Model
             if (this.Contacts != null)
             {                
                 writer.WriteStartElement("Contacts");
-                foreach (var pair in this.index)
+                
+                // sorting the output makes it easier to debug
+                SortedSet<UnifiedContact> sorted = new SortedSet<UnifiedContact>(this.Contacts, new ContactComparer());
+                foreach (UnifiedContact contact in sorted)
                 {
-                    var contact = pair.Value;
                     contact.Write(writer);
                 }
                 writer.WriteEndElement();
             }
 
+            if (this.Appointments != null)
+            {
+                writer.WriteStartElement("Appointments");
+
+                // sorting the output makes it easier to debug
+                SortedSet<UnifiedAppointment> asorted = new SortedSet<UnifiedAppointment>(this.Appointments, new AppointmentComparer());
+                foreach (var appointment in asorted)
+                {
+                    appointment.Write(writer);
+                }
+
+                writer.WriteEndElement();
+            }
             writer.WriteEndElement();
         }
 
         public ObservableCollection<UnifiedContact> Contacts { get; set; }
 
-        public UnifiedContact FindOutlookEntry(string id)
+        public UnifiedContact FindContactById(string id)
         {
             UnifiedContact c;
-            index.TryGetValue(id, out c);
+            contactIndex.TryGetValue(id, out c);
             return c;
+        }
+
+        public ObservableCollection<UnifiedAppointment> Appointments { get; set; }
+
+        public UnifiedAppointment FindAppointmentById(string id)
+        {
+            UnifiedAppointment a;
+            appointmentOutlookIndex.TryGetValue(id, out a);
+            return a;
+        }
+
+        public UnifiedAppointment FindAppointmentByPhoneId(string phoneId)
+        {
+            UnifiedAppointment a;
+            appointmentPhoneIndex.TryGetValue(phoneId, out a);
+            return a;
         }
 
         void Contacts_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -264,14 +381,46 @@ namespace OutlookSync.Model
             {
                 foreach (UnifiedContact c in e.OldItems)
                 {
-                    index.Remove(c.OutlookEntryId);
+                    contactIndex.Remove(c.Id);
                 }
             }
             if (e.NewItems != null)
             {
                 foreach (UnifiedContact c in e.NewItems)
                 {
-                    index[c.OutlookEntryId] = c;
+                    contactIndex[c.Id] = c;
+                }
+            }
+        }
+
+        void Appointments_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (UnifiedAppointment a in e.OldItems)
+                {
+                    if (a.Id != null)
+                    {
+                        appointmentOutlookIndex.Remove(a.Id);
+                    }
+                    if (a.PhoneId != null)
+                    {
+                        appointmentPhoneIndex.Remove(a.PhoneId);
+                    }
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (UnifiedAppointment a in e.NewItems)
+                {
+                    if (a.Id != null)
+                    {
+                        appointmentOutlookIndex[a.Id] = a;
+                    }
+                    if (a.PhoneId != null)
+                    {
+                        appointmentPhoneIndex[a.PhoneId] = a;
+                    }
                 }
             }
         }

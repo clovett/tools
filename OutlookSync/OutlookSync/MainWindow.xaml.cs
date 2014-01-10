@@ -54,7 +54,6 @@ namespace OutlookSync
             firewall.FirewallErrorDetected += OnFirewallErrorDetected;
             
             VersionNumber.Text = string.Format(VersionNumber.Text, updater.GetCurrentVersion().ToString());
-
         }
 
         bool isShowingFirewallError;
@@ -104,8 +103,6 @@ namespace OutlookSync
         void OnFixFirewall(object sender, MouseButtonEventArgs e)
         {
             firewall.FixFirewallSettings(this.ExePath, false);
-
-
         }
 
         protected override void OnPreviewKeyDown(KeyEventArgs e)
@@ -172,6 +169,11 @@ namespace OutlookSync
 
                     firewall.StartCheckingFirewall();
                 }
+
+                // get new contact info from outlook ready for syncing with this phone.
+                var loader = new OutlookStoreLoader();
+                await loader.UpdateAsync(store);
+
             }
             catch (NoPortsAvailableException)
             {
@@ -220,7 +222,7 @@ namespace OutlookSync
 
         void OnMessageReceived(object sender, MessageEventArgs e)
         {
-            Log.WriteLine("Message received from " + e.RemoteEndPoint.ToString());
+            Log.WriteLine(DateTime.Now.ToLongTimeString() + ": message received from " + e.RemoteEndPoint.ToString());
             Log.WriteLine("  Command: " + e.Message.Command + "(" + e.Message.Parameters + ")");
 
             e.Response = HandleMessage(e);
@@ -360,6 +362,8 @@ namespace OutlookSync
 
                 if (phone == null)
                 {
+                    Log.WriteLine("Connecting new phone: " + e.RemoteEndPoint.ToString());
+
                     bool result = await CheckVersions(phoneAppVersion);
 
                     if (!result)
@@ -396,11 +400,12 @@ namespace OutlookSync
 
                     Dispatcher.Invoke(new Action(() =>
                     {
-                        // phone reconnected, so start over.
-                        if (!phone.Connected)
-                        {
-                            phone.Allowed = false;
-                        }
+                        // phone reconnected, so start over by toggling the "Allowed" property to ensure the
+                        // AllowRemoteMachine is called which results in BroadcastEndPoints so the phone
+                        // hears back from it's "hello" ping.
+
+                        phone.Allowed = false;
+                        
                         if (settings.TrustedPhones.Contains(phone.Id))
                         {
                             phone.Allowed = true;

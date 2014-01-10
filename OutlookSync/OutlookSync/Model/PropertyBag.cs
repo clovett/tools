@@ -184,9 +184,23 @@ namespace OutlookSync.Model
     {
         SortedDictionary<string, PropertyValue> bag = new SortedDictionary<string, PropertyValue>();
 
+        Dictionary<string, string> propertyRenames = new Dictionary<string, string>();
+
         public virtual int? GetKey()
         {
             return null;
+        }
+
+        /// <summary>
+        /// Record a property name change so that serialization can take care of the migration for us.
+        /// The Read() method will automatically convert the "from" named property to the new "to" name.
+        /// The Write method will ignore it and write out the new property name.
+        /// </summary>
+        /// <param name="oldName">The old property name that we might find in the serialized store.</param>
+        /// <param name="newName">The new name to change the serialized property to.</param>
+        public void RenameProperty(string oldName, string newName)
+        {
+            propertyRenames[newName] = newName;
         }
 
         public virtual bool IsEmpty { get { return bag.Count == 0; } }
@@ -221,6 +235,116 @@ namespace OutlookSync.Model
         public bool HasValue(string key)
         {
             return bag.ContainsKey(key);
+        }
+
+        /// <summary>
+        /// After synchronization is complete we can remove all null or default valued properties to compress the store size.
+        /// But, for this to be safe we need to be sure all phones are synchronized, not just one of them, otherwise we'll
+        /// forget it was a 'delete' when we synchronize the second phone.  Either that or we need to create a separate
+        /// UnifiedStore for each phone on the PC, which is probably a good idea anyway...
+        /// </summary>
+        public void Compress()
+        {
+            foreach (KeyValuePair<string, PropertyValue> pair in bag.ToArray())
+            {
+                string key = pair.Key;
+                bool remove = false;
+                PropertyValue pv = pair.Value;
+                object v = pv.Value;
+                if (v == null)
+                {
+                    remove = true;
+                }
+                else
+                {
+                    // check for "default" values.
+                    if (v is bool)
+                    {
+                        if ((bool)v == false)
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is int)
+                    {
+                        if ((int)v == 0)
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is DateTime)
+                    {
+                        if ((DateTime)v == new DateTime())
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is string)
+                    {
+                        if (string.IsNullOrEmpty((string)v))
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is Enum)
+                    {
+                        int i = System.Convert.ToInt32(v);
+                        if (i == 0)
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is PropertyBag)
+                    {
+                        PropertyBag b = (PropertyBag)v;
+                        if (b.bag.Count == 0) 
+                        {
+                            remove = true;
+                        }
+                    }
+                    else if (v is IList)
+                    {
+                        IList list = (IList)v;
+                        if (list.Count == 0)
+                        {
+                            remove = true;
+                        }
+                    }
+                    else
+                    {
+                        // any other types to check here?
+                        Debug.WriteLine("Should we be compressing property values of type: {0}", v.GetType().FullName);
+                    }
+                }
+
+                if (remove)
+                {
+                    // ok, remove it!
+                    bag.Remove(key);
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// This method does not create a null property value if there wasn't one there already.
+        /// To do that call InnerSetValue with rememberNull set to false.  This method does not
+        /// delete the PropertyValue, it just nulls out the .Value property.  To reclaim the
+        /// space of deleted properties call Compress later after synchronization is complete.
+        /// </summary>
+        /// <param name="key">The property value to clear</param>
+        public void ClearValue(string key)
+        {
+            PropertyValue v = GetPropertyValue(key);
+            if (v != null)
+            {
+                // nulling out the value but remember this as a delete.
+                if (v.Value != null)
+                {
+                    v.Value = null;
+                    v.VersionNumber = UnifiedStore.SyncTime;
+                }
+            }
         }
 
         internal void InnerSetValue(string key, object value, bool rememberNull = false)
@@ -300,6 +424,13 @@ namespace OutlookSync.Model
                 if (reader.NodeType == System.Xml.XmlNodeType.Element)
                 {
                     string name = reader.LocalName;
+
+                    string newName = null;
+                    if (propertyRenames.TryGetValue(name, out newName))
+                    {
+                        name = newName;
+                    }
+
                     string version = reader.GetAttribute("version");
                     string type = reader.GetAttribute("type");
                     if (type.StartsWith("List"))
@@ -351,6 +482,7 @@ namespace OutlookSync.Model
         {
             if (type == "String") return "";
             if (type == "Int32") return 0;
+            if (type == "Boolean") return false;
             if (type == "DateTime") return DateTime.MinValue;
             if (type == "DateTimeOffset") return DateTimeOffset.MinValue;
 
