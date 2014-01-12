@@ -19,7 +19,7 @@ namespace OutlookSyncPhone
     {
         None,
         DeletedLocally,
-        NewContact,
+        NewEntry,
         Merged,
         ParseError
     };
@@ -32,20 +32,19 @@ namespace OutlookSyncPhone
         SyncMessage syncReport;
 
 
-        // this is the list of merged contacts, if a contact exists locally that is not in this hashset then
-        // it means the contact was deleted from outlook.
-        HashSet<string> mergedContacts = new HashSet<string>();
+        // this is the list of merged items, if a item exists locally that is not in this hashset then
+        // it means the item was deleted from outlook.
+        HashSet<SyncItem> merged = new HashSet<SyncItem>();
 
-        // contacts to send back to the server
-        HashSet<string> toSendContacts = new HashSet<string>();
+        // items to send back to the server
+        HashSet<SyncItem> toSend = new HashSet<SyncItem>();
 
-        // contacts to pull from the server
-        HashSet<string> toUpdateContacts = new HashSet<string>();
+        // items to pull from the server
+        HashSet<SyncItem> toUpdate = new HashSet<SyncItem>();
 
 
-        // this is the list of new contact we found in the local store.  We have to maintain this because
-        // when we update the RemoteId, the stupid FindContactByRemoteIdAsync method fails to find it.
-        Dictionary<string, StoredContact> locallyAddedContacts = new Dictionary<string, StoredContact>();
+        // this is the list of new contact we found in the local store.  
+        Dictionary<string, UnifiedContact> locallyAddedContacts = new Dictionary<string, UnifiedContact>();
 
         /// <summary>
         /// Contacts that were deleted on the phone.
@@ -53,14 +52,14 @@ namespace OutlookSyncPhone
         Dictionary<string, UnifiedContact> locallyDeletedContacts = new Dictionary<string, UnifiedContact>();
 
 
-        // this is the list of new appointments we found in the local store.  We have to maintain this because
-        // when we update the RemoteId
-        Dictionary<string, Appointment> locallyAddedAppointments = new Dictionary<string, Appointment>();
+        // this is the list of new appointments we found in the local store.  
+        Dictionary<string, UnifiedAppointment> locallyAddedAppointments = new Dictionary<string, UnifiedAppointment>();
 
         /// <summary>
         /// Appointments that were deleted on the phone.
         /// </summary>
         Dictionary<string, UnifiedAppointment> locallyDeletedAppointments = new Dictionary<string, UnifiedAppointment>();
+
 
         public PhoneStoreLoader()
         {
@@ -80,32 +79,31 @@ namespace OutlookSyncPhone
 
         internal void StartMerge()
         {
-            mergedContacts = new HashSet<string>();
-            toSendContacts = new HashSet<string>();
-            toUpdateContacts = new HashSet<string>();
+            merged = new HashSet<SyncItem>();
+            toSend = new HashSet<SyncItem>();
+            toUpdate = new HashSet<SyncItem>();
         }
 
-        internal string GetNextContactToUpdate()
+        internal SyncItem GetNextItemToUpdate()
         {
-            string id = null;
-            while (toUpdateContacts.Count > 0 && id == null)
+            SyncItem item= null;
+            while (toUpdate.Count > 0 && item == null)
             {
-                id = toUpdateContacts.FirstOrDefault();
-                toUpdateContacts.Remove(id);
+                item = toUpdate.FirstOrDefault();
+                toUpdate.Remove(item);
             }
-            return id;
+            return item;
         }
 
-        internal UnifiedContact GetNextContactToSend()
+        internal SyncItem GetNextItemToSend()
         {
-            UnifiedContact uc = null;
-            while (toSendContacts.Count > 0 && uc == null)
+            SyncItem result = null;
+            while (toSend.Count > 0 && result == null)
             {
-                string id = toSendContacts.FirstOrDefault();
-                uc = cache.FindContactById(id);
-                toSendContacts.Remove(id);
+                result = toSend.FirstOrDefault();
+                toSend.Remove(result);
             }
-            return uc;
+            return result;
         }
 
         internal SyncMessage GetSyncMessage()
@@ -113,20 +111,39 @@ namespace OutlookSyncPhone
             SyncMessage message = new SyncMessage();
             foreach (var pair in locallyDeletedContacts)
             {
-                string id = pair.Key;
-                message.Contacts.Add(new ContactVersion() { Id = id, Deleted = true, Name = pair.Value.DisplayName });
+                message.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
             }
 
             foreach (var pair in locallyAddedContacts)
             {
-                message.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
+                message.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
             }
 
             foreach (var contact in cache.Contacts)
             {
                 if (!locallyAddedContacts.ContainsKey(contact.Id))
                 {
-                    message.Contacts.Add(new ContactVersion() { Id = contact.Id, VersionNumber = contact.GetHighestVersionNumber(), Name = contact.DisplayName });
+                    message.Items.Add(new SyncItem(contact) { Change = ChangeType.Update });
+                }
+            }
+
+
+            foreach (var pair in locallyDeletedAppointments)
+            {
+                string id = pair.Key;
+                message.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
+            }
+
+            foreach (var pair in locallyAddedAppointments)
+            {
+                message.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
+            }
+
+            foreach (var appointment in cache.Appointments)
+            {
+                if (!locallyAddedAppointments.ContainsKey(appointment.PhoneId))
+                {
+                    message.Items.Add(new SyncItem(appointment) { Change = ChangeType.Update });
                 }
             }
 
@@ -171,8 +188,8 @@ namespace OutlookSyncPhone
         /// <summary>
         /// Load all appointments from now out the given number of months into the future.
         /// </summary>
-        /// <param name="months">The numberof months to load (default is 1)</param>
-        public async Task LoadAppointments(int months = 1)
+        /// <param name="months">The numberof months to load (default is 3)</param>
+        public async Task LoadAppointments(int months = 3)
         {
             if (cache == null || store == null)
             {
@@ -218,12 +235,8 @@ namespace OutlookSyncPhone
 
             foreach (Appointment appointment in e.Results)
             {
-                var account = appointment.Account;
-                if (account != null) 
-                {
-                    UnifiedAppointment ua = UpdateAppointment(appointment);
-                    found.Add(ua.PhoneId);
-                }
+                UnifiedAppointment ua = UpdateAppointment(appointment);
+                found.Add(ua.PhoneId);
             }
 
             // see if user has deleted contacts on the phone (we need to remember this)
@@ -252,10 +265,11 @@ namespace OutlookSyncPhone
                 // user added an appointment on the phone.
                 ua = new UnifiedAppointment();
                 ua.PhoneId = phoneId;
-                locallyAddedAppointments[phoneId] = appointment;
+                locallyAddedAppointments[phoneId] = ua;
                 cache.Appointments.Add(ua);
             }
 
+            ua.LocalStoreObject = appointment;
             UpdateFromStore(ua, appointment);
             return ua;
         }
@@ -285,7 +299,6 @@ namespace OutlookSyncPhone
             {
                 // user added this one manually?  Then we need to invent an OutlookId until we add this to outlook.
                 id = Guid.NewGuid().ToString();
-                locallyAddedContacts[id] = contact;
                 found.Add(id);
             }
 
@@ -295,12 +308,16 @@ namespace OutlookSyncPhone
                 // user added a contact manually.
                 uc = new UnifiedContact();
                 uc.Id = id;
+                locallyAddedContacts[id] = uc;
                 cache.Contacts.Add(uc);
             }
+            
+            uc.LocalStoreObject = contact;
+
             await UpdateFromStore(uc, contact);
         }
 
-        internal async Task UpdateRemoteId(string parameter)
+        internal async Task UpdateContactRemoteId(string parameter)
         {
             int i = parameter.IndexOf("=>");
             if (i > 0)
@@ -319,21 +336,44 @@ namespace OutlookSyncPhone
                 }
 
                 StoredContact sc = null;
-                locallyAddedContacts.TryGetValue(oldId, out sc);
-                if (sc == null)
+                UnifiedContact added = null;
+                locallyAddedContacts.TryGetValue(oldId, out added);
+                if (added == null)
                 {
                     sc = await store.FindContactByRemoteIdAsync(oldId);
+                }
+                else
+                {
+                    sc = added.LocalStoreObject as StoredContact;
                 }
                 if (sc != null)
                 {
                     // Have to create a new contact to update the remote id and replace the old one
-                    //StoredContact nsc = new StoredContact(store); 
-                    //nsc.RemoteId = newId;
-                    //await UpdateFromCache(cached, nsc);                    
-                    //await nsc.ReplaceExistingContactAsync(sc.Id);
                     sc.RemoteId = newId;
                     await sc.SaveAsync();
                 }
+            }
+        }
+
+        public void UpdateAppointmentOutlookId(string parameter)
+        {
+            int i = parameter.IndexOf("=>");
+            if (i > 0)
+            {
+                string phoneId = parameter.Substring(0, i);
+                string outlookId = parameter.Substring(i + 2);
+
+                UnifiedAppointment  cached = cache.FindAppointmentByPhoneId(phoneId);
+                if (cached != null)
+                {
+                    cached.Id = outlookId;
+                    // re-index it.
+                    cache.Appointments.Remove(cached);
+                    cache.Appointments.Add(cached);
+                    // we'll save the UnifiedStore again when all contacts have finished updating.
+                }
+
+                // Appointments don't store remote id's, so nothing else to do here.
             }
         }
 
@@ -373,10 +413,11 @@ namespace OutlookSyncPhone
                 }
                 cached = contact;
                 cache.Contacts.Add(cached);
+                cached.VersionNumber = cached.GetHighestVersionNumber();
             }
 
             // remember that we've seen this one so we can identify deleted contacts later
-            mergedContacts.Add(contact.Id);
+            merged.Add(new SyncItem(cached));
 
             // Now see if user has made any changes on the phone using People Hub
 
@@ -389,7 +430,7 @@ namespace OutlookSyncPhone
             }
             else
             {
-                rc = MergeResult.NewContact;
+                rc = MergeResult.NewEntry;
                 sc = new StoredContact(store);
                 sc.RemoteId = contact.Id;
             }
@@ -414,6 +455,93 @@ namespace OutlookSyncPhone
         }
 
 
+        /// <summary>
+        /// Merge the given Appointment from Outlook
+        /// </summary>
+        /// <param name="xml">The serialized Appointment</param>        
+        public async Task<Tuple<MergeResult, UnifiedAppointment>> MergeAppointment(string xml)
+        {
+            if (xml == "null")
+            {
+                return new Tuple<MergeResult, UnifiedAppointment>(MergeResult.None, null);
+            }
+
+            bool changedLocally = false;
+
+            // parse the XML into one of our unified store contacts and save it in our ContactStore.
+            UnifiedAppointment appointment = UnifiedAppointment.Parse(xml);
+            if (appointment == null)
+            {
+                // error handling.
+                return new Tuple<MergeResult, UnifiedAppointment>(MergeResult.ParseError, null);
+            }
+
+            // compare this new contact from outlook with our existing one
+            UnifiedAppointment cached = null;
+            if (!string.IsNullOrEmpty(appointment.PhoneId))
+            {
+                cached = cache.FindAppointmentByPhoneId(appointment.PhoneId);
+            }
+            else if (!string.IsNullOrEmpty(appointment.Id))
+            {
+                cached = cache.FindAppointmentById(appointment.Id);
+            }
+            if (cached != null)
+            {
+                changedLocally |= cached.Merge(appointment);
+            }
+            else
+            {
+                // new contact from outlook, unless it was deleted locally.
+                if (locallyDeletedContacts.ContainsKey(appointment.Id))
+                {
+                    return new Tuple<MergeResult, UnifiedAppointment>(MergeResult.DeletedLocally, cached);
+                }
+                cached = appointment;
+                cache.Appointments.Add(cached);
+                cached.VersionNumber = cached.GetHighestVersionNumber();
+            }
+
+            // remember that we've seen this one so we can identify deleted contacts later
+            merged.Add(new SyncItem(appointment));
+
+            // Now see if user has made any changes on the phone using People Hub
+            var rc = MergeResult.Merged;
+
+            cached.ClearValue("Details"); // don't persist this field.
+
+            Appointment sc = cached.LocalStoreObject as Appointment;
+            if (sc != null)
+            {
+                // merge
+            }
+            else
+            {
+                // no way to add a new appointment, FUCK !!!!!
+            }
+            try
+            {
+                // the Appointment class is read only, FUCK !!!!!
+                //await UpdateFromCache(cached, sc);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception updating from cache: " + ex.Message);
+            }
+
+            // shit no way to save appointments, fuck!!!!!
+            //await sc.SaveAsync();
+
+            if (changedLocally)
+            {
+                // we should pick this up later when we do th sync message
+                // toSend.Add(cached);
+            }
+
+            return new Tuple<MergeResult, UnifiedAppointment>(rc, cached);
+        }
+
+
         private void UpdateFromStore(UnifiedAppointment cache, Appointment appointment)
         {
             cache.Subject = appointment.Subject;
@@ -421,7 +549,7 @@ namespace OutlookSyncPhone
             // which we need for serialization across to the PC.
             cache.Start = appointment.StartTime;
             cache.End = appointment.EndTime;
-            cache.Hash = appointment.GetHashCode();
+            cache.Hash = appointment.GetHashCode().ToString();
 
             HashSet<string> foundAttendees = new HashSet<string>();
             if (appointment.Attendees != null) 
@@ -469,7 +597,9 @@ namespace OutlookSyncPhone
 
             // enums are compatible, just cast the integer value over.
             cache.Status = (AppointmentStatus)appointment.Status;
-           
+
+
+            cache.VersionNumber = cache.GetHighestVersionNumber();
         }
 
 
@@ -547,6 +677,8 @@ namespace OutlookSyncPhone
             UpdatePhoneNumberFromStore(KnownContactProperties.WorkFax, PhoneNumberKind.WorkFax, dictionary, cache);
 
             UpdateWebsitesFromStore(cache, dictionary);
+
+            cache.VersionNumber = cache.GetHighestVersionNumber();
         }
 
 
@@ -804,58 +936,69 @@ namespace OutlookSyncPhone
             SyncMessage server = SyncMessage.Parse(xml);
 
             SyncMessage phone = this.syncReport;
-            
-            // create index of our contacts.
-            Dictionary<string, ContactVersion> map = new Dictionary<string, ContactVersion>();
-            foreach (var contact in phone.Contacts)
+
+            // create index of our local items.
+            Dictionary<string, SyncItem> map = new Dictionary<string, SyncItem>();
+            foreach (var item in phone.Items)
             {
-                map[contact.Id] = contact;
+                string id = item.PhoneId == null ? item.Id : item.PhoneId;
+                map[id] = item;
             }
 
-            Dictionary<string, ContactVersion> serverMap = new Dictionary<string, ContactVersion>();
+            Dictionary<string, SyncItem> serverMap = new Dictionary<string, SyncItem>();
 
             // Ok, now compare version numbers to see what has changed
-            foreach (var contact in server.Contacts)
+            foreach (var item in server.Items)
             {
-                if (contact.Deleted)
+                string id = item.PhoneId == null ? item.Id : item.PhoneId;
+
+                if (item.Change == ChangeType.Delete)
                 {
                     // deleted on the server
-                    status.ServerDeleted.Add(contact);
-                    await this.DeleteContact(contact.Id);
+                    status.ServerDeleted.Add(item);
+                    if (item.Type == "C")
+                    {
+                        await this.DeleteContact(id);
+                    }
+                    else
+                    {
+                        await this.DeleteAppointment(item.PhoneId);
+                    }
                 }
-                else if (contact.Inserted)
+                else if (item.Change == ChangeType.Insert)
                 {
                     // remember to ask for this one.
                     // NOTE: delay updating this until item is actually received oso user sees the progress
                     // status.ServerInserted.Add(contact);
                     status.TotalChanges++;
-                    toSendContacts.Add(contact.Id);
+                    toUpdate.Add(item);
                 }
                 else
                 {
-                    serverMap[contact.Id] = contact;
+                    serverMap[id] = item;
 
-                    ContactVersion phoneVersion = null;
-                    if (map.TryGetValue(contact.Id, out phoneVersion))
+                    SyncItem phoneVersion = null;
+                    if (map.TryGetValue(id, out phoneVersion))
                     {
-                        if (phoneVersion.Deleted)
+                        if (phoneVersion.Change == ChangeType.Delete)
                         {
                             // let it stay deleted
                         }
-                        else if (phoneVersion.VersionNumber > contact.VersionNumber)
+                        else if (phoneVersion.VersionNumber > item.VersionNumber)
                         {
                             // remember to send this one
                             // NOTE: delay updating this until item is actually received oso user sees the progress
                             // status.PhoneUpdated.Add(contact);
-                            toSendContacts.Add(contact.Id);
+                            AssertStoreObject(item);
+                            toSend.Add(item);
                         }
-                        else if (contact.VersionNumber > phoneVersion.VersionNumber)
+                        else if (item.VersionNumber > phoneVersion.VersionNumber)
                         {
                             // remember to pull this one.
                             // NOTE: delay updating this until item is actually received oso user sees the progress
                             //status.ServerUpdated.Add(contact);
                             status.TotalChanges++;
-                            toUpdateContacts.Add(contact.Id);
+                            toUpdate.Add(item);
                         }
                         else
                         {
@@ -869,22 +1012,59 @@ namespace OutlookSyncPhone
                         // NOTE: delay updating this until item is actually received oso user sees the progress
                         // status.ServerInserted.Add(contact);
                         status.TotalChanges++;
-                        toUpdateContacts.Add(contact.Id);
+                        toUpdate.Add(item);
                     }
                 }
             }
 
 
             // check for new contacts on the phone
-            foreach (var contact in phone.Contacts)
+            foreach (var item in phone.Items)
             {
-                if (!serverMap.ContainsKey(contact.Id))
+                string id = item.PhoneId == null ? item.Id : item.PhoneId;
+                if (!serverMap.ContainsKey(id) && !locallyDeletedContacts.ContainsKey(id) && !locallyDeletedAppointments.ContainsKey(id))
                 {
                     // remember to send this one
-                    toSendContacts.Add(contact.Id);
+                    AssertStoreObject(item);
+                    toSend.Add(item);
+                }
+            }
+        }
+
+        private void AssertStoreObject(SyncItem item)
+        {
+            if (item.Type == "A")
+            {
+                UnifiedAppointment a = null;
+                if (!locallyAddedAppointments.TryGetValue(item.PhoneId, out a))
+                {
+                    a = cache.FindAppointmentByPhoneId(item.PhoneId);
+                }
+                if (a == null || a.LocalStoreObject == null)
+                {
+                    Debug.Assert(a != null && a.LocalStoreObject != null, "Missing local store object");
+                }
+            }
+            else
+            {
+                UnifiedContact c = null;
+                if (!locallyAddedContacts.TryGetValue(item.Id, out c))
+                {
+                    c =  cache.FindContactById(item.Id);
+                }
+                if (c == null || c.LocalStoreObject == null)
+                {
+                    Debug.Assert(c != null && c.LocalStoreObject != null, "Missing local store object");
                 }
             }
 
+        }
+
+
+        private Task DeleteAppointment(string phoneId)
+        {
+            // bugbug: Phone doesn't give us an API for this...
+            throw new NotImplementedException();
         }
 
 
@@ -892,6 +1072,24 @@ namespace OutlookSyncPhone
         {
             var syncReport = this.GetSyncMessage();
             return new SyncResult(syncReport, true);
+        }
+        
+        /// <summary>
+        /// The Sync XML contains the body of the appointment
+        /// </summary>
+        /// <returns></returns>
+        internal string GetSyncXml(UnifiedAppointment ua)
+        {
+            string result = null;
+            Appointment appointment = ua.LocalStoreObject as Appointment;
+            if (appointment != null)
+            {
+                ua.Details = appointment.Details;
+                result = ua.ToXml();
+                ua.ClearValue("Details"); // no version number updates.
+                return result;
+            }
+            throw new Exception("Why is Appointment object missing?");
         }
     }
 

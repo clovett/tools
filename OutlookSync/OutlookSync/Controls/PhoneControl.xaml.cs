@@ -125,7 +125,7 @@ namespace OutlookSync.Controls
             }
         }
 
-        void AnimateCount(SyncProgressControl ctrl, List<ContactVersion> list)
+        void AnimateCount(SyncProgressControl ctrl, List<SyncItem> list)
         {
             DoubleAnimation animation = new DoubleAnimation();
             animation.To = list == null ? 0 : list.Count;
@@ -152,7 +152,7 @@ namespace OutlookSync.Controls
         {
             SyncProgressControl ctrl = (SyncProgressControl)sender;
             var selectedTile = ctrl;
-            var selectedList = (List<ContactVersion>)ctrl.Tag;
+            var selectedList = (List<SyncItem>)ctrl.Tag;
             if (selectedList != null && selectedList.Count > 0)
             {
                 // todo: 

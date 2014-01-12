@@ -22,9 +22,9 @@ namespace OutlookSyncPhone.Pages
             InitializeComponent();
         }
 
-        public List<ContactVersion> ContactList
+        public List<SyncItem> ContactList
         {
-            get { return (List<ContactVersion>)ReportList.ItemsSource; }
+            get { return (List<SyncItem>)ReportList.ItemsSource; }
             set { ReportList.ItemsSource = value;  }
         }
 
@@ -42,27 +42,27 @@ namespace OutlookSyncPhone.Pages
 
         private void OnListItemSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ContactVersion contact = ReportList.SelectedItem as ContactVersion;
+            SyncItem contact = ReportList.SelectedItem as SyncItem;
             if (contact != null)
             {
-                Contacts cons = new Contacts();
+                //Contacts cons = new Contacts();
                 
-                //Identify the method that runs after the asynchronous search completes.
-                cons.SearchCompleted += new EventHandler<ContactsSearchEventArgs>(Contacts_SearchCompleted);
+                ////Identify the method that runs after the asynchronous search completes.
+                //cons.SearchCompleted += new EventHandler<ContactsSearchEventArgs>(Contacts_SearchCompleted);
 
-                //Start the asynchronous search.
-                cons.SearchAsync(contact.Name, FilterKind.DisplayName, "search");
+                ////Start the asynchronous search.
+                //cons.SearchAsync(contact.Name, FilterKind.DisplayName, "search");
             }
 
         }
 
         private void Contacts_SearchCompleted(object sender, ContactsSearchEventArgs e)
         {
-            foreach (Contact c in e.Results)
-            {
-                // found the contact, but now how do we navigate to the people hub to show it???
-                Debug.WriteLine(c.DisplayName);
-            }
+            //foreach (Contact c in e.Results)
+            //{
+            //    // found the contact, but now how do we navigate to the people hub to show it???
+            //    Debug.WriteLine(c.DisplayName);
+            //}
         }
 
         private void OnBackPressed(object sender, EventArgs e)

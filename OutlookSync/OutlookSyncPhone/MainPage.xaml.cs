@@ -118,30 +118,54 @@ namespace OutlookSyncPhone
                     StartSyncProgress();
 
                     // then start pulling updates from server.                 
-                    if (!await GetNextContact())
+                    if (!await GetNextItem())
                     {
                         // done pulling, start sending.
                         goto case "StartPushing";
                     }
                     break;
                 case "Contact":
-                    // server responded to GetNextContact 
-                    var result = await loader.MergeContact(m.Parameters);
-                    if (result.Item1 == MergeResult.NewContact)
                     {
-                        syncStatus.ServerInserted.Add(new ContactVersion(result.Item2));
-                        UpdateTiles();
-                    }
-                    else if (result.Item1 == MergeResult.Merged)
-                    {
-                        syncStatus.ServerUpdated.Add(new ContactVersion(result.Item2));
-                        UpdateTiles();
-                    }
+                        // server responded to GetNextContact 
+                        var result = await loader.MergeContact(m.Parameters);
+                        if (result.Item1 == MergeResult.NewEntry)
+                        {
+                            syncStatus.ServerInserted.Add(new SyncItem(result.Item2));
+                            UpdateTiles();
+                        }
+                        else if (result.Item1 == MergeResult.Merged)
+                        {
+                            syncStatus.ServerUpdated.Add(new SyncItem(result.Item2));
+                            UpdateTiles();
+                        }
 
-                    if (!await GetNextContact())
+                        if (!await GetNextItem())
+                        {
+                            // done pulling, start sending.
+                            goto case "StartPushing";
+                        }
+                    }
+                    break;
+                case "Appointment":
                     {
-                        // done pulling, start sending.
-                        goto case "StartPushing";
+                        // server responded to GetNextAppointment
+                        var result = await loader.MergeAppointment(m.Parameters);
+                        if (result.Item1 == MergeResult.NewEntry)
+                        {
+                            syncStatus.ServerInserted.Add(new SyncItem(result.Item2));
+                            UpdateTiles();
+                        }
+                        else if (result.Item1 == MergeResult.Merged)
+                        {
+                            syncStatus.ServerUpdated.Add(new SyncItem(result.Item2));
+                            UpdateTiles();
+                        }
+
+                        if (!await GetNextItem())
+                        {
+                            // done pulling, start sending.
+                            goto case "StartPushing";
+                        }
                     }
                     break;
                 case "StartPushing":
@@ -151,9 +175,18 @@ namespace OutlookSyncPhone
                         await FinishUpdate();
                     }
                     break;
-                case "Updated":
+                case "UpdatedContact":
                     // received a new outlook id for this a contact.
-                    await loader.UpdateRemoteId(e.Message.Parameters);
+                    await loader.UpdateContactRemoteId(e.Message.Parameters);
+
+                    if (!await SendNextUpdate())
+                    {
+                        await FinishUpdate();
+                    }
+                    break;
+                case "UpdatedAppointment":
+                    // received a new outlook id for this a contact.
+                    loader.UpdateAppointmentOutlookId(e.Message.Parameters);
 
                     if (!await SendNextUpdate())
                     {
@@ -212,11 +245,30 @@ namespace OutlookSyncPhone
                 LoadProgress.Value++;
             }));
 
-            var c = loader.GetNextContactToSend();
-            if (c != null)
+            var item = loader.GetNextItemToSend();
+            while (item != null)
             {
-                await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = c.ToXml() });
-                return true;
+                if (item.Type == "C")
+                {
+                    UnifiedContact contact = loader.UnifiedStore.FindContactById(item.Id);
+                    if (contact != null)
+                    {
+                        await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = contact.ToXml() });
+                        return true;
+                    }
+                }
+                else
+                {
+                    UnifiedAppointment appointment = loader.UnifiedStore.FindAppointmentByPhoneId(item.PhoneId);
+                    if (appointment != null)
+                    {
+                        await proxy.SendMessage(new Message() { Command = "UpdateAppointment", Parameters = loader.GetSyncXml(appointment) });
+                        return true;
+                    }
+                }
+                
+                // try again then..
+                item = loader.GetNextItemToSend();
             }
             return false;
         }
@@ -226,21 +278,28 @@ namespace OutlookSyncPhone
             await proxy.SendMessage(new Message() { Command = "UpdateContact", Parameters = moreRecent.ToXml() });
         }
 
-        private async Task<bool> GetNextContact()
+        private async Task<bool> GetNextItem()
         {
-            string id = loader.GetNextContactToUpdate();
+            SyncItem item = loader.GetNextItemToUpdate();
             
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 LoadProgress.Value++;
             }));
 
-            if (proxy != null && id != null)
-            {               
-                await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = id });
+            if (proxy != null && item != null)
+            {
+                if (item.Type == "C")
+                {
+                    await proxy.SendMessage(new Message() { Command = "GetContact", Parameters = item.Id });
+                }
+                else
+                {
+                    await proxy.SendMessage(new Message() { Command = "GetAppointment", Parameters = item.Id });
+                }
             }
 
-            return id != null;
+            return item != null;
         }
 
         Microsoft.Advertising.Mobile.UI.AdControl adControl;
@@ -340,7 +399,7 @@ namespace OutlookSyncPhone
             }));
         }
 
-        void AnimateCount(SyncProgressControl ctrl, List<ContactVersion> list)
+        void AnimateCount(SyncProgressControl ctrl, List<SyncItem> list)
         {
             DoubleAnimation animation = new DoubleAnimation();
             animation.To = list == null ? 0 : list.Count;
@@ -443,13 +502,13 @@ namespace OutlookSyncPhone
         }
 
         SyncProgressControl selectedTile;
-        List<ContactVersion> selectedList;
+        List<SyncItem> selectedList;
 
         private void OnIndicatorClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             SyncProgressControl ctrl = (SyncProgressControl)sender;
             selectedTile = ctrl;
-            selectedList = (List<ContactVersion>)ctrl.Tag;
+            selectedList = (List<SyncItem>)ctrl.Tag;
             if (selectedList != null && selectedList.Count > 0)
             {
                 this.NavigationService.Navigate(new Uri("/Pages/ReportPage.xaml", UriKind.RelativeOrAbsolute));

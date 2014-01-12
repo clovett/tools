@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 
 namespace OutlookSync.Model
@@ -328,22 +330,15 @@ namespace OutlookSync.Model
 
         /// <summary>
         /// This method does not create a null property value if there wasn't one there already.
-        /// To do that call InnerSetValue with rememberNull set to false.  This method does not
-        /// delete the PropertyValue, it just nulls out the .Value property.  To reclaim the
-        /// space of deleted properties call Compress later after synchronization is complete.
+        /// To do that call InnerSetValue with rememberNull set to false.  This method really
+        /// deletes the property so nothing is serialized, and no version number updates occur.
         /// </summary>
         /// <param name="key">The property value to clear</param>
         public void ClearValue(string key)
         {
-            PropertyValue v = GetPropertyValue(key);
-            if (v != null)
+            if (bag.ContainsKey(key))
             {
-                // nulling out the value but remember this as a delete.
-                if (v.Value != null)
-                {
-                    v.Value = null;
-                    v.VersionNumber = UnifiedStore.SyncTime;
-                }
+                bag.Remove(key);
             }
         }
 
@@ -507,6 +502,16 @@ namespace OutlookSync.Model
 
             throw new Exception("Unknown type: " + type);
 
+        }
+
+        internal string ToXml()
+        {
+            StringWriter buffer = new StringWriter();
+            using (XmlWriter writer = XmlWriter.Create(buffer))
+            {
+                this.Write(writer);
+            }
+            return buffer.ToString();
         }
 
 
@@ -677,6 +682,9 @@ namespace OutlookSync.Model
                     this.SetValue(key, pv.Value);
                 }
             }
+            
+            // update our version info.
+            this.VersionNumber = GetHighestVersionNumber();
 
             return localMoreRecent;
         }
@@ -771,7 +779,7 @@ namespace OutlookSync.Model
                 if (pv.Value != null)
                 {
                     object v = pv.Value;
-                    Debug.Assert(v is int || v is string || v is DateTime? || v is DateTimeOffset? || v.GetType().IsEnum, "Unexpected property value type: " + v.GetType().FullName);
+                    Debug.Assert(v is int || v is string || v is DateTime? || v is DateTimeOffset? || v.GetType().IsEnum || v is bool, "Unexpected property value type: " + v.GetType().FullName);
                 }
 
                 if (otherMoreRecent)
@@ -848,7 +856,7 @@ namespace OutlookSync.Model
                         // must be a scalar, should be the same then.
                         if (localValue != null)
                         {
-                            Debug.Assert(localValue is int || localValue is string || localValue is DateTime? || localValue is DateTimeOffset? || localValue.GetType().IsEnum, "Unexpected property value type: " + localValue.GetType().FullName);
+                            Debug.Assert(localValue is int || localValue is string || localValue is DateTime? || localValue is DateTimeOffset? || localValue.GetType().IsEnum || localValue is bool, "Unexpected property value type: " + localValue.GetType().FullName);
                         }
 
                         string a = localValue == null ? "" : localValue.ToString();

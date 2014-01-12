@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace OutlookSync.Model
 {
@@ -15,18 +18,10 @@ namespace OutlookSync.Model
             set { SetValue<string>("Id", value); }
         }
 
-        // the computed phone id (which is not persisted because the computed id could
-        // change each time we load the phone appointments).
         public string PhoneId
         {
-            get;
-            set; 
-        }
-
-        public int Hash
-        {
-            get { return GetValue<int>("Hash"); }
-            set { SetValue<int>("Hash", value); }
+            get { return GetValue<string>("PhoneId"); }
+            set { SetValue<string>("PhoneId", value); }
         }
 
         public PropertyList<UnifiedAttendee> Attendees
@@ -41,8 +36,15 @@ namespace OutlookSync.Model
             set { SetValue<string>("Subject", value); }
         }
 
-        // We don't want to store the entire details, an MD5 hash should be good enough for detecting changes.
-        public string DetailsMd5Hash
+
+        public string  Hash
+        {
+            get { return GetValue<string>("Hash"); }
+            set { SetValue<string>("Hash", value); }
+        }
+
+        // this is not stored, it is only sent over the wire when syncing appointments.
+        public string Details
         {
             get { return GetValue<string>("Details"); }
             set { SetValue<string>("Details", value); }
@@ -95,21 +97,21 @@ namespace OutlookSync.Model
         }
 
 
-        internal UnifiedAttendee GetAttendee(string email)
+        internal UnifiedAttendee GetAttendee(string name)
         {
             if (Attendees != null)
             {
-                return (from a in Attendees where a.Email == email select a).FirstOrDefault();
+                return (from a in Attendees where a.Name == name select a).FirstOrDefault();
             }
             return null;
         }
 
         internal void AddAttendee(string name, string email)
         {
-            UnifiedAttendee a = GetAttendee(email);
+            UnifiedAttendee a = GetAttendee(name);
             if (a != null)
             {
-                a.Name = name;
+                a.Email = email;
             }
             else 
             {
@@ -122,17 +124,52 @@ namespace OutlookSync.Model
             }
         }
 
-        internal void RemoveAttendee(string email)
+        internal void RemoveAttendee(string name)
         {
             if (Attendees != null)
             {
-                foreach (var a in (from a in Attendees where a.Email == email select a))
+                foreach (var a in (from a in Attendees where a.Name == name select a))
                 {
                     // don't actually remove it so we remember this was deleted.
                     // We'll come back and do a cleanup pass on these later after both sides are in sync.
                     a.Deleted = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// This is a non serialized property that can be used to link the unified appointment to the real 
+        /// Outlook or Phone object so we don't have to keep separate indexes on each type.
+        /// </summary>
+        public object LocalStoreObject { get; set; }
+
+        internal static UnifiedAppointment Parse(string xml)
+        {
+            UnifiedAppointment appointment = new UnifiedAppointment();
+            try
+            {
+                using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
+                {
+                    UnifiedStoreSerializer serializer = new UnifiedStoreSerializer(reader);
+                    while (reader.Read() && reader.NodeType != XmlNodeType.EndElement)
+                    {
+                        if (reader.NodeType == XmlNodeType.Element)
+                        {
+                            if (reader.LocalName == "UnifiedAppointment")
+                            {
+                                appointment.Read(serializer);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Exception parsing contact xml: " + ex.Message);
+                return null;
+            }
+            return appointment;
         }
 
     }

@@ -122,16 +122,6 @@ namespace OutlookSync.Model
             return contact;
         }
 
-        internal string ToXml()
-        {
-            StringWriter buffer = new StringWriter();
-            using (XmlWriter writer = XmlWriter.Create(buffer))
-            {                
-                this.Write(writer);
-            }
-            return buffer.ToString();
-        }
-
         internal void SetWebSites(IEnumerable<string> newSet)
         {
             if (Websites == null)
@@ -240,6 +230,12 @@ namespace OutlookSync.Model
                 }
             }
         }
+
+        /// <summary>
+        /// This is a non serialized property that can be used to link the unified contact to the real 
+        /// Outlook or Phone object so we don't have to keep separate indexes on each type.
+        /// </summary>
+        public object LocalStoreObject { get; set; }
 
     }
 

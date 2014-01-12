@@ -198,8 +198,8 @@ namespace OutlookSync.Model
                         UnifiedAppointment appointment = new UnifiedAppointment();
                         appointment.Read(reader);
 
-                        string id = appointment.Id;                        
-                        if (!appointmentOutlookIndex.ContainsKey(id))
+                        string id = appointment.PhoneId;                        
+                        if (id != null && !appointmentPhoneIndex.ContainsKey(id))
                         {
                             this.Appointments.Add(appointment);
                         }
@@ -363,8 +363,11 @@ namespace OutlookSync.Model
 
         public UnifiedAppointment FindAppointmentById(string id)
         {
-            UnifiedAppointment a;
-            appointmentOutlookIndex.TryGetValue(id, out a);
+            UnifiedAppointment a = null;
+            if (!string.IsNullOrEmpty(id))
+            {
+                appointmentOutlookIndex.TryGetValue(id, out a);
+            }
             return a;
         }
 
@@ -425,6 +428,23 @@ namespace OutlookSync.Model
             }
         }
 
+
+        /// <summary>
+        /// This method is called to see if there is any existing appointment matching the given one
+        /// just so we avoid creating too many duplicate entries...
+        /// </summary>
+        /// <param name="fromPhone"></param>
+        internal UnifiedAppointment FindMatchingAppointment(UnifiedAppointment fromPhone)
+        {
+            foreach (UnifiedAppointment a in this.Appointments)
+            {
+                if (a.Start == fromPhone.Start && a.End == fromPhone.End && a.Subject == fromPhone.Subject)
+                {
+                    return a;
+                }
+            }
+            return null;
+        }
     }
 
     class UnifiedStoreSerializer
@@ -502,6 +522,12 @@ namespace OutlookSync.Model
                     int i = 0;
                     int.TryParse(value, out i);
                     return i;
+                }
+                else if (type == typeof(bool))
+                {
+                    bool b = false;
+                    bool.TryParse(value, out b);
+                    return b;
                 }
                 else
                 {

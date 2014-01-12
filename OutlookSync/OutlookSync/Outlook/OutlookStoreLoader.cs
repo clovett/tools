@@ -14,14 +14,15 @@ namespace OutlookSync.Model
     class OutlookStoreLoader
     {
         Microsoft.Office.Interop.Outlook.Application outlook;
+
+        Dictionary<string, AddressEntry> localAddresses = new Dictionary<string, AddressEntry>();
+
         UnifiedStore store;
         DateTime syncTime;
-        Dictionary<string, ContactItem> contactIndex = new Dictionary<string, ContactItem>();
         Dictionary<string, AppointmentItem> appointmentIndex = new Dictionary<string, AppointmentItem>();
 
         Dictionary<string, UnifiedContact> contactsDeletedLocally = new Dictionary<string, UnifiedContact>();
         Dictionary<string, UnifiedContact> contactsAddedLocally = new Dictionary<string, UnifiedContact>();
-
 
         Dictionary<string, UnifiedAppointment> appointmentsDeletedLocally = new Dictionary<string, UnifiedAppointment>();
         Dictionary<string, UnifiedAppointment> appointmentsAddedLocally = new Dictionary<string, UnifiedAppointment>();
@@ -34,6 +35,16 @@ namespace OutlookSync.Model
         public void StartOutlook()
         {
             outlook = new Microsoft.Office.Interop.Outlook.Application();
+
+            // index the address entries so we can match them up on new appointment recipients.
+            for (int i = 1; i <= outlook.Session.AddressLists.Count; i++)
+            {                
+                AddressList addressBook = outlook.Session.AddressLists[i];
+                foreach (AddressEntry e in addressBook.AddressEntries)
+                {
+                    localAddresses[e.Name] = e;
+                }
+            }
         }
 
         /// <summary>
@@ -103,7 +114,7 @@ namespace OutlookSync.Model
                     switch (folder.DefaultItemType)
                     {
                         case OlItemType.olAppointmentItem:
-                            //LoadAppointments(folder, found);
+                            LoadAppointments(folder, found);
                             break;
 
                         case OlItemType.olContactItem:
@@ -170,13 +181,27 @@ namespace OutlookSync.Model
             if (cached != null)
             {
                 this.store.Contacts.Remove(cached);
+
+                ContactItem item = cached.LocalStoreObject as ContactItem;
+                if (item != null)
+                {
+                    item.Delete();
+                    cached.LocalStoreObject = null;
+                }
             }
-            
-            ContactItem item = null;
-            if (this.contactIndex.TryGetValue(id, out item))
+        }
+
+        private void DeleteAppointment(string id)
+        {
+            UnifiedAppointment cached = this.store.FindAppointmentById(id);
+            if (cached != null)
             {
-                item.Delete();
-                contactIndex.Remove(id);
+                this.store.Appointments.Remove(cached);
+                AppointmentItem item = cached.LocalStoreObject as AppointmentItem;
+                if (item != null)
+                {
+                    item.Delete();
+                }
             }
         }
 
@@ -204,6 +229,8 @@ namespace OutlookSync.Model
                 uc.Id = id;
             }
 
+            uc.LocalStoreObject = appointment;
+
             UpdateAppointment(uc, appointment);
 
             // update the total version number.
@@ -220,36 +247,80 @@ namespace OutlookSync.Model
 
         }
 
-        private void UpdateAppointment(UnifiedAppointment uc, AppointmentItem appointment)
+        private void UpdateAppointment(UnifiedAppointment ua, AppointmentItem appointment)
         {
-            uc.Start = appointment.StartUTC;
-            uc.End = appointment.EndUTC;
-            uc.Subject = appointment.Subject;
-            uc.IsAllDayEvent = appointment.AllDayEvent;
-            uc.DetailsMd5Hash = MD5.GetMd5String(appointment.Body);
-            uc.Location = appointment.Location;
+            ua.Start = appointment.Start;
+            ua.End = appointment.End;
+            ua.Subject = appointment.Subject;
+            ua.IsAllDayEvent = appointment.AllDayEvent;
+            // if the MF5 hash changes then chances are the body has changed, and the 
+            // sync will happen and GetSyncXml will send the real body.  But this optimization
+            // ensures our UnifiedStore doesn't get too big.  Technically we could do
+            // this with all the string properties, but probably not a big win in storage space.
+            ua.Hash = MD5.GetMd5String(appointment.Body);
+            ua.Location = appointment.Location;
 
             switch (appointment.BusyStatus)
             {
                 case OlBusyStatus.olBusy:
-                    uc.Status = AppointmentStatus.Busy;
+                    ua.Status = AppointmentStatus.Busy;
                     break;
                 case OlBusyStatus.olFree:
-                    uc.Status = AppointmentStatus.Free;
+                    ua.Status = AppointmentStatus.Free;
                     break;
                 case OlBusyStatus.olOutOfOffice:
-                    uc.Status = AppointmentStatus.OutOfOffice;
+                    ua.Status = AppointmentStatus.OutOfOffice;
                     break;
                 case OlBusyStatus.olTentative:
-                    uc.Status = AppointmentStatus.Tentative;
+                    ua.Status = AppointmentStatus.Tentative;
                     break;
+            }
+
+            string organizer = appointment.Organizer;
+            if (string.IsNullOrEmpty(organizer))
+            {
+                ua.Organizer = null;
+            }
+            else
+            {
+                UnifiedAttendee org = ua.Organizer;
+                if (org == null)
+                {
+                    org = new UnifiedAttendee();
+                    ua.Organizer = org;
+                }
+                org.Name = organizer;
+                // todo: parse out the email somehow?
+            }
+
+            Dictionary<string, UnifiedAttendee> existing = new Dictionary<string, UnifiedAttendee>();
+            if (ua.Attendees != null)
+            {
+                foreach (UnifiedAttendee a in ua.Attendees)
+                {
+                    existing[a.Name] = a;
+                }
             }
 
             foreach (Recipient r in appointment.Recipients)
             {
-                string name = r.Name;
-                string address = r.Address;
-                Debug.WriteLine(name);
+                UnifiedAttendee a = null;
+                if (existing.TryGetValue(r.Name, out a))
+                {
+                    a.Email = r.Address;
+                    existing.Remove(r.Name);
+                }
+                else
+                {
+                    a = new UnifiedAttendee() { Name = r.Name, Email = r.Address };
+                    ua.AddAttendee(r.Name, r.Address);
+                }
+            }
+
+            // if it was not found in the recipients list we need to remove it from our cache.
+            foreach (UnifiedAttendee toRemove in existing.Values)
+            {
+                ua.RemoveAttendee(toRemove.Name);
             }
 
             // todo: how to setup occurrences on the phone, the API doesn't seem to allow it...
@@ -263,7 +334,6 @@ namespace OutlookSync.Model
         private void MergeContact(ContactItem contact)
         {
             string id = contact.EntryID;
-            contactIndex[id] = contact;
 
             UnifiedContact uc = store.FindContactById(id);
             bool isNew = false;
@@ -274,6 +344,8 @@ namespace OutlookSync.Model
                 contactsAddedLocally[id] = uc;
                 uc.Id = id;         
             }
+
+            uc.LocalStoreObject = contact;
 
             UpdateContact(uc, contact);
 
@@ -334,6 +406,8 @@ namespace OutlookSync.Model
                 UpdateWebSites(uc, CreateMinimalSet(new string[] { contact.BusinessHomePage, contact.PersonalHomePage, contact.WebPage }));
                 uc.Children = contact.Children;
                 uc.Nickname = contact.NickName;
+
+                uc.VersionNumber = uc.GetHighestVersionNumber();
 
             }
             catch (System.Exception ex)
@@ -480,8 +554,8 @@ namespace OutlookSync.Model
         {
             try
             {
-                ContactItem item = null;
-                if (!contactIndex.TryGetValue(cached.Id, out item))
+                ContactItem item = cached.LocalStoreObject as ContactItem;
+                if (item == null)
                 {
                     // new contact then!
                     item = outlook.CreateItem(OlItemType.olContactItem);
@@ -736,20 +810,160 @@ namespace OutlookSync.Model
             }
         }
 
+        /// <summary>
+        /// Update Outlook with the changes we just got from the phone...
+        /// </summary>
+        /// <param name="cached"></param>
+        /// <returns>The new outlook id if this is a new appointment </returns>
+        internal string UpdateAppointment(UnifiedAppointment cached)
+        {
+            try
+            {
+                AppointmentItem item = cached.LocalStoreObject as AppointmentItem;
+                if (item == null)
+                {
+                    // new contact then!
+                    item = outlook.CreateItem(OlItemType.olAppointmentItem);
+                    cached.LocalStoreObject = item;
+                }
+
+                MergeAppointment(cached, item);
+
+                // let Outlook save the item in the default folder for the item type.                    
+                item.Save();
+
+                return item.EntryID;
+            }
+            catch (System.Exception ex)
+            {
+                Log.WriteException("Caught exception in UpdateAppointment", ex);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Push changes from UnifiedAppointment back into Outlook.
+        /// </summary>
+        internal void MergeAppointment (UnifiedAppointment ua, AppointmentItem appointment)
+        {
+            appointment.Start = ua.Start.LocalDateTime;
+            appointment.End = ua.End.LocalDateTime;
+            appointment.Subject = ua.Subject;
+            appointment.AllDayEvent = ua.IsAllDayEvent;
+            appointment.Body = ua.Details;
+            appointment.Location = ua.Location;
+
+            switch (ua.Status)
+            {
+                case AppointmentStatus.Free:
+                    appointment.BusyStatus = OlBusyStatus.olFree;
+                    break;
+                case AppointmentStatus.Tentative:
+                    appointment.BusyStatus = OlBusyStatus.olTentative;
+                    break;
+                case AppointmentStatus.Busy:
+                    appointment.BusyStatus = OlBusyStatus.olBusy;
+                    break;
+                case AppointmentStatus.OutOfOffice:
+                    appointment.BusyStatus = OlBusyStatus.olOutOfOffice;
+                    break;
+                default:
+                    break;
+            }
+
+            UnifiedAttendee organizer = ua.Organizer;
+            if (organizer != null && organizer.Name != null)
+            {
+                //bugbug: how to set the organizer?
+                //appointment.Organizer = organizer.Name;
+                // todo: what about the email address?
+            }
+
+            Dictionary<string, Recipient> recipients = new Dictionary<string, Recipient>();
+            Dictionary<Recipient,int> indexes = new Dictionary<Recipient,int>();
+
+            int i = 1; // index is 1-based
+            foreach (Recipient r in appointment.Recipients)
+            {
+                recipients[r.Name] = r;
+                indexes[r] = i;
+                i++;
+            }
+
+            if (ua.Attendees != null)
+            {
+                foreach (UnifiedAttendee a in ua.Attendees)
+                {
+                    Recipient r = null;
+                    if (recipients.TryGetValue(a.Name, out r))
+                    {
+                        recipients.Remove(r.Name);
+                    }
+                    else
+                    {
+                        r = appointment.Recipients.Add(a.Name);
+                        bool resolved = r.Resolve();
+                        if (!resolved)
+                        {
+                            Debug.WriteLine(string.Format("Recipient {0} not found in local addresses", r.Name));
+                        }
+                    }
+
+                    if (r.Address != null && a.Email != r.Address)
+                    {
+                        //bugbug: what to do here?
+                        Debug.WriteLine(string.Format("Recipient {0} email '{1}' doesn't match phone email '{2}'", r.Name, r.Address, a.Email));
+                    }
+                }
+            }
+
+            // remove any remaining recipients that were not found in the UnifiedAppointment from the phone.
+            foreach (Recipient r in recipients.Values)
+            {
+                int index = indexes[r];
+                appointment.Recipients.Remove(index);
+            }
+
+            // todo: how to get occurrence information from the phone...
+
+
+        }
+
+        AddressEntry GetAddressEntry(string name)
+        {
+            try
+            {
+                // not sure we want to be doing this.
+                AddressEntry e;
+                if (localAddresses.TryGetValue(name, out e))
+                {
+                    return e;
+                }
+
+                // todo: should we add entries for the user???
+                //return addressBook.AddressEntries.Add(addressType, name, email); 
+            }
+            catch (System.Exception)
+            {
+                return null;
+            }
+            return null;
+        }
+
         internal SyncMessage GetLocalSyncMessage()
         {
             SyncMessage response = new SyncMessage();
 
-            // first, out local deletes take precedence...
+            // first, our local deletes take precedence...
             foreach (var pair in this.contactsDeletedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete});
             }
 
             // and our local inserts the phone won't know about yet
             foreach (var pair in this.contactsAddedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
             }
 
             foreach (var contact in this.store.Contacts)
@@ -757,9 +971,31 @@ namespace OutlookSync.Model
                 if (!this.contactsAddedLocally.ContainsKey(contact.Id))
                 {
                     Debug.Assert(contact.VersionNumber == contact.GetHighestVersionNumber(), "version is not up to date");
-                    response.Contacts.Add(new ContactVersion() { Id = contact.Id, VersionNumber = contact.VersionNumber, Name = contact.DisplayName });
+                    response.Items.Add(new SyncItem(contact) { Change = ChangeType.Update });
                 }
             }
+
+            // first, our local deletes take precedence...
+            foreach (var pair in this.appointmentsDeletedLocally)
+            {
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
+            }
+
+            // and our local inserts the phone won't know about yet
+            foreach (var pair in this.appointmentsAddedLocally)
+            {
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
+            }
+
+            foreach (var appointment in this.store.Appointments)
+            {
+                if (!this.appointmentsAddedLocally.ContainsKey(appointment.Id))
+                {
+                    Debug.Assert(appointment.VersionNumber == appointment.GetHighestVersionNumber(), "version is not up to date");
+                    response.Items.Add(new SyncItem(appointment) { Change = ChangeType.Update });
+                }
+            }
+
             return response;
         }
 
@@ -768,30 +1004,49 @@ namespace OutlookSync.Model
             int same = 0;
             SyncMessage response = new SyncMessage();
 
-            // first, out local deletes take precedence...
+            // first, our local deletes take precedence...
             foreach (var pair in this.contactsDeletedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Deleted = true, Name = pair.Value.DisplayName });
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
             }
 
             // and our local inserts the phone won't know about yet
             foreach (var pair in this.contactsAddedLocally)
             {
-                response.Contacts.Add(new ContactVersion() { Id = pair.Key, Inserted = true, Name = pair.Value.DisplayName });
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
             }
 
-            // create index of our contacts.
-            Dictionary<string, ContactVersion> map = new Dictionary<string, ContactVersion>();
+            // first, our local deletes take precedence...
+            foreach (var pair in this.appointmentsDeletedLocally)
+            {
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
+            }
+
+            // and our local inserts the phone won't know about yet
+            foreach (var pair in this.appointmentsAddedLocally)
+            {
+                response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
+            }
+
+            // create index of items from the phone.
+            Dictionary<string, SyncItem> map = new Dictionary<string, SyncItem>();
 
             // Ok, now if the phone has deleted stuff, let's take care of that
-            foreach (var contact in msg.Contacts)
-            {                
-                if (contact.Deleted)
+            foreach (var item in msg.Items)
+            {
+                if (item.Change == ChangeType.Delete)
                 {
-                    status.PhoneDeleted.Add(contact);
-                    DeleteContact(contact.Id);
+                    status.PhoneDeleted.Add(item);
+                    if (item.Type == "C")
+                    {
+                        DeleteContact(item.Id);
+                    }
+                    else
+                    {
+                        DeleteAppointment(item.Id);
+                    }
                 }
-                else if (contact.Inserted)
+                else if (item.Change == ChangeType.Insert)
                 {
                     // wait for actual upload
                     //status.PhoneInserted.Add(contact);
@@ -799,11 +1054,11 @@ namespace OutlookSync.Model
                 }
                 else
                 {
-                    map[contact.Id] = contact;
+                    map[item.Id] = item;
                 }
             }
 
-            // Ok, send back what has changed on the server.
+            // Ok, compare the mapped contacts from phone with our own.
             foreach (var contact in this.store.Contacts)
             {
                 string id = contact.Id;
@@ -816,7 +1071,7 @@ namespace OutlookSync.Model
 
                     Debug.Assert(version == contact.GetHighestVersionNumber(), "version is not up to date");
 
-                    ContactVersion phone = null;
+                    SyncItem phone = null;
                     if (map.TryGetValue(id, out phone))
                     {
                         if (phone.VersionNumber == version)
@@ -834,14 +1089,63 @@ namespace OutlookSync.Model
                         }
                     }
 
-                    ContactVersion cv = new ContactVersion() { Id = contact.Id, VersionNumber = version, Name = contact.DisplayName };
-                    response.Contacts.Add(cv);
+                    response.Items.Add(new SyncItem(contact));
+                }
+            }
+
+
+            // Ok, compare the mapped appointments from phone with our own.
+            foreach (var appointment in this.store.Appointments)
+            {
+                string id = appointment.Id;
+
+                Debug.Assert(!appointmentsDeletedLocally.ContainsKey(id), "Should have been deleted???");
+
+                if (!this.appointmentsAddedLocally.ContainsKey(id))
+                {
+                    int version = appointment.VersionNumber;
+
+                    Debug.Assert(version == appointment.GetHighestVersionNumber(), "version is not up to date");
+
+                    SyncItem phone = null;
+                    if (map.TryGetValue(id, out phone))
+                    {
+                        if (phone.VersionNumber == version)
+                        {
+                            same++;
+                        }
+                        else if (phone.VersionNumber > version)
+                        {
+                            // wait for actual upload
+                            //status.PhoneUpdated.Add(phone);
+                        }
+                        else if (phone.VersionNumber < version)
+                        {
+                            status.ServerUpdated.Add(phone);
+
+                        }
+                    }
+                    response.Items.Add(new SyncItem(appointment));
                 }
             }
 
             identical = same;
 
             return response;
+        }
+
+
+        internal string GetSyncXml(UnifiedAppointment ua)
+        {
+            AppointmentItem appointment = ua.LocalStoreObject as AppointmentItem;
+            if (appointment != null)
+            {
+                ua.Details = appointment.Body;
+                string xml = ua.ToXml();
+                ua.ClearValue("Details");
+                return xml;
+            }
+            throw new System.Exception("Why is AppointmentItem missing?");
         }
     }
 }

@@ -58,7 +58,10 @@ namespace System.Security
         {
             MD5 md = new MD5();
             byte[] hash;
-
+            if (string.IsNullOrEmpty(source))
+            {
+                return null;
+            }
 
             UTF8Encoding enc = new UTF8Encoding();
 

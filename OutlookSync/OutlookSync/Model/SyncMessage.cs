@@ -12,20 +12,18 @@ namespace OutlookSync.Model
 {
     public class SyncMessage
     {
-        List<ContactVersion> contacts;
+        List<SyncItem> items;
 
         public SyncMessage()
         {
-            contacts = new List<ContactVersion>();
+            items = new List<SyncItem>();
         }
 
-        [XmlArrayItem(ElementName = "cv", Type = typeof(ContactVersion))]
-        public List<ContactVersion> Contacts
+        [XmlArrayItem(ElementName = "item", Type = typeof(SyncItem))]
+        public List<SyncItem> Items
         {
-            get { return contacts; }
-            set { contacts = value; }
+            get { return items; }
         }
-
 
         public string ToXml()
         {
@@ -57,58 +55,83 @@ namespace OutlookSync.Model
         }
     }
 
-    public class ContactVersion
+    public enum ChangeType 
     {
-        public ContactVersion()
+        None,
+        Insert,
+        Update,
+        Delete
+    }
+
+    public class SyncItem
+    {
+        public SyncItem()
         {
         }
 
-        public ContactVersion(UnifiedContact contact)
+        public SyncItem(UnifiedContact contact)
         {
             this.Id = contact.Id;
-            this.Name = contact.DisplayName;
+            this.Type = "C";
             this.VersionNumber = contact.VersionNumber;
+            this.Name = contact.DisplayName;
+        }
+        
+        public SyncItem(UnifiedAppointment appointment)
+        {
+            this.Id = appointment.Id;
+            this.PhoneId = appointment.PhoneId;
+            this.Type = "A";
+            this.VersionNumber = appointment.VersionNumber;
+            this.Name = appointment.Start.Date.ToShortDateString() + " " + appointment.Subject;
         }
 
         [XmlAttribute]
-        public string Name { get; set; }
+        public string Type { get; set; }
+
+        [XmlAttribute]
+        public ChangeType Change { get; set; }
 
         [XmlAttribute]
         public string Id { get; set; }
 
+        [XmlAttribute(AttributeName="pid")]
+        public string PhoneId { get; set; }
+
         [XmlElement(ElementName = "v")]
         public int VersionNumber { get; set; }
 
-        [XmlElement(ElementName = "d")]
-        public bool Deleted { get; set; }
+        /// <summary>
+        /// This is not serialized, but it used in the UI reports.
+        /// </summary>
+        [XmlIgnore]
+        public string Name { get; set; }
 
-        [XmlElement(ElementName = "i")]
-        public bool Inserted { get; set; }
     }
 
     public class SyncResult
     {
-        public List<ContactVersion> ServerInserted = new List<ContactVersion>();
-        public List<ContactVersion> ServerDeleted = new List<ContactVersion>();
-        public List<ContactVersion> ServerUpdated = new List<ContactVersion>();
+        public List<SyncItem> ServerInserted = new List<SyncItem>();
+        public List<SyncItem> ServerDeleted = new List<SyncItem>();
+        public List<SyncItem> ServerUpdated = new List<SyncItem>();
 
-        public List<ContactVersion> PhoneUpdated = new List<ContactVersion>();
-        public List<ContactVersion> PhoneInserted = new List<ContactVersion>();
-        public List<ContactVersion> PhoneDeleted = new List<ContactVersion>();
+        public List<SyncItem> PhoneUpdated = new List<SyncItem>();
+        public List<SyncItem> PhoneInserted = new List<SyncItem>();
+        public List<SyncItem> PhoneDeleted = new List<SyncItem>();
 
-        public List<ContactVersion> Unchanged = new List<ContactVersion>();
+        public List<SyncItem> Unchanged = new List<SyncItem>();
 
-        public List<ContactVersion> GetTotalInserted()
+        public List<SyncItem> GetTotalInserted()
         {
             return Concat(ServerInserted, PhoneInserted);
         }
         
-        public List<ContactVersion> GetTotalUpdated()
+        public List<SyncItem> GetTotalUpdated()
         {
             return Concat(ServerUpdated, PhoneUpdated);
         }
 
-        public List<ContactVersion> GetTotalDeleted()
+        public List<SyncItem> GetTotalDeleted()
         {
             return Concat(ServerDeleted, PhoneDeleted);
         }
@@ -120,31 +143,31 @@ namespace OutlookSync.Model
         {
         }
 
-        public SyncResult(SyncMessage phoneReport, bool phone)
+        public SyncResult(SyncMessage syncMsg, bool phone)
         {
             int time = UnifiedStore.SyncTime;
-            List<ContactVersion> updated = new List<ContactVersion>();
-            List<ContactVersion> deleted = new List<ContactVersion>();
-            List<ContactVersion> inserted = new List<ContactVersion>();
-            List<ContactVersion> unchanged = new List<ContactVersion>();
+            List<SyncItem> updated = new List<SyncItem>();
+            List<SyncItem> deleted = new List<SyncItem>();
+            List<SyncItem> inserted = new List<SyncItem>();
+            List<SyncItem> unchanged = new List<SyncItem>();
 
-            foreach (var cv in phoneReport.Contacts)
+            foreach (var item in syncMsg.Items)
             {
-                if (cv.Deleted)
+                if (item.Change == ChangeType.Delete)
                 {
-                    deleted.Add(cv);
+                    deleted.Add(item);
                 }
-                else if (cv.Inserted)
+                else if (item.Change == ChangeType.Insert)
                 {
-                    inserted.Add(cv);
+                    inserted.Add(item);
                 }
-                else if (cv.VersionNumber == time)
+                else if (item.VersionNumber == time)
                 {
-                    updated.Add(cv);
+                    updated.Add(item);
                 }
                 else
                 {
-                    unchanged.Add(cv);
+                    unchanged.Add(item);
                 }
             }
 
@@ -167,7 +190,7 @@ namespace OutlookSync.Model
             this.Unchanged = unchanged;
         }
 
-        List<ContactVersion> Concat(List<ContactVersion> list1, List<ContactVersion> list2)
+        List<SyncItem> Concat(List<SyncItem> list1, List<SyncItem> list2)
         {
             if (list1 == null && list2 == null)
             {
@@ -181,7 +204,7 @@ namespace OutlookSync.Model
             {
                 return list1;
             }
-            List<ContactVersion> combined = new List<ContactVersion>(list1);
+            List<SyncItem> combined = new List<SyncItem>(list1);
             combined.AddRange(list2);
             return combined;
         }

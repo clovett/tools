@@ -47,6 +47,7 @@ namespace OutlookSync.Model
             {
                 UnifiedStore.UpdateSyncTime();
                 loader = new OutlookStoreLoader();
+                loader.StartOutlook();
                 await loader.UpdateAsync(store);
                 await Save();
                 this.SyncStatus = new SyncResult(loader.GetLocalSyncMessage(), false);
@@ -246,6 +247,11 @@ namespace OutlookSync.Model
                     Maximum = Math.Max(Current, Maximum);
                     return UpdateContact(m.Parameters);
 
+                case "UpdateAppointment":
+                    Current++;
+                    Maximum = Math.Max(Current, Maximum);
+                    return UpdateAppointment(m.Parameters);
+
                 case "SyncMessage":
                     return HandleSync(m.Parameters);
 
@@ -267,6 +273,27 @@ namespace OutlookSync.Model
                     else
                     {
                         response = new Message() { Command = "Contact", Parameters = null };
+                    }
+                    break;
+
+                case "GetAppointment":
+
+                    string appointmentId = m.Parameters;
+                    if (!string.IsNullOrEmpty(appointmentId))
+                    {
+                        Current++;
+                        Maximum = Math.Max(Current, Maximum);
+                        UnifiedAppointment ua = store.FindAppointmentById(appointmentId);
+                        string xml = "null";
+                        if (ua != null)
+                        {
+                            xml = loader.GetSyncXml(ua);
+                        }
+                        response = new Message() { Command = "Appointment", Parameters = xml };
+                    }
+                    else
+                    {
+                        response = new Message() { Command = "Appointment", Parameters = null };
                     }
                     break;
 
@@ -316,21 +343,66 @@ namespace OutlookSync.Model
                     {
                         cached.Merge(fromPhone);
                     }
-                    
+
                     // update the total version number.
                     cached.VersionNumber = cached.GetHighestVersionNumber();
 
                     // push this to Outlook.
                     string newId = loader.UpdateContact(cached);
 
-                    SyncStatus.PhoneUpdated.Add(new ContactVersion(cached));
+                    SyncStatus.PhoneUpdated.Add(new SyncItem(cached));
                     OnPropertyChanged("SyncStatus");
 
-                    return new Message() { Command = "Updated", Parameters = id + "=>" + newId };
+                    return new Message() { Command = "UpdatedContact", Parameters = id + "=>" + newId };
                 }
             }
 
-            return new Message() { Command = "Updated", Parameters = "Parse error or missing id" };
+            return new Message() { Command = "UpdatedContact", Parameters = "Parse error or missing id" };
+        }
+
+        private Message UpdateAppointment(string xml)
+        {
+            UnifiedAppointment fromPhone = UnifiedAppointment.Parse(xml);
+            if (fromPhone != null)
+            {
+                string id = fromPhone.PhoneId;
+                if (!string.IsNullOrEmpty(id))
+                {
+                    UnifiedAppointment cached = this.store.FindAppointmentByPhoneId(id);
+                    if (cached == null)
+                    {
+                        // Oh, user added a new contact then!
+                        // if a phone sync fails for any reason we could end up with duplicate entries 
+                        // so we have to try and match entries here.
+                        cached = this.store.FindMatchingAppointment(fromPhone);
+                        if (cached == null)
+                        {
+                            cached = fromPhone;
+                            this.store.Appointments.Add(cached);
+                        }
+                    }
+                    else
+                    {
+                        cached.Merge(fromPhone);
+                    }
+
+                    // update the total version number.
+                    cached.VersionNumber = cached.GetHighestVersionNumber();
+
+                    // push this to Outlook.
+                    string newId = loader.UpdateAppointment(cached);
+                    cached.Id = newId;
+
+                    cached.ClearValue("Details"); // don't persist this field.
+
+                    SyncStatus.PhoneUpdated.Add(new SyncItem(cached));
+                    OnPropertyChanged("SyncStatus");
+
+                    return new Message() { Command = "UpdatedAppointment", Parameters = id + "=>" + newId };
+                }
+            }
+
+            return new Message() { Command = "UpdatedAppointment", Parameters = "Parse error or missing id" };
         }
 
     }
