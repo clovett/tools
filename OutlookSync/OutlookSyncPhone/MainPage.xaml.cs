@@ -343,8 +343,11 @@ namespace OutlookSyncPhone
                 ShowLoadProgress();
                 loader = new PhoneStoreLoader();
                 await loader.LoadContacts();
+
+#if SUPPORT_APPOINTMENTS
                 MessagePrompt.Text = AppResources.LoadingAppointments;
                 await loader.LoadAppointments();
+#endif
 
                 syncStatus = loader.GetLocalSyncResult();
                 UpdateTiles();

@@ -114,7 +114,9 @@ namespace OutlookSync.Model
                     switch (folder.DefaultItemType)
                     {
                         case OlItemType.olAppointmentItem:
+#if SUPPORT_APPOINTMENTS
                             LoadAppointments(folder, found);
+#endif
                             break;
 
                         case OlItemType.olContactItem:
