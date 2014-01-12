@@ -40,9 +40,14 @@ namespace OutlookSync.Model
             for (int i = 1; i <= outlook.Session.AddressLists.Count; i++)
             {                
                 AddressList addressBook = outlook.Session.AddressLists[i];
-                foreach (AddressEntry e in addressBook.AddressEntries)
+                string name = addressBook.Name;
+                var type = addressBook.AddressListType;
+                if (type != OlAddressListType.olExchangeGlobalAddressList && type != OlAddressListType.olExchangeContainer)
                 {
-                    localAddresses[e.Name] = e;
+                    foreach (AddressEntry e in addressBook.AddressEntries)
+                    {
+                        localAddresses[e.Name] = e;
+                    }
                 }
             }
         }
