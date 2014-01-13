@@ -77,7 +77,7 @@ namespace OutlookSync.Model
                 // see if user has deleted contacts in outlook
                 foreach (UnifiedContact c in store.Contacts.ToArray())
                 {
-                    string id = c.Id;
+                    string id = c.OutlookEntryId;
                     if (string.IsNullOrEmpty(id) || !found.Contains(id))
                     {
                         if (!string.IsNullOrEmpty(id))
@@ -349,7 +349,7 @@ namespace OutlookSync.Model
                 isNew = true;
                 uc = new UnifiedContact();
                 contactsAddedLocally[id] = uc;
-                uc.Id = id;         
+                uc.OutlookEntryId = id;         
             }
 
             uc.LocalStoreObject = contact;
@@ -379,7 +379,7 @@ namespace OutlookSync.Model
 
                 uc.DisplayName = contact.FullName;
 
-                PersonName pn = uc.Name;
+                PersonName pn = uc.CompleteName;
                 if (pn == null) 
                 {
                     pn = new PersonName();
@@ -391,9 +391,9 @@ namespace OutlookSync.Model
                 pn.Suffix = contact.Suffix;
                 pn.Title = contact.Title;
 
-                if (uc.Name != pn && !pn.IsEmpty)
+                if (uc.CompleteName != pn && !pn.IsEmpty)
                 {
-                    uc.Name = pn;
+                    uc.CompleteName = pn;
                 }
                 
                 uc.SignificantOthers = contact.Spouse;
@@ -645,7 +645,7 @@ namespace OutlookSync.Model
                 contact.OtherAddressCountry = "";
             }
 
-            PersonName pn = uc.Name;
+            PersonName pn = uc.CompleteName;
             if (pn == null || (string.IsNullOrEmpty(pn.FirstName) && 
                 string.IsNullOrEmpty(pn.LastName) && string.IsNullOrEmpty(pn.MiddleName) &&
                 string.IsNullOrEmpty(pn.Suffix) && string.IsNullOrEmpty(pn.Title)))
@@ -975,7 +975,7 @@ namespace OutlookSync.Model
 
             foreach (var contact in this.store.Contacts)
             {
-                if (!this.contactsAddedLocally.ContainsKey(contact.Id))
+                if (!this.contactsAddedLocally.ContainsKey(contact.OutlookEntryId))
                 {
                     Debug.Assert(contact.VersionNumber == contact.GetHighestVersionNumber(), "version is not up to date");
                     response.Items.Add(new SyncItem(contact) { Change = ChangeType.Update });
@@ -1009,7 +1009,7 @@ namespace OutlookSync.Model
         internal SyncMessage PhoneSync(SyncMessage msg, SyncResult status, out int identical)
         {
             int same = 0;
-            SyncMessage response = new SyncMessage();
+            SyncMessage response = new SyncMessage() { Version = msg.Version }; // preserve phone version.
 
             // first, our local deletes take precedence...
             foreach (var pair in this.contactsDeletedLocally)
@@ -1068,7 +1068,7 @@ namespace OutlookSync.Model
             // Ok, compare the mapped contacts from phone with our own.
             foreach (var contact in this.store.Contacts)
             {
-                string id = contact.Id;
+                string id = contact.OutlookEntryId;
 
                 Debug.Assert(!contactsDeletedLocally.ContainsKey(id), "Should have been deleted???");
 

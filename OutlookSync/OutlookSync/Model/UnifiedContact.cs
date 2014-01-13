@@ -18,19 +18,17 @@ namespace OutlookSync.Model
     {
         public UnifiedContact()
         {
-            RenameProperty("OutlookEntryId", "Id");
-            RenameProperty("CompleteName", "Name");
         }
         
         public override bool IsEmpty 
         { 
-            get { return Name == null; } 
+            get { return CompleteName == null; } 
         }
 
-        public string Id
+        public string OutlookEntryId
         {
-            get { return GetValue<string>("Id"); }
-            set { SetValue<string>("Id", value); }
+            get { return GetValue<string>("OutlookEntryId"); }
+            set { SetValue<string>("OutlookEntryId", value); }
         }
 
         public PropertyList<ContactAddress> Addresses
@@ -45,10 +43,10 @@ namespace OutlookSync.Model
             set { SetValue<DateTimeOffset?>("Birthday", value); }
         }
 
-        public PersonName Name
+        public PersonName CompleteName
         {
-            get { return GetValue<PersonName>("Name"); }
-            set { SetValue<PersonName>("Name", value); }
+            get { return GetValue<PersonName>("CompleteName"); }
+            set { SetValue<PersonName>("CompleteName", value); }
         }
 
         public string DisplayName

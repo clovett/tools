@@ -17,7 +17,11 @@ namespace OutlookSync.Model
         public SyncMessage()
         {
             items = new List<SyncItem>();
+            Version = "2";
         }
+
+        [XmlAttribute]
+        public string Version { get; set; }
 
         [XmlArrayItem(ElementName = "item", Type = typeof(SyncItem))]
         public List<SyncItem> Items
@@ -27,24 +31,79 @@ namespace OutlookSync.Model
 
         public string ToXml()
         {
-            StringWriter sw = new StringWriter();
-            using (XmlWriter writer = XmlWriter.Create(sw))
+            if (Version == "1")
             {
-                XmlSerializer s = new XmlSerializer(typeof(SyncMessage));
-                s.Serialize(writer, this);
+                // convert back to old format
+                OutlookSync.Model.Old.SyncMessage oldMsg = new OutlookSync.Model.Old.SyncMessage();
+                foreach (var item in this.Items)
+                {
+                    OutlookSync.Model.Old.ContactVersion cv = new Old.ContactVersion() { Id = item.Id, Name = item.Name, VersionNumber = item.VersionNumber };
+                    switch (item.Change)
+                    {
+                        case ChangeType.None:
+                            break;
+                        case ChangeType.Insert:
+                            cv.Inserted = true;
+                            break;
+                        case ChangeType.Update:
+                            break;
+                        case ChangeType.Delete:
+                            cv.Deleted = true;
+                            break;
+                        default:
+                            break;
+                    }
+                    oldMsg.Contacts.Add(cv);
+                }
+                return oldMsg.ToXml();
             }
-            string xml = sw.ToString();
-            return xml;
+            else
+            {
+
+                StringWriter sw = new StringWriter();
+                using (XmlWriter writer = XmlWriter.Create(sw))
+                {
+                    XmlSerializer s = new XmlSerializer(typeof(SyncMessage));
+                    s.Serialize(writer, this);
+                }
+                string xml = sw.ToString();
+                return xml;
+            }
         }
 
         public static SyncMessage Parse(string xml)
         {
             try
             {
-                using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
+                if (xml.Contains("<Contacts"))
                 {
-                    XmlSerializer s = new XmlSerializer(typeof(SyncMessage));
-                    return (SyncMessage)s.Deserialize(reader);
+                    SyncMessage newmsg = new SyncMessage();
+                    newmsg.Version = "1"; // remember this is the old format.
+
+                    // this is the old format, so we must be talking to the published phone app.
+                    OutlookSync.Model.Old.SyncMessage oldMsg = OutlookSync.Model.Old.SyncMessage.Parse(xml);
+                    foreach (var cv in oldMsg.Contacts)
+                    {
+                        SyncItem item = new SyncItem() { Id = cv.Id, Name = cv.Name, VersionNumber = cv.VersionNumber };
+                        if (cv.Deleted)
+                        {
+                            item.Change = ChangeType.Delete;
+                        }
+                        else if (cv.Inserted)
+                        {
+                            item.Change = ChangeType.Insert;
+                        }
+                        newmsg.Items.Add(item);
+                    }
+                    return newmsg;
+                }
+                else
+                {
+                    using (XmlReader reader = XmlReader.Create(new StringReader(xml)))
+                    {
+                        XmlSerializer s = new XmlSerializer(typeof(SyncMessage));
+                        return (SyncMessage)s.Deserialize(reader);
+                    }
                 }
             }
             catch (Exception ex)
@@ -71,7 +130,7 @@ namespace OutlookSync.Model
 
         public SyncItem(UnifiedContact contact)
         {
-            this.Id = contact.Id;
+            this.Id = contact.OutlookEntryId;
             this.Type = "C";
             this.VersionNumber = contact.VersionNumber;
             this.Name = contact.DisplayName;

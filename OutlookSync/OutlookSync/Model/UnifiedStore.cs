@@ -166,7 +166,7 @@ namespace OutlookSync.Model
                         UnifiedContact contact = new UnifiedContact();
                         contact.Read(reader);
 
-                        string id = contact.Id;
+                        string id = contact.OutlookEntryId;
                         if (!string.IsNullOrEmpty(id))
                         {
                             if (!contactIndex.ContainsKey(id))
@@ -384,14 +384,14 @@ namespace OutlookSync.Model
             {
                 foreach (UnifiedContact c in e.OldItems)
                 {
-                    contactIndex.Remove(c.Id);
+                    contactIndex.Remove(c.OutlookEntryId);
                 }
             }
             if (e.NewItems != null)
             {
                 foreach (UnifiedContact c in e.NewItems)
                 {
-                    contactIndex[c.Id] = c;
+                    contactIndex[c.OutlookEntryId] = c;
                 }
             }
         }

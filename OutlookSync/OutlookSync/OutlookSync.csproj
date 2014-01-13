@@ -34,7 +34,7 @@
     <ProductName>Outlook Sync</ProductName>
     <PublisherName>Lovett Software</PublisherName>
     <SuiteName>Outlook Sync</SuiteName>
-    <ApplicationRevision>14</ApplicationRevision>
+    <ApplicationRevision>17</ApplicationRevision>
     <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -115,6 +115,7 @@
       <DependentUpon>SyncProgressControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Model\ConnectedPhone.cs" />
+    <Compile Include="Model\OldSyncMessage.cs" />
     <Compile Include="Model\SyncMessage.cs" />
     <Compile Include="Model\UnifiedAppointment.cs" />
     <Compile Include="Outlook\OutlookStoreLoader.cs" />

@@ -329,10 +329,10 @@ namespace OutlookSync.Model
             UnifiedContact fromPhone = UnifiedContact.Parse(xml);
             if (fromPhone != null)
             {
-                string id = fromPhone.Id;
+                string id = fromPhone.OutlookEntryId;
                 if (!string.IsNullOrEmpty(id))
                 {
-                    UnifiedContact cached = this.store.FindContactById(fromPhone.Id);
+                    UnifiedContact cached = this.store.FindContactById(fromPhone.OutlookEntryId);
                     if (cached == null)
                     {
                         // Oh, user added a new contact then!
