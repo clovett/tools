@@ -219,6 +219,14 @@
   <ItemGroup>
     <Resource Include="Assets\Checkmark.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\OutlookSync\Screenshot2.png" />
+    <Resource Include="Images\OutlookSync\Screenshot3.png" />
+    <Resource Include="Images\OutlookSync\Screenshot4.png" />
+    <Resource Include="Images\OutlookSync\SecurityAlert.png" />
+    <Resource Include="Images\OutlookSync\SmartScreen1.png" />
+    <Resource Include="Images\OutlookSync\SmartScreen2.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
