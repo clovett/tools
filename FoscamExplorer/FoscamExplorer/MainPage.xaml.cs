@@ -61,6 +61,7 @@ namespace FoscamExplorer
                 }));
         }
 
+        DispatcherTimer searchTimer;
 
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
@@ -73,7 +74,11 @@ namespace FoscamExplorer
 
             if (store.Cameras.Count == 0)
             {
-                Prompt.Text = "Searching...";
+                Prompt.Text = StringResources.SearchingPrompt;
+                searchTimer = new DispatcherTimer();
+                searchTimer.Interval = TimeSpan.FromSeconds(10);
+                searchTimer.Tick += OnSearchTick;
+                searchTimer.Start();
             }
             try
             {
@@ -94,15 +99,57 @@ namespace FoscamExplorer
 
         }
 
+        private void OnSearchTick(object sender, object e)
+        {
+            if (searchTimer != null)
+            {
+                searchTimer.Tick -= OnSearchTick;
+                searchTimer = null;
+            }
+
+            // show a UI for buying foscam cameras :-) 
+            if (store.Cameras.Count == 0)
+            {
+                CameraInfo ad = new CameraInfo();
+                ad.Name = StringResources.NoCameraName;
+                ad.StaticImageUrl = "ms-appx:/Assets/fi9821w_0_black.png";
+                ad.StaticError = StringResources.NoCameraMessage;
+                store.MergeNewCamera(ad);
+            }
+        }
+
         async void OnDeviceAvailable(object sender, FoscamDevice e)
         {
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
-                var newCam = store.MergeNewCamera(e.CameraInfo);
-                newCam.LastPingTime = Environment.TickCount;
-                newCam.PropertyChanged -= OnCameraPropertyChanged;
-                newCam.PropertyChanged += OnCameraPropertyChanged;
+                SetupNewCamera(e);
             }));
+        }
+
+        private async void SetupNewCamera(FoscamDevice device)
+        {
+            var newCam = store.MergeNewCamera(device.CameraInfo);
+
+            if (newCam.LastPingTime + 10000 < Environment.TickCount)
+            {
+                // update the device name.
+                var properties = await device.GetStatus();
+                var realName = properties.GetValue<string>("alias");
+                if (!string.IsNullOrEmpty(realName))
+                {
+                    device.CameraInfo.Name = realName;
+                }
+
+                var sysver = properties.GetValue<string>("sys_ver");
+                if (!string.IsNullOrEmpty(sysver))
+                {
+                    device.CameraInfo.SystemVersion = sysver;
+                }
+            }
+
+            newCam.LastPingTime = Environment.TickCount;
+            newCam.PropertyChanged -= OnCameraPropertyChanged;
+            newCam.PropertyChanged += OnCameraPropertyChanged;
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

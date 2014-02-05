@@ -87,7 +87,7 @@ namespace FoscamExplorer
 
         private string CameraUrl
         {
-            get { return "http://" + CameraInfo.IpAddress + "/"; }
+            get { return string.IsNullOrEmpty(CameraInfo.IpAddress) ? null : "http://" + CameraInfo.IpAddress + "/"; }
         }
 
         public event EventHandler<ErrorEventArgs> Error;
@@ -124,9 +124,11 @@ namespace FoscamExplorer
 
         static CancellationTokenSource cancellationSource;
         static ManualResetEvent cancelled = new ManualResetEvent(false);
+        static bool findRunning;
 
         private static void FindDevices()
         {
+            findRunning = true;
             var cancellationToken = cancellationSource.Token;
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -154,15 +156,13 @@ namespace FoscamExplorer
                 try
                 {
                     Task.Delay(3000).Wait(cancellationToken);
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        cancelled.Set();
-                    }
                 }
                 catch
                 {
                 }
             }
+            cancelled.Set();
+            findRunning = false;
         }
 
         public static void StopFindingDevices()
@@ -171,7 +171,10 @@ namespace FoscamExplorer
             {
                 cancellationSource.Cancel();
                 // wait for FindDevices to terminate so we can tear down the sockets cleanly.
-                cancelled.WaitOne(5000);
+                if (findRunning)
+                {
+                    cancelled.WaitOne(5000);
+                }
             }
             foreach (var socket in sockets.Values)
             {
@@ -187,6 +190,7 @@ namespace FoscamExplorer
 
         private static async Task SendUdpPing(HostName hostName)
         {
+            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": SendUdpPing");
             string ipAddress = hostName.CanonicalName;
             DatagramSocket socket;
             if(!sockets.TryGetValue(ipAddress, out socket))
@@ -211,18 +215,20 @@ namespace FoscamExplorer
         {
             var remoteHost = args.RemoteAddress;
 
+            int expectedResponseLength = m_offset_router_IP + 4;
+
             var reader = args.GetDataReader();
             uint bytesRead = reader.UnconsumedBufferLength;
 
-            if (bytesRead < m_offset_router_IP + 4)
+            byte[] data = new byte[bytesRead];
+            reader.ReadBytes(data);
+
+            if (bytesRead < expectedResponseLength)
             {
                 return;
             }
 
-            byte[] data = new byte[m_offset_router_IP + 4];
-            reader.ReadBytes(data);
-
-            FoscamDevice device = await CreateDevice(data);
+            FoscamDevice device = CreateDevice(data);
 
             if (DeviceAvailable != null)
             {
@@ -230,7 +236,7 @@ namespace FoscamExplorer
             }
         }
 
-        private static async Task<FoscamDevice> CreateDevice(byte[] response)
+        private static FoscamDevice CreateDevice(byte[] response)
         {
             var macAddress = GetString(response, m_offset_MAC, m_length_MAC);
             var cameraIP = GetIPAddressString(response, m_offset_Camera_IP);
@@ -245,13 +251,6 @@ namespace FoscamExplorer
                     IpAddress = cameraIP
                 }
             };
-
-            var p = await device.GetStatus();
-            var realName = p.GetValue<string>("alias");
-            if (!string.IsNullOrEmpty(realName))
-            {
-                device.CameraInfo.Name = realName;
-            }
 
             return device;
         }
@@ -294,7 +293,12 @@ namespace FoscamExplorer
         /// <param name="fps">The fps setting, defaults to maximum FPS</param>
         public void StartJpegStream(CoreDispatcher dispatcher, int sizeHint = 640, CameraFps fps = CameraFps.Max)
         {
-            int resolution = (sizeHint <= 320) ? 8 : 32; 
+            int resolution = (sizeHint <= 320) ? 8 : 32;
+
+            if (CameraUrl == null)
+            {
+                return;
+            }
 
             try
             {
@@ -398,6 +402,8 @@ namespace FoscamExplorer
 
         private async Task<PropertyBag> SendCgiRequest(string url)
         {
+            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " +  url);
+
             dynamic map = new object();
             
             PropertyBag result = new PropertyBag();
@@ -480,6 +486,7 @@ namespace FoscamExplorer
                 mjpeg.StopStream();
             }
         }
+
         internal PropertyBag ParseCgiResult(string text)
         {
             // parses the foscam camera *.cgi result in the form:

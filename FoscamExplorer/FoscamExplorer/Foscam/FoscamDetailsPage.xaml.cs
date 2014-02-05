@@ -2,12 +2,14 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Foundation;
+using Windows.System.Display;
 using Windows.UI;
 using Windows.UI.ApplicationSettings;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
@@ -24,44 +26,87 @@ namespace FoscamExplorer
         FoscamDevice device;
         ImageManipulationGesture gesture;
         PropertyBag deviceParams;
+        Size sizeAvailable;
+        DisplayRequest displayRequest = new DisplayRequest();
 
         public FoscamDetailsPage()
         {
             this.InitializeComponent();
             this.ErrorMessage.Text = "";
 
+            displayRequest.RequestActive();
             gesture = new ImageManipulationGesture();
             gesture.DragVectorChanged += OnDragVectorChanged;
             gesture.ZoomDirectionChanged += OnZoomChanged;
             gesture.Start(CameraImage);
 
             this.SizeChanged += FoscamDetailsPage_SizeChanged;
+            this.Unloaded += FoscamDetailsPage_Unloaded;
+        }
+
+        void FoscamDetailsPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            displayRequest.RequestRelease();
         }
 
         void FoscamDetailsPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            Size newSize = e.NewSize;
-            Log.WriteLine("FoscamDetailsPage size changed to " + newSize);
+            sizeAvailable = e.NewSize;
+            LayoutCameraImage();
+        }
 
-            double widthAvailable  = newSize.Width - ImageGrid.Margin.Left - ImageGrid.Margin.Right;
-            if (widthAvailable < CameraImage.Width)
+        private bool IsRealCamera
+        {
+            get { return device.CameraInfo.IpAddress != null; }
+        }
+
+        void LayoutCameraImage()
+        {
+            if (sizeAvailable.Width == 0)
             {
-                double height = widthAvailable * (480.0 / 640.0);
+                return;
+            }
+            double widthAvailable = sizeAvailable.Width - ImageGrid.Margin.Left - ImageGrid.Margin.Right;
+            double heightAvailable = sizeAvailable.Height - ImageGrid.Margin.Top - ImageGrid.Margin.Bottom - TitleGrid.DesiredSize.Height - ButtonGrid.DesiredSize.Height;
 
-                CameraImage.Width = ImageOverlay.Width = widthAvailable;
-                CameraImage.Height = ImageOverlay.Height = height;
+            if (device.CameraInfo.Rotation == 90 || device.CameraInfo.Rotation == 270)
+            {
+                if (heightAvailable < CameraImage.Width)
+                {
+                    double height = heightAvailable * (480.0 / 640.0);
+
+                    CameraImage.Width = ImageOverlay.Width = heightAvailable;
+                    CameraImage.Height = ImageOverlay.Height = height;
+                }
+                else
+                {
+                    CameraImage.Width = ImageOverlay.Width = 640;
+                    CameraImage.Height = ImageOverlay.Height = 480;
+                }
             }
             else
             {
-                CameraImage.Width = ImageOverlay.Width = 640;
-                CameraImage.Height = ImageOverlay.Height = 480;
+
+                if (widthAvailable < CameraImage.Width)
+                {
+                    double height = widthAvailable * (480.0 / 640.0);
+
+                    CameraImage.Width = ImageOverlay.Width = widthAvailable;
+                    CameraImage.Height = ImageOverlay.Height = height;
+                }
+                else
+                {
+                    CameraImage.Width = ImageOverlay.Width = 640;
+                    CameraImage.Height = ImageOverlay.Height = 480;
+                }
             }
 
             if (widthAvailable < 320)
             {
                 PageTitle.FontSize = 20;
             }
-            else {
+            else 
+            {
                 PageTitle.ClearValue(TextBlock.FontSizeProperty);
             }
         }
@@ -74,6 +119,8 @@ namespace FoscamExplorer
         /// property is typically used to configure the page.</param>
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            base.OnNavigatedTo(e);
+
             // bring up camera details page...
             Log.WriteLine("FoscamDetailsPage OnNavigatedTo");
 
@@ -83,28 +130,49 @@ namespace FoscamExplorer
             device.Error += OnDeviceError;
             device.FrameAvailable += OnFrameAvailable;
             camera.PropertyChanged += OnCameraPropertyChanged;
-            device.StartJpegStream(this.Dispatcher);
-                        
+
+            if (camera.StaticImageUrl != null)
+            {
+                UpdateStaticImage();
+            }
+            else
+            {
+                device.StartJpegStream(this.Dispatcher);
+            }      
+
             this.DataContext = camera;
 
-            deviceParams = await device.GetParams();
-            ShowParameters(deviceParams);
+            if (camera.IpAddress != null)
+            {
+                deviceParams = await device.GetParams();
+                ShowParameters(deviceParams);
+            }
 
             OnRotationChanged();
 
             SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
 
-            var p = await device.GetCameraParams();
-            if (p.HasValue("brightness"))
+            if (camera.IpAddress != null)
             {
-                device.CameraInfo.Brightness = p.GetValue<byte>("brightness");
-            }
-            if (p.HasValue("contrast"))
-            {
-                device.CameraInfo.Contrast = p.GetValue<byte>("contrast");
+                var p = await device.GetCameraParams();
+                if (p.HasValue("brightness"))
+                {
+                    device.CameraInfo.Brightness = p.GetValue<byte>("brightness");
+                }
+                if (p.HasValue("contrast"))
+                {
+                    device.CameraInfo.Contrast = p.GetValue<byte>("contrast");
+                }
             }
         }
 
+        private void UpdateStaticImage()
+        {
+            CameraInfo info = device.CameraInfo;
+            CameraImage.Source = new BitmapImage(new Uri(info.StaticImageUrl));
+            ShowError(info.StaticError);
+            ErrorBorder.Background = new SolidColorBrush(Color.FromArgb(0xC0, 0, 0, 0));
+        }
 
         private void Reconnect()
         {
@@ -147,7 +215,10 @@ namespace FoscamExplorer
 
         private void OnChangePasswordCommand(IUICommand command)
         {
-            ChangeUserPassword();
+            if (IsRealCamera)
+            {
+                ChangeUserPassword();
+            }
         }
 
         void ChangeUserPassword()
@@ -156,8 +227,8 @@ namespace FoscamExplorer
             string pswd = deviceParams.GetValue<string>("user1_pwd");
 
             LogonPage login = new LogonPage() {
-                Title = "Camera Account",
-                SignOnButtonCaption = "Update",
+                Title = StringResources.LogonPromptCameraAccount,
+                SignOnButtonCaption = StringResources.LogonUpdateCameraButton,
                 UserName = user,
                 Password = pswd 
             };
@@ -165,7 +236,7 @@ namespace FoscamExplorer
             if (DataStore.Instance.Cameras.Count > 1)
             {
                 login.CheckboxVisibility = Windows.UI.Xaml.Visibility.Visible;
-                login.CheckBoxAllCaption = "Update all cameras";
+                login.CheckBoxAllCaption = StringResources.LogonUpdateCameraCheckbox;
             }
 
             login.Flyout(new Action(async () =>
@@ -210,7 +281,7 @@ namespace FoscamExplorer
             {
                 if (showError)
                 {
-                    ShowError("updated");
+                    ShowError(StringResources.UpdatedMessage);
                 }
                 device.CameraInfo.UserName = userName;
                 device.CameraInfo.Password = password;
@@ -302,7 +373,7 @@ namespace FoscamExplorer
                 case "Fps":
                     Reconnect();
                     break;
-                case "Flipped":
+                case "Rotation":
                     OnRotationChanged();
                     break;
                 case "LastFrameTime":
@@ -316,11 +387,28 @@ namespace FoscamExplorer
         }
 
         int lastFrameTime;
+        int lastSaveTime;
+        int imageIndex;
 
         void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
             lastFrameTime = Environment.TickCount;
             CameraImage.Source = e.BitmapSource;
+
+            if (lastSaveTime + 10000 < lastFrameTime)
+            {
+                SaveFrame(e.BitmapSource);
+                lastSaveTime = Environment.TickCount;
+            }
+        }
+
+        private async void SaveFrame(BitmapSource bitmapSource)
+        {
+            string fileName = "snap" + imageIndex++ + ".png";
+            using (var stream = await ((FoscamExplorer.App)App.Current).CacheFolder.SaveFileAsync(fileName))
+            {
+                await WpfUtilities.SaveImageAsync(bitmapSource, stream);
+            }
         }
 
         void OnDeviceError(object sender, ErrorEventArgs e)
@@ -345,7 +433,16 @@ namespace FoscamExplorer
         {
             var quiet = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
-                ErrorMessage.Text = text;
+                if (string.IsNullOrEmpty(text))
+                {
+                    ErrorBorder.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                    ErrorMessage.Text = "";
+                }
+                else
+                {
+                    ErrorBorder.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                    ErrorMessage.Text = text;
+                }
             }));
         }
 
@@ -408,7 +505,7 @@ namespace FoscamExplorer
                 }
             }
 
-            ShowError("updated");
+            ShowError(StringResources.UpdatedMessage);
         }
 
         Vector moveDirection;
@@ -610,49 +707,115 @@ namespace FoscamExplorer
 
         private void OnWifiSettings(object sender, RoutedEventArgs e)
         {
-            WifiSettingsPage page = new WifiSettingsPage()
+            if (IsRealCamera)
             {
-                FoscamDevice = this.device
-            };
+                WifiSettingsPage page = new WifiSettingsPage()
+                {
+                    FoscamDevice = this.device
+                };
 
-            page.Flyout(new Action(() =>
-            {
-            }));
+                page.Flyout(new Action(() =>
+                {
+                }));
+            }
         }
 
         private void OnUserAccountSettings(object sender, RoutedEventArgs e)
         {
-            ChangeUserPassword();
+            if (IsRealCamera)
+            {
+                ChangeUserPassword();
+            }
         }
 
         private void OnRotateCamera(object sender, RoutedEventArgs e)
         {
-            device.CameraInfo.Flipped = !device.CameraInfo.Flipped;
+            if (IsRealCamera)
+            {
+                int rotation = device.CameraInfo.Rotation;
+                if (rotation >= 360)
+                {
+                    rotation = 0;
+                }
+                rotation += 90;
+                device.CameraInfo.Rotation = rotation;
+            }
         }
+
+        RotateTransform rotate;
+        TranslateTransform translate;
 
         private void OnRotationChanged()
         {
-            bool flip = device.CameraInfo.Flipped;
-            if (flip)
+            int rotation = device.CameraInfo.Rotation;
+
+            TransformGroup transform = CameraImage.RenderTransform as TransformGroup;
+
+            if (transform == null) 
             {
-                CameraImage.RenderTransform = new RotateTransform() { Angle = 180, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
+                rotate = new RotateTransform() { CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
+                translate = new TranslateTransform();
+                transform = new TransformGroup();
+                transform.Children.Add(rotate);
+                transform.Children.Add(translate);
+                CameraImage.RenderTransform = transform;
             }
-            else
+            if (rotate.Angle == 360)
             {
-                CameraImage.RenderTransform = null;
+                rotate.Angle = 0;
             }
+
+            Storyboard sb = new Storyboard();
+            DoubleAnimation animation = new DoubleAnimation() { To = rotation, Duration = new Duration(TimeSpan.FromSeconds(0.2)) };
+            Storyboard.SetTarget(animation, rotate);
+            Storyboard.SetTargetProperty(animation, "Angle");
+            sb.Children.Add(animation);
+
+            double x = 0;
+            double y = 0;
+
+            if (rotation == 90)
+            {
+                x = CameraImage.Height;
+            }
+            else if (rotation == 180)
+            {
+                x = CameraImage.Width;
+                y = CameraImage.Height;
+            }
+            else if (rotation == 270)
+            {
+                y = CameraImage.Width;
+            }
+
+            //DoubleAnimation xanimation = new DoubleAnimation() { To = x, Duration = new Duration(TimeSpan.FromSeconds(0.2)) };
+            //Storyboard.SetTarget(xanimation, translate);
+            //Storyboard.SetTargetProperty(xanimation, "X");
+            //sb.Children.Add(xanimation);
+
+            //DoubleAnimation yanimation = new DoubleAnimation() { To = y, Duration = new Duration(TimeSpan.FromSeconds(0.2)) };
+            //Storyboard.SetTarget(yanimation, translate);
+            //Storyboard.SetTargetProperty(yanimation, "Y");
+            //sb.Children.Add(yanimation);
+
+            sb.Begin();
+
+            LayoutCameraImage();
         }
 
         private void OnCameraSettings(object sender, RoutedEventArgs e)
         {
-            CameraSettingsPage page = new CameraSettingsPage()
+            if (IsRealCamera)
             {
-                FoscamDevice = this.device
-            };
+                CameraSettingsPage page = new CameraSettingsPage()
+                {
+                    FoscamDevice = this.device
+                };
 
-            page.Flyout(new Action(() =>
-            {
-            }));
+                page.Flyout(new Action(() =>
+                {
+                }));
+            }
         }
 
 
@@ -663,7 +826,10 @@ namespace FoscamExplorer
 
         private void OnRenameCamera(object sender, RoutedEventArgs e)
         {
-            ShowEditBox();
+            if (IsRealCamera)
+            {
+                ShowEditBox();
+            }
         }
 
         private void ShowEditBox()
@@ -696,7 +862,11 @@ namespace FoscamExplorer
 
         private void OnPageTitlePointerPressed(object sender, Windows.UI.Xaml.Input.PointerRoutedEventArgs e)
         {
-            ShowEditBox();
+            if (IsRealCamera)
+            {
+                ShowEditBox();
+            }
         }
+
     }
 }

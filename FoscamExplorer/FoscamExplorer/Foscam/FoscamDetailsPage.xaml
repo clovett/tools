@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         <!-- Back button and page title -->
-        <Grid>
+        <Grid x:Name="TitleGrid">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -27,21 +27,18 @@
                      TextChanged="OnNameChanged" LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"/>
         </Grid>
 
-        <local:WrapPanel Grid.Row="1">
-            <Grid x:Name="ImageGrid" HorizontalAlignment="Left" Margin="30,0" VerticalAlignment="top">
-                <Image x:Name="CameraImage" Width="640" Height="480" HorizontalAlignment="Left" VerticalAlignment="top"/>
-                <!--<MediaElement x:Name="Player" RealTimePlayback="True" />-->
-                <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
-            </Grid>
-            <Grid Margin="30,10">
-                
-                <TextBlock Grid.Row="0" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" 
+        <Grid x:Name="ImageGrid" HorizontalAlignment="Left" Margin="30" VerticalAlignment="top" Grid.Row="1">
+            <Image x:Name="CameraImage" Width="640" Height="480" HorizontalAlignment="Center" VerticalAlignment="Center" Grid.Row="1"/>
+            <Canvas x:Name="ImageOverlay" Width="640" Height="480" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="top"/>
+        </Grid>
+
+        <Border x:Name="ErrorBorder" Background="#E0000000" Visibility="Collapsed" Margin="30,10" Grid.Row="1">
+            <TextBlock Grid.Row="0" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" 
                            HorizontalAlignment="Left" VerticalAlignment="Top"/>
 
-            </Grid>
-        </local:WrapPanel>
+        </Border>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" x:Name="ButtonGrid">
             <StackPanel Orientation="Horizontal">
                 <Button Style="{StaticResource WifiSettingsAppBarButtonStyle}" Click="OnWifiSettings" AutomationProperties.Name="Wifi"/>
                 <Button Style="{StaticResource UserAccountSettingsAppBarButtonStyle}" Click="OnUserAccountSettings"  AutomationProperties.Name="Users"/>

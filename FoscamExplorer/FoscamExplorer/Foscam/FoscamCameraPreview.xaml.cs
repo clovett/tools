@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -67,9 +68,24 @@ namespace FoscamExplorer
                 device.Error += OnDeviceError;
                 device.FrameAvailable += OnFrameAvailable;
                 newCamera.PropertyChanged += OnCameraPropertyChanged;
-                device.StartJpegStream(this.Dispatcher);
+                if (newCamera.StaticImageUrl != null)
+                {
+                    UpdateStaticImage();
+                }
+                else
+                {
+                    device.StartJpegStream(this.Dispatcher);
+                }
                 OnRotationChanged();
             }
+        }
+
+        private void UpdateStaticImage()
+        {
+            CameraInfo info = device.CameraInfo;
+            CameraImage.Source = new BitmapImage(new Uri(info.StaticImageUrl));
+            ShowError(info.StaticError);
+            ErrorBorder.Background = new SolidColorBrush(Color.FromArgb(0xC0, 0, 0, 0));
         }
 
         void Reconnect()
@@ -83,10 +99,10 @@ namespace FoscamExplorer
 
         private void OnRotationChanged()
         {
-            bool flip = device.CameraInfo.Flipped;
-            if (flip)
+            int rotation = device.CameraInfo.Rotation;
+            if (rotation > 0)
             {
-                CameraImage.RenderTransform = new RotateTransform() { Angle = 180, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
+                CameraImage.RenderTransform = new RotateTransform() { Angle = rotation, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
             }
             else
             {
@@ -131,6 +147,10 @@ namespace FoscamExplorer
                         DelayStartVideo(TimeSpan.FromMilliseconds(250));
                     }
                     break;
+                case "StaticImageUrl":
+                case "StaticError":
+                    UpdateStaticImage();
+                    break;
             }
             
         }
@@ -165,7 +185,7 @@ namespace FoscamExplorer
         void ShowError(string text)
         {
             ErrorBorder.Visibility = Windows.UI.Xaml.Visibility.Visible;
-            ErrorMessage.Text = text;
+            ErrorMessage.Text = "" + text;
         }
 
         void HideError()

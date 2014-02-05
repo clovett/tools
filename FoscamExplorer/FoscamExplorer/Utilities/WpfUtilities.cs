@@ -61,6 +61,28 @@ namespace FoscamExplorer
 
 #endif
 
+        public async static Task SaveImageAsync(BitmapSource image, IRandomAccessStream file)
+        {
+            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, file);
+            WriteableBitmap writeable = image as WriteableBitmap;
+            if (writeable == null)
+            {
+                return;
+            }
+
+            // remember the format of this image
+            BitmapPixelFormat format = PixelBufferObject.GetBitmapPixelFormat(writeable);
+            BitmapAlphaMode mode = PixelBufferObject.GetBitmapAlphaMode(writeable);
+
+            IBuffer buffer = writeable.PixelBuffer;
+            DataReader dataReader = DataReader.FromBuffer(buffer);
+            byte[] pixels = new byte[buffer.Length];
+            dataReader.ReadBytes(pixels);
+
+            encoder.SetPixelData(format, mode, (uint)image.PixelWidth, (uint)image.PixelHeight, 96, 96, pixels);
+            await encoder.FlushAsync();
+        }
+
         public async static Task<BitmapSource> LoadImageAsync(Stream imageStream)
         {
             if (imageStream == null)

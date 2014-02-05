@@ -31,7 +31,7 @@ namespace FoscamExplorer
         {
             this.InitializeComponent();
             this.Loaded += WifiSettingsPage_Loaded;
-
+            this.Unloaded += WifiSettingsPage_Unloaded;
             MergeWifiItem(new WifiNetworkInfo() { SSID = "disabled", Security = WifiSecurity.None });
             PasswordBoxWifi.IsEnabled = false;
 
@@ -41,6 +41,11 @@ namespace FoscamExplorer
         {
             get { return device; }
             set { device = value; }
+        }
+
+        void WifiSettingsPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            StopWifiScanner();
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)

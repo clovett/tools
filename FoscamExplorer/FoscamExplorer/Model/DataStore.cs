@@ -54,17 +54,19 @@ namespace FoscamExplorer
                     // keep everything else.
                     i.IpAddress = cam.IpAddress;
 
-                    // and take the name in case someone renamed it.
-                    i.Name = cam.Name;
-
+                    // use our existing CameraInfo object since it is already bound to the UI.
                     return i;
                 }
             }
 
-            Log.WriteLine("Found new Foscam Camera at " + cam.IpAddress.ToString());
+            if (cam.IpAddress != null)
+            {
+                Log.WriteLine("Found new Foscam Camera at " + cam.IpAddress.ToString());
+            }
 
             // new camera
             Cameras.Add(cam);
+
             return cam;
         }
 
@@ -84,6 +86,16 @@ namespace FoscamExplorer
             if (data == null)
             {
                 data = new DataStore();
+            }
+            else
+            {
+                foreach (var info in data.Cameras.ToArray())
+                {
+                    if (info.StaticImageUrl != null)
+                    {
+                        data.Cameras.Remove(info);
+                    }
+                }
             }
             return data;
         }
@@ -116,17 +128,21 @@ namespace FoscamExplorer
         private string id;
         private string name;
         private string userName;
+        private string sysVersion;
         private string password;
         private string address;
         private bool unauthorized;
         private WifiNetworkInfo network;
         private string wifipassword;
-        private bool flipped;
+        private int rotation;
         private byte brightness;
         private byte contrast;
         private byte fps;
         private int lastPing;
         private int lastFrame;
+        private string imageUrl;
+        private string error;
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -148,6 +164,20 @@ namespace FoscamExplorer
                 {
                     this.id = value;
                     OnPropertyChanged("Id");
+                }
+            }
+        }
+
+        [DataMember]
+        public string SystemVersion
+        {
+            get { return sysVersion; }
+            set
+            {
+                if (this.sysVersion != value)
+                {
+                    this.sysVersion = value;
+                    OnPropertyChanged("SystemVersion");
                 }
             }
         }
@@ -210,15 +240,15 @@ namespace FoscamExplorer
         }
 
         [DataMember]
-        public bool Flipped
+        public int Rotation
         {
-            get { return this.flipped; }
+            get { return this.rotation; }
             set
             {
-                if (this.flipped != value)
+                if (this.rotation != value)
                 {
-                    this.flipped = value;
-                    OnPropertyChanged("Flipped");
+                    this.rotation = value;
+                    OnPropertyChanged("Rotation");
                 }
             }
         }
@@ -338,5 +368,30 @@ namespace FoscamExplorer
             }
         }
 
+        public string StaticImageUrl
+        {
+            get { return this.imageUrl; }
+            set
+            {
+                if (this.imageUrl != value)
+                {
+                    this.imageUrl = value;
+                    OnPropertyChanged("StaticImageUrl");
+                }
+            }
+        }
+
+        public string StaticError
+        {
+            get { return this.error; }
+            set
+            {
+                if (this.error != value)
+                {
+                    this.error = value;
+                    OnPropertyChanged("StaticError");
+                }
+            }
+        }
     }
 }
