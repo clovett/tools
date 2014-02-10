@@ -1,0 +1,126 @@
+﻿<Window x:Class="BatchPhotoScan.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:BatchPhotoScan"
+        Title="Batch Photo Scanner" Height="600" Width="800" Icon="Images/scanner.png">
+    <Window.Resources>
+
+        <ContextMenu x:Key="PaperSizeMenu">
+            <MenuItem Header="Entire Scan Area" IsCheckable="True" Tag="PaperSizeAll" Click="OnPageSizeChanged"/>
+            <MenuItem Header="Letter (8.5 x 11 in)" IsCheckable="True" Tag="PaperSizeLetter" Click="OnPageSizeChanged"/>
+            <MenuItem Header="A4 (210 x 297 mm)" IsCheckable="True" Tag="PaperSizeA4" Click="OnPageSizeChanged"/>
+            <MenuItem Header="Legal (8.5 x 14 in)" IsCheckable="True" Tag="PaperSizeLegal" Click="OnPageSizeChanged"/>
+            <MenuItem Header="5 x 7 in" IsCheckable="True" Tag="PaperSize5x7" Click="OnPageSizeChanged"/>
+            <MenuItem Header="4 x 6 in" IsCheckable="True" Tag="PaperSize4x6" Click="OnPageSizeChanged"/>
+            <MenuItem Header="3 x 7 in" IsCheckable="True" Tag="PaperSize3x7" Click="OnPageSizeChanged"/>
+        </ContextMenu>
+        
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="Cut" Executed="Cut" CanExecute="HasSelectedItem"/>
+        <CommandBinding Command="Copy" Executed="Copy" CanExecute="HasSelectedItem"/>
+        <CommandBinding Command="Paste" Executed="Paste" CanExecute="ClipboardHasData"/>
+        <CommandBinding Command="Delete" Executed="Delete" CanExecute="HasSelectedItem"/>
+        <CommandBinding Command="Save" Executed="Save" CanExecute="CanSave"/>
+        <CommandBinding Command="Print" Executed="Print" CanExecute="HasSelectedItem"/>
+        <CommandBinding Command="local:MainWindow.CommandRotateRight" Executed="RotateRight" CanExecute="HasSelectedImage"/>
+        <CommandBinding Command="local:MainWindow.CommandRotateLeft" Executed="RotateLeft" CanExecute="HasSelectedImage"/>
+        <CommandBinding Command="local:MainWindow.CommandCropImage" Executed="OnCropImage" CanExecute="HasSelectedImage"/>
+        <CommandBinding Command="local:MainWindow.CommandScan" Executed="OnScanImage" CanExecute="CanScanImage"/>
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="Cut" Key="X" Modifiers="Control"/>
+        <KeyBinding Command="Copy" Key="C" Modifiers="Control"/>
+        <KeyBinding Command="Paste" Key="V" Modifiers="Control"/>
+        <KeyBinding Command="Delete" Key="Delete"/>
+        <KeyBinding Command="Save" Key="S" Modifiers="Control"/>
+        <KeyBinding Command="Print" Key="P" Modifiers="Control"/>
+    </Window.InputBindings>
+    <Window.ContextMenu>
+        <ContextMenu>
+            <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Command="Cut">
+                <MenuItem.Icon>
+                    <Image Source="/Images/CutHS.png" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Command="Copy">
+                <MenuItem.Icon>
+                    <Image Source="/Images/CopyHS.png" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Paste" InputGestureText="Ctrl+V" Command="Paste">
+                <MenuItem.Icon>
+                    <Image Source="/Images/PasteHS.png" />
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator/>
+            <MenuItem Header="Delete" InputGestureText="Del" Command="Delete">
+                <MenuItem.Icon>
+                    <Image Source="/Images/delete_16x.png" />
+                </MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </Window.ContextMenu>
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top" >
+            <ToolBar Height="46" HorizontalAlignment="Stretch">
+                <Button x:Name="ScanButton" Command="local:MainWindow.CommandScan" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/Scanner.png" Width="32" Height="32" ToolTip="Click here to scan a document" />
+                </Button>
+                <Button x:Name="ZoomInButton" Click="ZoomIn" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/ZoomIn.png" Width="32" Height="32" ToolTip="Zoom in" />
+                </Button>
+                <Button x:Name="ZoomOutButton" Click="ZoomOut" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/ZoomOut.png" Width="32" Height="32" ToolTip="Zoom out" />
+                </Button>
+                <Button x:Name="SaveButton" Command="Save" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/Save.png" Width="32" Height="32" ToolTip="Save attachment" />
+                </Button>
+                <Button x:Name="RotateLeftButton" Command="local:MainWindow.CommandRotateLeft" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/RotateLeft.png" Width="32" Height="32" ToolTip="Rotate counter-clockwise 90 degrees" />
+                </Button>
+                <Button x:Name="RotateRightButton" Command="local:MainWindow.CommandRotateRight" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/RotateRight.png" Width="32" Height="32" ToolTip="Rotate clockwise 90 degrees" />
+                </Button>
+                <Button x:Name="CropImageButton" Command="local:MainWindow.CommandCropImage" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/CropImage.png" Width="32" Height="32" ToolTip="Find image bounds and crop image" />
+                </Button>
+                <Grid Width="100">
+
+                </Grid>
+                <Button x:Name="CutButton" Command="Cut" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/cut.png" Width="32" Height="32" ToolTip="Cut selected attachment" />
+                </Button>
+                <Button x:Name="CopyButton" Command="Copy" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/copy.png" Width="32" Height="32" ToolTip="Copy selected attachment" />
+                </Button>
+                <Button x:Name="PasteButton" Command="Paste" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/Paste.png" Width="32" Height="32" ToolTip="Paste a new attachment" />
+                </Button>
+                <Button x:Name="DeleteButton" Command="Delete" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/Delete.png" Width="32" Height="32" ToolTip="Delete selected attachment" />
+                </Button>
+                <Button x:Name="PrintButton" Command="Print" BorderThickness="0" SnapsToDevicePixels="True">
+                    <Image Source="/Images/Printer.png" Width="32" Height="32" ToolTip="Click here to print the selected attachment" />
+                </Button>
+                <local:DropDownButton x:Name="PageSizeButton" BorderThickness="0" SnapsToDevicePixels="True" DropDownMenu="{StaticResource PaperSizeMenu}">
+                    <Image Source="/Images/PageSize.png" Width="32" Height="32" ToolTip="Click here to change the page size" />
+                </local:DropDownButton>
+                <TextBlock  Margin="10">
+                     <Hyperlink x:Name="FolderLink" Click="OnFolderLinkClick">c:\users\chris\pictures\</Hyperlink>
+                </TextBlock>
+            </ToolBar>
+        </ToolBarTray>
+        <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Auto" x:Name="Scroller">
+            <Grid x:Name="CanvasGrid" Margin="0" MouseWheel="OnCanvasMouseWheel">
+                <Grid.Background>
+                    <DrawingBrush TileMode="Tile" Viewport="0,0,16,16" ViewportUnits="Absolute"
+                                        Drawing="{StaticResource CheckerBoxBackground}"/>
+
+                </Grid.Background>
+                <WrapPanel x:Name="Canvas" Orientation="Vertical" Margin="0"/>
+                <Canvas x:Name="Adorners" Margin="0"/>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
+</Window>
