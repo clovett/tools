@@ -133,6 +133,7 @@ namespace FoscamExplorer
             if (newCam.LastPingTime + 10000 < Environment.TickCount)
             {
                 // update the device name.
+                device = new FoscamDevice() { CameraInfo = newCam };
                 var properties = await device.GetStatus();
                 var realName = properties.GetValue<string>("alias");
                 if (!string.IsNullOrEmpty(realName))

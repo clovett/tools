@@ -242,6 +242,8 @@ namespace FoscamExplorer
             var cameraIP = GetIPAddressString(response, m_offset_Camera_IP);
             var routerIP = GetIPAddressString(response, m_offset_router_IP);
 
+            Debug.WriteLine("Found device at " + cameraIP);
+
             var device = new FoscamDevice()
             {
                 CameraInfo = new CameraInfo()
