@@ -229,7 +229,7 @@ namespace HttpGet
 
             Console.WriteLine("Fetching: " + uri.AbsoluteUri);
             WebRequest req = WebRequest.Create(uri);
-            req.Credentials = CredentialCache.DefaultCredentials;
+            req.Credentials = CredentialCache.DefaultNetworkCredentials;            
             req.Method = "GET";
 
             WebResponse resp = req.GetResponse();
