@@ -94,12 +94,29 @@ namespace OutlookSyncPhone
 
         async void OnMessageReceived(object sender, MessageEventArgs e)
         {
+            if (loader == null)
+            {
+                // user has gone elsewhere.
+                return;
+            }
+
             Message m = e.Message;
+            if (m == null)
+            {
+                return;
+            }
+
+            string parameters = m.Parameters;
+            if (string.IsNullOrEmpty(parameters))
+            {
+                parameters = "";
+            }
+
             switch (m.Command)
             {
                 case "Count":
                     int max = 0;
-                    int.TryParse(m.Parameters, out max);
+                    int.TryParse(parameters, out max);
                     outlookContactCount = max;
                     
                     loader.StartMerge();
@@ -113,7 +130,7 @@ namespace OutlookSyncPhone
                     await SendSyncMessage();
                     break;
                 case "ServerSync":
-                    await loader.HandleServerSync(m.Parameters, syncStatus);
+                    await loader.HandleServerSync(parameters, syncStatus);
                     
                     StartSyncProgress();
 
@@ -127,7 +144,7 @@ namespace OutlookSyncPhone
                 case "Contact":
                     {
                         // server responded to GetNextContact 
-                        var result = await loader.MergeContact(m.Parameters);
+                        var result = await loader.MergeContact(parameters);
                         if (result.Item1 == MergeResult.NewEntry)
                         {
                             syncStatus.ServerInserted.Add(new SyncItem(result.Item2));
@@ -149,7 +166,7 @@ namespace OutlookSyncPhone
                 case "Appointment":
                     {
                         // server responded to GetNextAppointment
-                        var result = await loader.MergeAppointment(m.Parameters);
+                        var result = await loader.MergeAppointment(parameters);
                         if (result.Item1 == MergeResult.NewEntry)
                         {
                             syncStatus.ServerInserted.Add(new SyncItem(result.Item2));
@@ -177,7 +194,7 @@ namespace OutlookSyncPhone
                     break;
                 case "UpdatedContact":
                     // received a new outlook id for this a contact.
-                    await loader.UpdateContactRemoteId(e.Message.Parameters);
+                    await loader.UpdateContactRemoteId(parameters);
 
                     if (!await SendNextUpdate())
                     {
@@ -186,7 +203,7 @@ namespace OutlookSyncPhone
                     break;
                 case "UpdatedAppointment":
                     // received a new outlook id for this a contact.
-                    loader.UpdateAppointmentOutlookId(e.Message.Parameters);
+                    loader.UpdateAppointmentOutlookId(parameters);
 
                     if (!await SendNextUpdate())
                     {
@@ -214,6 +231,11 @@ namespace OutlookSyncPhone
 
         private async Task FinishUpdate()
         {
+            if (loader == null)
+            {
+                // user has gone away
+                return;
+            }
             if (proxy != null)
             {
                 await proxy.SendMessage(new Message() { Command = "FinishUpdate" });
@@ -234,12 +256,23 @@ namespace OutlookSyncPhone
 
         private async Task SendSyncMessage()
         {
+            if (loader == null)
+            {
+                // user has gone away.
+                return;
+            }
             var syncReport = loader.GetSyncMessage();
             await proxy.SendMessage(new Message() { Command = "SyncMessage", Parameters = syncReport .ToXml() });
         }
 
         private async Task<bool> SendNextUpdate()
         {
+            if (loader == null)
+            {
+                // user has gone away
+                return false;
+            }
+
             Dispatcher.BeginInvoke(new Action(() =>
             {
                 LoadProgress.Value++;
@@ -280,6 +313,12 @@ namespace OutlookSyncPhone
 
         private async Task<bool> GetNextItem()
         {
+            if (loader == null)
+            {
+                // user has gone away
+                return false;
+            }
+
             SyncItem item = loader.GetNextItemToUpdate();
             
             Dispatcher.BeginInvoke(new Action(() =>
@@ -319,16 +358,20 @@ namespace OutlookSyncPhone
                     adControl.AdUnitId = "10338338";
                     adControl.ApplicationId = "78e6a089-a787-42a2-9433-88c65eaa5706";
                     adControl.ErrorOccurred += OnAdControlError;
+
+                    AdGrid.Children.Clear();
                     AdGrid.Children.Add(adControl);
                 }
             }
             catch (Exception)
             {
+                Debug.WriteLine("Exception: error creating ad control???");
             }
         }
 
         private void OnAdControlError(object sender, Microsoft.Advertising.AdErrorEventArgs e)
         {
+            Debug.WriteLine("OnAdControlError: " + e.Error.Message);
             return;
         }
 
@@ -348,12 +391,13 @@ namespace OutlookSyncPhone
                 MessagePrompt.Text = AppResources.LoadingAppointments;
                 await loader.LoadAppointments();
 #endif
-
-                syncStatus = loader.GetLocalSyncResult();
-                UpdateTiles();
-                HideLoadProgress();
-
-                MessagePrompt.Text = AppResources.LaunchPrompt;
+                if (loader != null)
+                {
+                    syncStatus = loader.GetLocalSyncResult();
+                    UpdateTiles();
+                    HideLoadProgress();
+                    MessagePrompt.Text = AppResources.LaunchPrompt;
+                }
             }
 
             if (!DeviceNetworkInformation.IsNetworkAvailable)

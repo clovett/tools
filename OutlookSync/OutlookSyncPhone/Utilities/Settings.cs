@@ -29,16 +29,13 @@ namespace OutlookSyncPhone.Utilities
         public static async Task<Settings> LoadAsync(string fileName)
         {
             Settings result = null;
-
-            await Task.Run(new Action(() =>
+            
+            IsolatedStorage<Settings> store = new IsolatedStorage<Settings>();
+            result = store.LoadFromFile(fileName);
+            if (result == null)
             {
-                IsolatedStorage<Settings> store = new IsolatedStorage<Settings>();
-                result = store.LoadFromFile(fileName);
-                if (result == null)
-                {
-                    result = new Settings();
-                }
-            }));
+                result = new Settings();
+            }
 
             result.fileName = fileName;
             return result;

@@ -121,7 +121,7 @@ namespace OutlookSyncPhone
 
             foreach (var contact in cache.Contacts)
             {
-                if (!locallyAddedContacts.ContainsKey(contact.Id))
+                if (!locallyAddedContacts.ContainsKey(contact.OutlookEntryId))
                 {
                     message.Items.Add(new SyncItem(contact) { Change = ChangeType.Update });
                 }
@@ -173,7 +173,7 @@ namespace OutlookSyncPhone
             // see if user has deleted contacts on the phone (we need to remember this)
             foreach (UnifiedContact c in cache.Contacts.ToArray())
             {
-                string id = c.Id;
+                string id = c.OutlookEntryId;
                 if (string.IsNullOrEmpty(id) || !found.Contains(id))
                 {
                     if (!string.IsNullOrEmpty(id))
@@ -307,7 +307,7 @@ namespace OutlookSyncPhone
             {
                 // user added a contact manually.
                 uc = new UnifiedContact();
-                uc.Id = id;
+                uc.OutlookEntryId = id;
                 locallyAddedContacts[id] = uc;
                 cache.Contacts.Add(uc);
             }
@@ -328,7 +328,7 @@ namespace OutlookSyncPhone
                 UnifiedContact cached = cache.FindContactById(oldId);
                 if (cached != null)
                 {
-                    cached.Id = newId;
+                    cached.OutlookEntryId = newId;
                     // re-index it.
                     cache.Contacts.Remove(cached);
                     cache.Contacts.Add(cached);
@@ -383,7 +383,7 @@ namespace OutlookSyncPhone
         /// <param name="xml">The serialized contact</param>        
         public async Task<Tuple<MergeResult,UnifiedContact>> MergeContact(string xml)
         {
-            if (xml == "null")
+            if (xml == "null" || string.IsNullOrEmpty(xml))
             {
                 return new Tuple<MergeResult, UnifiedContact>(MergeResult.None, null);
             }
@@ -399,7 +399,7 @@ namespace OutlookSyncPhone
             }
 
             // compare this new contact from outlook with our existing one
-            UnifiedContact cached = cache.FindContactById(contact.Id);            
+            UnifiedContact cached = cache.FindContactById(contact.OutlookEntryId);            
             if (cached != null)
             {
                 changedLocally |= cached.Merge(contact);
@@ -407,7 +407,7 @@ namespace OutlookSyncPhone
             else
             {
                 // new contact from outlook, unless it was deleted locally.
-                if (locallyDeletedContacts.ContainsKey(contact.Id))
+                if (locallyDeletedContacts.ContainsKey(contact.OutlookEntryId))
                 {
                     return new Tuple<MergeResult, UnifiedContact>(MergeResult.DeletedLocally, cached);
                 }
@@ -423,7 +423,7 @@ namespace OutlookSyncPhone
 
             var rc = MergeResult.Merged;
 
-            StoredContact sc = await store.FindContactByRemoteIdAsync(contact.Id);
+            StoredContact sc = await store.FindContactByRemoteIdAsync(contact.OutlookEntryId);
             if (sc != null)
             {
                 // merge
@@ -432,7 +432,7 @@ namespace OutlookSyncPhone
             {
                 rc = MergeResult.NewEntry;
                 sc = new StoredContact(store);
-                sc.RemoteId = contact.Id;
+                sc.RemoteId = contact.OutlookEntryId;
             }
             try
             {
@@ -606,11 +606,11 @@ namespace OutlookSyncPhone
         private async Task UpdateFromStore(UnifiedContact cache, StoredContact contact)
         {
             cache.DisplayName = contact.DisplayName;
-            PersonName name = cache.Name;
+            PersonName name = cache.CompleteName;
             if (name == null)
             {
                 name = new PersonName();
-                cache.Name = name;
+                cache.CompleteName = name;
             }
             name.FirstName = contact.GivenName;
             name.LastName = contact.FamilyName;
@@ -686,7 +686,7 @@ namespace OutlookSyncPhone
         {
             contact.DisplayName = "" + cache.DisplayName;
 
-            var fullName = cache.Name;
+            var fullName = cache.CompleteName;
             if (fullName != null)
             {
                 contact.FamilyName = "" + fullName.LastName;
@@ -933,6 +933,11 @@ namespace OutlookSyncPhone
 
         public async Task HandleServerSync(string xml, SyncResult status)
         {
+            if (string.IsNullOrEmpty(xml))
+            {
+                return;
+            }
+
             SyncMessage server = SyncMessage.Parse(xml);
 
             SyncMessage phone = this.syncReport;

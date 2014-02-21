@@ -89,7 +89,11 @@ namespace OutlookSyncPhone
         // This code will not execute when the application is deactivated
         private async void Application_Closing(object sender, ClosingEventArgs e)
         {
-            await App.Settings.SaveAsync();
+            var settings = App.Settings;
+            if (settings != null)
+            {
+                await settings.SaveAsync();
+            }
         }
 
         // Code to execute if a navigation fails

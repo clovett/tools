@@ -38,6 +38,7 @@ namespace OutlookSync
         Settings settings;
         Updater updater = new Updater();
         FirewallConfig firewall;
+        //WebServer webserver;
 
         public MainWindow()
         {
@@ -54,6 +55,9 @@ namespace OutlookSync
             firewall.FirewallErrorDetected += OnFirewallErrorDetected;
             
             VersionNumber.Text = string.Format(VersionNumber.Text, updater.GetCurrentVersion().ToString());
+
+            //webserver = new WebServer();
+            //webserver.Start();
         }
 
         bool isShowingFirewallError;

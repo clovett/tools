@@ -122,6 +122,7 @@
     <Compile Include="Model\PropertyBag.cs" />
     <Compile Include="Model\UnifiedContact.cs" />
     <Compile Include="Model\UnifiedStore.cs" />
+    <Compile Include="Outlook\WebServer.cs" />
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\Log.cs" />
     <Compile Include="Utilities\MD5.cs" />

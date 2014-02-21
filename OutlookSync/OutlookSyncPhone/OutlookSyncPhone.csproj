@@ -94,6 +94,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\OutlookSync\Model\OldSyncMessage.cs">
+      <Link>Model\OldSyncMessage.cs</Link>
+    </Compile>
     <Compile Include="..\OutlookSync\Model\PropertyBag.cs">
       <Link>Model\PropertyBag.cs</Link>
     </Compile>

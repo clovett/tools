@@ -32,7 +32,11 @@ namespace OutlookSyncPhone.Pages
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            ServerAddress.Text = "" + App.Settings.ServerAddress;
+            var settings = App.Settings;
+            if (settings != null)
+            {
+                ServerAddress.Text = "" + settings.ServerAddress;
+            }
             UpdateButtonState();
             base.OnNavigatedTo(e);
         }

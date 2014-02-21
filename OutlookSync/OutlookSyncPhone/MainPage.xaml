@@ -95,9 +95,7 @@
                           />
         </Grid>
 
-        <Grid Grid.Row="2" x:Name="AdGrid">
-            
-        </Grid>
+        <Grid Grid.Row="2" x:Name="AdGrid"/>
     </Grid>
 
 

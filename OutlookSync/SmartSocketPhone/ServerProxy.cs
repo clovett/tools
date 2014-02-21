@@ -79,15 +79,18 @@ namespace Microsoft.Networking
 
                         MemoryStream ms = new MemoryStream(buffer);
                         Message msg = (Message)serializer.Deserialize(ms);
-                        var args = new MessageEventArgs(endPoint, msg);
-                        if (MessageReceived != null)
+                        if (msg != null)
                         {
-                            MessageReceived(this, args);
-                        }
-                        if (args.Response != null)
-                        {
-                            Message m = await args.Response;
-                            SendMessage(m).Wait();
+                            var args = new MessageEventArgs(endPoint, msg);
+                            if (MessageReceived != null)
+                            {
+                                MessageReceived(this, args);
+                            }
+                            if (args.Response != null)
+                            {
+                                Message m = await args.Response;
+                                SendMessage(m).Wait();
+                            }
                         }
                     }
                 }
