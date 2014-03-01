@@ -222,6 +222,10 @@ namespace Microsoft.Networking
                 Message msg = (Message)serializer.Deserialize(ms);
                 var args = new MessageEventArgs((IPEndPoint)this.client.Client.RemoteEndPoint, msg);
                 MessageReceived(this, args);
+                if (msg.Command == "Disconnect")
+                {
+                    stopped = true;
+                }
                 return args.Response;
             }
             return null;

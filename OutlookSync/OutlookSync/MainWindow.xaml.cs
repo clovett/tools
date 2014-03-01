@@ -541,5 +541,32 @@ namespace OutlookSync
             base.OnClosed(e);
         }
 
+        private void OnShowHelp(object sender, ExecutedRoutedEventArgs e)
+        {
+            OpenUrl("http://www.lovettsoftware.com/LovettSoftware/post/2014/01/09/Outlook-Sync.aspx");
+        }
+
+        public static string StartupPath
+        {
+            get
+            {
+                Process p = Process.GetCurrentProcess();
+                string exe = p.MainModule.FileName;
+                return System.IO.Path.GetDirectoryName(exe);
+            }
+        }
+
+        public void OpenUrl(string url)
+        {            
+            const int SW_SHOWNORMAL = 1;
+            int rc = ShellExecute(IntPtr.Zero, "open", url, null, StartupPath, SW_SHOWNORMAL);
+        }
+        
+
+
+        [DllImport("Shell32.dll", EntryPoint = "ShellExecuteA",
+            SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true,
+            CallingConvention = CallingConvention.StdCall)]
+        public static extern int ShellExecute(IntPtr handle, string verb, string file, string args, string dir, int show);
     }
 }

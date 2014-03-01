@@ -5,6 +5,12 @@
         Title="Outlook Sync Server" Height="500" Width="800" Icon="AppIcon.ico">
     <Window.Resources>
     </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="Help" Executed="OnShowHelp"/>
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="Help" Key="F1"/>
+    </Window.InputBindings>
     <DockPanel>
         <Grid DockPanel.Dock="Bottom" Height="30" Background="#E0E0E0">
             <Grid.ColumnDefinitions>

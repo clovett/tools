@@ -21,7 +21,7 @@
     <PublishUrl>ftp://www.lovettsoftware.com/LovettSoftware/Downloads/OutlookSync/</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
@@ -34,7 +34,7 @@
     <ProductName>Outlook Sync</ProductName>
     <PublisherName>Lovett Software</PublisherName>
     <SuiteName>Outlook Sync</SuiteName>
-    <ApplicationRevision>17</ApplicationRevision>
+    <ApplicationRevision>19</ApplicationRevision>
     <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -123,6 +123,9 @@
     <Compile Include="Model\UnifiedContact.cs" />
     <Compile Include="Model\UnifiedStore.cs" />
     <Compile Include="Outlook\WebServer.cs" />
+    <Compile Include="UnhandledExceptionWindow.xaml.cs">
+      <DependentUpon>UnhandledExceptionWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\Log.cs" />
     <Compile Include="Utilities\MD5.cs" />
@@ -153,6 +156,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Themes\generic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UnhandledExceptionWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
