@@ -67,7 +67,7 @@
 
                     <TextBlock Text="Changes:" Margin="0,20,0,0" Foreground="{StaticResource PhoneAccentBrush}"/>
                     
-                    <TextBlock Text="Version 1.2.1.0: fixed some crashes reported by the app store."
+                    <TextBlock Text="Version 1.2.2.0: fixed some sync bugs and added ability to remove advertising on the help page."
                                TextWrapping="Wrap"/>
 
                 </StackPanel>
