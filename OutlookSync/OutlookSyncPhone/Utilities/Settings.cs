@@ -15,6 +15,8 @@ namespace OutlookSyncPhone.Utilities
     {
         string fileName;
         string serverAddress;
+        private List<string> licenses;
+        public const string RemoveAdsProductId = "OutlookSyncRemoveAdsId";
 
         public Settings()
         {
@@ -24,6 +26,15 @@ namespace OutlookSyncPhone.Utilities
         {
             get { return serverAddress; }
             set { serverAddress = value; }
+        }
+
+        /// <summary>
+        /// Array of licenses that are owned by this user.
+        /// </summary>
+        public List<string> Licenses
+        {
+            get { return this.licenses; }
+            set { this.licenses = value; }
         }
 
         public static async Task<Settings> LoadAsync(string fileName)

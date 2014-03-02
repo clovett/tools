@@ -799,12 +799,12 @@ namespace OutlookSyncPhone
                 var address = contact.GetAddress(kind);
                 if (address == null)
                 {
-                    address = new OutlookSync.Model.ContactAddress() { Kind = kind };
+                    address = new OutlookSync.Model.ContactAddress() { Kind = kind, VersionNumber = UnifiedStore.SyncTime };
                     contact.AddAddress(address);
                 }
                 if (address.PhysicalAddress == null)
                 {
-                    address.PhysicalAddress = new PhysicalAddress();
+                    address.PhysicalAddress = new PhysicalAddress() { VersionNumber = UnifiedStore.SyncTime };
                 }
 
                 var pa = address.PhysicalAddress;
@@ -886,7 +886,7 @@ namespace OutlookSyncPhone
                     ContactPhoneNumber phone = contact.GetPhoneNumber(kind);
                     if (phone == null)
                     {
-                        phone = new ContactPhoneNumber() { Kind = kind };
+                        phone = new ContactPhoneNumber() { Kind = kind, VersionNumber = UnifiedStore.SyncTime };
                         contact.AddPhoneNumber(phone);
                     }
                     phone.PhoneNumber = value;

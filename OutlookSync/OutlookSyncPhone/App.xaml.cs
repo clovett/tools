@@ -13,7 +13,7 @@ namespace OutlookSyncPhone
 {
     public partial class App : Application
     {
-        public const string AppId = "2a8637e6-493c-4e02-ac41-216c150f79bb";
+        public const string AppId = "cecb77ee-f698-44c2-b66d-113cc04c5f52";
 
         /// <summary>
         /// Provides easy access to the root frame of the Phone Application.

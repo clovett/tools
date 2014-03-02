@@ -146,6 +146,7 @@
     </Compile>
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\IsolatedStorage.cs" />
+    <Compile Include="Utilities\LicenseManager.cs" />
     <Compile Include="Utilities\ReflectionExtensions.cs" />
     <Compile Include="Utilities\Settings.cs" />
     <Compile Include="Utilities\SyncProgressControl.xaml.cs">

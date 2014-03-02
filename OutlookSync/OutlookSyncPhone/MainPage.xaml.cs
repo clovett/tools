@@ -55,9 +55,23 @@ namespace OutlookSyncPhone
 
             this.SizeChanged += MainPage_SizeChanged;
 
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", GetHelloMessage(), 12777);            
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", GetHelloMessage(), 12777);
+
+            LicenseManager.Instance.RegisterProductId(Settings.RemoveAdsProductId);
         }
 
+        void OnLicenseChecked(object sender, EventArgs e)
+        {
+            Dispatcher.BeginInvoke(new Action(UpdateLicenseUI));
+        }
+
+        private void UpdateLicenseUI()
+        {
+            if (!LicenseManager.Instance.HasLicense(Settings.RemoveAdsProductId))
+            {
+                SetupAds();
+            }
+        }
         void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             double w = e.NewSize.Width * 0.8;
@@ -396,8 +410,8 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
-
-            SetupAds();
+            LicenseManager.Instance.LicensesChecked += OnLicenseChecked;
+            LicenseManager.Instance.BeginCheckLicenses();
 
             if (loader == null)
             {
@@ -494,6 +508,8 @@ namespace OutlookSyncPhone
 
         protected async override void OnNavigatedFrom(NavigationEventArgs e)
         {
+            LicenseManager.Instance.LicensesChecked -= OnLicenseChecked;
+
             base.OnNavigatedFrom(e);
 
             HideLoadProgress();
