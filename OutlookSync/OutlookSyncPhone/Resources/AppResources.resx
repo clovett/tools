@@ -161,4 +161,7 @@
   <data name="LoadingAppointments" xml:space="preserve">
     <value>Loading local appointments...</value>
   </data>
+  <data name="OldVersionWarning" xml:space="preserve">
+    <value>You are running an older version of Outlook Sync Server on your PC.  Please uninstall it and get the latest version from http://www.lovettsoftware.com.</value>
+  </data>
 </root>

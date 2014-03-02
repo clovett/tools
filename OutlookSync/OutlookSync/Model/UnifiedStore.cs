@@ -41,7 +41,12 @@ namespace OutlookSync.Model
 
         public static void UpdateSyncTime()
         {
-            _syncTime = 0;
+            // We need to synchronize the time on both phone and PC so the updated fields get the same timestamps.
+            TimeSpan from2013 = DateTime.UtcNow - new DateTime(2013, 1, 1);
+            // this should fit in a 32 bit integer, and be able to count 
+            // time out about 150 years which should be plenty for this app :-) 
+            int syncTime = (int)from2013.TotalSeconds;
+            _syncTime = syncTime;
         }
 
         public static int SyncTime
@@ -50,15 +55,12 @@ namespace OutlookSync.Model
             {
                 if (_syncTime == 0)
                 {
-                    TimeSpan from2013 = DateTime.UtcNow - new DateTime(2013, 1, 1);
-                    // this should fit in a 32 bit integer, and be able to count 
-                    // time out about 150 years which should be plenty for this app :-) 
-                    _syncTime = (int)from2013.TotalSeconds;
+                    UpdateSyncTime();
                 }
                 return _syncTime;
             }
+            set { _syncTime = value; }
         }
-
 
 #if WINDOWS_PHONE
         public static async Task<UnifiedStore> LoadAsync(string fileName)

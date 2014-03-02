@@ -30,7 +30,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Text="OUTLOOK SYNC" Style="{StaticResource PhoneTextNormalStyle}"/>
+                <TextBlock Text="SYNC FOR OUTLOOK" Style="{StaticResource PhoneTextNormalStyle}"/>
 
                 <Grid Grid.Column="1">
                     <local:ConnectorControl x:Name="Connector" Connected="False" Margin="0,0,5,0"/>

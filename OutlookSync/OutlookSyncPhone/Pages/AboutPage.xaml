@@ -27,7 +27,7 @@
 
             <local:BackButton Click="OnBackPressed"/>
 
-            <TextBlock x:Name="VersionText" Text="Outlook Sync Version {0}"
+            <TextBlock x:Name="VersionText" Text="Sync for Outlook Version {0}"
                        Style="{StaticResource PhoneTextNormalStyle}"
                        Margin="12" VerticalAlignment="Center"/>
         </StackPanel>

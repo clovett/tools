@@ -115,8 +115,27 @@ namespace OutlookSyncPhone
             switch (m.Command)
             {
                 case "Count":
+                    string[] parts = parameters.Split(',');
                     int max = 0;
-                    int.TryParse(parameters, out max);
+                    int.TryParse(parts[0], out max);
+
+                    if (parts.Length > 1)
+                    {
+                        // We need to synchronize the time on both phone and PC so the updated fields get the same timestamps.
+                        int syncTime = 0;
+                        int.TryParse(parts[1], out syncTime);
+                        UnifiedStore.SyncTime = syncTime;
+                    }
+                    else
+                    {
+                        // user is running older version of the PC client.
+                        Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            MessagePrompt.Text = AppResources.OldVersionWarning;
+                        }));
+                        return;
+                    }
+
                     outlookContactCount = max;
                     
                     loader.StartMerge();
@@ -352,11 +371,11 @@ namespace OutlookSyncPhone
                 if (adControl == null)
                 {
                     adControl = new Microsoft.Advertising.Mobile.UI.AdControl();
-                    adControl.Name = "bannerAd1";
+                    adControl.Name = "OutlookSyncBannerAd";
                     adControl.Width = 480;
                     adControl.Height = 80;
-                    adControl.AdUnitId = "10338338";
-                    adControl.ApplicationId = "78e6a089-a787-42a2-9433-88c65eaa5706";
+                    adControl.AdUnitId = "10719352";
+                    adControl.ApplicationId = "ad903a62-ee8d-4947-a540-72da1dec934c";
                     adControl.ErrorOccurred += OnAdControlError;
 
                     AdGrid.Children.Clear();
