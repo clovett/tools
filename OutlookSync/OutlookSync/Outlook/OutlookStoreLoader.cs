@@ -27,7 +27,6 @@ namespace OutlookSync.Model
         Dictionary<string, UnifiedAppointment> appointmentsDeletedLocally = new Dictionary<string, UnifiedAppointment>();
         Dictionary<string, UnifiedAppointment> appointmentsAddedLocally = new Dictionary<string, UnifiedAppointment>();
 
-
         public OutlookStoreLoader()
         {
         }
@@ -90,6 +89,7 @@ namespace OutlookSync.Model
 
                 Log.WriteLine("Loaded {0} contacts", store.Contacts.Count);
 
+#if SUPPORT_APPOINTMENTS
                 // see if user has deleted appointments in outlook
                 foreach (UnifiedAppointment a in store.Appointments.ToArray())
                 {
@@ -103,7 +103,7 @@ namespace OutlookSync.Model
                         store.Appointments.Remove(a);
                     }
                 }
-
+#endif
             }));
 
         }
@@ -182,11 +182,13 @@ namespace OutlookSync.Model
             }
         }
 
-        internal void DeleteContact(string id)
+        internal void DeleteContact(SyncItem s)
         {
+            string id = s.Id;
             UnifiedContact cached = this.store.FindContactById(id);
             if (cached != null)
             {
+                s.Name = cached.DisplayName;
                 this.store.Contacts.Remove(cached);
 
                 ContactItem item = cached.LocalStoreObject as ContactItem;
@@ -198,11 +200,13 @@ namespace OutlookSync.Model
             }
         }
 
-        private void DeleteAppointment(string id)
+        private void DeleteAppointment(SyncItem s)
         {
+            string id = s.Id;
             UnifiedAppointment cached = this.store.FindAppointmentById(id);
             if (cached != null)
             {
+                s.Name = cached.Subject;
                 this.store.Appointments.Remove(cached);
                 AppointmentItem item = cached.LocalStoreObject as AppointmentItem;
                 if (item != null)
@@ -340,7 +344,16 @@ namespace OutlookSync.Model
 
         private void MergeContact(ContactItem contact)
         {
+            if (contact == null)
+            {
+                return ;
+            }
+
             string id = contact.EntryID;
+            if (string.IsNullOrEmpty(id))
+            {
+                return;
+            }
 
             UnifiedContact uc = store.FindContactById(id);
             bool isNew = false;
@@ -354,7 +367,7 @@ namespace OutlookSync.Model
 
             uc.LocalStoreObject = contact;
 
-            UpdateContact(uc, contact);
+            UpdateContact(uc, contact, isNew);
 
             // update the total version number.
             uc.VersionNumber = uc.GetHighestVersionNumber();
@@ -369,7 +382,7 @@ namespace OutlookSync.Model
             }
         }
 
-        private void UpdateContact(UnifiedContact uc, ContactItem contact)
+        private void UpdateContact(UnifiedContact uc, ContactItem contact, bool isNew)
         {
             try
             {
@@ -1043,15 +1056,15 @@ namespace OutlookSync.Model
             {
                 if (item.Change == ChangeType.Delete)
                 {
-                    status.PhoneDeleted.Add(item);
                     if (item.Type == "C")
                     {
-                        DeleteContact(item.Id);
+                        DeleteContact(item);
                     }
                     else
                     {
-                        DeleteAppointment(item.Id);
+                        DeleteAppointment(item);
                     }
+                    status.PhoneDeleted.Add(item);
                 }
                 else if (item.Change == ChangeType.Insert)
                 {

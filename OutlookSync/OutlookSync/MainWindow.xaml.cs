@@ -198,7 +198,9 @@ namespace OutlookSync
             } 
             catch (Exception ex)
             {
-                ShowMessage(string.Format(Properties.Resources.UnknownNetworkingError, ex.Message));
+                UnhandledExceptionWindow uew = new UnhandledExceptionWindow();
+                uew.ErrorMessage = ex.ToString();
+                uew.ShowDialog();
             }      
 
         }

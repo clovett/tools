@@ -45,6 +45,7 @@ namespace Microsoft.Networking
                         var props = adapter.GetIPProperties();
                         var stats = adapter.GetIPStatistics();
                         if (adapter.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && 
+                            props != null && 
                             props.DhcpServerAddresses.Count > 0)
                         {
                             internet = true;

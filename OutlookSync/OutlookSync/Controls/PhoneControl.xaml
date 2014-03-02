@@ -5,61 +5,69 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d"              
-             d:DesignHeight="200" d:DesignWidth="800">
-    <Border Background="White" CornerRadius="3" BorderBrush="Black" BorderThickness="1" Margin="5">
+             d:DesignHeight="400" d:DesignWidth="800">
+    <Border Background="White" CornerRadius="3" BorderBrush="Black" BorderThickness="1" Margin="5" x:Name="WhiteBorder">
         <Border.Effect>
             <DropShadowEffect Color="Gray" />
         </Border.Effect>
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Grid VerticalAlignment="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                    <RowDefinition Height="auto"/>
-                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="auto"/>
+                    </Grid.RowDefinitions>
 
-                <TextBlock x:Name="PhoneName" Text="{Binding Name}" FontSize="24" Margin="10" VerticalAlignment="Top"/>
+                    <TextBlock x:Name="PhoneName" Text="{Binding Name}" FontSize="24" Margin="10" VerticalAlignment="Top"/>
 
-                <Button HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="80" MinHeight="30" x:Name="ConnectButton" Grid.Row="1" Margin="10"
-                    Click="OnConnectClick" Padding="5,0">Sync this phone</Button>
-
-                <Grid Grid.Row="2" >
-                    <Image x:Name="TrustedPhoneImage" Source="/Assets/SecurityLock.png" Width="48" Height="48" HorizontalAlignment="Left" Margin="10"
-                           ToolTip="This is a trusted phone."/>
-                    <Image x:Name="InSyncImage" Source="/Assets/CheckMark.png" Width="48" Height="48" Grid.Row="2" HorizontalAlignment="Left" Margin="10"
+                    <Grid Grid.Row="2" >
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button HorizontalAlignment="Left" VerticalAlignment="Top" MinWidth="80" MinHeight="30" x:Name="ConnectButton" Grid.Row="1" Margin="10"
+                             Click="OnConnectClick" Padding="5,0">Sync this phone</Button>
+                        <Image x:Name="TrustedPhoneImage" Source="/Assets/SecurityLock.png" Width="48" Height="48" HorizontalAlignment="Right" Margin="10" Grid.Column="1"
+                           ToolTip="This is a trusted phone." />
+                        <Image x:Name="InSyncImage" Source="/Assets/CheckMark.png" Width="48" Height="48" Grid.Row="2" HorizontalAlignment="Right" Margin="10" Grid.Column="1"
                            ToolTip="Congratulations this phone is now in sync."/>
+                    </Grid>
                 </Grid>
-            </Grid>
-            <local:SyncProgressControl x:Name="InsertIndicator" 
+                <local:SyncProgressControl x:Name="InsertIndicator" 
                           Grid.Row="0" Grid.Column="1" Margin="20" 
                          SubText="inserted" TileBackground="Green"
                          TileForeground="LightGreen" Count="0"
                          MouseLeftButtonDown="OnIndicatorClick"
                          />
 
-            <local:SyncProgressControl x:Name="UpdateIndicator" 
+                <local:SyncProgressControl x:Name="UpdateIndicator" 
                          Grid.Row="0" Grid.Column="2" Margin="20" 
                          SubText="updated" TileBackground="SteelBlue"
                          TileForeground="LightBlue" Count="0"
                          MouseLeftButtonDown="OnIndicatorClick"
                          />
 
-            <local:SyncProgressControl x:Name="UnchangedIndicator" 
-                          Grid.Row="0" Grid.Column="3" Margin="20"
+                <local:SyncProgressControl x:Name="UnchangedIndicator" 
+                          Grid.Row="0" Grid.Column="3" Margin="20" 
                          SubText="unchanged" TileBackground="Gray"                         
                          TileForeground="White" Count="0"
                          MouseLeftButtonDown="OnIndicatorClick"
                          />
 
-            <local:SyncProgressControl x:Name="DeleteIndicator" 
+                <local:SyncProgressControl x:Name="DeleteIndicator" 
                           Grid.Row="0" Grid.Column="4" Margin="20" 
                          SubText="deleted" TileBackground="Maroon"
                          TileForeground="LightCoral" Count="0"
@@ -67,12 +75,38 @@
                          />
 
 
-            <Border x:Name="ErrorBorder" Grid.Column="1" Grid.ColumnSpan="4" Background="#E0FFFFFF" Visibility="Collapsed">
-                <TextBlock Text="this is an error" x:Name="ErrorMessage" HorizontalAlignment="Center" VerticalAlignment="Center"
+                <Border x:Name="ErrorBorder" Grid.Column="1" Grid.ColumnSpan="4" Background="#E0FFFFFF" Visibility="Collapsed">
+                    <TextBlock Text="this is an error" x:Name="ErrorMessage" HorizontalAlignment="Center" VerticalAlignment="Center"
                            TextWrapping="Wrap" Margin="10"/>
-            </Border>
+                </Border>
 
 
+            </Grid>
+
+            <Path Fill="Green" Grid.Row="1"  x:Name="SyncDetailsBorder" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" StrokeThickness="0">
+                <Path.Data>
+                    <PathGeometry>
+                        <PathGeometry.Figures>
+                            <PathFigure IsClosed="True" StartPoint="248,0">
+                                <ArcSegment  Size="20,20" SweepDirection="Clockwise" RotationAngle="90" Point="228,20"/>
+                                <LineSegment Point="50,20"/>
+                                <ArcSegment  Size="20,20" SweepDirection="Counterclockwise" RotationAngle="90" Point="30,40"/>
+                                <LineSegment Point="30,240"/>
+                                <ArcSegment  Size="20,20" SweepDirection="Counterclockwise" RotationAngle="90" Point="50,260"/>
+                                <LineSegment Point="700,260"/>
+                                <ArcSegment  Size="20,20" SweepDirection="Counterclockwise" RotationAngle="90" Point="720,240"/>
+                                <LineSegment Point="720,40"/>
+                                <ArcSegment  Size="20,20" SweepDirection="Counterclockwise" RotationAngle="90" Point="700,20"/>
+                                <LineSegment Point="368,20"/>
+                                <ArcSegment  Size="20,20" SweepDirection="Clockwise" RotationAngle="90" Point="348,0"/>
+                            </PathFigure>
+                        </PathGeometry.Figures>
+                    </PathGeometry>
+                </Path.Data>
+            </Path>
+            <TextBox Margin="40" Width="340" Height="190" Grid.Row="1" VerticalAlignment="Top" Background="Green" Foreground="LightGreen"
+                     HorizontalAlignment="Left" Visibility="Collapsed" x:Name="SyncDetails" BorderThickness="0"
+                     TextWrapping="Wrap" Text="" />
         </Grid>
     </Border>
 </UserControl>

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using System.Xml.Linq;
 
 namespace OutlookSync.Model
 {
@@ -235,7 +236,8 @@ namespace OutlookSync.Model
 
                     this.Name = phoneName;
                     this.Id = phoneId;
-                    response = new Message() { Command = "Count", Parameters = store.Contacts.Count.ToString() };
+
+                    response = new Message() { Command = "Count", Parameters = store.Contacts.Count.ToString() + "," + UnifiedStore.SyncTime };
                     break;
 
                 case "Disconnect":
@@ -333,11 +335,12 @@ namespace OutlookSync.Model
                 if (!string.IsNullOrEmpty(id))
                 {
                     UnifiedContact cached = this.store.FindContactById(fromPhone.OutlookEntryId);
+                    bool inserted = false;
                     if (cached == null)
                     {
                         // Oh, user added a new contact then!
+                        inserted = true;
                         cached = fromPhone;
-                        this.store.Contacts.Add(cached);
                     }
                     else
                     {
@@ -349,8 +352,16 @@ namespace OutlookSync.Model
 
                     // push this to Outlook.
                     string newId = loader.UpdateContact(cached);
-
-                    SyncStatus.PhoneUpdated.Add(new SyncItem(cached));
+                    if (inserted)
+                    {
+                        cached.OutlookEntryId = newId;
+                        SyncStatus.PhoneInserted.Add(new SyncItem(cached));
+                        this.store.Contacts.Add(cached);
+                    }
+                    else
+                    {
+                        SyncStatus.PhoneUpdated.Add(new SyncItem(cached));
+                    }
                     OnPropertyChanged("SyncStatus");
 
                     return new Message() { Command = "UpdatedContact", Parameters = id + "=>" + newId };

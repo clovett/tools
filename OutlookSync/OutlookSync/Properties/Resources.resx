@@ -160,7 +160,7 @@
     <value>Waiting for new phone app version</value>
   </data>
   <data name="WaitingForPhone" xml:space="preserve">
-    <value>Waiting for you to launch Outlook Sync on your phone</value>
+    <value>Waiting for you to launch the 'Sync for Outlook' app on your phone</value>
   </data>
   <data name="WaitingForRestart" xml:space="preserve">
     <value>Waiting for you to restart this app</value>
