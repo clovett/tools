@@ -34,8 +34,8 @@
     <ProductName>Outlook Sync</ProductName>
     <PublisherName>Lovett Software</PublisherName>
     <SuiteName>Outlook Sync</SuiteName>
-    <ApplicationRevision>24</ApplicationRevision>
-    <ApplicationVersion>1.2.0.%2a</ApplicationVersion>
+    <ApplicationRevision>1</ApplicationRevision>
+    <ApplicationVersion>1.2.2.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
