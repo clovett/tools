@@ -76,6 +76,8 @@ namespace FoscamExplorer
                 ComboBoxWifi.SelectedIndex = MergeWifiItem(network);
             }
 
+            TextBoxIp.Text = device.CameraInfo.IpAddress;
+
             StartWifiScan();
         }
 

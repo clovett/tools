@@ -43,16 +43,21 @@
                     <StackPanel >
 
                         <!-- Wifi -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Wifi network:" VerticalAlignment="Center" Margin="10" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="IP Address:" VerticalAlignment="Center" Margin="10" />
+                        <TextBox x:Name="TextBoxIp" Margin="10" HorizontalAlignment="Left" Width="250" IsReadOnly="True"/>
 
-                        <ComboBox x:Name="ComboBoxWifi"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"
+
+                        <!-- Wifi -->
+                        <TextBlock Text="Wifi network:" VerticalAlignment="Center" Margin="10" />
+
+                        <ComboBox x:Name="ComboBoxWifi"  Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"
                           SelectionChanged="OnWifiSelectionChanged" SelectedItem="{Binding WifiNetwork}"
                           />
 
                         <!-- Wifi password -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Wifi password:" VerticalAlignment="Center" Margin="10" />
+                        <TextBlock  Text="Wifi password:" VerticalAlignment="Center" Margin="10" />
 
-                        <PasswordBox x:Name="PasswordBoxWifi"  Grid.Row="2" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"  
+                        <PasswordBox x:Name="PasswordBoxWifi"  Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"  
                              IsPasswordRevealButtonEnabled="True" GotFocus="OnPasswordGotFocus"
                              Password="{Binding WifiPassword, Mode=TwoWay}"
                              PasswordChanged="OnWifiPasswordChanged"/>

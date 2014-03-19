@@ -82,7 +82,7 @@
 
                     <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
 
-                    <Button Click="OnChangeUserPassword">Change Camera Password</Button>
+                    <Button x:Name="PasswordButton" Click="OnChangeUserPassword">Change Camera Password</Button>
                 </StackPanel>
             </Grid>
         </Grid>

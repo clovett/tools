@@ -39,6 +39,8 @@ namespace FoscamExplorer.Foscam
                 ComboBoxBrightness.Items.Add(i.ToString());
             }
             this.Loaded += CameraSettingsPage_Loaded;
+
+            PasswordButton.IsEnabled = false;
         }
 
         public FoscamDevice FoscamDevice
@@ -116,6 +118,7 @@ namespace FoscamExplorer.Foscam
             if (FoscamDevice != null)
             {
                 this.deviceParams = await device.GetParams();
+                PasswordButton.IsEnabled = true;
 
                 updating = true;
                 this.ComboBoxFps.SelectedItem = GetFpsItem(this.device.CameraInfo.Fps).Caption;

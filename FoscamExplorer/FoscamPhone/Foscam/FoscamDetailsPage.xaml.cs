@@ -215,7 +215,7 @@ namespace FoscamExplorer.Foscam
                 case "Fps":
                     Reconnect();
                     break;
-                case "Flipped":
+                case "Rotation":
                     OnRotationChanged();
                     break;
                 case "LastFrameTime":
@@ -504,12 +504,12 @@ namespace FoscamExplorer.Foscam
 
         private void OnRotateClick(object sender, EventArgs e)
         {
-            device.CameraInfo.Flipped = !device.CameraInfo.Flipped;
+            device.CameraInfo.Rotation = (device.CameraInfo.Rotation == 0 ? 180 : 0);
         }
 
         private void OnRotationChanged()
         {
-            bool flip = device.CameraInfo.Flipped;
+            bool flip = device.CameraInfo.Rotation == 180;
             if (flip)
             {
                 CameraImage.RenderTransform = new RotateTransform() { Angle = 180, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };

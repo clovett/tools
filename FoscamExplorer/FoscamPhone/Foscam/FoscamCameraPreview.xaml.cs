@@ -85,7 +85,7 @@ namespace FoscamExplorer.Foscam
 
         private void OnRotationChanged()
         {
-            bool flip = device.CameraInfo.Flipped;
+            bool flip = device.CameraInfo.Rotation == 180;
             if (flip)
             {
                 CameraImage.RenderTransform = new RotateTransform() { Angle = 180, CenterX = CameraImage.Width / 2, CenterY = CameraImage.Height / 2 };
@@ -124,7 +124,7 @@ namespace FoscamExplorer.Foscam
                 case "Fps":
                     DelayStartVideo(TimeSpan.FromMilliseconds(250));
                     break;
-                case "Flipped":
+                case "Rotation":
                     OnRotationChanged();
                     break;
                 case "LastPingTime":
