@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes />
+  <Links />
+  <Properties>
+    <Property Id="Expression" DataType="System.String" />
+    <Property Id="GroupLabel" DataType="System.String" />
+    <Property Id="IsEnabled" DataType="System.Boolean" />
+    <Property Id="TargetType" DataType="System.Type" />
+    <Property Id="Value" DataType="System.String" />
+    <Property Id="ValueLabel" DataType="System.String" />
+  </Properties>
+  <Styles>
+    <Style TargetType="Node" GroupLabel="Item" ValueLabel="True">
+      <Condition Expression="HasCategory('Item')" />
+      <Setter Property="Icon" Value="Action" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Component" ValueLabel="True">
+      <Condition Expression="HasCategory('Component')" />
+      <Setter Property="Background" Value="#FF7287BA" />
+      <Setter Property="Icon" Value="Microsoft.VisualStudio.Interface.Public" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Feature" ValueLabel="True">
+      <Condition Expression="HasCategory('Feature')" />
+      <Setter Property="Background" Value="#FFCE8686" />
+      <Setter Property="Icon" Value="Microsoft.VisualStudio.Struct.Public" />
+    </Style>
+    <Style TargetType="Node" GroupLabel="Product" ValueLabel="True">
+      <Condition Expression="HasCategory('Product')" />
+      <Setter Property="Background" Value="#FF70B675" />
+      <Setter Property="Icon" Value="CodeSchema_LocalExpression" />
+    </Style>
+  </Styles>
+</DirectedGraph>
