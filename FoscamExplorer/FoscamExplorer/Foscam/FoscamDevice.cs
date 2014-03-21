@@ -16,6 +16,7 @@ using Windows.Storage.Streams;
 using CoreDispatcher = System.Windows.Threading.Dispatcher;
 #else
 using Windows.UI.Core;
+using Windows.UI.Xaml.Media.Imaging;
 #endif
 
 namespace FoscamExplorer
@@ -287,6 +288,30 @@ namespace FoscamExplorer
             return null;
         }
 
+        public async void GetSnapshot()
+        {
+            string requestStr = String.Format("http://{0}/snapshot.cgi", CameraInfo.IpAddress);
+            
+            try
+            {
+                using (var stream = await GetFileRequest(requestStr))
+                {
+                    var frame = await WpfUtilities.LoadImageAsync(stream);
+
+                    // tell whoever's listening that we have a frame to draw
+                    if (FrameAvailable != null)
+                    {
+                        FrameAvailable(this, new FrameReadyEventArgs { BitmapSource = frame });
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                OnError(this, new ErrorEventArgs() { Message = e.Message });
+                Log.WriteLine("{0}: error getting snapshot: {1}", this.ToString(), e.ToString());
+            }
+        }
+
         /// <summary>
         /// Start receiving jpeg frames via the FrameAvailable event.
         /// </summary>
@@ -454,6 +479,41 @@ namespace FoscamExplorer
 
             return result;
         }
+
+
+        private async Task<Stream> GetFileRequest(string url)
+        {
+            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " + url);
+
+            dynamic map = new object();
+
+            HttpClientHandler settings = new HttpClientHandler();
+            settings.Credentials = GetCredentials();
+
+            HttpClient client = new HttpClient(settings);
+            using (HttpResponseMessage msg = await client.GetAsync(new Uri(url), HttpCompletionOption.ResponseHeadersRead))
+            {
+                if (msg.StatusCode == HttpStatusCode.OK)
+                {
+                    HttpContent content = msg.Content;
+                    using (Stream stream = await content.ReadAsStreamAsync())
+                    {
+                        MemoryStream ms = new MemoryStream();
+                        byte[] block = new byte[64000];
+                        int len = 0;
+                        while ((len = stream.Read(block, 0, block.Length)) > 0)
+                        {
+                            ms.Write(block, 0, len);
+                        }
+                        ms.Seek(0, SeekOrigin.Begin);
+                        return ms;
+                    }
+                }
+            }
+
+            return null;
+        }
+
 
         void OnError(object sender, ErrorEventArgs e)
         {

@@ -74,7 +74,8 @@ namespace FoscamExplorer
                 }
                 else
                 {
-                    device.StartJpegStream(this.Dispatcher);
+                    device.GetSnapshot();
+                    //device.StartJpegStream(this.Dispatcher);
                 }
                 OnRotationChanged();
             }
@@ -121,7 +122,8 @@ namespace FoscamExplorer
                 delayVideoTimer.Tick += new EventHandler<object>((s, e) =>
                 {
                     delayVideoTimer.Stop();
-                    device.StartJpegStream(this.Dispatcher);
+                    device.GetSnapshot();
+                    //device.StartJpegStream(this.Dispatcher);
                     delayVideoTimer = null;
                 });
             }

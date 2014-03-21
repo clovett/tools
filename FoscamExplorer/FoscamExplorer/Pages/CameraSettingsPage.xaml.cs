@@ -116,6 +116,7 @@ namespace FoscamExplorer
                 this.ComboBoxFps.SelectedItem = GetFpsItem(this.device.CameraInfo.Fps);
                 this.ComboBoxBrightness.SelectedItem = (int)(this.device.CameraInfo.Brightness / 16);
                 this.ComboBoxContrast.SelectedItem = (int)this.device.CameraInfo.Contrast;
+                this.FirmwareVersion.Text = "Firmware version " + this.device.CameraInfo.SystemVersion;
                 updating = false;
             }
 

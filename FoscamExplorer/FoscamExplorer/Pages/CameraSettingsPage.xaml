@@ -24,6 +24,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="80"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Back button and page title -->
@@ -69,6 +70,10 @@
                 </Grid>
             </ScrollViewer>
 
+            <Grid Grid.Row="2">
+                <TextBlock Text="Version 11.1.1.1" x:Name="FirmwareVersion"
+                           Margin="30,10" Foreground="LightGray"/>
+            </Grid>
             <VisualStateManager.VisualStateGroups>
 
                 <!-- Visual states reflect the application's view state -->

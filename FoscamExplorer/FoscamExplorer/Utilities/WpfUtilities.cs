@@ -25,6 +25,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.UI.Xaml.Controls;
 using Windows.ApplicationModel;
 using Windows.Foundation;
+using System.Diagnostics;
 #endif
 
 namespace FoscamExplorer
@@ -103,22 +104,30 @@ namespace FoscamExplorer
             }
             await Task.Delay(1);
 #else
-            var stream = await ConvertStream(imageStream);
+            WriteableBitmap bmp = null;
+            try
+            {
+                var stream = await ConvertStream(imageStream);
 
-            BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
+                BitmapDecoder decoder = await BitmapDecoder.CreateAsync(stream);
 
-            // convert to a writable bitmap so we can get the PixelBuffer back out later...
-            // in case we need to edit and/or re-encode the image.
-            WriteableBitmap bmp = new WriteableBitmap((int)decoder.PixelHeight, (int)decoder.PixelWidth);
+                // convert to a writable bitmap so we can get the PixelBuffer back out later...
+                // in case we need to edit and/or re-encode the image.
+                bmp = new WriteableBitmap((int)decoder.PixelHeight, (int)decoder.PixelWidth);
 
-            // remember the format of this image
-            PixelBufferObject.SetBitmapPixelFormat(bmp, decoder.BitmapPixelFormat);
-            PixelBufferObject.SetBitmapAlphaMode(bmp, decoder.BitmapAlphaMode);
+                // remember the format of this image
+                PixelBufferObject.SetBitmapPixelFormat(bmp, decoder.BitmapPixelFormat);
+                PixelBufferObject.SetBitmapAlphaMode(bmp, decoder.BitmapAlphaMode);
 
-            stream.Seek(0);
-            bmp.SetSource(stream);
+                stream.Seek(0);
+                bmp.SetSource(stream);
 
-            imageStream.Dispose();
+                imageStream.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
 #endif
             return bmp;
         }
