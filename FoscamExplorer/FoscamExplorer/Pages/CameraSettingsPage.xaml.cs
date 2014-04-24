@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -182,6 +183,25 @@ namespace FoscamExplorer
                     device.CameraInfo.Contrast = (byte)newValue;
                 }
             }
+        }
+
+        private async void OnRebootClick(object sender, RoutedEventArgs e)
+        {
+            Button b = (Button)sender;
+            b.IsEnabled = false;
+            try
+            {
+                await device.RebootDevice();
+            }
+            finally
+            {
+                b.IsEnabled = true;
+            }
+        }
+
+        private void OnUpdateClick(object sender, RoutedEventArgs e)
+        {
+            // todo
         }
 
     }

@@ -64,6 +64,10 @@
                                   SelectionChanged="OnContrastChanged"
                           />
 
+                        <StackPanel Orientation="Horizontal">
+                            <Button Margin="10" Click="OnRebootClick">Reboot Camera</Button>
+                            <Button x:Name="ButtonUpdateFirmware" Margin="10" Click="OnUpdateClick">Update Firmware</Button>
+                        </StackPanel>
                         <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
 
                     </StackPanel>

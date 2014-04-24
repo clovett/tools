@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,7 @@ namespace FoscamExplorer
         public FoscamCameraPreview()
         {
             this.InitializeComponent();
-            this.Unloaded += FoscamCameraPreview_Unloaded;
+            this.Unloaded += FoscamCameraPreview_Unloaded;            
         }
 
         void FoscamCameraPreview_Unloaded(object sender, RoutedEventArgs e)
@@ -34,6 +35,8 @@ namespace FoscamExplorer
             device.Error -= OnDeviceError;
             device.FrameAvailable -= OnFrameAvailable;
             device.StopStream();
+            unloaded = true;
+            StopUpdateTimer();
         }
 
         public CameraInfo Camera
@@ -61,41 +64,29 @@ namespace FoscamExplorer
                 device.StopStream();
             }
 
-
             if (newCamera != null)
             {
                 device = new FoscamDevice() { CameraInfo = newCamera };
                 device.Error += OnDeviceError;
                 device.FrameAvailable += OnFrameAvailable;
                 newCamera.PropertyChanged += OnCameraPropertyChanged;
-                if (newCamera.StaticImageUrl != null)
-                {
-                    UpdateStaticImage();
-                }
-                else
-                {
-                    device.GetSnapshot();
-                    //device.StartJpegStream(this.Dispatcher);
-                }
+                StartUpdateSnapshot(true);
                 OnRotationChanged();
+                if (device.CameraInfo.LastFrame != null)
+                {
+                    CameraImage.Source = device.CameraInfo.LastFrame as ImageSource;
+                }
             }
         }
 
-        private void UpdateStaticImage()
+        private void ShowStaticImage(string appxUri)
         {
+            // Load some static image to show instead of camera snapshot - used in error cases.
             CameraInfo info = device.CameraInfo;
-            CameraImage.Source = new BitmapImage(new Uri(info.StaticImageUrl));
-            ShowError(info.StaticError);
-            ErrorBorder.Background = new SolidColorBrush(Color.FromArgb(0xC0, 0, 0, 0));
-        }
+            CameraImage.Source = new BitmapImage(new Uri(appxUri));
 
-        void Reconnect()
-        {
-            if (this.device != null)
-            {
-                device.StopStream();
-                device.StartJpegStream(this.Dispatcher);
-            }
+            // make sure static image has full background in case it is partially transparent.
+            ErrorBorder.Background = new SolidColorBrush(Color.FromArgb(0xC0, 0, 0, 0));
         }
 
         private void OnRotationChanged()
@@ -111,25 +102,60 @@ namespace FoscamExplorer
             }
         }
 
-        DispatcherTimer delayVideoTimer;
+        DispatcherTimer updateTimer;
 
-        void DelayStartVideo(TimeSpan delay)
+        void StartUpdateSnapshot(bool imediate)
         {
-            if (delayVideoTimer == null)
+            if (updateTimer == null)
             {
-                delayVideoTimer = new DispatcherTimer();
-                delayVideoTimer.Interval = delay;
-                delayVideoTimer.Tick += new EventHandler<object>((s, e) =>
-                {
-                    delayVideoTimer.Stop();
-                    device.GetSnapshot();
-                    //device.StartJpegStream(this.Dispatcher);
-                    delayVideoTimer = null;
-                });
+                updateTimer = new DispatcherTimer();
+                updateTimer.Interval = TimeSpan.FromMilliseconds(1000);
+                updateTimer.Tick += UpdateSnapshot;
             }
-
-            delayVideoTimer.Start();
+            if (imediate)
+            {
+                UpdateSnapshot(this, null);
+            }
+            updateTimer.Start();
         }
+
+        bool unloaded;
+
+        async void UpdateSnapshot(object sender, object args)
+        {
+            updateTimer.Stop();
+
+            if (device != null)
+            {
+                var info = device.CameraInfo;
+                if (info.Rebooting || info.UpdatingFirmware)
+                {
+                    ShowStaticImage("ms-appx:/Assets/Gear.png");
+                }
+                else if (info.StaticImageUrl != null)
+                {
+                    ShowStaticImage(info.StaticImageUrl);
+                    ShowError(info.StaticError);
+                }
+                else
+                {
+                    await device.GetSnapshot();
+                }
+            }
+            if (!unloaded)
+            {
+                updateTimer.Start();
+            }
+        }
+
+        void StopUpdateTimer()
+        {
+            if (updateTimer != null)
+            {
+                updateTimer.Stop();
+            }
+        }
+
 
         void OnCameraPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
@@ -138,7 +164,7 @@ namespace FoscamExplorer
                 case "UserName":
                 case "Password":
                 case "Fps":
-                    DelayStartVideo(TimeSpan.FromMilliseconds(250));
+                    StartUpdateSnapshot(false);
                     break;
                 case "Flipped":
                     OnRotationChanged();
@@ -146,12 +172,17 @@ namespace FoscamExplorer
                 case "LastPingTime":
                     if (ErrorBorder.Visibility == Windows.UI.Xaml.Visibility.Visible && lastFrameTime + 1000 < device.CameraInfo.LastPingTime)
                     {
-                        DelayStartVideo(TimeSpan.FromMilliseconds(250));
+                        StartUpdateSnapshot(false);
                     }
                     break;
                 case "StaticImageUrl":
+                    ShowStaticImage(device.CameraInfo.StaticImageUrl);
+                    break;
                 case "StaticError":
-                    UpdateStaticImage();
+                    ShowError(device.CameraInfo.StaticError);
+                    break;
+                case "Unauthorized":
+                    CheckUnauthorized();
                     break;
             }
             
@@ -161,22 +192,44 @@ namespace FoscamExplorer
 
         void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
-            lastFrameTime = Environment.TickCount;
-            HideError();
-            CameraImage.Source = e.BitmapSource;
+            if (e.BitmapSource == null)
+            {
+                CheckUnauthorized();
+            }
+            else
+            {
+                lastFrameTime = Environment.TickCount;
+                HideError();
+                CameraImage.Source = e.BitmapSource;
+                device.CameraInfo.LastFrame = e.BitmapSource;
+            }
+        }
+
+        void CheckUnauthorized()
+        {
+            if (device != null && device.CameraInfo.Unauthorized)
+            {
+                var nowait = this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(new Action(() =>
+                {
+                    CameraImage.Source = new BitmapImage(new Uri("ms-appx:/Assets/Padlock.png", UriKind.RelativeOrAbsolute));
+                })));
+            }
         }
 
         void OnDeviceError(object sender, ErrorEventArgs e)
         {
             if (e.HttpResponse == System.Net.HttpStatusCode.Unauthorized)
             {
-                CameraImage.Source = new BitmapImage(new Uri("ms-appx:/Assets/Padlock.png", UriKind.RelativeOrAbsolute));
+                if (device != null)
+                {
+                    device.CameraInfo.Unauthorized = true;
+                }
             }
             else if (e.HttpResponse == System.Net.HttpStatusCode.ServiceUnavailable && lastFrameTime != 0 && lastFrameTime + 1000 < Environment.TickCount)
             {
                 // one retry - this handles the case where the computer comes out of sleep since we get no other events telling us this.
                 lastFrameTime = Environment.TickCount;
-                Reconnect();
+                StartUpdateSnapshot(false);
             }
             else
             {

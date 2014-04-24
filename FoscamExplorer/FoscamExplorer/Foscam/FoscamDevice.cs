@@ -19,7 +19,7 @@ using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-namespace FoscamExplorer
+namespace FoscamExplorer.Foscam
 {
     public enum CameraDirection
     {
@@ -116,21 +116,21 @@ namespace FoscamExplorer
 
         public static void StartFindDevices()
         {
-            if (cancellationSource == null || cancellationSource.IsCancellationRequested)
+            if (findDevicesCancellationSource == null || findDevicesCancellationSource.IsCancellationRequested)
             {
-                cancellationSource = new CancellationTokenSource();
+                findDevicesCancellationSource = new CancellationTokenSource();
                 var result = Task.Run(new Action(FindDevices));
             }
         }
 
-        static CancellationTokenSource cancellationSource;
+        static CancellationTokenSource findDevicesCancellationSource;
         static ManualResetEvent cancelled = new ManualResetEvent(false);
         static bool findRunning;
 
         private static void FindDevices()
         {
             findRunning = true;
-            var cancellationToken = cancellationSource.Token;
+            var cancellationToken = findDevicesCancellationSource.Token;
             while (!cancellationToken.IsCancellationRequested)
             {
                 // send out the UDP ping every few seconds.
@@ -168,9 +168,9 @@ namespace FoscamExplorer
 
         public static void StopFindingDevices()
         {
-            if (cancellationSource != null)
+            if (findDevicesCancellationSource != null)
             {
-                cancellationSource.Cancel();
+                findDevicesCancellationSource.Cancel();
                 // wait for FindDevices to terminate so we can tear down the sockets cleanly.
                 if (findRunning)
                 {
@@ -212,7 +212,7 @@ namespace FoscamExplorer
             }
         }
 
-        static async void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
+        static void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
             var remoteHost = args.RemoteAddress;
 
@@ -288,7 +288,7 @@ namespace FoscamExplorer
             return null;
         }
 
-        public async void GetSnapshot()
+        public async Task GetSnapshot()
         {
             string requestStr = String.Format("http://{0}/snapshot.cgi", CameraInfo.IpAddress);
             
@@ -297,13 +297,17 @@ namespace FoscamExplorer
                 using (var stream = await GetFileRequest(requestStr))
                 {
                     var frame = await WpfUtilities.LoadImageAsync(stream);
+                    if (frame != null)
+                    {
+                        this.CameraInfo.Unauthorized = false;
+                    }
 
                     // tell whoever's listening that we have a frame to draw
                     if (FrameAvailable != null)
                     {
                         FrameAvailable(this, new FrameReadyEventArgs { BitmapSource = frame });
                     }
-                }
+                }                
             }
             catch (Exception e)
             {
@@ -427,6 +431,28 @@ namespace FoscamExplorer
             return result.GetValue<string>("Error");
         }
 
+        public async Task UploadFirmware(Stream binFile)
+        {
+            CameraInfo.UpdatingFirmware = true;
+            try
+            {
+                string requestStr = String.Format("http://{0}/upgrade_firmware.cgi", CameraInfo.IpAddress);
+                await PutFileRequest(requestStr, binFile);
+            }
+            finally
+            {
+                // actually, let's wait for next ping to succeed which means the reboot is finished.
+                // CameraInfo.UpdatingFirmware = false;
+            }
+        }
+
+        public async Task RebootDevice()
+        {
+            CameraInfo.Rebooting = true;
+            string requestStr = String.Format("http://{0}/reboot.cgi", CameraInfo.IpAddress);
+            await SendCgiRequest(requestStr);
+        }
+
         private async Task<PropertyBag> SendCgiRequest(string url)
         {
             Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " +  url);
@@ -509,9 +535,43 @@ namespace FoscamExplorer
                         return ms;
                     }
                 }
+                else if (msg.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    this.CameraInfo.Unauthorized = true;
+                }
             }
 
             return null;
+        }
+
+        private async Task PutFileRequest(string url, Stream fileContent)
+        {
+            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " + url);
+
+            dynamic map = new object();
+
+            HttpClientHandler settings = new HttpClientHandler();
+            settings.Credentials = GetCredentials();
+
+            HttpContent content = new StreamContent(fileContent);
+
+            HttpClient client = new HttpClient(settings);
+            using (HttpResponseMessage msg = await client.PostAsync(new Uri(url), content))
+            {
+                if (msg.StatusCode == HttpStatusCode.OK)
+                {
+                    // great!
+                }
+                else if (msg.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    this.CameraInfo.Unauthorized = true;
+                }
+                else
+                {
+                    // upload failed... so now what?
+                    throw new Exception("File upload to FoscamDevice failed");
+                }
+            }
         }
 
 
@@ -530,8 +590,10 @@ namespace FoscamExplorer
 
         void OnFrameReady(object sender, FrameReadyEventArgs e)
         {
-            this.CameraInfo.Unauthorized = false;
-
+            if (e.BitmapSource != null)
+            {
+                this.CameraInfo.Unauthorized = false;
+            }
             if (FrameAvailable != null)
             {
                 FrameAvailable(sender, e);

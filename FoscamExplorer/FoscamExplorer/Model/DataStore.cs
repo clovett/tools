@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -65,6 +66,7 @@ namespace FoscamExplorer
             }
 
             // new camera
+            cam.IsNew = true;
             Cameras.Add(cam);
 
             return cam;
@@ -101,23 +103,33 @@ namespace FoscamExplorer
         }
 
         bool saving;
+        bool savePending;
 
-        public async Task SaveAsync(CacheFolder cache)
+        public async void SaveAsync(CacheFolder cache)
         {
-            try
+            savePending = true;
+            if (!saving)
             {
-                if (!saving)
+                saving = true;
+                try
                 {
-                    saving = true;
+                    savePending = false;
                     Log.WriteLine("Saving DataStore at time : " + DateTime.Now.ToString());
                     IsolatedStorage<DataStore> store = new IsolatedStorage<DataStore>(cache);
                     await store.SaveToFileAsync(DataFile, this);
+                    if (savePending)
+                    {
+                        SaveAsync(cache);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.WriteLine("Error saving DataStore: " + ex.Message);
+                }
+                finally
+                {
                     saving = false;
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.WriteLine("Error saving DataStore: " + ex.Message);
             }
         }
 
@@ -129,6 +141,7 @@ namespace FoscamExplorer
         private string name;
         private string userName;
         private string sysVersion;
+        private string webUiVersion;
         private string password;
         private string address;
         private bool unauthorized;
@@ -142,7 +155,9 @@ namespace FoscamExplorer
         private int lastFrame;
         private string imageUrl;
         private string error;
-
+        private bool isNew;
+        private bool updating;
+        private bool rebooting;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -178,6 +193,21 @@ namespace FoscamExplorer
                 {
                     this.sysVersion = value;
                     OnPropertyChanged("SystemVersion");
+                }
+            }
+        }
+
+
+        [DataMember]
+        public string WebUiVersion
+        {
+            get { return webUiVersion; }
+            set
+            {
+                if (this.webUiVersion != value)
+                {
+                    this.webUiVersion = value;
+                    OnPropertyChanged("WebUiVersion");
                 }
             }
         }
@@ -323,6 +353,20 @@ namespace FoscamExplorer
             }
         }
 
+        [DataMember]
+        public bool IsNew
+        {
+            get { return this.isNew; }
+            set
+            {
+                if (this.isNew != value)
+                {
+                    this.isNew = value;
+                    OnPropertyChanged("IsNew");
+                }
+            }
+        }
+
         /// <summary>
         /// The frames per second, a number from 0 to 23.  Where 0 is full speed and 23 is 1 frame every 5 seconds.
         /// </summary>
@@ -368,6 +412,38 @@ namespace FoscamExplorer
             }
         }
 
+        [XmlIgnore]
+        [IgnoreDataMember]
+        public bool UpdatingFirmware
+        {
+            get { return this.updating; }
+            set
+            {
+                if (this.updating != value)
+                {
+                    this.updating = value;
+                    OnPropertyChanged("Updating");
+                }
+            }
+        }
+
+        [XmlIgnore]
+        [IgnoreDataMember]
+        public bool Rebooting
+        {
+            get { return this.rebooting; }
+            set
+            {
+                if (this.rebooting != value)
+                {
+                    this.rebooting = value;
+                    OnPropertyChanged("Rebooting");
+                }
+            }
+        }
+
+        [XmlIgnore]
+        [IgnoreDataMember]
         public string StaticImageUrl
         {
             get { return this.imageUrl; }
@@ -381,6 +457,8 @@ namespace FoscamExplorer
             }
         }
 
+        [XmlIgnore]
+        [IgnoreDataMember]
         public string StaticError
         {
             get { return this.error; }
@@ -393,5 +471,14 @@ namespace FoscamExplorer
                 }
             }
         }
+
+        // Cache of last image fetched.
+        [XmlIgnore]
+        [IgnoreDataMember]
+        public object LastFrame { get; set; }
+
+        [XmlIgnore]
+        [IgnoreDataMember]
+        public  Update UpdateAvailable { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -68,7 +69,7 @@ namespace FoscamExplorer
 
         private void ShowParameters(PropertyBag props)
         {           
-            PasswordBoxWifi.Password = device.CameraInfo.WifiPassword;
+            PasswordBoxWifi.Password = "" + device.CameraInfo.WifiPassword;
 
             var network = device.CameraInfo.WifiNetwork;
             if (network != null)
@@ -195,11 +196,11 @@ namespace FoscamExplorer
                 if (camera != this.device.CameraInfo)
                 {
                     FoscamDevice temp = new FoscamDevice() { CameraInfo = camera };
-                    if (temp.CameraInfo.WifiNetwork == null || temp.CameraInfo.WifiNetwork.SSID != info.SSID || camera.WifiPassword != device.CameraInfo.WifiPassword)
+                    if (camera.WifiNetwork == null || camera.WifiNetwork.SSID != info.SSID || camera.WifiPassword != device.CameraInfo.WifiPassword)
                     {
                         camera.WifiPassword = device.CameraInfo.WifiPassword;
                         temp.CameraInfo.WifiNetwork = info;
-                        await device.UpdateWifiSettings();
+                        await temp.UpdateWifiSettings();
                     }
                 }
             }

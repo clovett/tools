@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Windows.Foundation;
@@ -131,14 +132,7 @@ namespace FoscamExplorer
             device.FrameAvailable += OnFrameAvailable;
             camera.PropertyChanged += OnCameraPropertyChanged;
 
-            if (camera.StaticImageUrl != null)
-            {
-                UpdateStaticImage();
-            }
-            else
-            {
-                device.StartJpegStream(this.Dispatcher);
-            }      
+            this.Reconnect();
 
             this.DataContext = camera;
 
@@ -166,11 +160,12 @@ namespace FoscamExplorer
             }
         }
 
-        private void UpdateStaticImage()
+        private void ShowStaticImage(string uri)
         {
             CameraInfo info = device.CameraInfo;
-            CameraImage.Source = new BitmapImage(new Uri(info.StaticImageUrl));
+            CameraImage.Source = new BitmapImage(new Uri(uri));
             ShowError(info.StaticError);
+            // give full background in case image is partially transparent.
             ErrorBorder.Background = new SolidColorBrush(Color.FromArgb(0xC0, 0, 0, 0));
         }
 
@@ -179,7 +174,21 @@ namespace FoscamExplorer
             if (device != null)
             {
                 device.StopStream();
-                device.StartJpegStream(this.Dispatcher);
+
+                var camera = device.CameraInfo;
+                if (camera.StaticImageUrl != null)
+                {
+                    ShowStaticImage(camera.StaticImageUrl);
+                    ShowError(camera.StaticError);
+                }
+                else if (camera.UpdatingFirmware || camera.Rebooting)
+                {
+                    ShowStaticImage("ms-appx:/Assets/Gear.png");
+                }
+                else
+                {
+                    device.StartJpegStream(this.Dispatcher);
+                }      
             }
         }
 
@@ -289,9 +298,12 @@ namespace FoscamExplorer
             }
         }
 
-        async Task Save()
+        void Save()
         {
-            await DataStore.Instance.SaveAsync(((FoscamExplorer.App)App.Current).CacheFolder); ;
+            var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, new Windows.UI.Core.DispatchedHandler(() =>
+            {
+                DataStore.Instance.SaveAsync(((FoscamExplorer.App)App.Current).CacheFolder);
+            }));
         }
 
         private void ShowParameters(PropertyBag props)
@@ -371,6 +383,9 @@ namespace FoscamExplorer
                 case "UserName":
                 case "Password":
                 case "Fps":
+                case "Rebooting":
+                case "UpdatingFirmware":
+                case "StaticImageUrl":
                     Reconnect();
                     break;
                 case "Rotation":
@@ -383,28 +398,48 @@ namespace FoscamExplorer
             }
             
             // save the changes
-            var nowait = Save();
+            Save();
         }
 
         int lastFrameTime;
-        int lastSaveTime;
+        int lastCheckTime;
         int imageIndex;
+        int nextCheck = 0;
 
-        void OnFrameAvailable(object sender, FrameReadyEventArgs e)
+        async void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
             lastFrameTime = Environment.TickCount;
+
+            var img = e.BitmapSource;
+            
             CameraImage.Source = e.BitmapSource;
 
-            if (lastSaveTime + 10000 < lastFrameTime)
+            if (img != null) 
             {
-                SaveFrame(e.BitmapSource);
-                lastSaveTime = Environment.TickCount;
+                device.CameraInfo.LastFrame = img;
+            }
+
+            if (lastCheckTime + nextCheck < lastFrameTime)
+            {
+                lastCheckTime = Environment.TickCount;
+                var properties = await device.GetStatus();
+                // device current alarm status，0=no alarm；1=motion detection alarm；2=input alarm；3=voice detection alarm
+                double alarm = (double)properties["alarm_status"];
+                if (alarm == 1)
+                {
+                    nextCheck = 60000; // takes a minute for alarm to clear.
+                    SaveFrame(e.BitmapSource);
+                }
+                else
+                {
+                    nextCheck = 1000;
+                }
             }
         }
 
         private async void SaveFrame(BitmapSource bitmapSource)
         {
-            string fileName = "snap" + imageIndex++ + ".png";
+            string fileName = "snapshots\\snap" + imageIndex++ + ".png";
             using (var stream = await ((FoscamExplorer.App)App.Current).CacheFolder.SaveFileAsync(fileName))
             {
                 await WpfUtilities.SaveImageAsync(bitmapSource, stream);

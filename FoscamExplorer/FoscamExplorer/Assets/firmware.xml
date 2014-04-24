@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!-- See http://foscam.us/forum/firmware-update-information-t9417.html -->
+<Firmware>
+  <Updates>
+    <Update for="FI8910W, FI8918W, FI8916W, FI8910E" 
+            latest="11.22.2.51" 
+            from="11.22.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip"/>
+    <Update for="FI8910W, FI8918W, FI8916W, FI8910E" 
+            latest="11.37.2.56" 
+            from="11.37.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.37.2.56-20140318.zip"/>
+    <Update for="FI8905W, FI8904W, FI8906W, FI8905E" 
+            latest="11.25.2.51" 
+            from="11.25.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.25.2.51.zip"/>
+    <Update for="FI8905W, FI8904W, FI8906W, FI8905E" 
+            latest="11.35.2.55" 
+            from="11.35.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.35.2.55-20140123.zip"/>
+    <Update for="FI8909W, FI8907W" 
+            latest="11.25.2.51" 
+            from="11.25.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.25.2.51.zip"/>
+    <Update for="FI8909W, FI8907W" 
+            latest="11.35.2.51" 
+            from="11.35.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.35.2.56-20140318.zip"/>
+    <Update for="FI8919W" 
+            latest="11.37.2.56" 
+            from="11.37.2.xx" 
+            download="http://foscam.us/downloads/MJPEG%20outdoor%20PT%20camera-11.37.2.56-20140414%20for%20North%20America%20only.zip"/>
+  </Updates>
+</Firmware>

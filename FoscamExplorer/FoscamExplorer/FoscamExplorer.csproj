@@ -112,6 +112,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Foscam\Firmware.cs" />
     <Compile Include="StringResources.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -167,6 +168,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\fi9821w_0_black.png" />
+    <Content Include="Assets\firmware.xml" />
+    <Content Include="Assets\Gear.png" />
     <Content Include="Assets\Wide.png" />
     <Content Include="Assets\Logo.png" />
     <Content Include="Assets\Padlock.png" />

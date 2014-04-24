@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -72,6 +73,11 @@ namespace FoscamExplorer
         {
             Log.WriteLine("MainPage OnNavigatedTo");
 
+            StartSearch();
+        }
+
+        void StartSearch()
+        {
             if (store.Cameras.Count == 0)
             {
                 Prompt.Text = StringResources.SearchingPrompt;
@@ -80,22 +86,27 @@ namespace FoscamExplorer
                 searchTimer.Tick += OnSearchTick;
                 searchTimer.Start();
             }
+            else
+            {
+                foreach (var cam in store.Cameras)
+                {
+                    cam.PropertyChanged += OnCameraPropertyChanged;
+                }
+
+                store.Cameras.CollectionChanged += Cameras_CollectionChanged;
+            }
+
             try
             {
-                FoscamDevice.DeviceAvailable += OnDeviceAvailable;
                 FoscamDevice.StartFindDevices();
+                FoscamDevice.DeviceAvailable -= OnDeviceAvailable;
+                FoscamDevice.DeviceAvailable += OnDeviceAvailable;
             }
             catch (Exception ex)
             {
                 Prompt.Text = "Error: " + ex.Message;
             }
 
-            foreach (var cam in store.Cameras)
-            {
-                cam.PropertyChanged += OnCameraPropertyChanged;
-            }
-
-            store.Cameras.CollectionChanged += Cameras_CollectionChanged;
 
         }
 
@@ -110,6 +121,7 @@ namespace FoscamExplorer
             // show a UI for buying foscam cameras :-) 
             if (store.Cameras.Count == 0)
             {
+                Prompt.Text = "";
                 CameraInfo ad = new CameraInfo();
                 ad.Name = StringResources.NoCameraName;
                 ad.StaticImageUrl = "ms-appx:/Assets/fi9821w_0_black.png";
@@ -129,28 +141,51 @@ namespace FoscamExplorer
         private async void SetupNewCamera(FoscamDevice device)
         {
             var newCam = store.MergeNewCamera(device.CameraInfo);
-
-            if (newCam.LastPingTime + 10000 < Environment.TickCount)
+            
+            if (newCam.IsNew || newCam.LastPingTime + 10000 < Environment.TickCount)
             {
-                // update the device name.
+                // get the device properties
                 device = new FoscamDevice() { CameraInfo = newCam };
                 var properties = await device.GetStatus();
+
                 var realName = properties.GetValue<string>("alias");
                 if (!string.IsNullOrEmpty(realName))
                 {
-                    device.CameraInfo.Name = realName;
+                    newCam.Name = realName;
                 }
 
                 var sysver = properties.GetValue<string>("sys_ver");
                 if (!string.IsNullOrEmpty(sysver))
                 {
-                    device.CameraInfo.SystemVersion = sysver;
+                    newCam.SystemVersion = sysver;
                 }
-            }
 
+                var webver = properties.GetValue<string>("app_ver");
+                if (!string.IsNullOrEmpty(webver))
+                {
+                    newCam.WebUiVersion = webver;
+                }
+
+                CheckFirmwareVersion(device);
+            }
+            
+            Prompt.Text = "";
             newCam.LastPingTime = Environment.TickCount;
+            newCam.Rebooting = false;
+            newCam.UpdatingFirmware = false;
             newCam.PropertyChanged -= OnCameraPropertyChanged;
             newCam.PropertyChanged += OnCameraPropertyChanged;
+        }
+
+        private void CheckFirmwareVersion(FoscamDevice device)
+        {
+            App app = (App)(App.Current);
+            var info = device.CameraInfo;
+            var update = app.Firmware.FindUpdate(info.SystemVersion);
+            if (update != null)
+            {
+                info.UpdateAvailable = update;
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -159,11 +194,12 @@ namespace FoscamExplorer
             base.OnNavigatedFrom(e);
         }
 
-        private void Disconnect()
+        internal void Disconnect()
         {
             Log.WriteLine("MainPage disconnecting");
 
             FoscamDevice.StopFindingDevices();
+            FoscamDevice.DeviceAvailable -= OnDeviceAvailable;
 
             foreach (var cam in store.Cameras)
             {
@@ -173,6 +209,15 @@ namespace FoscamExplorer
             store.Cameras.CollectionChanged -= Cameras_CollectionChanged;
 
             CameraGrid.ItemsSource = null;
+        }
+
+        internal void Reconnect()
+        {
+            Log.WriteLine("MainPage reconnecting");
+
+            this.store = DataStore.Instance;
+            CameraGrid.ItemsSource = store.Cameras;
+            StartSearch();
         }
 
         void OnDeviceError(object sender, ErrorEventArgs e)
@@ -224,7 +269,7 @@ namespace FoscamExplorer
 
         void Save()
         {
-            var result = DataStore.Instance.SaveAsync(((FoscamExplorer.App)App.Current).CacheFolder);
+            DataStore.Instance.SaveAsync(((FoscamExplorer.App)App.Current).CacheFolder);
         }
 
         private void OnDeleteSelection(object sender, RoutedEventArgs e)
@@ -234,6 +279,10 @@ namespace FoscamExplorer
             {
                 this.store.Cameras.Remove(cameraToDelete);
                 Save();
+                if (this.store.Cameras.Count == 0)
+                {
+                    StartSearch();
+                }
             }
         }
 
@@ -247,5 +296,6 @@ namespace FoscamExplorer
         {
             Disconnect();
         }
+
     }
 }

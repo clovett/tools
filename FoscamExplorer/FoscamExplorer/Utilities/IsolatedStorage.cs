@@ -48,12 +48,7 @@ namespace FoscamExplorer
                 StorageFile storageFile = cacheFolder.LoadFile(fileName);
                 if (storageFile != null)
                 {
-                    Log.WriteLine("Loading file: " + storageFile.Path);
-                    using (Stream myFileStream = await storageFile.OpenStreamForReadAsync())
-                    {
-                        // Call the Deserialize method and cast to the object type.
-                        return LoadFromStream(myFileStream);
-                    }
+                    return await LoadFromFile(storageFile);
                 }
             }
             catch
@@ -63,7 +58,21 @@ namespace FoscamExplorer
             return loadedFile;
         }
 
-        public T LoadFromStream(Stream s)
+        public static async Task<T> LoadFromFile(StorageFile storageFile)
+        {
+            if (storageFile != null)
+            {
+                Log.WriteLine("Loading file: " + storageFile.Path);
+                using (Stream myFileStream = await storageFile.OpenStreamForReadAsync())
+                {
+                    // Call the Deserialize method and cast to the object type.
+                    return LoadFromStream(myFileStream);
+                }
+            }
+            return default(T);
+        }
+
+        public static T LoadFromStream(Stream s)
         {
             // Call the Deserialize method and cast to the object type.
             XmlSerializer mySerializer = new XmlSerializer(typeof(T));

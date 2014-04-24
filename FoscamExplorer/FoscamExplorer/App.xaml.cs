@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FoscamExplorer.Foscam;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -78,6 +79,10 @@ namespace FoscamExplorer
         /// </summary>
         public CacheFolder CacheFolder { get; set; }
 
+        /// <summary>
+        /// Get the firmware version info
+        /// </summary>
+        public Firmware Firmware { get; set; }
 
         /// <summary>
         /// Invoked when the application is launched normally by the end user.  Other entry points
@@ -95,7 +100,7 @@ namespace FoscamExplorer
             await folder.PopulateCache();
             await Log.OpenLog(folder);
             await DataStore.LoadAsync(folder);
-
+            this.Firmware = await Firmware.LoadAsync();
 
             Log.WriteLine("OnLaunched {0}", args.Kind);
 
@@ -113,6 +118,7 @@ namespace FoscamExplorer
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
+                Window.Current.VisibilityChanged += OnWindowVisibilityChanged;
             }
 
             if (rootFrame.Content == null)
@@ -127,6 +133,30 @@ namespace FoscamExplorer
             }
             // Ensure the current window is active
             Window.Current.Activate();
+        }
+
+        void OnWindowVisibilityChanged(object sender, Windows.UI.Core.VisibilityChangedEventArgs e)
+        {
+            Window w = sender as Window;
+            if (w != null)
+            {
+                Frame f = w.Content as Frame;
+                if (f != null)
+                {
+                    MainPage main = f.Content as MainPage;
+                    if (main != null)
+                    {
+                        if (e.Visible)
+                        {
+                            main.Reconnect();
+                        }
+                        else
+                        {
+                            main.Disconnect();
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>

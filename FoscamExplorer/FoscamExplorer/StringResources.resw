@@ -127,7 +127,7 @@
     <value>Update all cameras</value>
   </data>
   <data name="NoCameraMessage" xml:space="preserve">
-    <value>Not finding your Foscam camera, please ensure it is on and try plugging in an ethernet cable</value>
+    <value>Not finding your Foscam camera from this computer.  Please make sure this computer is connected to the same network and please also ensure your cameras are turned on.  If that doesn't work then try using an ethernet cable to connect  your cameras.</value>
   </data>
   <data name="NoCameraName" xml:space="preserve">
     <value>Camera not found</value>
