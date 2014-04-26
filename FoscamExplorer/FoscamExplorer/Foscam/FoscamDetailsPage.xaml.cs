@@ -1,8 +1,12 @@
 ﻿using FoscamExplorer.Foscam;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.IO;
 using Windows.Foundation;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System.Display;
 using Windows.UI;
 using Windows.UI.ApplicationSettings;
@@ -14,6 +18,7 @@ using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Xaml.Shapes;
+using System.Text;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -43,6 +48,8 @@ namespace FoscamExplorer
 
             this.SizeChanged += FoscamDetailsPage_SizeChanged;
             this.Unloaded += FoscamDetailsPage_Unloaded;
+
+            ButtonUpdate.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         void FoscamDetailsPage_Unloaded(object sender, RoutedEventArgs e)
@@ -131,6 +138,11 @@ namespace FoscamExplorer
             device.Error += OnDeviceError;
             device.FrameAvailable += OnFrameAvailable;
             camera.PropertyChanged += OnCameraPropertyChanged;
+
+            if (camera.UpdateAvailable != null)
+            {
+                ButtonUpdate.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            }
 
             this.Reconnect();
 
@@ -288,10 +300,6 @@ namespace FoscamExplorer
             }
             else
             {
-                if (showError)
-                {
-                    ShowError(StringResources.UpdatedMessage);
-                }
                 device.CameraInfo.UserName = userName;
                 device.CameraInfo.Password = password;
                 return true;
@@ -403,8 +411,7 @@ namespace FoscamExplorer
 
         int lastFrameTime;
         int lastCheckTime;
-        int imageIndex;
-        int nextCheck = 0;
+        int imageIndex;        
 
         async void OnFrameAvailable(object sender, FrameReadyEventArgs e)
         {
@@ -419,7 +426,7 @@ namespace FoscamExplorer
                 device.CameraInfo.LastFrame = img;
             }
 
-            if (lastCheckTime + nextCheck < lastFrameTime)
+            if (lastCheckTime + 1000 < lastFrameTime)
             {
                 lastCheckTime = Environment.TickCount;
                 var properties = await device.GetStatus();
@@ -427,12 +434,7 @@ namespace FoscamExplorer
                 double alarm = (double)properties["alarm_status"];
                 if (alarm == 1)
                 {
-                    nextCheck = 60000; // takes a minute for alarm to clear.
                     SaveFrame(e.BitmapSource);
-                }
-                else
-                {
-                    nextCheck = 1000;
                 }
             }
         }
@@ -440,9 +442,10 @@ namespace FoscamExplorer
         private async void SaveFrame(BitmapSource bitmapSource)
         {
             string fileName = "snapshots\\snap" + imageIndex++ + ".png";
-            using (var stream = await ((FoscamExplorer.App)App.Current).CacheFolder.SaveFileAsync(fileName))
+            var file = await ((FoscamExplorer.App)App.Current).CacheFolder.CreateFileAsync(fileName);
+            using (IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.ReadWrite))
             {
-                await WpfUtilities.SaveImageAsync(bitmapSource, stream);
+                await WpfUtilities.SaveImageAsync(bitmapSource, fileStream);
             }
         }
 
@@ -481,20 +484,21 @@ namespace FoscamExplorer
             }));
         }
 
-        private void OnNameChanged(object sender, TextChangedEventArgs e)
-        {
-            // send new name to the camera 
-            StartDelayedUpdate();
-        }
-
         DispatcherTimer updateTimer;
+        List<Action> pendingActions;
 
-        private void StartDelayedUpdate()
+        private void StartDelayedUpdate(Action updateAction, TimeSpan delay)
         {
+            if (pendingActions == null)
+            {
+                pendingActions = new List<Action>();
+            }
+            pendingActions.Add(updateAction);
+
             if (updateTimer == null)
             {
                 updateTimer = new DispatcherTimer();
-                updateTimer.Interval = TimeSpan.FromSeconds(3);
+                updateTimer.Interval = delay;
                 updateTimer.Tick += OnUpdateTick;
             }
             updateTimer.Stop();
@@ -511,36 +515,58 @@ namespace FoscamExplorer
             }
         }
 
+        private void OnUpdateTick(object sender, object args)
+        {
+            StopUpdate();
+            FinishUpdate();
+        }
+
         private void FinishUpdate()
         {
-            if (updateTimer != null)
+            List<Action> doit = pendingActions;
+            pendingActions = null;
+            if (doit != null)
             {
-                // do it now then!
-                OnUpdateTick(this, null);
+                foreach (Action a in doit)
+                {
+                    a();
+                }
             }
         }
 
-        private async void OnUpdateTick(object sender, object e)
+
+        bool renaming;
+
+        private void StartRename()
         {
-            StopUpdate();
-            
+            if (!renaming)
+            {
+                renaming = true;
+                StartDelayedUpdate(RenameCamera, TimeSpan.FromSeconds(0.1));
+                renaming = false;
+            }
+        }
+
+        private async void RenameCamera()
+        {
             string newName = TextBoxName.Text.Trim();
             if (newName.Length > 20)
             {
                 newName = newName.Substring(0, 20);                
             }
+            
             CameraInfo camera = this.device.CameraInfo;
             if (camera.Name != newName)
             {
-                string rc = await device.Rename(newName);
-                if (!string.IsNullOrEmpty(rc))
+                camera.Name = newName; // so the title shows up right away.
+                string error = await device.Rename(newName);
+                renaming = false;
+
+                if (!string.IsNullOrEmpty(error))
                 {
-                    ShowError(rc);
-                    return;
+                    ShowError(error);
                 }
             }
-
-            ShowError(StringResources.UpdatedMessage);
         }
 
         Vector moveDirection;
@@ -548,7 +574,7 @@ namespace FoscamExplorer
         int steps;
         DispatcherTimer moveTimer;
         int moveTimerId;
-        Path arrowHead;
+        Windows.UI.Xaml.Shapes.Path arrowHead;
         int msPerMove;
         int lastMove;
 
@@ -600,7 +626,7 @@ namespace FoscamExplorer
 
                 if (arrowHead == null)
                 {
-                    arrowHead = new Path() { Fill = new SolidColorBrush(Color.FromArgb(0xA0, 0xF0, 0xF0, 0xFF)) };
+                    arrowHead = new Windows.UI.Xaml.Shapes.Path() { Fill = new SolidColorBrush(Color.FromArgb(0xA0, 0xF0, 0xF0, 0xFF)) };
                     ImageOverlay.Children.Add(arrowHead);
                 }
 
@@ -608,7 +634,7 @@ namespace FoscamExplorer
             }
         }
 
-        private void UpdatePathGeometry(Path arrowHead, Point start, Point end)
+        private void UpdatePathGeometry(Windows.UI.Xaml.Shapes.Path arrowHead, Point start, Point end)
         {
             arrowHead.Data = GeometryUtilities.CreateFatArrow(end, start, 10, 16, 16);
         }
@@ -876,7 +902,8 @@ namespace FoscamExplorer
         }
 
         private void HideEditBox()
-        {
+        {            
+            StartRename();
             TextBoxName.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             PageTitle.Visibility = Windows.UI.Xaml.Visibility.Visible;
         }
@@ -900,6 +927,54 @@ namespace FoscamExplorer
             if (IsRealCamera)
             {
                 ShowEditBox();
+            }
+        }
+
+        private async void OnUpdateCamera(object sender, RoutedEventArgs e)
+        {
+            if (this.device == null) return;
+
+            var info = this.device.CameraInfo;
+            var update = info.UpdateAvailable;
+            if (update == null)
+            {
+                return;
+            }
+
+            // stop displaying video.
+            Disconnect();
+
+            info.UpdatingFirmware = true; // this causes static image to change.
+            ShowStaticImage("ms-appx:/Assets/Gear.png");
+
+            try
+            {
+                using (var zipFile = await device.GetZipAsync(update.Download))
+                {
+                    string systemFirmware = update.SystemFirmware;
+                    if (!string.IsNullOrEmpty(systemFirmware))
+                    {
+                        var binStream = device.GetSystemFirmware(zipFile, systemFirmware);
+
+                        string result = await device.UploadFirmware(systemFirmware, binStream);
+                        if (result != null)
+                        {
+                            ShowError(result);
+                        }
+                        else
+                        {
+                            await device.RebootDevice();
+                        }
+                    }
+
+                    // todo: here we need to ping the UDP message to find out when camera is back so we
+                    // can then Reconnect().  Then do web ui update...
+                }
+            }
+            catch (Exception ex)
+            {
+                // crap - now what state is the camera in???
+                ShowError(ex.Message);
             }
         }
 

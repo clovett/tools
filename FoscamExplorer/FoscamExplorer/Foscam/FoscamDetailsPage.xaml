@@ -24,7 +24,7 @@
             <Button x:Name="backButton" Click="GoBack" IsEnabled="{Binding Frame.CanGoBack, ElementName=pageRoot}" Style="{StaticResource BackButtonStyle}"/>
             <TextBlock x:Name="PageTitle" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextStyle}" PointerPressed="OnPageTitlePointerPressed"/>
             <TextBox x:Name="TextBoxName" Grid.Column="1" Text="{Binding Name}" Style="{StaticResource PageHeaderTextBoxStyle}" Visibility="Collapsed"
-                     TextChanged="OnNameChanged" LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"/>
+                     LostFocus="OnTextBoxNameLostFocus" KeyDown="OnTextBoxNameKeyDown"/>
         </Grid>
 
         <Grid x:Name="ImageGrid" HorizontalAlignment="Left" Margin="30" VerticalAlignment="top" Grid.Row="1">
@@ -45,6 +45,7 @@
                 <Button Style="{StaticResource RotateCameraAppBarButtonStyle}"  Click="OnRotateCamera"  AutomationProperties.Name="Rotate"/>
                 <Button Style="{StaticResource RenameAppBarButtonStyle}"  Click="OnRenameCamera"  AutomationProperties.Name="Rename"/>
                 <Button Style="{StaticResource SettingsAppBarButtonStyle}"  Click="OnCameraSettings"  AutomationProperties.Name="Settings"/>
+                <Button x:Name="ButtonUpdate" Style="{StaticResource DownloadAppBarButtonStyle}"   Click="OnUpdateCamera"  AutomationProperties.Name="Update" Foreground="Green"/>
             </StackPanel>
         </Grid>
     </Grid>

@@ -1,34 +1,76 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<!-- See http://foscam.us/forum/firmware-update-information-t9417.html -->
+<!-- see http://foscam.us/firmware -->
+<!-- See my questions: http://foscam.us/forum/firmware-update-information-t9417.html -->
 <Firmware>
-  <Updates>
-    <Update for="FI8910W, FI8918W, FI8916W, FI8910E" 
-            latest="11.22.2.51" 
-            from="11.22.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip"/>
-    <Update for="FI8910W, FI8918W, FI8916W, FI8910E" 
-            latest="11.37.2.56" 
-            from="11.37.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.37.2.56-20140318.zip"/>
-    <Update for="FI8905W, FI8904W, FI8906W, FI8905E" 
-            latest="11.25.2.51" 
-            from="11.25.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.25.2.51.zip"/>
-    <Update for="FI8905W, FI8904W, FI8906W, FI8905E" 
-            latest="11.35.2.55" 
-            from="11.35.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.35.2.55-20140123.zip"/>
-    <Update for="FI8909W, FI8907W" 
-            latest="11.25.2.51" 
-            from="11.25.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.25.2.51.zip"/>
-    <Update for="FI8909W, FI8907W" 
-            latest="11.35.2.51" 
-            from="11.35.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.35.2.56-20140318.zip"/>
-    <Update for="FI8919W" 
-            latest="11.37.2.56" 
-            from="11.37.2.xx" 
-            download="http://foscam.us/downloads/MJPEG%20outdoor%20PT%20camera-11.37.2.56-20140414%20for%20North%20America%20only.zip"/>
-  </Updates>
+    <Updates>
+        <Update devices="FI8910W, FI8918W, FI8916W, FI8910E"
+                from="11.22.2.xx"
+                to="11.22.2.51"
+                download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip"
+                system="lr_cmos_11_22_2_51.bin"
+                webui="2.4.10.5.bin"/>
+
+        <Update devices="FI8910W, FI8918W, FI8916W, FI8910E"
+                from="11.37.2.xx"
+                to="11.37.2.56"
+                download="http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.37.2.56-20140318.zip"
+                system="lr_cmos_11_37_2_56.bin"
+                webui="2.4.10.10.bin"/>
+
+        <Update devices="FI8905W, FI8904W, FI8906W, FI8905E"
+                from="11.25.2.xx"
+                to="11.25.2.51"
+                download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.25.2.51.zip"
+                system="lr_cmos_11_25_2_51.bin"
+                webui="2.4.20.6.bin"/>
+
+        <Update devices="FI8905W, FI8904W, FI8906W, FI8905E"
+                from="11.35.2.xx"
+                to="11.35.2.55"
+                download="http://foscam.us/downloads/MJPEG%20outdoor%20waterproof%20camera-11.35.2.55-20140123.zip"
+                system="lr_cmos_11_35_2_55.bin"
+                webui="2.4.20.10.bin"/>
+
+        <Update devices="FI8909W, FI8907W"
+                from="11.25.2.xx"
+                to="11.25.2.51"
+                download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.25.2.51.zip"
+                system="lr_cmos_11_25_2_51.bin"
+                webui="2.4.30.5.bin"/>
+
+        <Update devices="FI8909W, FI8907W"
+                from="11.35.2.xx"
+                to="11.35.2.56"
+                download="http://foscam.us/downloads/MJPEG%20indoor%20fixed%20camera-11.35.2.56-20140318.zip"
+                system="lr_cmos_11_35_2_56.bin"
+                webui="2.4.30.10.bin"/>
+
+        <Update devices="FI8919W"
+                from="11.37.2.xx"
+                to="11.37.2.56"
+                download="http://foscam.us/downloads/MJPEG%20outdoor%20PT%20camera-11.37.2.56-20140414%20for%20North%20America%20only.zip"
+                system="lr_cmos_11_37_2_56.bin"
+                webui="2.0.40.9.bin"/>
+
+        <Update devices="FI8608W"
+                from="3.2.1.1.xx"
+                to="V3.2.1.1.1-20120815"
+                download="http://foscam.us/downloads/FI8608W-3.2.1.1.1-20120815.zip"
+                package="B12FC_V3.2.1.1.1_0815Vga8608P1.pkg"/>
+
+        <Update devices="FI9820W"
+                from="3.2.6.1.xx"
+                to="V3.2.6.1.1-20120807"
+                download="https://agasio.com/downloads/FI9820W-3.2.6.1.1-20120807.zip"
+                package="B12FC_V3.2.6.1.1_0807Hd9820P1.pkg"
+                wireless="false"
+                reboot-after="true"/>
+
+        <Update devices="FI9801W, FI9802W"
+                from="1.2.1.xx"
+                to="1.2.1.1"
+                download="http://foscam.us/downloads/FI9802W-1.4.1.13-20130812.zip"
+                package="FI980102W_app_ver1.4.1.13.bin"/>
+
+    </Updates>
 </Firmware>

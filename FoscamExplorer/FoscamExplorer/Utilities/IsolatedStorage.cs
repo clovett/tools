@@ -86,10 +86,11 @@ namespace FoscamExplorer
         /// <param name="data">The data to save</param>
         public async Task SaveToFileAsync(string fileName, T data)
         {
-            using (var stream = await cacheFolder.SaveFileAsync(fileName))
+            var file = await cacheFolder.CreateFileAsync(fileName);
+            using (var stream = await file.OpenStreamForWriteAsync())
             {
                 XmlSerializer mySerializer = new XmlSerializer(typeof(T));
-                mySerializer.Serialize(stream.AsStreamForWrite(), data);
+                mySerializer.Serialize(stream, data);
             }         
         }
 

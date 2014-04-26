@@ -17,6 +17,7 @@ using CoreDispatcher = System.Windows.Threading.Dispatcher;
 #else
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media.Imaging;
+using System.IO.Compression;
 #endif
 
 namespace FoscamExplorer.Foscam
@@ -431,13 +432,26 @@ namespace FoscamExplorer.Foscam
             return result.GetValue<string>("Error");
         }
 
-        public async Task UploadFirmware(Stream binFile)
+        public async Task<string> UploadFirmware(string fileName, Stream binFile)
         {
             CameraInfo.UpdatingFirmware = true;
             try
             {
                 string requestStr = String.Format("http://{0}/upgrade_firmware.cgi", CameraInfo.IpAddress);
-                await PutFileRequest(requestStr, binFile);
+
+                var fileContents = new System.Net.Http.StreamContent(binFile);
+                fileContents.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
+
+                var content = new System.Net.Http.MultipartFormDataContent("---------------------------7deef381d07b6");
+                content.Add(fileContents, "file", fileName);
+
+                // override the content disposition
+                var contentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data");                
+                contentDisposition.Name = "file";
+                contentDisposition.FileName = fileName;
+                fileContents.Headers.ContentDisposition = contentDisposition;
+
+                return await PostFormRequest(requestStr, content);                
             }
             finally
             {
@@ -455,8 +469,10 @@ namespace FoscamExplorer.Foscam
 
         private async Task<PropertyBag> SendCgiRequest(string url)
         {
-            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " +  url);
-
+            if (!url.EndsWith("get_status.cgi"))
+            {
+                Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " + url);
+            }
             dynamic map = new object();
             
             PropertyBag result = new PropertyBag();
@@ -524,15 +540,7 @@ namespace FoscamExplorer.Foscam
                     HttpContent content = msg.Content;
                     using (Stream stream = await content.ReadAsStreamAsync())
                     {
-                        MemoryStream ms = new MemoryStream();
-                        byte[] block = new byte[64000];
-                        int len = 0;
-                        while ((len = stream.Read(block, 0, block.Length)) > 0)
-                        {
-                            ms.Write(block, 0, len);
-                        }
-                        ms.Seek(0, SeekOrigin.Begin);
-                        return ms;
+                        return CopyStream(stream);
                     }
                 }
                 else if (msg.StatusCode == HttpStatusCode.Unauthorized)
@@ -544,7 +552,20 @@ namespace FoscamExplorer.Foscam
             return null;
         }
 
-        private async Task PutFileRequest(string url, Stream fileContent)
+        private Stream CopyStream(Stream stream)
+        {
+            MemoryStream ms = new MemoryStream();
+            byte[] block = new byte[64000];
+            int len = 0;
+            while ((len = stream.Read(block, 0, block.Length)) > 0)
+            {
+                ms.Write(block, 0, len);
+            }
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
+        }
+
+        private async Task<string> PostFileRequest(string url, Stream fileContent)
         {
             Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " + url);
 
@@ -561,6 +582,12 @@ namespace FoscamExplorer.Foscam
                 if (msg.StatusCode == HttpStatusCode.OK)
                 {
                     // great!
+                    HttpContent response = msg.Content;
+                    string text = await response.ReadAsStringAsync();
+                    if (text.StartsWith("error"))
+                    {
+                        return text; // error: illegal http frame.
+                    }
                 }
                 else if (msg.StatusCode == HttpStatusCode.Unauthorized)
                 {
@@ -569,11 +596,48 @@ namespace FoscamExplorer.Foscam
                 else
                 {
                     // upload failed... so now what?
-                    throw new Exception("File upload to FoscamDevice failed");
+                    throw new Exception("File upload to FoscamDevice failed: " + msg.StatusCode.ToString());
                 }
             }
+            return null;
         }
 
+
+        private async Task<string> PostFormRequest(string url,  MultipartFormDataContent formContent)
+        {
+            Debug.WriteLine(DateTime.Now.TimeOfDay.ToString() + ": " + url);
+
+            dynamic map = new object();
+
+            HttpClientHandler settings = new HttpClientHandler();
+            settings.Credentials = GetCredentials();
+
+
+            HttpClient client = new HttpClient(settings);
+            using (HttpResponseMessage msg = await client.PostAsync(new Uri(url), formContent))
+            {
+                if (msg.StatusCode == HttpStatusCode.OK)
+                {
+                    // great!
+                    HttpContent response = msg.Content;
+                    string text = await response.ReadAsStringAsync();
+                    if (text.StartsWith("error"))
+                    {
+                        return text; // error: illegal http frame.
+                    }
+                }
+                else if (msg.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    this.CameraInfo.Unauthorized = true;
+                }
+                else
+                {
+                    // upload failed... so now what?
+                    throw new Exception("File upload to FoscamDevice failed: " + msg.StatusCode.ToString());
+                }
+            }
+            return null;
+        }
 
         void OnError(object sender, ErrorEventArgs e)
         {
@@ -857,6 +921,42 @@ namespace FoscamExplorer.Foscam
             var properties = await SendCgiRequest(sb.ToString());
             string error = properties.GetValue<string>("Error");
             return error;
+        }
+
+        internal async Task<ZipArchive> GetZipAsync(string zipUrl)
+        {
+            HttpClient client = new HttpClient();
+            using (HttpResponseMessage msg = await client.GetAsync(new Uri(zipUrl), HttpCompletionOption.ResponseHeadersRead))
+            {
+                if (msg.StatusCode == HttpStatusCode.OK)
+                {
+                    HttpContent content = msg.Content;
+                    using (var stream = await content.ReadAsStreamAsync())
+                    {
+                        var memoryStream = CopyStream(stream);
+                        return new ZipArchive(memoryStream, System.IO.Compression.ZipArchiveMode.Read);
+                    }
+                }
+                else
+                {
+                    throw new Exception(msg.StatusCode.ToString());
+                }
+            }
+        }
+
+        internal Stream GetSystemFirmware(ZipArchive archive, string fileName)
+        {
+            foreach (var entry in archive.Entries)
+            {
+                if (string.Compare(entry.Name, fileName, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    using (Stream s = entry.Open())
+                    {
+                        return CopyStream(s);
+                    }
+                }
+            }
+            return null;
         }
     }
 

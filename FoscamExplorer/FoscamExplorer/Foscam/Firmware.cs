@@ -39,7 +39,12 @@ namespace FoscamExplorer.Foscam
             {
                 if (u.Matches(currentVersion))
                 {
-                    return u;
+#if !DEBUG
+                    if (currentVersion != u.Latest)
+#endif
+                    {
+                        return u;
+                    }
                 }
             }
             return null;
@@ -53,21 +58,27 @@ namespace FoscamExplorer.Foscam
         [XmlAttribute("devices")]
         public string Devices { get; set; }
 
-        [XmlAttribute("latest")]
-        public string Latest { get; set; }
+        [XmlAttribute("to")]
+        public string ToVersion { get; set; }
 
         [XmlAttribute("from")]
-        public string From { get; set; }
+        public string FromVersion { get; set; }
 
         [XmlAttribute("download")]
         public string Download { get; set; }
 
+        [XmlAttribute("system")]
+        public string SystemFirmware { get; set; }
+
+        [XmlAttribute("webui")]
+        public string WebUiFirmware { get; set; }
+
         internal bool Matches(string currentVersion)
         {
-            if (currentVersion == Latest) return true;
-            if (Latest == null || currentVersion == null) return false;
+            if (currentVersion == ToVersion) return true;
+            if (ToVersion == null || currentVersion == null) return false;
 
-            string[] parts = this.Latest.Split('.');
+            string[] parts = this.FromVersion.Split('.');
 
             string[] parts2 = currentVersion.Split('.');
 

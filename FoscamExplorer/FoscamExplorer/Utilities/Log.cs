@@ -18,8 +18,8 @@ namespace FoscamExplorer
             {
                 try
                 {
-                    var stream = await cache.SaveFileAsync("log.txt");
-                    log = new StreamWriter(stream.AsStreamForWrite());
+                    var file = await cache.CreateFileAsync("log.txt");
+                    log = new StreamWriter(await file.OpenStreamForWriteAsync());
                 }
                 catch (Exception ex)
                 {

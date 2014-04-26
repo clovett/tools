@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,17 +92,17 @@ namespace FoscamExplorer
 
 
         /// <summary>
-        /// Save the given file to the cache using the given stream for data.
+        /// Create the given file in the cache.
         /// </summary>
         /// <param name="fileName">The local name of the file to save</param>
-        /// <returns>The stream to write to</returns>
-        public async Task<IRandomAccessStream> SaveFileAsync(string fileName)
+        /// <returns>The new StorageFile object</returns>
+        public async Task<StorageFile> CreateFileAsync(string fileName)
         {
             StorageFolder folder = this.storageFolder;
             StorageFile storageFile = await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
-            IRandomAccessStream fileStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite);
             files[storageFile.Name] = storageFile;
-            return fileStream;
+            Debug.WriteLine("Created file: " + storageFile.Path);
+            return storageFile;
         }
     }
 }

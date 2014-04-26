@@ -118,6 +118,7 @@ namespace FoscamExplorer
                 this.ComboBoxBrightness.SelectedItem = (int)(this.device.CameraInfo.Brightness / 16);
                 this.ComboBoxContrast.SelectedItem = (int)this.device.CameraInfo.Contrast;
                 this.FirmwareVersion.Text = "Firmware version " + this.device.CameraInfo.SystemVersion;
+
                 updating = false;
             }
 
@@ -199,10 +200,6 @@ namespace FoscamExplorer
             }
         }
 
-        private void OnUpdateClick(object sender, RoutedEventArgs e)
-        {
-            // todo
-        }
 
     }
 }
