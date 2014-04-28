@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using Windows.Storage;
 
 namespace FoscamExplorer
 {
@@ -18,6 +19,8 @@ namespace FoscamExplorer
     [XmlRoot("Data")]
     public class DataStore : INotifyPropertyChanged
     {
+        private string snapshotDir;
+
         const string DataFile = "data.xml";
         private ObservableCollection<CameraInfo> cameras;
 
@@ -37,6 +40,20 @@ namespace FoscamExplorer
 
         [XmlIgnore]
         public bool IsOffline { get; set; }
+
+        public string SnapshotDirectory
+        {
+            get { return snapshotDir; }
+            set { snapshotDir = value; OnPropertyChanged("SnapshotDirectory"); }
+        }
+
+        // the token we can use to get access to this directory again later.
+        public string SnapshotDirectoryToken { get; set; }
+
+        // cached StorageFolder object that we can use to save snapshots.
+        // but this is not persistable.
+        [XmlIgnore]
+        public StorageFolder SnapshotFolder { get; set; }
 
         [DataMember]
         public ObservableCollection<CameraInfo> Cameras

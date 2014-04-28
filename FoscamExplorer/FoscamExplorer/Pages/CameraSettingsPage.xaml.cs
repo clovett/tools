@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI.ApplicationSettings;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -80,6 +82,8 @@ namespace FoscamExplorer
             }
 
             this.Loaded += CameraSettingsPage_Loaded;
+
+            TextBoxSnapshotDirectory.Text = "" + DataStore.Instance.SnapshotDirectory;
         }
 
         public FoscamDevice FoscamDevice
@@ -197,6 +201,34 @@ namespace FoscamExplorer
             finally
             {
                 b.IsEnabled = true;
+            }
+        }
+
+        private async void OnBrowseSnapshotDirectory(object sender, RoutedEventArgs e)
+        {
+            BrowseSnapshotDirectory.IsEnabled = false;
+            try
+            {
+                FolderPicker fo = new FolderPicker();
+                fo.CommitButtonText = "Select";
+                fo.ViewMode = PickerViewMode.Thumbnail;
+                fo.FileTypeFilter.Add(".png");
+                StorageFolder folder = await fo.PickSingleFolderAsync();
+                if (folder != null)
+                {
+                    string mruToken = Windows.Storage.AccessCache.StorageApplicationPermissions.MostRecentlyUsedList.Add(folder, "SnapshotDirectory");
+
+                    DataStore.Instance.SnapshotDirectoryToken = mruToken;
+                    DataStore.Instance.SnapshotDirectory = folder.Path;
+                    DataStore.Instance.SnapshotFolder = folder;
+
+                    var cache = ((App)App.Current).CacheFolder;
+                    DataStore.Instance.SaveAsync(cache);
+                }
+            }
+            finally
+            {
+                BrowseSnapshotDirectory.IsEnabled = true;
             }
         }
 

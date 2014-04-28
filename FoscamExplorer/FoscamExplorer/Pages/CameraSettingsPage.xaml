@@ -39,38 +39,42 @@
 
 
             <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="1">
-                <Grid Margin="30" VerticalAlignment="Top" Grid.RowSpan="3" >
+                <StackPanel Margin="10" >
 
-                    <StackPanel >
+                    <!-- Fps -->
+                    <TextBlock Text="FPS:" VerticalAlignment="Center" Margin="10" />
 
-                        <!-- Fps -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="FPS:" VerticalAlignment="Center" Margin="10" />
-
-                        <ComboBox x:Name="ComboBoxFps"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
+                    <ComboBox x:Name="ComboBoxFps"   Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
                                   SelectionChanged="OnFpsChanged"
                           />
 
-                        <!-- Brightness -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Brightness:" VerticalAlignment="Center" Margin="10" />
+                    <!-- Brightness -->
+                    <TextBlock Text="Brightness:" VerticalAlignment="Center" Margin="10" />
 
-                        <ComboBox x:Name="ComboBoxBrightness"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"
+                    <ComboBox x:Name="ComboBoxBrightness"   Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center"
                                   SelectionChanged="OnBrightnessChanged"
                           />
 
-                        <!-- Contrast -->
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Contrast:" VerticalAlignment="Center" Margin="10" />
+                    <!-- Contrast -->
+                    <TextBlock Text="Contrast:" VerticalAlignment="Center" Margin="10" />
 
-                        <ComboBox x:Name="ComboBoxContrast"  Grid.Row="1" Grid.Column="1" Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
+                    <ComboBox x:Name="ComboBoxContrast"   Width="250" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Center" 
                                   SelectionChanged="OnContrastChanged"
                           />
 
-                        <StackPanel Orientation="Horizontal">
-                            <Button Margin="10" Click="OnRebootClick">Reboot Camera</Button>                            
-                        </StackPanel>
-                        <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
+                    <TextBlock Text="Snapshot directory:" Margin="10"/>
 
+                    <StackPanel Orientation="Horizontal">
+                        <TextBox x:Name="TextBoxSnapshotDirectory"  Width="250" Margin="10" />
+                        <Button x:Name="BrowseSnapshotDirectory" Click="OnBrowseSnapshotDirectory">...</Button>
                     </StackPanel>
-                </Grid>
+
+                    <Button Margin="10" Click="OnRebootClick">Reboot Camera</Button>
+
+                    <TextBlock Grid.Row="10" x:Name="ErrorMessage" Margin="10" Text="error message" FontWeight="Light" Foreground="Salmon" Grid.ColumnSpan="2" TextWrapping="Wrap" />
+
+                </StackPanel>
+
             </ScrollViewer>
 
             <Grid Grid.Row="2">

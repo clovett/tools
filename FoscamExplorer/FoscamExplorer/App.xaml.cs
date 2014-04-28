@@ -99,7 +99,28 @@ namespace FoscamExplorer
             CacheFolder = folder;
             await folder.PopulateCache();
             await Log.OpenLog(folder);
-            await DataStore.LoadAsync(folder);
+            var store = await DataStore.LoadAsync(folder);
+
+            if (!string.IsNullOrEmpty(store.SnapshotDirectory) && !string.IsNullOrEmpty(store.SnapshotDirectoryToken))
+            {
+                try
+                {
+                    store.SnapshotFolder = await Windows.Storage.AccessCache.StorageApplicationPermissions.MostRecentlyUsedList.GetFolderAsync(store.SnapshotDirectoryToken);
+                    store.SnapshotDirectory = store.SnapshotFolder.Path;
+                }
+                catch
+                {
+                    // bummer, didn't work...
+                    store.SnapshotDirectoryToken = null;
+                }
+            }
+
+            if (store.SnapshotDirectory == null || store.SnapshotDirectoryToken == null)
+            {
+                store.SnapshotFolder = await CacheFolder.GetOrCreateFolder("Snapshots");
+                store.SnapshotDirectory = store.SnapshotFolder.Path;                
+            }
+
             this.Firmware = await Firmware.LoadAsync();
 
             Log.WriteLine("OnLaunched {0}", args.Kind);

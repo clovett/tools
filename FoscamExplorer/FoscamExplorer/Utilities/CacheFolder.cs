@@ -25,6 +25,8 @@ namespace FoscamExplorer
             this.folder = folder;
         }
 
+        public StorageFolder Folder { get { return this.storageFolder; } }
+
         public async Task PopulateCache()
         {
             var appData = ApplicationData.Current;
@@ -103,6 +105,24 @@ namespace FoscamExplorer
             files[storageFile.Name] = storageFile;
             Debug.WriteLine("Created file: " + storageFile.Path);
             return storageFile;
+        }
+
+        public async Task<StorageFolder> GetOrCreateFolder(string name)
+        {
+            StorageFolder folder = this.storageFolder;
+            try
+            {
+                folder = await this.storageFolder.GetFolderAsync(name);
+            }
+            catch
+            {
+                folder = null;
+            }
+            if (folder == null)
+            {
+                folder = await this.storageFolder.CreateFolderAsync(name);
+            }
+            return folder;
         }
     }
 }
