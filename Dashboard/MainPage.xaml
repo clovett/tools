@@ -1,0 +1,50 @@
+﻿<Page
+    x:Class="Dashboard.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Dashboard"        
+    xmlns:s="using:System"
+    xmlns:dv="using:WinRTXamlToolkit.Controls.DataVisualization"
+    xmlns:charting="using:WinRTXamlToolkit.Controls.DataVisualization.Charting"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Page.Resources>
+        <Style x:Key="InvisibleLegend" TargetType="dv:Legend">
+            <Setter Property="Visibility" Value="Collapsed"/>
+        </Style>
+        <Style x:Key="MonthAxisLabelStyle" TargetType="charting:DateTimeAxisLabel">
+            <Setter Property="DaysIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="HoursIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="MillisecondsIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="MinutesIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="SecondsIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="MonthsIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="WeeksIntervalStringFormat" Value="{}{0:MMM}"/>
+            <Setter Property="YearsIntervalStringFormat" Value="{}{0:MMM}"/>
+        </Style>
+    </Page.Resources>
+
+    <Grid Background="{StaticResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <charting:Chart x:Name="ChartByDay" Grid.Row="1"  LegendStyle="{StaticResource InvisibleLegend}" >
+            <charting:Chart.Series>
+                <charting:ColumnSeries IndependentValueBinding="{Binding Path=Date}" 
+                                 DependentValueBinding="{Binding Path=Usage}" AnimationSequence="FirstToLast" Title="Usage"
+                              />
+            </charting:Chart.Series>
+            <charting:Chart.Axes>
+                <charting:DateTimeAxis Orientation="X"  IntervalType="Months"  AxisLabelStyle="{StaticResource MonthAxisLabelStyle}" 
+                                       />
+            </charting:Chart.Axes>
+        </charting:Chart>
+    </Grid>
+</Page>
