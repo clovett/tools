@@ -1,0 +1,224 @@
+﻿<Window x:Class="TimeKeeper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TimeKeeper"
+        Title="Time Keeper" Height="350" Width="525" Icon="/TimeKeeper;component/Icons/Stopwatch.ico">
+    <Window.Resources>
+        <Style x:Key="RowStyle" TargetType="{x:Type DataGridRow}" >
+            <Style.Triggers>
+                <Trigger Property="AlternationIndex" Value="1" >
+                    <Setter Property="Background" Value="#E6BDD9F2" />
+                </Trigger>
+                <DataTrigger Binding="{Binding Path=IsError}" Value="True">
+                    <Setter Property="Background" Value="Red" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DescriptionStyle" TargetType="{x:Type DataGridCell}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsNew}" Value="True">
+                    <Setter Property="Foreground" Value="Gray"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <local:TimeSpanConverter x:Key="TimeSpanConverter"/>
+
+
+        <DrawingGroup x:Key="DownArrow" >
+            <GeometryDrawing >
+                <GeometryDrawing.Geometry >
+                    <PathGeometry >
+                        <PathFigure IsClosed="True" IsFilled="True" StartPoint="4,0" >
+                            <LineSegment Point="4,7" IsStroked="true"  />
+                            <LineSegment Point="0,7" IsStroked="true"  />
+                            <LineSegment Point="7.5,15" IsStroked="true"  />
+                            <LineSegment Point="15,7" IsStroked="true"  />
+                            <LineSegment Point="11,7" IsStroked="true"  />
+                            <LineSegment Point="11,0" IsStroked="true"  />
+                        </PathFigure>
+                    </PathGeometry>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Brush >
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                        <GradientStop Color="#a0a0FF" Offset="0"  />
+                        <GradientStop Color="#90B0FF" Offset=".5"  />
+                        <GradientStop Color="#487CCB" Offset="1"  />
+                    </LinearGradientBrush>
+                </GeometryDrawing.Brush>
+                <GeometryDrawing.Pen >
+                    <Pen Thickness="0.75" >
+                        <Pen.Brush >
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="#5071C5" Offset="0"  />
+                                <GradientStop Color="#5071C5" Offset="1"  />
+                            </LinearGradientBrush>
+                        </Pen.Brush>
+                    </Pen>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing >
+                <GeometryDrawing.Geometry >
+                    <PathGeometry >
+                        <PathFigure IsClosed="True" IsFilled="False" StartPoint="5,1" >
+                            <LineSegment Point="5,8" IsStroked="true"  />
+                            <LineSegment Point="2,8" IsStroked="true"  />
+                            <LineSegment Point="7.5,14" IsStroked="true"  />
+                            <LineSegment Point="13,8" IsStroked="true"  />
+                            <LineSegment Point="10,8" IsStroked="true"  />
+                            <LineSegment Point="10,1" IsStroked="true"  />
+                        </PathFigure>
+                    </PathGeometry>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen >
+                    <Pen Thickness="0.75" >
+                        <Pen.Brush >
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="#A0D0F0" Offset="0"  />
+                                <GradientStop Color="#80A0E0" Offset="1"  />
+                            </LinearGradientBrush>
+                        </Pen.Brush>
+                    </Pen>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingGroup>
+        <DrawingGroup x:Key="UpArrow" >
+            <GeometryDrawing >
+                <GeometryDrawing.Geometry >
+                    <PathGeometry >
+                        <PathFigure IsClosed="True" IsFilled="True" StartPoint="4,15" >
+                            <LineSegment Point="4,8" IsStroked="true"  />
+                            <LineSegment Point="0,8" IsStroked="true"  />
+                            <LineSegment Point="7.5,0" IsStroked="true"  />
+                            <LineSegment Point="15,8" IsStroked="true"  />
+                            <LineSegment Point="11,8" IsStroked="true"  />
+                            <LineSegment Point="11,15" IsStroked="true"  />
+                        </PathFigure>
+                    </PathGeometry>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Brush >
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                        <GradientStop Color="#a0a0FF" Offset="0"  />
+                        <GradientStop Color="#90B0FF" Offset=".5"  />
+                        <GradientStop Color="#487CCB" Offset="1"  />
+                    </LinearGradientBrush>
+                </GeometryDrawing.Brush>
+                <GeometryDrawing.Pen >
+                    <Pen Thickness="0.75" >
+                        <Pen.Brush >
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="#5071C5" Offset="0"  />
+                                <GradientStop Color="#5071C5" Offset="1"  />
+                            </LinearGradientBrush>
+                        </Pen.Brush>
+                    </Pen>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+            <GeometryDrawing >
+                <GeometryDrawing.Geometry >
+                    <PathGeometry >
+                        <PathFigure IsClosed="True" IsFilled="False" StartPoint="5,14" >
+                            <LineSegment Point="5,7" IsStroked="true"  />
+                            <LineSegment Point="2,7" IsStroked="true"  />
+                            <LineSegment Point="7.5,1" IsStroked="true"  />
+                            <LineSegment Point="13,7" IsStroked="true"  />
+                            <LineSegment Point="10,7" IsStroked="true"  />
+                            <LineSegment Point="10,14" IsStroked="true"  />
+                        </PathFigure>
+                    </PathGeometry>
+                </GeometryDrawing.Geometry>
+                <GeometryDrawing.Pen >
+                    <Pen Thickness="0.75" >
+                        <Pen.Brush >
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1" >
+                                <GradientStop Color="#A0D0F0" Offset="0"  />
+                                <GradientStop Color="#80A0E0" Offset="1"  />
+                            </LinearGradientBrush>
+                        </Pen.Brush>
+                    </Pen>
+                </GeometryDrawing.Pen>
+            </GeometryDrawing>
+        </DrawingGroup>
+    </Window.Resources>
+    <Window.InputBindings>
+        <KeyBinding Command="Save" Key="S" Modifiers="Control"/>
+        <KeyBinding Command="Undo" Key="Z" Modifiers="Control"/>
+        <KeyBinding Command="Redo" Key="Y" Modifiers="Control"/>
+        <KeyBinding Command="Cut" Key="X" Modifiers="Control"/>
+        <KeyBinding Command="Copy" Key="C" Modifiers="Control"/>
+        <KeyBinding Command="Paste" Key="V" Modifiers="Control"/>
+        <KeyBinding Command="local:MainWindow.InsertCommand" Key="Insert" />
+        <KeyBinding Command="Delete" Key="Delete" />
+    </Window.InputBindings>
+    <Window.CommandBindings>
+        <CommandBinding Command="Save" Executed="OnSave"/>
+        <CommandBinding Command="Undo" Executed="OnUndo" CanExecute="OnCanUndo"/>
+        <CommandBinding Command="Redo" Executed="OnRedo" CanExecute="OnCanRedo"/>
+        <CommandBinding Command="Cut" Executed="OnCut" CanExecute="OnCanCut"/>
+        <CommandBinding Command="Copy" Executed="OnCopy" CanExecute="OnCanCopy"/>
+        <CommandBinding Command="Paste" Executed="OnPaste" CanExecute="OnCanPaste"/>
+        <CommandBinding Command="local:MainWindow.InsertCommand" Executed="OnInsert"/>
+        <CommandBinding Command="Delete" Executed="OnDelete" PreviewCanExecute="OnCanDelete"/>
+    </Window.CommandBindings>
+    <DockPanel>
+        <Menu IsMainMenu="True" DockPanel.Dock="Top" >
+            <MenuItem Header="_File">
+                <MenuItem Header="_Save" Command="Save"/>
+                <Separator/>
+                <MenuItem Header="Se_ttings..." Click="OnShowSettings"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Command="Undo" Header="{Binding Path=UndoCommandCaption, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}}"
+                          ToolTip="{Binding Path=UndoCommandDescription, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}}"/>
+                <MenuItem Command="Redo" Header="{Binding Path=RedoCommandCaption, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}}"
+                          ToolTip="{Binding Path=RedoCommandDescription, Mode=OneWay, RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}}"/>
+                <Separator/>
+                <MenuItem Header="Cu_t" Command="Cut"/>
+                <MenuItem Header="_Copy" Command="Copy"/>
+                <MenuItem Header="_Paste" Command="Paste"/>
+                <Separator/>
+                <MenuItem Header="_Insert" Command="local:MainWindow.InsertCommand" InputGestureText="Insert"/>
+                <MenuItem Header="_Delete" Command="Delete"/>
+            </MenuItem>
+            <MenuItem Padding="1">
+                <MenuItem.Header>
+                    <Button x:Name="PreviousButton" Click="PreviousButton_Click" ToolTip="Goto previous day">
+                        <Image Width="16" Height="16">
+                            <Image.Source >
+                                <DrawingImage Drawing="{StaticResource UpArrow}"  />
+                            </Image.Source>
+                        </Image>
+                    </Button>
+                </MenuItem.Header>
+            </MenuItem>
+            <MenuItem Padding="1">
+                <MenuItem.Header>
+                    <Button x:Name="NextButton" Click="NextButton_Click" ToolTip="Goto next day">
+                        <Image Width="16" Height="16">
+                            <Image.Source >
+                                <DrawingImage Drawing="{StaticResource DownArrow}"  />
+                            </Image.Source>
+                        </Image>
+                    </Button>
+                </MenuItem.Header>
+            </MenuItem>
+        </Menu>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem HorizontalAlignment="Left">
+                <TextBlock x:Name="Message"/>
+            </StatusBarItem>
+            <StatusBarItem x:Name="TotalTime" HorizontalAlignment="Right" >
+                <TextBlock Text="{Binding Path=TotalTime, Mode=OneWay, Converter={StaticResource TimeSpanConverter}}"/>
+            </StatusBarItem>
+        </StatusBar>
+        <DataGrid x:Name="DataGrid" ItemsSource="{Binding Tasks}" AutoGenerateColumns="false" HorizontalGridLinesBrush="#FFCEC3C3" VerticalGridLinesBrush="#FFCEC3C3"
+                  RowStyle="{StaticResource RowStyle}" AlternationCount="2" CanUserAddRows="true" CanUserDeleteRows="False">
+            <DataGrid.Columns>
+                <local:DataGridTimeColumn Header="Time" Binding="{Binding StartTime, Mode=TwoWay}"/>
+                <DataGridTextColumn Header="Task Description" Binding="{Binding Description, Mode=TwoWay}" Width="*"
+                                   CellStyle="{StaticResource DescriptionStyle}">
+                </DataGridTextColumn>
+                <local:DataGridTimeSpanColumn Header="Duration" Binding="{Binding Duration, Mode=TwoWay}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </DockPanel>
+</Window>
