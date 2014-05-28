@@ -6,6 +6,7 @@
     xmlns:s="using:System"
     xmlns:dv="using:WinRTXamlToolkit.Controls.DataVisualization"
     xmlns:charting="using:WinRTXamlToolkit.Controls.DataVisualization.Charting"
+    xmlns:c="using:WinRTXamlToolkit.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -34,7 +35,16 @@
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-
+        
+        <StackPanel Orientation="Horizontal">
+            <Grid Margin="20">
+                <TextBlock Text="Utilization" FontSize="24" Foreground="Gray"/>
+                <c:RingSlice Radius="75" InnerRadius="55" StartAngle="0" EndAngle="220" Fill="Salmon"/>
+                <TextBlock Text="60%" Foreground="Salmon" FontSize="30" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Grid>
+            
+            
+        </StackPanel>
         <charting:Chart x:Name="ChartByDay" Grid.Row="1"  LegendStyle="{StaticResource InvisibleLegend}" >
             <charting:Chart.Series>
                 <charting:ColumnSeries IndependentValueBinding="{Binding Path=Date}" 
