@@ -15,6 +15,8 @@
             <MenuItem Header="3 x 7 in" IsCheckable="True" Tag="PaperSize3x7" Click="OnPageSizeChanged"/>
         </ContextMenu>
         
+        <SolidColorBrush x:Key="ResizerThumbBrush" Color="#C08080B0"/>
+        
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="Cut" Executed="Cut" CanExecute="HasSelectedItem"/>
@@ -118,7 +120,7 @@
                                         Drawing="{StaticResource CheckerBoxBackground}"/>
 
                 </Grid.Background>
-                <WrapPanel x:Name="Canvas" Orientation="Vertical" Margin="0"/>
+                <WrapPanel x:Name="Canvas" Orientation="Vertical" Margin="12"/>
                 <Canvas x:Name="Adorners" Margin="0"/>
             </Grid>
         </ScrollViewer>

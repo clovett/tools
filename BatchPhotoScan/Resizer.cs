@@ -93,10 +93,32 @@ namespace Walkabout.Controls
             InvalidateVisual();
         }
 
-        static Brush ThumbBrush = Brushes.Navy;
-        static Brush BorderBrush = Brushes.Navy;
+
+        public double ThumbSize
+        {
+            get { return thumbSize; }
+            set { thumbSize = value; }
+        }
+
+        Brush thumbBrush = Brushes.Navy;
+
+        public Brush ThumbBrush
+        {
+            get { return thumbBrush; }
+            set { thumbBrush = value; }
+        }
+
+        Brush borderBrush = Brushes.Navy;
+
+        public Brush BorderBrush
+        {
+            get { return borderBrush; }
+            set { borderBrush = value; }
+        }
+
         static Brush SmokyGlassBrush = new SolidColorBrush(Color.FromArgb(0xA0, 0xe0, 0xe0, 0xff));
-        double ThumbSize = 8;
+        double thumbSize = 8;
+
         double[] dashes = new double[] { 3, 3 };
         double offset = 0;
 
@@ -112,7 +134,7 @@ namespace Walkabout.Controls
             CombinedGeometry mask = new CombinedGeometry(GeometryCombineMode.Exclude, new RectangleGeometry(imageBounds), new RectangleGeometry(resizerBounds));            
             drawingContext.DrawGeometry(SmokyGlassBrush, null, mask);
 
-            Pen pen = new Pen(BorderBrush, 1);
+            Pen pen = new Pen(borderBrush, 1);
             pen.DashStyle = new DashStyle(dashes, offset);
             offset++;
             if (offset == 6)
@@ -123,16 +145,16 @@ namespace Walkabout.Controls
             Rect box = resizerBounds;
             drawingContext.DrawRectangle(null, pen, box);
             
-            drawingContext.DrawRectangle(ThumbBrush, null, TopLeftThumb);
-            drawingContext.DrawRectangle(ThumbBrush, null, TopMiddleThumb);
-            drawingContext.DrawRectangle(ThumbBrush, null, TopRightThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, TopLeftThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, TopMiddleThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, TopRightThumb);
 
-            drawingContext.DrawRectangle(ThumbBrush, null, MiddleLeftThumb);
-            drawingContext.DrawRectangle(ThumbBrush, null, MiddleRightThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, MiddleLeftThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, MiddleRightThumb);
 
-            drawingContext.DrawRectangle(ThumbBrush, null, BottomLeftThumb);
-            drawingContext.DrawRectangle(ThumbBrush, null, BottomMiddleThumb);
-            drawingContext.DrawRectangle(ThumbBrush, null, BottomRightThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, BottomLeftThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, BottomMiddleThumb);
+            drawingContext.DrawRectangle(thumbBrush, null, BottomRightThumb);
 
         }
 
@@ -353,7 +375,7 @@ namespace Walkabout.Controls
         public Rect TopLeftThumb
         {
             get { 
-                Rect result = new Rect(bounds.Left - ThumbSize, bounds.Top - ThumbSize, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Left - thumbSize, bounds.Top - thumbSize, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -363,7 +385,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Left + bounds.Width / 2 - ThumbSize / 2, bounds.Top - ThumbSize, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Left + bounds.Width / 2 - thumbSize / 2, bounds.Top - thumbSize, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -372,7 +394,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Right, bounds.Top - ThumbSize, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Right, bounds.Top - thumbSize, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -381,7 +403,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Left - ThumbSize, bounds.Top + bounds.Height / 2 - ThumbSize / 2, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Left - thumbSize, bounds.Top + bounds.Height / 2 - thumbSize / 2, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -391,7 +413,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Right, bounds.Top + bounds.Height / 2 - ThumbSize / 2, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Right, bounds.Top + bounds.Height / 2 - thumbSize / 2, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -401,7 +423,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Left - ThumbSize, bounds.Bottom, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Left - thumbSize, bounds.Bottom, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -411,7 +433,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Left + bounds.Width / 2 - ThumbSize / 2, bounds.Bottom, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Left + bounds.Width / 2 - thumbSize / 2, bounds.Bottom, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }
@@ -421,7 +443,7 @@ namespace Walkabout.Controls
         {
             get
             {
-                Rect result = new Rect(bounds.Right, bounds.Bottom, ThumbSize, ThumbSize);
+                Rect result = new Rect(bounds.Right, bounds.Bottom, thumbSize, thumbSize);
                 result.Offset(-limit.Left, -limit.Top);
                 return result;
             }

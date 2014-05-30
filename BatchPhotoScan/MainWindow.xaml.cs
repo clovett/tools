@@ -30,6 +30,8 @@ namespace BatchPhotoScan
         private AttachmentDialogItem selected;
         private string directory;
         private int nextImageIndex;
+        private Brush resizerBrush;
+        const double ResizerThumbSize = 12;
 
         public MainWindow()
         {
@@ -41,6 +43,8 @@ namespace BatchPhotoScan
             CanvasGrid.PreviewMouseDown += new MouseButtonEventHandler(CanvasGrid_MouseDown);
 
             SelectPageSize("PaperSize4x6");
+
+            resizerBrush = (Brush)Resources["ResizerThumbBrush"];
         }
 
         void CanvasGrid_MouseDown(object sender, MouseButtonEventArgs e)
@@ -189,7 +193,7 @@ namespace BatchPhotoScan
                     WIA.Item scannerItem = scanner.Items[1];
 
                     SetDPI(scannerItem, 600);
-                    SetScannerBounds(scannerItem, 0, 0, (int)(600 * selectedPageSize.Width), (int)(600 * selectedPageSize.Height)); 
+                    SetScannerBounds(scannerItem, 0, 0, (int)(600 * selectedPageSize.Width), (int)(600 * selectedPageSize.Height));
                     const string wiaFormatPNG = "{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}";
                     object scanResult = cdc.ShowTransfer(scannerItem, wiaFormatPNG, false);
                     imageFile = (WIA.ImageFile)scanResult;
@@ -213,6 +217,10 @@ namespace BatchPhotoScan
                     ZoomToFit(this, new RoutedEventArgs());
                     SetDirty();
                 }
+            }
+            catch
+            {
+                scanner = null;
             }
             finally
             {
@@ -369,6 +377,8 @@ namespace BatchPhotoScan
             if (resizer == null)
             {
                 resizer = new Resizer();
+                resizer.BorderBrush = resizer.ThumbBrush = this.resizerBrush;
+                resizer.ThumbSize = ResizerThumbSize;
                 resizer.Resized += OnResized;
                 resizer.Resizing += OnResizing;
                 this.Adorners.Children.Add(resizer);
