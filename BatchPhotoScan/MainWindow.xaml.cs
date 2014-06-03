@@ -28,17 +28,17 @@ namespace BatchPhotoScan
         private Resizer resizer;
         private bool dirty;
         private AttachmentDialogItem selected;
-        private string directory;
         private int nextImageIndex;
         private Brush resizerBrush;
         const double ResizerThumbSize = 12;
+        Settings _settings;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-            Directory = path;
+            _settings = App.Settings;
+            SetDirectory(_settings.PhotoDir);
 
             CanvasGrid.PreviewMouseDown += new MouseButtonEventHandler(CanvasGrid_MouseDown);
 
@@ -126,8 +126,8 @@ namespace BatchPhotoScan
 
         public string Directory
         {
-            get { return directory; }
-            set { directory = value; OnDirectoryChanged(); }
+            get { return _settings.PhotoDir; }
+            set { _settings.PhotoDir = value;  OnDirectoryChanged(); }
         }
 
         private void OnDirectoryChanged()
@@ -135,7 +135,7 @@ namespace BatchPhotoScan
             int max = 0;
 
             // scan the directory and find the largest file index.
-            foreach (string name in System.IO.Directory.GetFiles(this.directory))
+            foreach (string name in System.IO.Directory.GetFiles(this.Directory))
             {
                 string fname = Path.GetFileNameWithoutExtension(name);
                 for (int i = fname.Length - 1; i >= 0; i--)
@@ -155,7 +155,7 @@ namespace BatchPhotoScan
             this.nextImageIndex = max + 1;
         }
 
-        WIA.ICommonDialog cdc = new WIA.CommonDialog();
+        WIA.ICommonDialog cdc;
         WIA.Device scanner;
         bool scanning;
 
@@ -177,16 +177,31 @@ namespace BatchPhotoScan
             }
         }
 
-        private void Scan()
+        private async Task<WIA.Device> GetScanner()
+        {
+            if (scanner == null)
+            {
+                await Task.Run(new Action(() => {
+                    if (cdc == null)
+                    {
+                        cdc = new WIA.CommonDialog();
+                    }
+                    scanner = cdc.ShowSelectDevice(DeviceType: WIA.WiaDeviceType.ScannerDeviceType, AlwaysSelectDevice: true);
+                }));
+
+            }
+            return scanner;
+        }
+
+        private async void Scan()
         {
             scanning = true;
             try
             {
                 CommandManager.InvalidateRequerySuggested();
-                if (scanner == null)
-                {
-                    scanner = cdc.ShowSelectDevice(DeviceType: WIA.WiaDeviceType.ScannerDeviceType, AlwaysSelectDevice: true);
-                }
+
+                var scanner = await GetScanner();
+
                 WIA.ImageFile imageFile = null;
                 if (scanner != null)
                 {
@@ -220,6 +235,10 @@ namespace BatchPhotoScan
             }
             catch
             {
+                if (scanner != null)
+                {
+                    MessageBox.Show("Error scanning, please check your scanner and try again", "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
                 scanner = null;
             }
             finally
@@ -424,6 +443,8 @@ namespace BatchPhotoScan
         {
             base.OnClosing(e);
 
+            _settings.SaveSettings();
+
             if (dirty)
             {
                 Save(this, null);
@@ -487,7 +508,7 @@ namespace BatchPhotoScan
 
         private string GetNextImageFileName()
         {
-            return Path.Combine(this.directory, "Scan" + this.nextImageIndex++);
+            return Path.Combine(this.Directory, "Scan" + this.nextImageIndex++);
         }
 
         private void Save(object sender, ExecutedRoutedEventArgs e)
@@ -746,13 +767,18 @@ namespace BatchPhotoScan
         private void OnFolderLinkClick(object sender, RoutedEventArgs e)
         {
             System.Windows.Forms.FolderBrowserDialog fd = new System.Windows.Forms.FolderBrowserDialog();
-            fd.SelectedPath = this.directory;
+            fd.SelectedPath = this.Directory;
             if (fd.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
-                this.Directory = fd.SelectedPath;
-                FolderLink.Inlines.Clear();
-                FolderLink.Inlines.Add(new Run(this.directory));
+                SetDirectory(fd.SelectedPath);
             }
+        }
+
+        private void SetDirectory(string path)
+        {
+            this.Directory = path;
+            FolderLink.Inlines.Clear();
+            FolderLink.Inlines.Add(new Run(this.Directory));
         }
 
 

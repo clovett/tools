@@ -70,7 +70,9 @@
       <DependentUpon>DropDownButton.xaml</DependentUpon>
     </Compile>
     <Compile Include="EdgeDetector.cs" />
+    <Compile Include="IsolatedStorage.cs" />
     <Compile Include="Resizer.cs" />
+    <Compile Include="Settings.cs" />
     <Compile Include="TempFileCollection.cs" />
     <Compile Include="XamlHelpers.cs" />
     <Page Include="DropDownButton.xaml">
