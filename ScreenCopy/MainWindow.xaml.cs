@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -24,26 +26,66 @@ namespace ScreenCopy
     public partial class MainWindow : Window
     {
         int index;
+        Settings settings;
+        ObservableCollection<Thumbnail> thumbnails = new ObservableCollection<Thumbnail>();
 
         public MainWindow()
         {
             InitializeComponent();
 
-            Directory.Text = System.IO.Path.GetTempPath();
+            settings = Settings.Instance;
+
+            if (string.IsNullOrEmpty(settings.Directory))
+            {
+                Directory.Text = System.IO.Path.GetTempPath();   
+            }
+            else
+            {
+                Directory.Text = settings.Directory;
+            }
+
+            ThumbnailView.ItemsSource = thumbnails;
         }
 
-        private void OnSnap(object sender, RoutedEventArgs e)
+        protected override void OnClosed(EventArgs e)
+        {
+            settings.Directory = Directory.Text;
+            settings.Save();
+            base.OnClosed(e);
+        }
+
+        private async void OnSnap(object sender, RoutedEventArgs e)
         {
             try
             {
+                SnapButton.IsEnabled = false;
+                string delay = TextBoxDelay.Text;
+                double seconds = 0;
+                if (double.TryParse(delay, out seconds) && seconds > 0)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(seconds));
+                }
+
                 index++;
-                ImageFile.Text = "";
+                SoundPlayer.Source = ResolveAsset("assets/shutter.mp3");
+                var nowait = Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    SoundPlayer.Play();
+                }));               
                 GrabScreenToFile(System.IO.Path.Combine(Directory.Text, "image" + index + ".png"), System.Drawing.Imaging.ImageFormat.Png);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error Creating Screenshot", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            SnapButton.IsEnabled = true;
+        }
+
+        Uri ResolveAsset(string relativePath)
+        {
+            Uri baseUri = new Uri(this.GetType().Assembly.Location);
+            Uri resolved = new Uri(baseUri, relativePath);
+            return resolved;
         }
 
         private void GrabScreenToFile(string fileName, System.Drawing.Imaging.ImageFormat imgFormat)
@@ -90,10 +132,37 @@ namespace ScreenCopy
 
                     img.Save(fullPath, imgFormat);
 
-                    ImageFile.Text = System.IO.Path.GetFileName(fullPath);
-                    ImageFile.Tag = fullPath;
+                    AddThumbnail(fullPath, img);
                 }
             }
+        }
+
+        private void AddThumbnail(string path, System.Drawing.Image img)
+        {
+            using (var smallImage = img.GetThumbnailImage(200, 200, new System.Drawing.Image.GetThumbnailImageAbort(() => { return false; }), IntPtr.Zero))
+            {
+
+                var thumbnail = new Thumbnail()
+                {
+                    Path = path,
+                    Image = ConvertToWpfImage(smallImage)
+                };
+                thumbnails.Add(thumbnail);
+
+            }
+        }
+
+        private ImageSource ConvertToWpfImage(System.Drawing.Image smallImage)
+        {
+            MemoryStream ms = new MemoryStream();
+            smallImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+
+            BitmapImage result = new System.Windows.Media.Imaging.BitmapImage();
+            result.BeginInit();
+            result.StreamSource = new MemoryStream(ms.ToArray());
+            result.EndInit();
+
+            return result;
         }
 
         private void ForceDelete(string fileName)
@@ -119,10 +188,32 @@ namespace ScreenCopy
             }
         }
 
-        private void OnImageFileClick(object sender, MouseButtonEventArgs e)
+
+        private void OnThumbnailSelected(object sender, SelectionChangedEventArgs e)
         {
-            string path = (string)ImageFile.Tag;
-            NativeMethods.OpenUrl(IntPtr.Zero, new Uri(path));
+            if (e.AddedItems.Count > 0)
+            {
+                Thumbnail nail = e.AddedItems[0] as Thumbnail;
+                string path = nail.Path;
+                NativeMethods.OpenUrl(IntPtr.Zero, new Uri(path));
+            }
+        }
+
+        private void OnListViewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                List<Thumbnail> toRemove = new List<Thumbnail>();
+                foreach (Thumbnail item in ThumbnailView.SelectedItems)
+                {
+                    toRemove.Add(item);
+                }
+
+                foreach (var item in toRemove)
+                {
+                    thumbnails.Remove(item);
+                }
+            }
         }
     }
 }
