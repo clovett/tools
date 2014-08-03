@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="350" Width="525">
 
-    <Grid>
+    <Grid Background="Black">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -19,70 +19,21 @@
             <TextBox x:Name="CharacterBox" Grid.Column="1" Text="E124" HorizontalAlignment="Left" VerticalAlignment="Top" Width="200"
                      TextChanged="OnCharacterChanged"/>
         </Grid>
-        <Border x:Name="IconBorder" Width="300" Height="300" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" Grid.Row="1"
+        <Border x:Name="IconBorder" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" Grid.Row="1"
                 >
-            <Canvas >
-                <Path x:Name="AzureCloud" Data="M396,334.04C331,334.04,259,335.04,203,333.04C132,329.04,141,213.04,234,219.04C215,136.04,280,83.04,367,136.04C422,25.04,532,52.04,538,164.04C588,165.04,629,223.04,598,292.04C564,346.04,459,333.04,397,335.04z"
-                                       Stroke="White" StrokeThickness="5" Fill="Blue">
-                    <Path.RenderTransform>
-                        <TransformGroup>
-                            <TranslateTransform X="-140" Y="0"/>
-                            <ScaleTransform ScaleX=".6" ScaleY=".6"/>
-                        </TransformGroup>
-                    </Path.RenderTransform>
+            <Grid  Width="100" Height="100">
+                <Ellipse Width="40" Height="30" Fill="White"/>
+                <Path Stroke="White" StrokeThickness="10" StrokeEndLineCap="Round" StrokeStartLineCap="Round">
+                    <Path.Data>
+                        <PathGeometry>
+                            <PathFigure StartPoint="5,50">
+                                <ArcSegment Point="95,50" Size="50,50" RotationAngle="180" SweepDirection="Clockwise"/>
+                            </PathFigure>
+                        </PathGeometry>
+                    </Path.Data>
                 </Path>
-                <TextBlock x:Name="CharacterText" Text="&#x1F60a;" FontSize="48"  FontFamily="Segoe UI Symbol" Foreground="white" 
-                          Margin="70,120,0,0"/>
 
-                <Grid Width="68" Height="210" Margin="150,90,0,0">
-                    <Grid.RenderTransform>
-                        <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
-                    </Grid.RenderTransform>
-
-                    <Path StrokeThickness="7" Fill="Red"
-                              HorizontalAlignment="Left"
-                              VerticalAlignment="Top">
-                        <Path.Clip>
-                            <RectangleGeometry x:Name="MercuryClip" Rect="0,50,80,200"/>
-                        </Path.Clip>
-                        <Path.Data>
-                            <PathGeometry>
-                                <PathGeometry.Figures>
-                                    <PathFigure StartPoint="14,24" IsFilled="True" IsClosed="True">
-                                        <ArcSegment Size="20,20" RotationAngle="180" SweepDirection="Clockwise"
-                                        Point="54,24"/>
-                                        <LineSegment Point="54,150"/>
-                                        <ArcSegment Size="30,30" RotationAngle="270" SweepDirection="Clockwise"
-                                        IsLargeArc="True"
-                                        Point="14,150"/>
-                                        <LineSegment Point="14,24"/>
-                                    </PathFigure>
-                                </PathGeometry.Figures>
-                            </PathGeometry>
-                        </Path.Data>
-                    </Path>
-
-                    <Path Stroke="White" StrokeThickness="7"
-                              HorizontalAlignment="Left"
-                              VerticalAlignment="Top">
-                        <Path.Data>
-                            <PathGeometry>
-                                <PathGeometry.Figures>
-                                    <PathFigure StartPoint="14,24" IsFilled="False" IsClosed="True">
-                                        <ArcSegment Size="20,20" RotationAngle="180" SweepDirection="Clockwise"
-                                        Point="54,24"/>
-                                        <LineSegment Point="54,150"/>
-                                        <ArcSegment Size="30,30" RotationAngle="270" SweepDirection="Clockwise"
-                                        IsLargeArc="True"
-                                        Point="14,150"/>
-                                        <LineSegment Point="14,24"/>
-                                    </PathFigure>
-                                </PathGeometry.Figures>
-                            </PathGeometry>
-                        </Path.Data>
-                    </Path>
-                </Grid>
-            </Canvas>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="2">
