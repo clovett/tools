@@ -34,10 +34,27 @@ namespace OutlookSync.Model
         public void StartOutlook()
         {
             outlook = new Microsoft.Office.Interop.Outlook.Application();
+            outlook.MAPILogonComplete += OnMAPILogonComplete;
+            var session = outlook.Session;
 
+        }
+
+        public event EventHandler LogonComplete;
+
+        private void OnLogonComplete()
+        {
+            if (LogonComplete != null)
+            {
+                LogonComplete(this, EventArgs.Empty);
+            }
+        }
+
+
+        private void LoadAddresses()
+        {
             // index the address entries so we can match them up on new appointment recipients.
             for (int i = 1; i <= outlook.Session.AddressLists.Count; i++)
-            {                
+            {
                 AddressList addressBook = outlook.Session.AddressLists[i];
                 string name = addressBook.Name;
                 var type = addressBook.AddressListType;
@@ -49,6 +66,12 @@ namespace OutlookSync.Model
                     }
                 }
             }
+        }
+
+        void OnMAPILogonComplete()
+        {
+            Console.WriteLine("OnMAPILogonComplete");
+            OnLogonComplete();
         }
 
         /// <summary>
@@ -63,11 +86,12 @@ namespace OutlookSync.Model
             {
                 throw new System.Exception(Properties.Resources.NoOutlook);
             }
-
+            
             await Task.Run(new System.Action(() =>
             {
+                LoadAddresses();
 
-                var mapi = outlook.GetNamespace("MAPI");
+                var mapi = outlook.Session;
 
                 HashSet<string> found = new HashSet<string>();
 

@@ -115,7 +115,7 @@ namespace OutlookSync.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Outlook does not appear to be installed on this machine.  .
+        ///   Looks up a localized string similar to Error starting Outlook.  Reason: {0}.
         /// </summary>
         internal static string NoOutlook {
             get {
@@ -129,6 +129,15 @@ namespace OutlookSync.Properties {
         internal static string NoPortsAvailable {
             get {
                 return ResourceManager.GetString("NoPortsAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error loading Outlook data, something is blocking Outlook.  Reason: {0}.
+        /// </summary>
+        internal static string OutlookUnavailable {
+            get {
+                return ResourceManager.GetString("OutlookUnavailable", resourceCulture);
             }
         }
         

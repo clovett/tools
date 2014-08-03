@@ -176,19 +176,23 @@ namespace OutlookSync
 
                 // get new contact info from outlook ready for syncing with this phone.
                 var loader = new OutlookStoreLoader();
-                bool started = false;
+
                 try
                 {
                     loader.StartOutlook();
-                    started = true;
+
+                    try
+                    {
+                        await loader.UpdateAsync(store);
+                    }                
+                    catch (Exception ex)
+                    {
+                        ShowMessage(string.Format(Properties.Resources.OutlookUnavailable, ex.Message));
+                    }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    ShowMessage(Properties.Resources.NoOutlook);
-                }
-                if (started)
-                {
-                    await loader.UpdateAsync(store);
+                    ShowMessage(string.Format(Properties.Resources.NoOutlook, ex.Message));
                 }
 
             }
