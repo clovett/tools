@@ -96,7 +96,51 @@ namespace HtmlScraper
 
         private void Run()
         {
-            Scrape(this.baseUrl);
+            try
+            {
+                Scrape(this.baseUrl);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("### error: " + ex.Message);
+            }
+        }
+
+        XmlNodeList Select(XmlNode scope, string xpath)
+        {
+            int letterA = Convert.ToInt32('a');
+            int prefix = 0;
+            XmlNamespaceManager mgr = new XmlNamespaceManager(scope.OwnerDocument.NameTable);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0, n = xpath.Length; i < n; i++ )
+            {
+                char c = xpath[i];
+                if (c == '{')
+                {
+                    i++;
+                    int j = xpath.IndexOf('}', i);
+                    if (j > i)
+                    {
+                        if (prefix == 26)
+                        {
+                            throw new Exception("too many namespaces in your xpath, we only support 26");                            
+                        }
+                        string nsUri = xpath.Substring(i, j - i);
+                        char nsPrefix = Convert.ToChar(letterA + prefix++);
+                        sb.Append(nsPrefix);
+                        sb.Append(':');
+                        mgr.AddNamespace(nsPrefix.ToString(), nsUri);
+                        i = j;
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            string prefixedXPath = sb.ToString();
+            return scope.SelectNodes(prefixedXPath, mgr);
         }
 
 
@@ -109,7 +153,7 @@ namespace HtmlScraper
             {
                 try
                 {
-                    foreach (XmlNode e in doc.SelectNodes(scope))
+                    foreach (XmlNode e in Select(doc, scope))
                     {
                         scopes.Add(e);
                     }
@@ -134,7 +178,7 @@ namespace HtmlScraper
 
             foreach (XmlNode root in scopes)
             {
-                foreach (XmlNode d in root.SelectNodes(select))
+                foreach (XmlNode d in Select(root, select))
                 {
                     count++;
                     if (inner)

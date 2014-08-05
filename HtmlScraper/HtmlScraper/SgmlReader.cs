@@ -376,7 +376,7 @@ namespace Sgml
         private StringBuilder m_name;
         private TextWriter m_log;
         private bool m_foundRoot;
-        private bool m_ignoreDtd;
+        private bool m_ignoreDtd;        
 
         // autoclose support
         private Node m_newnode;
