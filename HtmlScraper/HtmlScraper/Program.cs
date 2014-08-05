@@ -103,13 +103,17 @@ namespace HtmlScraper
         private void Scrape(Uri url)
         {
             XmlDocument doc = LoadHtmlPage(url);
-            XmlElement e = doc.DocumentElement;
+
+            List<XmlNode> scopes = new List<XmlNode>();
             if (scope != null)
             {
                 try
                 {
-                    e = doc.SelectSingleNode(scope) as XmlElement;
-                    if (e == null)
+                    foreach (XmlNode e in doc.SelectNodes(scope))
+                    {
+                        scopes.Add(e);
+                    }
+                    if (scopes.Count == 0)
                     {
                         Console.WriteLine("no elements matching scope: " + scope);
                         return;
@@ -121,19 +125,26 @@ namespace HtmlScraper
                     return;
                 }
             }
-            
+            else
+            {
+                scopes.Add(doc.DocumentElement);
+            }
 
             int count = 0;
-            foreach (XmlNode d in e.SelectNodes(select))
+
+            foreach (XmlNode root in scopes)
             {
-                count++;
-                if (inner)
+                foreach (XmlNode d in root.SelectNodes(select))
                 {
-                    Console.WriteLine(d.InnerText);
-                }
-                else
-                {
-                    Console.WriteLine(d.OuterXml);
+                    count++;
+                    if (inner)
+                    {
+                        Console.WriteLine(d.InnerText);
+                    }
+                    else
+                    {
+                        Console.WriteLine(d.OuterXml);
+                    }
                 }
             }
             if (count == 0)
