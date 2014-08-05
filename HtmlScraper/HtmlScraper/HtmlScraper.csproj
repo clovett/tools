@@ -7,8 +7,8 @@
     <ProjectGuid>{D87DE949-4B2E-43C6-AC6F-C9750BC6FC3A}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>UrlScraper</RootNamespace>
-    <AssemblyName>UrlScraper</AssemblyName>
+    <RootNamespace>HtmlScraper</RootNamespace>
+    <AssemblyName>HtmlScraper</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -47,15 +47,14 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SgmlParser.cs" />
+    <Compile Include="SgmlReader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\..\SGMLReader\SgmlReader\Html.dtd">
+      <Link>Html.dtd</Link>
+    </EmbeddedResource>
     <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\SGMLReader\sgmlreaderdll\SgmlReaderDll.csproj">
-      <Project>{499527ff-ae52-450f-b3e3-4ad53e1712ad}</Project>
-      <Name>SgmlReaderDll</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
