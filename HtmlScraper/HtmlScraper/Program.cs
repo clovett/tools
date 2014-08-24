@@ -1,6 +1,7 @@
 ﻿using Sgml;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -17,6 +18,9 @@ namespace HtmlScraper
         string select;
         bool inner;
         Uri baseUrl;
+        string userid;
+        string password;
+        WebClient client;
 
         static void Main(string[] args)
         {
@@ -38,6 +42,8 @@ namespace HtmlScraper
             Console.WriteLine("    /select xpath    an xpath expression for selecting things in the page, for example: //a/@href");
             Console.WriteLine("    [/scope  xpath]  an xpath expression for selecting the scope of the search, example: /html/body limits search to the body tag.");
             Console.WriteLine("    /inner           print the inner text of the matching nodes");
+            Console.WriteLine("    [/userid userid]         credentials for https login if required");
+            Console.WriteLine("    [/password password]     credentials for https login if required");
         }
 
         private bool ParseCommandLine(string[] args)
@@ -67,7 +73,19 @@ namespace HtmlScraper
                             continue;
                         case "inner":
                             inner = true;
-                            continue;                        
+                            continue;
+                        case "userid":
+                            if (i + 1 < args.Length)
+                            {
+                                userid = args[++i];
+                            }
+                            continue;
+                        case "password":
+                            if (i + 1 < args.Length)
+                            {
+                                password = args[++i];
+                            }
+                            continue;                             
                     }
                 }
                 
@@ -108,9 +126,14 @@ namespace HtmlScraper
 
         XmlNodeList Select(XmlNode scope, string xpath)
         {
+            XmlDocument doc = scope.OwnerDocument;
+            if (doc == null)
+            {
+                doc = scope as XmlDocument;
+            }
             int letterA = Convert.ToInt32('a');
             int prefix = 0;
-            XmlNamespaceManager mgr = new XmlNamespaceManager(scope.OwnerDocument.NameTable);
+            XmlNamespaceManager mgr = new XmlNamespaceManager(doc.NameTable);
             StringBuilder sb = new StringBuilder();
             for (int i = 0, n = xpath.Length; i < n; i++ )
             {
@@ -215,22 +238,37 @@ namespace HtmlScraper
                 }
                 else
                 {
-                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-                    request.Method = "GET";
-                    request.UseDefaultCredentials = true;
-                    HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    this.client = new WebClient();
+                    byte[] data = this.client.DownloadData(url);
+                    XmlDocument doc = ParseHtmlAsXml(new MemoryStream(data), "utf-8");
+
+                    string title = null;
+                    foreach (XmlNode node in Select(doc, "//title"))
                     {
-                        string encoding = response.ContentEncoding;
-                        using (var stream = response.GetResponseStream())
-                        {
-                            return ParseHtmlAsXml(stream, encoding);
-                        }
+                        title = node.InnerText;
                     }
-                    else
+
+                    if (title.Contains("Login"))
                     {
-                        Console.WriteLine("### error: " + response.StatusDescription);
+                        doc = Login(url, doc);
                     }
+
+                    //HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+                    //request.Method = "GET";
+                    //request.UseDefaultCredentials = true;
+                    //HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                    //if (response.StatusCode == HttpStatusCode.OK)
+                    //{
+                    //    string encoding = response.ContentEncoding;
+                    //    using (var stream = response.GetResponseStream())
+                    //    {
+                    //        return ParseHtmlAsXml(stream, encoding);
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    Console.WriteLine("### error: " + response.StatusDescription);
+                    //}
                 }
             }
             catch (Exception ex)
@@ -238,6 +276,74 @@ namespace HtmlScraper
                 Console.WriteLine("### error: " + ex.Message);
             }
             return null;
+        }
+
+        private XmlDocument Login(Uri baseUrl, XmlDocument loginForm)
+        {
+            XmlElement form = Select(loginForm, "//form").FirstOrDefault() as XmlElement;
+            if (form == null)
+            {
+                throw new Exception("Login failed to find html form");                
+            }
+
+            string action = form.GetAttribute("action");
+            if (action == null)
+            {
+                throw new Exception("Login failed to find html form 'action' attribute");   
+            }
+
+            Uri loginUri = new Uri(baseUrl, action);
+
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(loginUri);
+            request.Method = "POST";
+            request.KeepAlive = true;
+            request.Credentials = new NetworkCredential(this.userid, this.password);            
+
+            StringBuilder sb = new StringBuilder();
+            foreach (XmlElement node in Select(form, ".//input"))
+            {
+                string id = node.GetAttribute("id");
+                if (!string.IsNullOrEmpty(id))
+                {
+                    if (sb.Length > 0)
+                    {
+                        sb.Append("&");
+                    }
+
+                    string value = node.GetAttribute("value");
+                    string type = node.GetAttribute("type");
+
+                    if (string.IsNullOrEmpty(value) && type != "hidden")
+                    {
+                        string lid = id.ToLowerInvariant();
+                        if (lid.Contains("user") || lid.Contains("email"))
+                        {
+                            value = this.userid;
+                        }
+                        else if (lid.Contains("password"))
+                        {
+                            value = this.password;
+                        }
+                    }
+                    if (value == null) value = "";
+                    sb.Append(id);
+                    sb.Append("=");
+                    sb.Append(value);
+                }
+            }
+
+            request.UserAgent = "Agent=Mozilla/5.0 (Windows NT 6.3; Win64; x64; Trident/7.0; rv:11.0)";
+            using (Stream stream = request.GetRequestStream())
+            {
+                using (var writer = new StreamWriter(stream, Encoding.UTF8))
+                {
+                    writer.WriteLine(sb.ToString());
+                }
+            }
+
+            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            
+            return ParseHtmlAsXml(response.GetResponseStream(), response.ContentEncoding);
         }
 
         private XmlDocument ParseHtmlAsXml(System.IO.Stream stream, string encoding)
