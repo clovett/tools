@@ -126,7 +126,8 @@ namespace Microsoft.Journal
             if (journal != null && journal.Entries.Count > 0)
             {
                 JournalEntry last = journal.Entries.Last();
-                last.Duration += TimeSpan.FromSeconds(1);
+                TimeSpan span = DateTime.Now - last.StartTime;
+                last.Duration = new TimeSpan(span.Hours, span.Minutes, span.Seconds);
             }
             ticks++;
             if (ticks == 60)
@@ -184,7 +185,7 @@ namespace Microsoft.Journal
             this.journal = await Journal.LoadAsync(file);
             if (this.journal.Entries.Count == 0)
             {
-                this.journal.Entries.Add(new JournalEntry() { Title = "doing nothing" });
+                this.journal.Entries.Add(new JournalEntry() { Title = "doing nothing", StartTime = DateTime.Now });
                 OnSaveFile();
             }
 
@@ -196,7 +197,7 @@ namespace Microsoft.Journal
 
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
-            this.journal.Entries.Add(new JournalEntry() { Title = "new" });
+            this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = DateTime.Now });
 
             var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, new Windows.UI.Core.DispatchedHandler(() =>
             {
@@ -247,6 +248,7 @@ namespace Microsoft.Journal
             {
                 je.IsSelected = true;
             }
+            ButtonDelete.Visibility = (JournalList.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void OnTextBoxLostFocus(object sender, RoutedEventArgs e)
@@ -258,6 +260,10 @@ namespace Microsoft.Journal
         {
             TextBox box = (TextBox)sender;
             box.SelectAll();
+        }
+
+        private void OnButtonDeleteClick(object sender, RoutedEventArgs e)
+        {
         }
 
 

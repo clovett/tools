@@ -105,6 +105,12 @@
                               Click="OnAddClick"
                               Icon="Add"/>
 
+                <AppBarButton x:Name="ButtonDelete"
+                              Visibility="Collapsed"
+                              Label="Delete"
+                              Click="OnButtonDeleteClick"
+                              Icon="Delete"/>
+                
                 <AppBarButton x:Name="ButtonUp"
                               Visibility="Collapsed"
                               Label="Up"

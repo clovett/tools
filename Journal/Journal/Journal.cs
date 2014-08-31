@@ -50,7 +50,7 @@ namespace Microsoft.Journal
     public class JournalEntry : INotifyPropertyChanged
     {
         private bool isSelected;
-
+        private DateTime startTime;
         private TimeSpan duration;
 
         private string title;
@@ -58,6 +58,19 @@ namespace Microsoft.Journal
 
         public JournalEntry() { }
 
+
+        public DateTime StartTime
+        {
+            get { return startTime; }
+            set
+            {
+                if (startTime != value)
+                {
+                    startTime = value;
+                    OnPropertyChanged("StartTime");
+                }
+            }
+        }
 
         public TimeSpan Duration
         {
