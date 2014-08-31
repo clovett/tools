@@ -19,7 +19,7 @@ using Windows.ApplicationModel;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
-namespace Microsoft.Phone.BatteryStretcher.Common
+namespace Microsoft.Utilities
 {
 
     /// <summary>
@@ -37,7 +37,7 @@ namespace Microsoft.Phone.BatteryStretcher.Common
         /// </summary>
         /// <param name="fileName">Name of the file to read.</param>
         /// <returns>Deserialized data object</returns>
-        public async Task<T> LoadFromFileAsync(string fileName)
+        public static async Task<T> LoadFromFileAsync(string fileName)
         {
             T loadedFile = default(T);
 
@@ -56,7 +56,26 @@ namespace Microsoft.Phone.BatteryStretcher.Common
                 {
                     // doesn't exist?
                 }
+                return await LoadFromFileAsync(storageFile);
+            }
+            catch
+            {
+                // silently rebuild data file if it got corrupted.
+            }
+            return loadedFile;
+        }
+        
+        /// <summary>
+        /// Loads data from a file asynchronously.
+        /// </summary>
+        /// <param name="storageFile">The file to load.</param>
+        /// <returns>Deserialized data object</returns>
+        public static async Task<T> LoadFromFileAsync(StorageFile storageFile)
+        {
+            T loadedFile = default(T);
 
+            try
+            {
                 if (storageFile != null)
                 {
                     using (Stream myFileStream = await storageFile.OpenStreamForReadAsync())
@@ -73,7 +92,7 @@ namespace Microsoft.Phone.BatteryStretcher.Common
             return loadedFile;
         }
 
-        public T LoadFromStream(Stream s)
+        public static T LoadFromStream(Stream s)
         {
             // Call the Deserialize method and cast to the object type.
             XmlSerializer mySerializer = new XmlSerializer(typeof(T));
@@ -85,7 +104,7 @@ namespace Microsoft.Phone.BatteryStretcher.Common
         /// </summary>
         /// <param name="fileName">Name of the file to write to</param>
         /// <param name="data">The data to save</param>
-        public async Task SaveToFileAsync(string fileName, T data)
+        public static async Task SaveToFileAsync(string fileName, T data)
         {
             var localFolder = ApplicationData.Current.LocalFolder;
 
@@ -113,16 +132,28 @@ namespace Microsoft.Phone.BatteryStretcher.Common
                     storageFolder = await localFolder.CreateFolderAsync(subdir, CreationCollisionOption.FailIfExists);
                 }
             }
-
+            
             try
             {
                 StorageFile storageFile = await storageFolder.CreateFileAsync(fname, CreationCollisionOption.ReplaceExisting);
+                await SaveToFileAsync(storageFile, data);
+            }
+            catch
+            {
+                // ???
+            }
+        }
+
+        public static async Task SaveToFileAsync(StorageFile storageFile, T data)
+        {
+
+            try
+            {
                 using (IRandomAccessStream fileStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite))
                 {
                     XmlSerializer mySerializer = new XmlSerializer(typeof(T));
                     mySerializer.Serialize(fileStream.AsStreamForWrite(), data);
                 }
-
             }
             catch
             {

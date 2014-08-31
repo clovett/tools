@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.Phone.BatteryStretcher.Common
+namespace Microsoft.Utilities
 {
     public class Settings
     {
@@ -18,8 +18,7 @@ namespace Microsoft.Phone.BatteryStretcher.Common
 
         public static async Task<Settings> LoadAsync()
         {
-            IsolatedStorage<Settings> store = new IsolatedStorage<Settings>();
-            Settings data = await store.LoadFromFileAsync(SettingsFileName);
+            Settings data = await IsolatedStorage<Settings>.LoadFromFileAsync(SettingsFileName);
             if (data == null)
             {
                 data = new Settings();
@@ -31,8 +30,7 @@ namespace Microsoft.Phone.BatteryStretcher.Common
         {
             try
             {
-                IsolatedStorage<Settings> store = new IsolatedStorage<Settings>();
-                await store.SaveToFileAsync(SettingsFileName, this);
+                await IsolatedStorage<Settings>.SaveToFileAsync(SettingsFileName, this);
             }
             catch
             {

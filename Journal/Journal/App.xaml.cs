@@ -1,5 +1,4 @@
-﻿
-using Microsoft.Phone.BatteryStretcher.Common;
+﻿using Microsoft.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -21,7 +20,7 @@ using Windows.UI.Xaml.Navigation;
 
 // The Blank Application template is documented at http://go.microsoft.com/fwlink/?LinkId=391641
 
-namespace Journal
+namespace Microsoft.Journal
 {
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
@@ -31,7 +30,6 @@ namespace Journal
         Settings settings;
         private TransitionCollection transitions;
 
-        const string SettingsFileName = "settings.xml";
 
         /// <summary>
         /// Initializes the singleton application object.  This is the first line of authored code
@@ -60,8 +58,7 @@ namespace Journal
             }
 #endif
 
-            IsolatedStorage<Settings> store = new IsolatedStorage<Settings>();
-            this.settings = await store.LoadFromFileAsync(SettingsFileName);
+            this.settings = await Settings.LoadAsync();
             if (this.settings == null)
             {
                 this.settings = new Settings();
@@ -147,20 +144,16 @@ namespace Journal
         {
             Window w = Window.Current;
             Frame f = w.Content as Frame;
-            IFilePickerContinuable pickable = f.Content as IFilePickerContinuable;
 
             switch (args.Kind)
             {
-                case ActivationKind.PickFileContinuation:
-                    if (pickable != null && args is FileOpenPickerContinuationEventArgs)
-                    {
-                        pickable.ContinueFileOpenPicker(args as FileOpenPickerContinuationEventArgs);
-                    }
-                    break;
                 case ActivationKind.PickSaveFileContinuation:
-                    if (pickable != null && args is FileSavePickerContinuationEventArgs)
+                    
+                    IFileSavePickerContinuable fspc = f.Content as IFileSavePickerContinuable;
+                    var fspcArgs = args as FileSavePickerContinuationEventArgs;
+                    if (fspc != null && fspcArgs != null)
                     {
-                        pickable.ContinueFileSavePicker(args as FileSavePickerContinuationEventArgs);
+                        fspc.ContinueFileSavePicker(fspcArgs);
                     }
                     break;
             }

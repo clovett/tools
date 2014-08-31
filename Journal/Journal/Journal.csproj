@@ -7,8 +7,8 @@
     <ProjectGuid>{6A0244F2-2CDF-4BAE-A2B7-95EB8A86F1FF}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Journal</RootNamespace>
-    <AssemblyName>Journal</AssemblyName>
+    <RootNamespace>Microsoft.Journal</RootNamespace>
+    <AssemblyName>Microsoft.Journal</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
@@ -84,12 +84,31 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <PRIResource Include="AppResources.resw">
+      <Generator>ReswFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.cs</LastGenOutput>
+    </PRIResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="IFilePickerContinuable.cs" />
+    <Compile Include="AppResources.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>AppResources.resw</DependentUpon>
+    </Compile>
+    <Compile Include="Common\BooleanFalseVisibleConverter.cs" />
+    <Compile Include="Common\BooleanTrueVisibleConverter.cs" />
+    <Compile Include="Common\IFilePickerContinuable.cs" />
+    <Compile Include="Common\IsolatedStorage.cs" />
+    <Compile Include="Common\ReorderableListView.cs" />
+    <Compile Include="Common\Settings.cs" />
+    <Compile Include="Common\TimeSpanConverter.cs" />
+    <Compile Include="Common\XamlExtensions.cs" />
+    <Compile Include="Controls\SpeechTextBox.xaml.cs">
+      <DependentUpon>SpeechTextBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Journal.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
@@ -102,6 +121,10 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\CancelledEarcon.wav" />
+    <Content Include="Assets\CortanaGo.png" />
+    <Content Include="Assets\CortanaMicrophone.png" />
+    <Content Include="Assets\ListeningEarcon.wav" />
     <Content Include="Assets\Logo.scale-240.png" />
     <Content Include="Assets\SmallLogo.scale-240.png" />
     <Content Include="Assets\SplashScreen.scale-240.png" />
@@ -114,6 +137,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\SpeechTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
