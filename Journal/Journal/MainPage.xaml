@@ -9,17 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Page.Resources>
-
-        <!-- todo: figure out how to find these colors from the speed dial UI -->
-        <SolidColorBrush x:Key="ListViewReorderItemBackgroundDarkTheme" Color="#333333"/>
-        <SolidColorBrush x:Key="ListViewReorderItemBackgroundLightTheme" Color="#CCCCCC"/>
-
-        <common:TimeSpanConverter x:Key="TimeSpanConverter"/>
-
-        <common:BooleanFalseVisibleConverter x:Key="BooleanFalseVisibleConverter"/>
-        <common:BooleanTrueVisibleConverter x:Key="BooleanTrueVisibleConverter"/>
-    </Page.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -58,35 +48,7 @@
             </common:ReorderableListView.ItemContainerStyle>
             <common:ReorderableListView.ItemTemplate>
                 <DataTemplate>
-                    <Grid Margin="5">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" 
-                                    FontSize="18"
-                                    Text="{Binding Title}"
-                                    Visibility="{Binding IsSelected, 
-                                                Converter={StaticResource BooleanFalseVisibleConverter}}"
-                                    Margin="8,2"/>
-
-                        <c:SpeechTextBox Grid.Row="0" 
-                                    FontSize="18"
-                                    Text="{Binding Title, Mode=TwoWay}"
-                                    Visibility="{Binding IsSelected, 
-                                                Converter={StaticResource BooleanTrueVisibleConverter}}"
-                                    Margin="0,0,0,0"
-                                    TextBoxGotFocus="OnTextBoxGotFocus"
-                                    TextBoxLostFocus="OnTextBoxLostFocus"/>
-                        
-                        <TextBlock  Grid.Row="1" 
-                                    Foreground="{StaticResource PhoneAccentBrush}"
-                                    FontSize="14"
-                                    Text="{Binding Duration, Converter={StaticResource TimeSpanConverter}}"
-                                    Margin="8,2"/>
-
-                    </Grid>
+                    <c:JournalListItem/>
                 </DataTemplate>
             </common:ReorderableListView.ItemTemplate>
             <common:ReorderableListView.Footer>

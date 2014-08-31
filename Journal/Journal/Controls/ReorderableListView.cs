@@ -151,6 +151,7 @@ namespace Microsoft.Journal.Common
         public ReorderableListViewItem(ReorderableListView list)
         {
             this.list = list;
+            
         }
 
         // Using a DependencyProperty as the backing store for FlipPosition.  This enables animation, styling, binding, etc...

@@ -74,7 +74,7 @@ namespace Microsoft.Journal.Controls
         {
             if (InternalTextBox.Text != this.Text)
             {
-                InternalTextBox.Text = this.Text;
+                InternalTextBox.Text = "" + this.Text;
             }
         }
 

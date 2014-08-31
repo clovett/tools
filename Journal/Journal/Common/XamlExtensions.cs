@@ -10,6 +10,16 @@ namespace Microsoft.Journal.Common
 {
     static class XamlExtensions
     {
+
+        internal static T FindParent<T>(this DependencyObject d) where T : DependencyObject
+        {
+            while (!(d is T) && d != null)
+            {
+                d = VisualTreeHelper.GetParent(d);
+            }
+            return (T)d;
+        }
+
         internal static T FindResource<T>(this FrameworkElement e, string name)
         {
             object value = null;

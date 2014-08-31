@@ -102,7 +102,10 @@
     <Compile Include="Common\BooleanTrueVisibleConverter.cs" />
     <Compile Include="Common\IFilePickerContinuable.cs" />
     <Compile Include="Common\IsolatedStorage.cs" />
-    <Compile Include="Common\ReorderableListView.cs" />
+    <Compile Include="Controls\JournalListItem.xaml.cs">
+      <DependentUpon>JournalListItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ReorderableListView.cs" />
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\TimeSpanConverter.cs" />
     <Compile Include="Common\XamlExtensions.cs" />
@@ -137,6 +140,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\JournalListItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\SpeechTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

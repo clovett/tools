@@ -29,6 +29,7 @@ namespace Microsoft.Journal
                 journal = new Journal();
             }
             journal.file = file;
+
             return journal;
         }
 
@@ -51,8 +52,7 @@ namespace Microsoft.Journal
     {
         private bool isSelected;
         private DateTime startTime;
-        private TimeSpan duration;
-
+        private int seconds;
         private string title;
 
 
@@ -72,17 +72,26 @@ namespace Microsoft.Journal
             }
         }
 
-        public TimeSpan Duration
+
+
+        public int Seconds
         {
-            get { return duration; }
+            get { return seconds; }
             set
             {
-                if (duration != value)
+                if (seconds != value)
                 {
-                    duration = value;
+                    seconds = value;
+                    OnPropertyChanged("Seconds");
                     OnPropertyChanged("Duration");
                 }
             }
+        }
+
+
+        public TimeSpan Duration
+        {
+            get { return TimeSpan.FromSeconds(seconds); }
         }
 
         public string Title
@@ -94,19 +103,6 @@ namespace Microsoft.Journal
                 {
                     this.title = value;
                     OnPropertyChanged("Title");
-                }
-            }
-        }
-
-        public bool IsSelected
-        {
-            get { return this.isSelected; }
-            set
-            {
-                if (this.isSelected != value)
-                {
-                    this.isSelected = value;
-                    OnPropertyChanged("IsSelected");
                 }
             }
         }

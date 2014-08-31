@@ -1,4 +1,5 @@
 ﻿using Microsoft.Journal.Common;
+using Microsoft.Journal.Controls;
 using Microsoft.Utilities;
 using System;
 using System.Collections.Generic;
@@ -127,7 +128,7 @@ namespace Microsoft.Journal
             {
                 JournalEntry last = journal.Entries.Last();
                 TimeSpan span = DateTime.Now - last.StartTime;
-                last.Duration = new TimeSpan(span.Hours, span.Minutes, span.Seconds);
+                last.Seconds = (int)span.TotalSeconds;
             }
             ticks++;
             if (ticks == 60)
@@ -152,9 +153,9 @@ namespace Microsoft.Journal
         private void OnBrowseClick(object sender, RoutedEventArgs e)
         {
             FileSavePicker savePicker = new FileSavePicker();
-            savePicker.SuggestedFileName = "data";
+            savePicker.SuggestedFileName = "journal";
             savePicker.SuggestedStartLocation = PickerLocationId.DocumentsLibrary;
-            savePicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
+            savePicker.FileTypeChoices.Add("XML Files", new List<string>() { ".xml" });
             savePicker.PickSaveFileAndContinue();     // we get called back on ContinueFileSavePicker below.          
         }
 
@@ -185,7 +186,7 @@ namespace Microsoft.Journal
             this.journal = await Journal.LoadAsync(file);
             if (this.journal.Entries.Count == 0)
             {
-                this.journal.Entries.Add(new JournalEntry() { Title = "doing nothing", StartTime = DateTime.Now });
+                OnAddClick(this, null);
                 OnSaveFile();
             }
 
@@ -240,30 +241,16 @@ namespace Microsoft.Journal
 
         private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            foreach (JournalEntry je in e.RemovedItems)
-            {
-                je.IsSelected = false;
-            }
-            foreach (JournalEntry je in e.AddedItems)
-            {
-                je.IsSelected = true;
-            }
             ButtonDelete.Visibility = (JournalList.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        private void OnTextBoxLostFocus(object sender, RoutedEventArgs e)
-        {
-            JournalList.SelectedItem = null;
-        }
-
-        private void OnTextBoxGotFocus(object sender, RoutedEventArgs e)
-        {
-            TextBox box = (TextBox)sender;
-            box.SelectAll();
         }
 
         private void OnButtonDeleteClick(object sender, RoutedEventArgs e)
         {
+            JournalEntry entry = JournalList.SelectedItem as JournalEntry;
+            if (entry != null)
+            {
+                this.journal.Entries.Remove(entry);
+            }
         }
 
 
