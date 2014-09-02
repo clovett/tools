@@ -28,7 +28,7 @@ namespace Microsoft.Journal.Controls
         Resizer resizer;
         double itemHeight = 60;
         bool layoutDirty;
-        double previousWidth;
+        double availableWidth;
 
         public CalendarDayControl()
         {
@@ -124,20 +124,38 @@ namespace Microsoft.Journal.Controls
 
         protected override Size MeasureOverride(Size availableSize)
         {
-            if (layoutDirty || previousWidth != availableSize.Width)
+            if (layoutDirty || availableWidth != availableSize.Width)
             {
                 // add the journal entries to the CalendarEntryCanvas
-                previousWidth = availableSize.Width;
+                availableWidth = availableSize.Width;
                 layoutDirty = false;
                 StopResizing();
                 CalendarEntryCanvas.Children.Clear();
-                DateTime date = this.Date;
                 foreach (JournalEntry j in this.entries)
                 {
+                    j.PropertyChanged -= OnJournalEntryPropertyChanged;
+                    j.PropertyChanged += OnJournalEntryPropertyChanged;
                     JournalEntryControl item = new JournalEntryControl();
+                    item.MinHeight = 40;
                     item.PointerPressed += OnItemPointerPressed;
                     item.Selected += OnJournalItemSelected;
                     item.DataContext = j;
+                    
+                    CalendarEntryCanvas.Children.Add(item);
+                }
+                LayoutItems(availableSize.Width);
+            }
+            return base.MeasureOverride(availableSize);
+        }
+        private void LayoutItems(double availableWidth)
+        {
+            DateTime date = this.Date;
+            foreach (UIElement child in CalendarEntryCanvas.Children)
+            {
+                JournalEntryControl item = child as JournalEntryControl;
+                if (item != null)
+                {
+                    JournalEntry j = item.DataContext as JournalEntry;
                     DateTime start = j.StartTime;
                     TimeSpan duration = j.Duration;
                     if (start < date)
@@ -145,16 +163,19 @@ namespace Microsoft.Journal.Controls
                         duration -= (date - start);
                         start = date;
                     }
-                    item.Width = availableSize.Width - 60;
-                    item.Height = duration.TotalHours * this.itemHeight;
+                    item.Width = availableWidth - 60;
+                    item.Height = item.FillHeight = duration.TotalHours * this.itemHeight;
                     double hours = (double)start.Hour + (double)start.Minute / 60;
                     Canvas.SetTop(item, hours * itemHeight);
                     Canvas.SetLeft(item, 61);
-                    CalendarEntryCanvas.Children.Add(item);
                 }
-
             }
-            return base.MeasureOverride(availableSize);
+        }
+
+
+        void OnJournalEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            LayoutItems(availableWidth);
         }
 
         void OnItemPointerPressed(object sender, PointerRoutedEventArgs e)

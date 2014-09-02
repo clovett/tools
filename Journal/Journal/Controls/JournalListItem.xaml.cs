@@ -27,6 +27,26 @@ namespace Microsoft.Journal.Controls
             this.InitializeComponent();
         }
 
+        public double FillHeight
+        {
+            get { return (double)GetValue(FillHeightProperty); }
+            set { SetValue(FillHeightProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for FillHeight.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty FillHeightProperty =
+            DependencyProperty.Register("FillHeight", typeof(double), typeof(JournalEntryControl), new PropertyMetadata(0.0, new PropertyChangedCallback(OnFillHeightChanged)));
+        
+        private static void OnFillHeightChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((JournalEntryControl)d).OnFillHeightChanged();
+        }
+
+        private void OnFillHeightChanged()
+        {
+            BackgroundBorder.Height = this.FillHeight;
+        }
+
         public bool IsSelected
         {
             get { return (bool)GetValue(IsSelectedProperty); }

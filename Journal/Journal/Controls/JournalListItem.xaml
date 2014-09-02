@@ -7,26 +7,28 @@
     xmlns:c="using:Microsoft.Journal.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="300"
+    d:DesignHeight="40"
     d:DesignWidth="400">
 
     <Grid  x:Name="RootGrid">
-        <Border BorderThickness="5,1,0,1"
+        <Border x:Name="BackgroundBorder" BorderThickness="5,1,0,1"
+                Height="20" VerticalAlignment="Top"
             BorderBrush="{StaticResource PhoneAccentBrush}"
-            Background="#8080A0">
-            <Grid Margin="5">
-                
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+            Background="#8080A0"/>
+        
+        <Grid Margin="5">
 
-                <TextBlock Grid.Row="0" 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" 
                         FontSize="18"
                         Text="{Binding Title}"
                         x:Name="TitleBlock"
                         Margin="8,2" TextWrapping="Wrap"/>
 
-                <c:SpeechTextBox Grid.Row="0" 
+            <c:SpeechTextBox Grid.Row="0" 
                         x:Name="EditBox"
                         FontSize="18"
                         Text="{Binding Title, Mode=TwoWay}"
@@ -35,8 +37,8 @@
                         TextBoxGotFocus="OnTextBoxGotFocus"
                         TextBoxLostFocus="OnTextBoxLostFocus"/>
 
-            </Grid>
-        </Border>
+        </Grid>
+
 
         <VisualStateManager.VisualStateGroups>
             <VisualStateGroup x:Name="CommonStates">
