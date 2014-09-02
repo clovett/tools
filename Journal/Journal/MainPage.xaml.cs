@@ -46,11 +46,7 @@ namespace Microsoft.Journal
 
             this.Loaded += MainPage_Loaded;
 
-            CalendarToday.Date = DateTime.Today;
-            CalendarYesterday.Date = DateTime.Today.AddDays(-1);
-            CalendarTomorrow.Date = DateTime.Today.AddDays(1);
-
-            AddNewItem(3, CalendarTomorrow.Date.AddDays(1));
+            OnDayChanged();
         }
 
         private void OnWindowVisibilityChanged(object sender, Windows.UI.Core.VisibilityChangedEventArgs e)
@@ -115,8 +111,11 @@ namespace Microsoft.Journal
             }
         }
 
+        DateTime previousTime;
+
         private void StartTimer()
         {
+            previousTime = DateTime.Now;
             StopTimer();
             timer = new DispatcherTimer()
             {
@@ -140,10 +139,18 @@ namespace Microsoft.Journal
         {
             if (journal != null && journal.Entries.Count > 0)
             {
-                JournalEntry last = journal.Entries.Last();
-                TimeSpan span = DateTime.Now - last.StartTime;
-                last.Seconds = (int)span.TotalSeconds;
+                if (previousTime.Date != DateTime.Now.Date)
+                {
+                    previousTime = DateTime.Now;
+                    OnDayChanged();
+                }
 
+                JournalEntry last = journal.Entries.LastOrDefault();
+                if (last != null)
+                {
+                    TimeSpan span = DateTime.Now - last.StartTime;
+                    last.Seconds = (int)span.TotalSeconds;
+                }
                 CalendarToday.HighlightCurrentHour();
             }
             ticks++;
@@ -151,6 +158,43 @@ namespace Microsoft.Journal
             {
                 ticks = 0;
                 OnSaveFile();
+            }
+        }
+
+        private void OnDayChanged()
+        {
+            CalendarToday.Date = DateTime.Today;
+            CalendarYesterday.Date = DateTime.Today.AddDays(-1);
+            CalendarTomorrow.Date = DateTime.Today.AddDays(1);
+
+            DateTime date = CalendarYesterday.Date;
+            int first = DayPivot.Items.IndexOf(PivotYesterday);
+            while (first > 0)
+            {
+                first--;
+                PivotItem item = (PivotItem)DayPivot.Items[first];
+                CalendarDayControl c = item.Content as CalendarDayControl;
+                date = c.Date = date.AddDays(-1);               
+            }
+
+            date = CalendarTomorrow.Date;
+            int last = DayPivot.Items.IndexOf(PivotTomorrow);
+            if (last >= DayPivot.Items.Count - 1)
+            {
+                AddNewItem(DayPivot.Items.Count, date.AddDays(1));
+            }
+            else
+            {
+                for (int i = last + 1, n = DayPivot.Items.Count; i < n; i++)
+                {
+                    PivotItem item = (PivotItem)DayPivot.Items[i];
+                    CalendarDayControl c = item.Content as CalendarDayControl;
+                    date = c.Date = date.AddDays(1);
+                }
+            }
+            if (journal != null)
+            {
+                BindJournal();
             }
         }
 
@@ -211,21 +255,43 @@ namespace Microsoft.Journal
                 OnSaveFile();
             }
 
-            
+            BindJournal();
+
+            MessageText.Text = "";
+        }
+
+        private void BindJournal()
+        {
+
             foreach (PivotItem item in this.DayPivot.Items)
             {
                 CalendarDayControl content = item.Content as CalendarDayControl;
                 PopulateJournalEntries(content);
             }
-
-            MessageText.Text = "";
         }
 
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
-            this.DayPivot.SelectedItem = PivotToday;
-            this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = DateTime.Now });
-            CalendarDayControl content = PivotToday.Content as CalendarDayControl;
+            PivotItem selectedPivot = this.DayPivot.SelectedItem as PivotItem;
+            CalendarDayControl content = selectedPivot.Content as CalendarDayControl;
+            DateTime date = content.Date;
+            if (date == DateTime.Today)
+            {
+                this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = DateTime.Now });
+            }
+            else
+            {
+                // user is back-filling, find late time on this day
+                JournalEntry last = content.Entries.LastOrDefault();
+                if (last == null)
+                {
+                    this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = date });
+                }
+                else if (last.StartTime + TimeSpan.FromSeconds(last.Seconds) < date.AddMinutes((24 * 60) - 1)) 
+                {
+                    this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = last.StartTime + TimeSpan.FromSeconds(last.Seconds) });
+                }
+            }
             PopulateJournalEntries(content);
         }
 
@@ -238,16 +304,11 @@ namespace Microsoft.Journal
             //}
         }
 
-        bool lockSelection;
-
         private void OnSelectionChanged(object sender, EventArgs e)
         {
-            if (!lockSelection)
-            {
-                CalendarDayControl calendar = sender as CalendarDayControl;
-                Visibility visibleWhenHaveSelection = (calendar.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
-                ButtonDelete.Visibility = visibleWhenHaveSelection;
-            }
+            CalendarDayControl calendar = sender as CalendarDayControl;
+            Visibility visibleWhenHaveSelection = (calendar.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
+            ButtonDelete.Visibility = visibleWhenHaveSelection;
         }
 
         private void OnButtonDeleteClick(object sender, RoutedEventArgs e)
@@ -260,6 +321,7 @@ namespace Microsoft.Journal
                 if (entry != null)
                 {
                     this.journal.Entries.Remove(entry);
+                    calendar.Entries.Remove(entry);
                 }
             }
         }
@@ -312,11 +374,20 @@ namespace Microsoft.Journal
             {
                 content.Entries.Clear();
                 DateTime date = content.Date.Date;
-                foreach (JournalEntry e in this.journal.Entries)
+                for (int i = 0; i < this.journal.Entries.Count; i++)
                 {
+                    JournalEntry e = this.journal.Entries[i];
                     DateTime endTime = e.StartTime + e.Duration;
-                    if (e.StartTime.Date == date || endTime.Date == date)
+                    if (e.StartTime.Date == date)
                     {
+                        if (endTime.Date > date)
+                        {
+                            // wraps around, let's split it into two entries.
+                            DateTime splitStart = endTime.Date;
+                            JournalEntry split = new JournalEntry() { StartTime = splitStart, Title = e.Title, Seconds = (int)(endTime - splitStart).TotalSeconds };
+                            this.journal.Entries.Insert(i + 1, split);
+                            e.Seconds = (int)(splitStart - e.StartTime).TotalSeconds;
+                        }
                         content.Entries.Add(e);
                     }
                 }

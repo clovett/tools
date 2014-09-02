@@ -37,6 +37,11 @@ namespace Microsoft.Journal.Controls
             this.InitializeComponent();
             this.SizeChanged += Resizer_SizeChanged;
 
+            SetCorner(TopLeftThumbGhost, Corner.TopLeft);
+            SetCorner(TopRightThumbGhost, Corner.TopRight);
+            SetCorner(BottomLeftThumbGhost, Corner.BottomLeft);
+            SetCorner(BottomRightThumbGhost, Corner.BottomRight);
+
             SetCorner(TopLeftThumb, Corner.TopLeft);
             SetCorner(TopRightThumb, Corner.TopRight);
             SetCorner(BottomLeftThumb, Corner.BottomLeft);
@@ -65,33 +70,41 @@ namespace Microsoft.Journal.Controls
 
             Canvas.SetLeft(TopLeftThumb, -TopLeftThumb.Width / 2);
             Canvas.SetTop(TopLeftThumb, -TopLeftThumb.Height / 2);
+            Canvas.SetLeft(TopLeftThumbGhost, -TopLeftThumbGhost.Width / 2);
+            Canvas.SetTop(TopLeftThumbGhost, -TopLeftThumbGhost.Height / 2);
 
-            Canvas.SetLeft(TopRightThumb, s.Width - TopLeftThumb.Width / 2);
-            Canvas.SetTop(TopRightThumb, -TopLeftThumb.Height / 2);
+            Canvas.SetLeft(TopRightThumb, s.Width - TopRightThumb.Width / 2);
+            Canvas.SetTop(TopRightThumb, -TopRightThumb.Height / 2);
+            Canvas.SetLeft(TopRightThumbGhost, s.Width - TopRightThumbGhost.Width / 2);
+            Canvas.SetTop(TopRightThumbGhost, -TopRightThumbGhost.Height / 2);
 
-            Canvas.SetLeft(BottomLeftThumb, -TopLeftThumb.Width / 2);
-            Canvas.SetTop(BottomLeftThumb, s.Height - TopLeftThumb.Height / 2);
 
-            Canvas.SetLeft(BottomRightThumb, s.Width - TopLeftThumb.Width / 2);
-            Canvas.SetTop(BottomRightThumb, s.Height - TopLeftThumb.Height / 2);
+            Canvas.SetLeft(BottomLeftThumb, -BottomLeftThumb.Width / 2);
+            Canvas.SetTop(BottomLeftThumb, s.Height - BottomLeftThumb.Height / 2);
+            Canvas.SetLeft(BottomLeftThumbGhost, -BottomLeftThumbGhost.Width / 2);
+            Canvas.SetTop(BottomLeftThumbGhost, s.Height - BottomLeftThumbGhost.Height / 2);
+
+            Canvas.SetLeft(BottomRightThumb, s.Width - BottomRightThumb.Width / 2);
+            Canvas.SetTop(BottomRightThumb, s.Height - BottomRightThumb.Height / 2);
+            Canvas.SetLeft(BottomRightThumbGhost, s.Width - BottomRightThumbGhost.Width / 2);
+            Canvas.SetTop(BottomRightThumbGhost, s.Height - BottomRightThumbGhost.Height / 2);
+
+
         }
 
         Corner dragging;
         Point mouseDownPosition;
         Ellipse selectedThumb;
-        bool captured;
-        uint pointerId;
 
         public void OnThumbPressed(object sender, PointerRoutedEventArgs e)
         {
             if (selectedThumb == null)
             {
                 selectedThumb = sender as Ellipse;
-                selectedThumb.Fill = this.FindResource<Brush>("SelectedThumbBrush");
-
-                pointerId = e.Pointer.PointerId;
-                captured = CapturePointer(e.Pointer);
-
+                if (!selectedThumb.Name.EndsWith("Ghost"))
+                {
+                    selectedThumb.Fill = this.FindResource<Brush>("SelectedThumbBrush");
+                }
                 // start dragging on first pointer press.
                 DependencyObject thumb = sender as DependencyObject;
                 dragging = GetCorner(thumb);
@@ -140,8 +153,9 @@ namespace Microsoft.Journal.Controls
                     case Corner.BottomRight:
                         newBounds.Width = Math.Max(0, newBounds.Width + dx);
                         newBounds.Height = Math.Max(0, newBounds.Height + dy);
-                        break;
+                        break;                
                 }
+
                 if (Resizing != null)
                 {
                     Resizing(this, new ResizerEventArgs() { NewBounds = newBounds });
@@ -153,7 +167,10 @@ namespace Microsoft.Journal.Controls
         {
             if (selectedThumb != null)
             {
-                selectedThumb.Fill = this.FindResource<Brush>("NormalThumbBrush");
+                if (!selectedThumb.Name.EndsWith("Ghost"))
+                {
+                    selectedThumb.Fill = this.FindResource<Brush>("NormalThumbBrush");
+                }
                 selectedThumb = null;
                 e.Handled = true;
             }

@@ -7,20 +7,26 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     d:DesignHeight="300"
-    d:DesignWidth="400"
-    PointerCaptureLost="OnCaptureLost" IsHitTestVisible="True">
+    d:DesignWidth="400">
 
 
     <ScrollViewer x:Name="Scroller">
-        <Border  BorderBrush="{StaticResource PhoneForegroundBrush}"
-                 BorderThickness="0,0,0,1">
-            <Grid>
-                <StackPanel x:Name="HourStack">
-                </StackPanel>
-                <Canvas x:Name="CalendarEntryCanvas" Background="Transparent">
+        <Grid Margin="0,0,0,40">
+            <Border  BorderBrush="{StaticResource PhoneForegroundBrush}"
+                 BorderThickness="0,0,0,1" >
+                <Grid>
+                    <StackPanel x:Name="HourStack">
+                    </StackPanel>
+                    <Canvas x:Name="CalendarEntryCanvas" Background="Transparent"                        
+                    PointerPressed="OnCanvasPressed" 
+                    PointerReleased="OnCanvasReleased" 
+                    PointerMoved="OnCanvasMoved"
+                    PointerCaptureLost="OnCanvasCaptureLost"
+                    PointerCanceled="OnCanvasPointerCancelled">
 
-                </Canvas>
-            </Grid>
-        </Border>
+                    </Canvas>
+                </Grid>
+            </Border>
+        </Grid>
     </ScrollViewer>
 </UserControl>

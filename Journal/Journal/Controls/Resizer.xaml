@@ -13,6 +13,16 @@
         <SolidColorBrush x:Key="SelectedThumbBrush" Color="#A0A0C0"/>
     </UserControl.Resources>
     <Canvas>
+
+        <Ellipse x:Name="TopLeftThumbGhost" Width="64" Height="64" Fill="Transparent"
+              />
+        <Ellipse x:Name="TopRightThumbGhost" Width="64" Height="64" Fill="Transparent"
+                 />
+        <Ellipse x:Name="BottomLeftThumbGhost" Width="64" Height="64" Fill="Transparent"
+                 />
+        <Ellipse x:Name="BottomRightThumbGhost" Width="64" Height="64" Fill="Transparent"
+                 />
+        
         <Ellipse x:Name="TopLeftThumb" Width="24" Height="24" Fill="{StaticResource NormalThumbBrush}"
               />
         <Ellipse x:Name="TopRightThumb" Width="24" Height="24" Fill="{StaticResource NormalThumbBrush}"

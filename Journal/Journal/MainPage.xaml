@@ -52,7 +52,7 @@
                 </DataTemplate>
             </Pivot.HeaderTemplate>
 
-            <PivotItem Header="yesterday" >
+            <PivotItem x:Name="PivotYesterday" Header="yesterday" >
 
                 <c:CalendarDayControl x:Name="CalendarYesterday"
                                       SelectionChanged="OnSelectionChanged"
@@ -66,7 +66,7 @@
                                />
 
             </PivotItem>
-            <PivotItem Header="tomorrow">
+            <PivotItem x:Name="PivotTomorrow" Header="tomorrow">
 
                 <c:CalendarDayControl x:Name="CalendarTomorrow"                                      
                                       SelectionChanged="OnSelectionChanged"

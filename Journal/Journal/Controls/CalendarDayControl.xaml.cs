@@ -42,14 +42,16 @@ namespace Microsoft.Journal.Controls
         }
 
         Ellipse thumb;
+        bool captured;        
 
-        protected override void OnPointerPressed(PointerRoutedEventArgs e)
+        private void OnCanvasPressed(object sender, PointerRoutedEventArgs e)
         {
             thumb = e.OriginalSource as Ellipse;
             if (thumb != null && resizer != null)
             {
                 resizer.OnThumbPressed(thumb, e);
-                this.CapturePointer(e.Pointer);
+                captured = CalendarEntryCanvas.CapturePointer(e.Pointer);
+                CalendarEntryCanvas.CancelDirectManipulations();
             }
             else
             {
@@ -57,11 +59,28 @@ namespace Microsoft.Journal.Controls
             }
         }
 
-        protected override void OnPointerMoved(PointerRoutedEventArgs e)
+        private void OnCanvasReleased(object sender, PointerRoutedEventArgs e)
+        {
+            if (thumb != null && resizer != null)
+            {
+                resizer.OnThumbReleased(thumb, e);
+                CalendarEntryCanvas.CancelDirectManipulations();
+                thumb = null;
+            }
+            else
+            {
+                base.OnPointerPressed(e);
+            }
+            this.ReleasePointerCapture(e.Pointer);
+            captured = false;
+        }
+
+        private void OnCanvasMoved(object sender, PointerRoutedEventArgs e)
         {
             if (thumb != null && resizer != null)
             {
                 resizer.OnThumbMoved(thumb, e);
+                CalendarEntryCanvas.CancelDirectManipulations();
             }
             else
             {
@@ -69,37 +88,27 @@ namespace Microsoft.Journal.Controls
             }
         }
 
-        protected override void OnPointerReleased(PointerRoutedEventArgs e)
+        private void OnCanvasCaptureLost(object sender, PointerRoutedEventArgs e)
         {
+            CalendarEntryCanvas.ReleasePointerCapture(e.Pointer);
+
             if (thumb != null && resizer != null)
             {
                 resizer.OnThumbReleased(thumb, e);
+                thumb = null;
             }
             else
             {
                 base.OnPointerPressed(e);
             }
-            this.ReleasePointerCapture(e.Pointer);
+            captured = false;
         }
 
-        protected override void OnPointerCanceled(PointerRoutedEventArgs e)
+        private void OnCanvasPointerCancelled(object sender, PointerRoutedEventArgs e)
         {
-            base.OnPointerCanceled(e);
+            OnCanvasCaptureLost(sender, e);
         }
 
-        private void OnCaptureLost(object sender, PointerRoutedEventArgs e)
-        {
-            this.ReleasePointerCapture(e.Pointer);
-
-            if (thumb != null && resizer != null)
-            {
-                resizer.OnThumbReleased(thumb, e);
-            }
-            else
-            {
-                base.OnPointerPressed(e);
-            }
-        }
 
         public void HighlightCurrentHour()
         {
@@ -117,6 +126,11 @@ namespace Microsoft.Journal.Controls
 
         void OnEntriesCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
+            StopResizing();
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            {
+                CalendarEntryCanvas.Children.Clear();
+            }
             layoutDirty = true;
             InvalidateMeasure();
             InvalidateArrange();
@@ -175,7 +189,10 @@ namespace Microsoft.Journal.Controls
 
         void OnJournalEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            LayoutItems(availableWidth);
+            if (!IsResizing)
+            {
+                LayoutItems(availableWidth);
+            }
         }
 
         void OnItemPointerPressed(object sender, PointerRoutedEventArgs e)
@@ -263,6 +280,11 @@ namespace Microsoft.Journal.Controls
             }
         }
 
+        public bool IsResizing
+        {
+            get { return captured; }
+        }
+
         void resizer_Resizing(object sender, ResizerEventArgs e)
         {
             if (selected != null)
@@ -284,10 +306,12 @@ namespace Microsoft.Journal.Controls
 
                 JournalEntry j = selected.DataContext as JournalEntry;
                 double hours = top / this.itemHeight;
-                double ticks = j.StartTime.Date.Ticks + (hours * 60 * 60 * 10000); // convert to 100 nanosecond ticks
+                long ticks = j.StartTime.Date.Ticks + (long)(hours * 60 * 60 * 10000000); // convert to 100 nanosecond ticks
                 j.StartTime = new DateTime((long)ticks);
                 double seconds = (newBounds.Height / this.itemHeight) * 3600;
                 j.Seconds = (int)seconds;
+
+                selected.FillHeight = j.Duration.TotalHours * this.itemHeight;
             }
         }
 
