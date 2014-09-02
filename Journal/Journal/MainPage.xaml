@@ -7,30 +7,76 @@
     xmlns:common="using:Microsoft.Journal.Common"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d"
+    mc:Ignorable="d" 
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    
-    <Grid>
+    <Page.Resources>
+        <Style TargetType="PivotItem">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style TargetType="PivotHeaderItem">
+            <Setter Property="Margin" Value="10,0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+    </Page.Resources>
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
-        <TextBlock x:Name="MessageText"
+        <StackPanel x:Name="SetupPanel" Visibility="Collapsed">
+            <TextBlock x:Name="MessageText"
                    HorizontalAlignment="Left"
-                   Grid.Row="0"
                    Margin="10"
                    FontSize="18" TextWrapping="Wrap"/>
         
-        <Button x:Name="BrowseButton"
-                HorizontalAlignment="Left"
-                Grid.Row="1"
-                Visibility="Collapsed"
-                Click="OnBrowseClick"
-                Margin="20">Browse...</Button>
+            <Button x:Name="BrowseButton"
+                    HorizontalAlignment="Left"
+                    Visibility="Collapsed"
+                    Click="OnBrowseClick"
+                    Margin="20">Browse...</Button>
+        </StackPanel>
+        <TextBlock x:Name="DateText" Text="MONDAY, SEPTEMBER 1, 2014"
+                       FontWeight="SemiBold" Grid.Row="1"
+                       Margin="10" FontSize="{StaticResource TextStyleLargeFontSize}"
+                       />
 
-        <common:ReorderableListView x:Name="JournalList"
+        <Pivot x:Name="DayPivot"  Grid.Row="2"
+                   SelectionChanged="OnPivotSelectionChanged"
+                   SelectedIndex="1">
+            <Pivot.HeaderTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding}" FontSize="{StaticResource TextStyleExtraExtraLargeFontSize}"
+                                   Margin="0,5" OpticalMarginAlignment="TrimSideBearings"/>
+                </DataTemplate>
+            </Pivot.HeaderTemplate>
+
+            <PivotItem Header="yesterday" >
+
+                <c:CalendarDayControl x:Name="CalendarYesterday"
+                                      SelectionChanged="OnSelectionChanged"
+                                    />
+
+            </PivotItem>
+            <PivotItem x:Name="PivotToday" Header="today">
+
+                <c:CalendarDayControl x:Name="CalendarToday"                                      
+                                      SelectionChanged="OnSelectionChanged"
+                               />
+
+            </PivotItem>
+            <PivotItem Header="tomorrow">
+
+                <c:CalendarDayControl x:Name="CalendarTomorrow"                                      
+                                      SelectionChanged="OnSelectionChanged"
+                               />
+
+            </PivotItem>
+        </Pivot>
+        
+        <!--<common:ReorderableListView x:Name="JournalList"
                                 AutomationProperties.AutomationId="SacrificeList"
                                 SelectionMode="Single"
                                 Grid.Row="3"
@@ -52,10 +98,10 @@
                 </DataTemplate>
             </common:ReorderableListView.ItemTemplate>
             <common:ReorderableListView.Footer>
-                <!-- for some reason the AppBar overlaps the listview so we have to make space here-->
+                --><!-- for some reason the AppBar overlaps the listview so we have to make space here--><!--
                 <Grid Height="30"/>
             </common:ReorderableListView.Footer>
-        </common:ReorderableListView>
+        </common:ReorderableListView>-->
 
     </Grid>
 
@@ -73,20 +119,6 @@
                               Click="OnButtonDeleteClick"
                               Icon="Delete"/>
                 
-                <AppBarButton x:Name="ButtonUp"
-                              Visibility="Collapsed"
-                              Label="Up"
-                              Click="OnButtonUpClick"
-                              Icon="Up"/>
-                <AppBarButton x:Name="ButtonDown"
-                              Visibility="Collapsed"
-                              Label="Down"
-                              Click="OnButtonDownClick"
-                              >
-                    <AppBarButton.Icon >
-                        <FontIcon Glyph="&#xE1FD;"/>
-                    </AppBarButton.Icon>
-                </AppBarButton>
             </CommandBar.PrimaryCommands>
         </CommandBar>
 

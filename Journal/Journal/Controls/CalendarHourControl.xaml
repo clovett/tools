@@ -1,0 +1,38 @@
+﻿<UserControl
+    x:Class="Microsoft.Journal.Controls.CalendarHourControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Microsoft.Journal.Common"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    d:DesignHeight="40"
+    d:DesignWidth="400">
+
+    <UserControl.Resources>
+        <local:HourLabelConverter x:Key="HourLabelConverter"/>
+        <local:HighlightBorderThicknessConverter x:Key="HighlightBorderThicknessConverter"/>
+    </UserControl.Resources>
+
+    <Border BorderThickness="0,1,0,0"
+            BorderBrush="{StaticResource PhoneForegroundBrush}"
+            MinHeight="{Binding Path=ItemHeight}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="60"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border BorderThickness="{Binding Path=IsHighlighted, Converter={StaticResource HighlightBorderThicknessConverter}}"
+                    BorderBrush="{StaticResource PhoneAccentBrush}">
+
+                <Border BorderThickness="0,0,1,0"
+                BorderBrush="{StaticResource PhoneForegroundBrush}">
+                    <TextBlock x:Name="TimeLabel" Text="{Binding Path=Hour, Converter={StaticResource HourLabelConverter}}"
+                           Margin="3,8" Foreground="{StaticResource PhoneForegroundBrush}"
+                           FontSize="{StaticResource TextStyleMediumFontSize}"/>
+                </Border>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

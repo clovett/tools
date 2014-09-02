@@ -25,14 +25,14 @@ namespace Microsoft.Journal.Controls
     public sealed partial class SpeechTextBox : UserControl
     {
         // This enum and these members are used for state management for the various buttons and input
-        private enum SearchState
+        private enum InputState
         {
             ReadyForInput,
             ListeningForInput,
             TypingInput,
         };
 
-        private SearchState CurrentSearchState;
+        private InputState currentInputState;
 
         // State maintenance of the Speech Recognizer
         private SpeechRecognizer recognizer;
@@ -107,25 +107,25 @@ namespace Microsoft.Journal.Controls
 
         private void OnTextInputGainedFocus(object sender, RoutedEventArgs e)
         {
-            SetSearchState(SearchState.TypingInput);
+            SetInputState(InputState.TypingInput);
         }
 
         private void OnTextInputLostFocus(object sender, RoutedEventArgs e)
         {
-            if (this.CurrentSearchState == SearchState.TypingInput)
+            if (this.currentInputState == InputState.TypingInput)
             {
-                SetSearchState(SearchState.ReadyForInput);
+                SetInputState(InputState.ReadyForInput);
             }
         }
 
         private void OnSpeechActionButtonTapped(object sender, PointerRoutedEventArgs e)
         {
-            switch (this.CurrentSearchState)
+            switch (this.currentInputState)
             {
-                case SearchState.ReadyForInput:
+                case InputState.ReadyForInput:
                     StartListening();
                     break;
-                case SearchState.ListeningForInput:
+                case InputState.ListeningForInput:
                     // The input bar is currently disabled and we may have an outstanding speech operation.
                     // There's unfortunately no way to manually endpoint (tell the recognizer "Hey, we're done!" and so
                     // we'll just cancel here.
@@ -138,7 +138,7 @@ namespace Microsoft.Journal.Controls
                     }
                     else
                     {
-                        SetSearchState(SearchState.ReadyForInput);
+                        SetInputState(InputState.ReadyForInput);
                     }
                     break;
 
@@ -147,34 +147,31 @@ namespace Microsoft.Journal.Controls
         }
 
         /// <summary>
-        /// Sets the current state associated with the search bar and button and performs the needed UI modifications
+        /// Sets the current state associated with the text box and button and performs the needed UI modifications
         /// associated with the new state
         /// </summary>
         /// <param name="newState"> the new state being selected </param>
-        private void SetSearchState(SearchState newState)
+        private void SetInputState(InputState newState)
         {
-            this.CurrentSearchState = newState;
+            this.currentInputState = newState;
 
             // Hide all of the possible button elements for the microphone icon; we'll restore the one we want momentarily.
             this.SpeechActionButtonMicrophone.Opacity = 0;
-            this.SpeechActionButtonGoBackingRect.Opacity = 0;
-            this.SpeechActionButtonGo.Opacity = 0;
             this.SpeechActionButtonStop.Opacity = 0;
             this.SpeechActionButtonStopBorder.Opacity = 0;
 
-            // Preemptively restore the absolute width of the search text box; we'll resize it if needed.
+            // Preemptively restore the absolute width of the text box; we'll resize it if needed.
             //this.InternalTextBox.Width = App.Current.Host.Content.ActualWidth - 66;
 
             switch (newState)
             {
-                case SearchState.ReadyForInput:
+                case InputState.ReadyForInput:
                     this.InternalTextBox.FontStyle = FontStyle.Normal;
                     this.InternalTextBox.IsEnabled = true;
                     this.SpeechActionButtonMicrophone.Opacity = 1;
-
                     this.SpeechActionButtonContainer.Visibility = Windows.UI.Xaml.Visibility.Visible;
                     break;
-                case SearchState.ListeningForInput:
+                case InputState.ListeningForInput:
                     this.InternalTextBox.FontStyle = FontStyle.Italic;
                     this.InternalTextBox.IsEnabled = false;
                     this.SpeechActionButtonStop.Opacity = 1;
@@ -182,22 +179,13 @@ namespace Microsoft.Journal.Controls
                     this.InternalTextBox.Width += SpeechActionButtonContainer.ActualWidth;
                     this.SpeechActionButtonContainer.Visibility = Windows.UI.Xaml.Visibility.Visible;
                     break;
-                case SearchState.TypingInput:
+                case InputState.TypingInput:
                     this.InternalTextBox.Foreground = new SolidColorBrush(Colors.Black);
                     this.SpeechActionButtonContainer.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
                     break;
             }
         }
 
-
-        private void OnTextInputKeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == Windows.System.VirtualKey.Enter && (this.InternalTextBox.Text.Length > 0))
-            {
-                StartSearch(this.InternalTextBox.Text, null);
-            }
-
-        }
 
         /// <summary>
         /// Generates a new recognition operation from the speech recognizer, hooks up its completion handler, and
@@ -213,7 +201,7 @@ namespace Microsoft.Journal.Controls
                 await this.recognizer.CompileConstraintsAsync();
                 this.currentRecognizerOperation = this.recognizer.RecognizeAsync();
                 this.currentRecognizerOperation.Completed = new AsyncOperationCompletedHandler<SpeechRecognitionResult>(OnRecognitionCompleted);
-                SetSearchState(SearchState.ListeningForInput);
+                SetInputState(InputState.ListeningForInput);
             }
             catch (Exception recoException)
             {
@@ -226,9 +214,8 @@ namespace Microsoft.Journal.Controls
                 }
                 else
                 {
-                    ShowMessage(recoException.Message, "Error");
+                    // user may have cancelled when there was no text.
                 }
-                //OnRecognitionCompleted(null, AsyncStatus.Error);
             }
         }
 
@@ -250,7 +237,7 @@ namespace Microsoft.Journal.Controls
             {
 
                 bool recognitionSuccessful = false;
-                SetSearchState(SearchState.ReadyForInput);
+                SetInputState(InputState.ReadyForInput);
 
                 switch (asyncStatus)
                 {
@@ -260,7 +247,7 @@ namespace Microsoft.Journal.Controls
                         if (!String.IsNullOrEmpty(result.Text))
                         {
                             recognitionSuccessful = true;
-                            StartSearch(result.Text, result);
+                            AcceptVoiceInput(result.Text, result);
                         }
                         break;
                     case AsyncStatus.Error:
@@ -281,12 +268,16 @@ namespace Microsoft.Journal.Controls
 
         }
 
-        private void StartSearch(string searchText, SpeechRecognitionResult result)
+        private void AcceptVoiceInput(string voiceText, SpeechRecognitionResult result)
         {
+            if (voiceText.EndsWith("."))
+            {
+                voiceText = voiceText.Substring(0, voiceText.Length - 1);
+            }
 
             var nowait = this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
             {
-                InternalTextBox.Text = searchText;
+                InternalTextBox.Text = voiceText;
             }));
         }
 

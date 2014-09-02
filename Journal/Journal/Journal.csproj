@@ -100,8 +100,16 @@
     </Compile>
     <Compile Include="Common\BooleanFalseVisibleConverter.cs" />
     <Compile Include="Common\BooleanTrueVisibleConverter.cs" />
+    <Compile Include="Common\HighlightBorderThicknessConverter.cs" />
     <Compile Include="Common\IFilePickerContinuable.cs" />
     <Compile Include="Common\IsolatedStorage.cs" />
+    <Compile Include="Common\HourLabelConverter.cs" />
+    <Compile Include="Controls\CalendarDayControl.xaml.cs">
+      <DependentUpon>CalendarDayControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\CalendarHourControl.xaml.cs">
+      <DependentUpon>CalendarHourControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\JournalListItem.xaml.cs">
       <DependentUpon>JournalListItem.xaml</DependentUpon>
     </Compile>
@@ -109,6 +117,9 @@
     <Compile Include="Common\Settings.cs" />
     <Compile Include="Common\TimeSpanConverter.cs" />
     <Compile Include="Common\XamlExtensions.cs" />
+    <Compile Include="Controls\Resizer.xaml.cs">
+      <DependentUpon>Resizer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SpeechTextBox.xaml.cs">
       <DependentUpon>SpeechTextBox.xaml</DependentUpon>
     </Compile>
@@ -140,7 +151,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="Controls\CalendarDayControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\CalendarHourControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\JournalListItem.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\Resizer.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

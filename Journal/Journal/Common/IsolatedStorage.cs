@@ -1,15 +1,4 @@
-﻿// Copyright (c) 2010 Microsoft Corporation.  All rights reserved.
-//
-//
-// Use of this source code is subject to the terms of the Microsoft
-// license agreement under which you licensed this source code.
-// If you did not accept the terms of the license agreement,
-// you are not authorized to use this source code.
-// For the terms of the license, please see the license agreement
-// signed by you and Microsoft.
-// THE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES OR INDEMNITIES.
-//
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -149,10 +138,23 @@ namespace Microsoft.Utilities
 
             try
             {
-                using (IRandomAccessStream fileStream = await storageFile.OpenAsync(FileAccessMode.ReadWrite))
+                using (var transaction = await storageFile.OpenTransactedWriteAsync())
                 {
                     XmlSerializer mySerializer = new XmlSerializer(typeof(T));
-                    mySerializer.Serialize(fileStream.AsStreamForWrite(), data);
+                    MemoryStream ms = new MemoryStream();
+                    mySerializer.Serialize(ms, data);
+
+                    ms.Seek(0, SeekOrigin.Begin);
+                    var writer = new DataWriter();
+                    writer.WriteBytes(ms.ToArray());
+                    var buffer = writer.DetachBuffer();
+
+                    await transaction.Stream.WriteAsync(buffer);
+
+                    // truncate the file 
+                    transaction.Stream.Size = (ulong)ms.Length;
+
+                    await transaction.CommitAsync();
                 }
             }
             catch

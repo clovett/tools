@@ -74,14 +74,14 @@ namespace Microsoft.Journal.Common
                 {
                     s.Completed += (sender, args) =>
                     {
-                        if (moveDataItemsAction != null)
+                        //var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High, new Windows.UI.Core.DispatchedHandler(() =>
                         {
-                            moveDataItemsAction();
-                        }
-                        var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High, new Windows.UI.Core.DispatchedHandler(() =>
-                        {
+                            if (moveDataItemsAction != null)
+                            {
+                                moveDataItemsAction();
+                            }
                             this.SelectedItem = selected;
-                        }));
+                        }//));
                     };
                 }
             }

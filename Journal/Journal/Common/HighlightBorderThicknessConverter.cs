@@ -1,18 +1,22 @@
 ﻿namespace Microsoft.Journal.Common
 {
     using System;
+    using Windows.UI.Xaml;
     using Windows.UI.Xaml.Data;
 
-    class TimeSpanConverter : IValueConverter
+    class HighlightBorderThicknessConverter : IValueConverter
     {
         public Object Convert(Object value, Type targetType, Object parameter, String culture)
         {
-            if (value is TimeSpan)
+            if (value is bool)
             {
-                TimeSpan span = (TimeSpan)value;
-                return span.ToString();
+                bool b = (bool)value;
+                if (b)
+                {
+                    return new Thickness(5,0,0,0);
+                }
             }
-            return "???";
+            return new Thickness(0);
         }
 
         public Object ConvertBack(Object value, Type targetType, Object parameter, String culture)

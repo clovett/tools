@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Input;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -19,59 +20,46 @@ using Windows.UI.Xaml.Navigation;
 
 namespace Microsoft.Journal.Controls
 {
-    public sealed partial class JournalListItem : UserControl
+    public sealed partial class JournalEntryControl : UserControl
     {
-        public JournalListItem()
+        public JournalEntryControl()
         {
             this.InitializeComponent();
-            this.Loaded += JournalListItem_Loaded;
-            this.Unloaded += JournalListItem_Unloaded;
         }
 
-        void JournalListItem_Unloaded(object sender, RoutedEventArgs e)
+        public bool IsSelected
         {
-            ListView list = this.FindParent<ListView>();
-            if (list != null)
-            {
-                list.SelectionChanged -= OnSelectionChanged;
-            }
+            get { return (bool)GetValue(IsSelectedProperty); }
+            set { SetValue(IsSelectedProperty, value); }
         }
 
-        void JournalListItem_Loaded(object sender, RoutedEventArgs e)
-        {
-            ListViewItem item = this.FindParent<ListViewItem>();      
-            if (item != null && item.IsSelected)
-            {
-                GotoEditState();
-            }
+        // Using a DependencyProperty as the backing store for IsSelected.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsSelectedProperty =
+            DependencyProperty.Register("IsSelected", typeof(bool), typeof(JournalEntryControl), new PropertyMetadata(false, new PropertyChangedCallback(OnSelectedChanged)));
 
-            ListView list = this.FindParent<ListView>();
-            if (list != null)
-            {
-                list.SelectionChanged += OnSelectionChanged;
-            }
+        private static void OnSelectedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            ((JournalEntryControl)d).OnSelectedChanged();
         }
 
-        void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        public event EventHandler Selected;
+
+
+        private void OnSelectedChanged()
         {
+
+            if (Selected != null && this.IsSelected)
+            {
+                Selected(this, EventArgs.Empty);
+            }
+
             var context = this.DataContext;
 
-            foreach (var item in e.RemovedItems)
+            if (this.IsSelected)
             {
-                if (item == context)
-                {
-                    GotoViewState();
-                    break;
-                }
-            }
-
-            foreach (var item in e.AddedItems)
-            {
-                if (item == context)
-                {
-                    GotoEditState();
-                    break;
-                }
+                GotoEditState();
+            } else {
+                GotoViewState();
             }
         }
 
@@ -93,7 +81,11 @@ namespace Microsoft.Journal.Controls
 
         internal void GotoEditState()
         {
-            VisualStateManager.GoToState(this, "Edit", true);
+            if (!VisualStateManager.GoToState(this, "Edit", true))
+            {
+                Debug.WriteLine("Goto edit state failed???");
+            }
         }
+
     }
 }

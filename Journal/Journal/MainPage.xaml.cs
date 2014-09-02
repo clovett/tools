@@ -32,39 +32,49 @@ namespace Microsoft.Journal
         Journal journal;
         DispatcherTimer timer;
         int ticks;
+        bool loaded;
 
         public MainPage()
         {
             this.InitializeComponent();
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
-            UpdateReorderBackgroundBrush();
 
             Window.Current.Activated += OnWindowActivated;
+            Window.Current.VisibilityChanged += OnWindowVisibilityChanged;
             this.Unloaded += MainPage_Unloaded;
+
+            this.Loaded += MainPage_Loaded;
+
+            CalendarToday.Date = DateTime.Today;
+            CalendarYesterday.Date = DateTime.Today.AddDays(-1);
+            CalendarTomorrow.Date = DateTime.Today.AddDays(1);
+
+            AddNewItem(3, CalendarTomorrow.Date.AddDays(1));
+        }
+
+        private void OnWindowVisibilityChanged(object sender, Windows.UI.Core.VisibilityChangedEventArgs e)
+        {
+            if (!e.Visible)
+            {
+                OnSaveFile();
+            }
+        }
+
+        void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.loaded = true;
         }
 
         void MainPage_Unloaded(object sender, RoutedEventArgs e)
         {
+            Window.Current.Activated -= OnWindowActivated;
+            Window.Current.VisibilityChanged -= OnWindowVisibilityChanged;
             StopTimer();
         }
 
         private void OnWindowActivated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
         {
-            UpdateReorderBackgroundBrush();
-        }        
-
-        private void UpdateReorderBackgroundBrush()
-        {
-            // todo: figure out how to get the same brush used by the Speed Dial page so we don't have to do this hack.
-            if (App.Current.RequestedTheme == ApplicationTheme.Dark)
-            {
-                JournalList.ReorderItemBackground = this.FindResource<Brush>("ListViewReorderItemBackgroundDarkTheme");
-            }
-            else
-            {
-                JournalList.ReorderItemBackground = this.FindResource<Brush>("ListViewReorderItemBackgroundLightTheme");
-            }
         }
 
         /// <summary>
@@ -91,13 +101,13 @@ namespace Microsoft.Journal
                     Debug.WriteLine("token is stale? " + ex.Message);
 
                     MessageText.Text = "Journal file is gone, please select a new location to save your journal:";
-                    BrowseButton.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                    SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Visible;
                 }
             }
             else
             {
                 MessageText.Text = "Please select a location to save your journal:";
-                BrowseButton.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Visible;
             }
         }
 
@@ -129,6 +139,8 @@ namespace Microsoft.Journal
                 JournalEntry last = journal.Entries.Last();
                 TimeSpan span = DateTime.Now - last.StartTime;
                 last.Seconds = (int)span.TotalSeconds;
+
+                CalendarToday.HighlightCurrentHour();
             }
             ticks++;
             if (ticks == 60)
@@ -176,7 +188,7 @@ namespace Microsoft.Journal
 
             LoadJournal(file);
 
-            BrowseButton.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
         }
 
         private async void LoadJournal(StorageFile file)
@@ -190,69 +202,117 @@ namespace Microsoft.Journal
                 OnSaveFile();
             }
 
+            
+            foreach (PivotItem item in this.DayPivot.Items)
+            {
+                CalendarDayControl content = item.Content as CalendarDayControl;
+                PopulateJournalEntries(content);
+            }
+
             MessageText.Text = "";
-
-            JournalList.ItemsSource = this.journal.Entries;
-
         }
 
         private void OnAddClick(object sender, RoutedEventArgs e)
         {
+            this.DayPivot.SelectedItem = PivotToday;
             this.journal.Entries.Add(new JournalEntry() { Title = "new", StartTime = DateTime.Now });
-
-            var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Low, new Windows.UI.Core.DispatchedHandler(() =>
-            {
-                JournalList.SelectedIndex = this.journal.Entries.Count - 1;
-            }));
-        }
-
-
-        private void OnButtonDownClick(object sender, RoutedEventArgs e)
-        {
-            int index = JournalList.SelectedIndex;
-            if (index >= 0 && index < journal.Entries.Count - 1)
-            {
-                FlipItems(index, index + 1);
-            }
-        }
-
-        private void OnButtonUpClick(object sender, RoutedEventArgs e)
-        {
-            int index = JournalList.SelectedIndex;
-            if (index > 0 && index < journal.Entries.Count)
-            {
-                FlipItems(index - 1, index);
-            }
-        }
-
-        private void FlipItems(int item1Index, int item2Index)
-        {
-            JournalList.FlipItems(item1Index, item2Index, () => { journal.Entries.Move(item1Index, item2Index); });
+            CalendarDayControl content = PivotToday.Content as CalendarDayControl;
+            PopulateJournalEntries(content);
         }
 
         private void OnItemClicked(object sender, ItemClickEventArgs e)
         {
-            JournalEntry entry = e.ClickedItem as JournalEntry;
-            if (entry != null)
-            {
-                JournalList.SelectedItem = entry;
-            }
+            //JournalEntry entry = e.ClickedItem as JournalEntry;
+            //if (entry != null)
+            //{
+            //    JournalList.SelectedItem = entry;
+            //}
         }
 
-        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        bool lockSelection;
+
+        private void OnSelectionChanged(object sender, EventArgs e)
         {
-            ButtonDelete.Visibility = (JournalList.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
+            if (!lockSelection)
+            {
+                CalendarDayControl calendar = sender as CalendarDayControl;
+                Visibility visibleWhenHaveSelection = (calendar.SelectedItem == null) ? Visibility.Collapsed : Visibility.Visible;
+                ButtonDelete.Visibility = visibleWhenHaveSelection;
+            }
         }
 
         private void OnButtonDeleteClick(object sender, RoutedEventArgs e)
         {
-            JournalEntry entry = JournalList.SelectedItem as JournalEntry;
-            if (entry != null)
+            var pivotItem = DayPivot.SelectedItem as PivotItem;
+            if (pivotItem != null)
             {
-                this.journal.Entries.Remove(entry);
+                CalendarDayControl calendar = pivotItem.Content as CalendarDayControl;
+                JournalEntry entry = calendar.SelectedItem as JournalEntry;
+                if (entry != null)
+                {
+                    this.journal.Entries.Remove(entry);
+                }
             }
         }
 
+        private void OnPivotSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            PivotItem selected = DayPivot.SelectedItem as PivotItem;
+            CalendarDayControl selectedDay = selected.Content as CalendarDayControl;
+            DateText.Text = selectedDay.Date.ToString("D").ToUpper();
+
+            if (this.loaded)
+            {
+                if (DayPivot.SelectedIndex == 0)
+                {
+                    // need a new first pivot
+                    var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
+                    {
+                        DateTime previous = selectedDay.Date.AddDays(-1);
+                        AddNewItem(0, previous);
+                    }));
+                }
+                else if (DayPivot.SelectedIndex == DayPivot.Items.Count - 1)
+                {
+                    // need a new last pivot
+                    var nowait = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() =>
+                    {
+                        AddNewItem(DayPivot.Items.Count, selectedDay.Date.AddDays(1));
+                    }));
+                }
+            }
+        }
+
+        private void AddNewItem(int index, DateTime date)
+        {
+            PivotItem newItem = new PivotItem() { Header = date.ToString("dddd").ToLower() };
+            var control = new CalendarDayControl() { Date = date };
+            control.SelectionChanged += OnSelectionChanged;
+            newItem.Content = control;
+            DayPivot.Items.Insert(index, newItem);
+            if (index == 0)
+            {
+                DayPivot.SelectedIndex = 1;
+            }
+            PopulateJournalEntries(control);
+        }
+
+        private void PopulateJournalEntries(CalendarDayControl content)
+        {
+            if (this.journal != null)
+            {
+                content.Entries.Clear();
+                DateTime date = content.Date.Date;
+                foreach (JournalEntry e in this.journal.Entries)
+                {
+                    DateTime endTime = e.StartTime + e.Duration;
+                    if (e.StartTime.Date == date || endTime.Date == date)
+                    {
+                        content.Entries.Add(e);
+                    }
+                }
+            }
+        }
 
     }
 }

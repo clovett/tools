@@ -1,4 +1,5 @@
-﻿using Microsoft.Utilities;
+﻿using Microsoft.Journal.Controls;
+using Microsoft.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -48,73 +49,4 @@ namespace Microsoft.Journal
         }
     }
 
-    public class JournalEntry : INotifyPropertyChanged
-    {
-        private bool isSelected;
-        private DateTime startTime;
-        private int seconds;
-        private string title;
-
-
-        public JournalEntry() { }
-
-
-        public DateTime StartTime
-        {
-            get { return startTime; }
-            set
-            {
-                if (startTime != value)
-                {
-                    startTime = value;
-                    OnPropertyChanged("StartTime");
-                }
-            }
-        }
-
-
-
-        public int Seconds
-        {
-            get { return seconds; }
-            set
-            {
-                if (seconds != value)
-                {
-                    seconds = value;
-                    OnPropertyChanged("Seconds");
-                    OnPropertyChanged("Duration");
-                }
-            }
-        }
-
-
-        public TimeSpan Duration
-        {
-            get { return TimeSpan.FromSeconds(seconds); }
-        }
-
-        public string Title
-        {
-            get { return title; }
-            set
-            {
-                if (title != value)
-                {
-                    this.title = value;
-                    OnPropertyChanged("Title");
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string name)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
-            }
-        }
-    }
 }
