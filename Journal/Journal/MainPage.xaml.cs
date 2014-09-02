@@ -102,12 +102,16 @@ namespace Microsoft.Journal
 
                     MessageText.Text = "Journal file is gone, please select a new location to save your journal:";
                     SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                    DayPivot.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                    DateText.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
                 }
             }
             else
             {
                 MessageText.Text = "Please select a location to save your journal:";
                 SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Visible;
+                DayPivot.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+                DateText.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
             }
         }
 
@@ -152,7 +156,10 @@ namespace Microsoft.Journal
 
         private void OnSaveFile()
         {
-            var nowait = journal.SaveAsync();
+            if (journal != null)
+            {
+                var nowait = journal.SaveAsync();
+            }
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -189,6 +196,8 @@ namespace Microsoft.Journal
             LoadJournal(file);
 
             SetupPanel.Visibility = Windows.UI.Xaml.Visibility.Collapsed;
+            DayPivot.Visibility = Windows.UI.Xaml.Visibility.Visible;
+            DateText.Visibility = Windows.UI.Xaml.Visibility.Visible;
         }
 
         private async void LoadJournal(StorageFile file)

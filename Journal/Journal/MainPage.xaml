@@ -34,7 +34,6 @@
         
             <Button x:Name="BrowseButton"
                     HorizontalAlignment="Left"
-                    Visibility="Collapsed"
                     Click="OnBrowseClick"
                     Margin="20">Browse...</Button>
         </StackPanel>

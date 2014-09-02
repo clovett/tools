@@ -17,7 +17,7 @@
             <Grid>
                 <StackPanel x:Name="HourStack">
                 </StackPanel>
-                <Canvas x:Name="CalendarEntryCanvas">
+                <Canvas x:Name="CalendarEntryCanvas" Background="Transparent">
 
                 </Canvas>
             </Grid>
