@@ -43,7 +43,11 @@ namespace OutlookSyncPhone.Pages
 
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
-            App.Settings.ServerAddress = ServerAddress.Text;
+            // avoid NullReferenceException reported here...
+            if (ServerAddress != null && App.Settings != null)
+            {
+                App.Settings.ServerAddress = ServerAddress.Text;
+            }
             base.OnNavigatingFrom(e);
         }
 
@@ -101,7 +105,18 @@ namespace OutlookSyncPhone.Pages
                 ErrorMessage.Text = "";
                 IPEndPoint addr;
                 string text = ServerAddress.Text;
-                ConnectButton.IsEnabled = !string.IsNullOrEmpty(text) && ConnectionManager.TryParseEndPoint(text, out addr);
+                bool valid = false;
+                try
+                {
+                    // Apparently this can throw exceptions even though it is called "Try...";
+                    valid = ConnectionManager.TryParseEndPoint(text, out addr);
+                }
+                catch (Exception ex)
+                {
+                    // invalid
+                    ErrorMessage.Text = ex.Message;
+                }
+                ConnectButton.IsEnabled = !string.IsNullOrEmpty(text) && valid;
             }
         }
 
