@@ -55,7 +55,7 @@ namespace OutlookSyncPhone
 
             this.SizeChanged += MainPage_SizeChanged;
 
-            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", GetHelloMessage(), 12777);
+            conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440", GetHelloMessage());
 
             LicenseManager.Instance.RegisterProductId(Settings.RemoveAdsProductId);
         }
@@ -533,11 +533,12 @@ namespace OutlookSyncPhone
             if (mcp != null)
             {
                 mcp.ConnectionManager = this.conmgr;
-                return;
             }
-
-            // going elsewhere? Then we need to unload.
-            this.loader = null;
+            else
+            {
+                // going elsewhere? Then we need to unload.
+                this.loader = null;
+            }
 
             if (proxy != null)
             {
