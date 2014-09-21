@@ -45,7 +45,7 @@ namespace OutlookSync.Model
                 } 
                 catch (Exception ex) 
                 {
-                    Debug.WriteLine("HttpListener caught exception: " + ex.Message);
+                    Log.WriteLine("HttpListener caught exception: " + ex.ToString());
                 }
             }
         }

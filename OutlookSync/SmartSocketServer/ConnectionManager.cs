@@ -56,13 +56,42 @@ namespace Microsoft.Networking
             return internet;
         }
 
-        public void StartListening(params int[] udpPortsToTry)
+        // cannot be completely random, the phone has to use the same seed.
+        const int randomSeed = 1980527718;
+
+        IEnumerable<int> GetRandomPortNumber()
         {
-            foreach (int port in udpPortsToTry)
+            // this is what the original phone app is expecting in case user still has old version.
+            yield return 12777;
+
+            Random r = new Random(randomSeed);
+
+            // according to wikipedia ports 1024 to 49151 are available
+            const int min = 1024;
+            const int max = 49151;
+            int count = 0;
+
+            while (count++ < 20)
+            {
+                int port = r.Next(min, max);
+                if (port != 12777)
+                {
+                    yield return port;
+                }
+            }
+
+            // give up!
+            throw new NoPortsAvailableException();
+        }
+
+        public void StartListening()
+        {
+            foreach (int port in GetRandomPortNumber())
             {
                 try
                 {
                     client = new UdpClient(port);
+                    Log.WriteLine("Listening on port: " + port);
                     m_portNumber = port;
                     client.EnableBroadcast = true;
                     break;

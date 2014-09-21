@@ -60,10 +60,17 @@ namespace OutlookSync.Model
                 var type = addressBook.AddressListType;
                 if (type != OlAddressListType.olExchangeGlobalAddressList && type != OlAddressListType.olExchangeContainer)
                 {
+                    int count = 0;
                     foreach (AddressEntry e in addressBook.AddressEntries)
                     {
+                        count++;
                         localAddresses[e.Name] = e;
                     }
+                    Log.WriteLine("Loading address book: [" + name + "], found " + count + " contacts");                    
+                }
+                else
+                {
+                    Log.WriteLine("Skipping address book: [" + name + "], because it belongs to Exchange");
                 }
             }
         }
@@ -949,14 +956,14 @@ namespace OutlookSync.Model
                         bool resolved = r.Resolve();
                         if (!resolved)
                         {
-                            Debug.WriteLine(string.Format("Recipient {0} not found in local addresses", r.Name));
+                            Log.WriteLine("Recipient {0} not found in local addresses", r.Name);
                         }
                     }
 
                     if (r.Address != null && a.Email != r.Address)
                     {
                         //bugbug: what to do here?
-                        Debug.WriteLine(string.Format("Recipient {0} email '{1}' doesn't match phone email '{2}'", r.Name, r.Address, a.Email));
+                        Log.WriteLine("Recipient {0} email '{1}' doesn't match phone email '{2}'", r.Name, r.Address, a.Email);
                     }
                 }
             }
@@ -1094,7 +1101,6 @@ namespace OutlookSync.Model
                 {
                     // wait for actual upload
                     //status.PhoneInserted.Add(contact);
-                    Debug.WriteLine("new contact on phone");
                 }
                 else
                 {

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using OutlookSync.Utilities;
 
 namespace OutlookSync.Model
 {
@@ -166,7 +167,7 @@ namespace OutlookSync.Model
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("Exception parsing contact xml: " + ex.Message);
+                Log.WriteLine("Exception parsing contact xml: " + ex.ToString());
                 return null;
             }
             return appointment;

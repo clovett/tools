@@ -38,6 +38,7 @@ namespace OutlookSync
         Settings settings;
         Updater updater = new Updater();
         FirewallConfig firewall;
+        Log log;
         //WebServer webserver;
 
         public MainWindow()
@@ -45,9 +46,10 @@ namespace OutlookSync
             InitializeComponent();
             this.Loaded += OnLoaded;
 
-            Log.OpenLog(GetLogFileName());
+            log = Log.OpenLog(GetLogFileName());
 
-            Debug.WriteLine("Starting time " + UnifiedStore.SyncTime);
+            // this is for debugging synchronization itself.
+            //Log.WriteLine("Starting time " + UnifiedStore.SyncTime);
 
             PhoneList.ItemsSource = items;
 
@@ -116,6 +118,11 @@ namespace OutlookSync
                 ShowMessage("Server is listening on the following addresses:\n" +
                     string.Join("\n", conmgr.ServerEndPoints.ToArray()));
             }
+            else if (e.Key == Key.F8)
+            {
+                InternetExplorer.OpenUrl(IntPtr.Zero, this.log.FileName);
+                e.Handled = true;
+            }
             base.OnPreviewKeyDown(e);
         }
 
@@ -161,7 +168,7 @@ namespace OutlookSync
                 }
                 else
                 {
-                    conmgr.StartListening(12777, 57365, 59650, 63203, 53889, 65238, 55264, 51764, 59305, 57979, 53993);
+                    conmgr.StartListening();
 
                     conmgr.MessageReceived += OnMessageReceived;
                     conmgr.ReadException += OnServerException;
@@ -245,15 +252,15 @@ namespace OutlookSync
 
         void OnMessageReceived(object sender, MessageEventArgs e)
         {
-            Log.WriteLine(DateTime.Now.ToLongTimeString() + ": message received from " + e.RemoteEndPoint.ToString());
-            Log.WriteLine("  Command: " + e.Message.Command + "(" + e.Message.Parameters + ")");
-
             e.Response = HandleMessage(e);
         }
 
         async Task<Message> HandleMessage(MessageEventArgs e)
         {
-            Debug.WriteLine(e.Message.Command);
+            Log.WriteLine("{0}: message received from {1}: {2}", DateTime.Now.ToLongTimeString(), e.RemoteEndPoint.ToString(), e.Message.Command);
+
+            //Log.WriteLine("  Command: " + e.Message.Command + "(" + e.Message.Parameters + ")");
+
             var msg = e.Message;
             switch (msg.Command)
             {
@@ -543,7 +550,7 @@ namespace OutlookSync
 
             settings.FirstLoad = false;
             await settings.SaveAsync();
-            Log.CloseLog();
+            this.log.CloseLog();
             base.OnClosed(e);
         }
 

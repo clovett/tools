@@ -20,8 +20,9 @@
             <TextBlock x:Name="StatusMessage" Text=""  VerticalAlignment="Center" Margin="10,0"/>
             <local:ConnectorControl x:Name="Connector" Grid.Column="1" Width="45" Height="20" VerticalAlignment="Center"/>
         </Grid>
-        <Grid>
-            <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0" Background="{StaticResource MainBackgroundBrush}"
+        <Grid Background="{StaticResource MainBackgroundBrush}">
+
+            <ListBox Grid.Row="2" x:Name="PhoneList" BorderThickness="0" Background="Transparent"
                      ScrollViewer.VerticalScrollBarVisibility="Auto" HorizontalAlignment="Stretch"
                      >
                 <ListBox.ItemTemplate>
@@ -42,7 +43,7 @@
             </Border>
             
             <TextBlock x:Name="VersionNumber" Margin="10" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="#7090B0" Text="Version {0}"/>
-            
+
         </Grid>
     </DockPanel>
 </Window>

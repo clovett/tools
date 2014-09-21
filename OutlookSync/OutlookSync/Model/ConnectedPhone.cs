@@ -268,6 +268,7 @@ namespace OutlookSync.Model
                         string xml = "null";
                         if (uc != null)
                         {
+                            Log.WriteLine("Sending contact to phone: [{0}]", uc.CompleteName);
                             xml = uc.ToXml();
                         }
                         response = new Message() { Command = "Contact", Parameters = xml };
@@ -331,6 +332,8 @@ namespace OutlookSync.Model
             UnifiedContact fromPhone = UnifiedContact.Parse(xml);
             if (fromPhone != null)
             {
+                Log.WriteLine("Updating contact from phone: [{0}]", fromPhone.CompleteName);
+
                 string id = fromPhone.OutlookEntryId;
                 if (!string.IsNullOrEmpty(id))
                 {

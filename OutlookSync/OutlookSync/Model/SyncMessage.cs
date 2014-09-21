@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using OutlookSync.Utilities;
 
 namespace OutlookSync.Model
 {
@@ -108,7 +109,7 @@ namespace OutlookSync.Model
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("SyncMessage parse caught exception: " + ex.Message);
+                Log.WriteLine("SyncMessage parse caught exception: " + ex.ToString());
                 return null;
             }
         }

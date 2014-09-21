@@ -34,7 +34,7 @@
     <ProductName>Outlook Sync</ProductName>
     <PublisherName>Lovett Software</PublisherName>
     <SuiteName>Outlook Sync</SuiteName>
-    <ApplicationRevision>2</ApplicationRevision>
+    <ApplicationRevision>3</ApplicationRevision>
     <ApplicationVersion>1.2.2.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -129,8 +129,10 @@
       <DependentUpon>UnhandledExceptionWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utilities\HlsColor.cs" />
+    <Compile Include="Utilities\InternetExplorer.cs" />
     <Compile Include="Utilities\Log.cs" />
     <Compile Include="Utilities\MD5.cs" />
+    <Compile Include="Utilities\ProcessHelper.cs" />
     <Compile Include="Utilities\Settings.cs" />
     <Compile Include="Utilities\Updater.cs" />
     <Page Include="Controls\ConnectorControl.xaml">

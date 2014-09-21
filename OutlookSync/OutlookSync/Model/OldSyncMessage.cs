@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OutlookSync.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -54,7 +55,7 @@ namespace OutlookSync.Model.Old
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("SyncMessage parse caught exception: " + ex.Message);
+                Log.WriteLine("SyncMessage parse caught exception: " + ex.ToString());
                 return null;
             }
         }

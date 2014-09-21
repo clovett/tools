@@ -10,9 +10,19 @@ namespace OutlookSync
 {
     class Log
     {
-        static StreamWriter log;
+        StreamWriter log;
+        string fileName;
+        static Log instance;
 
-        public static void OpenLog(string fileName)
+        public Log Instance
+        {
+            get
+            {
+                return instance;
+            }
+        }
+
+        private Log(string fileName)
         {
             if (log == null)
             {
@@ -23,7 +33,11 @@ namespace OutlookSync
                     {
                         Directory.CreateDirectory(dir);
                     }
-
+                    this.fileName = fileName;
+                    if (File.Exists(fileName))
+                    {
+                        File.Delete(fileName);
+                    }
                     log = new StreamWriter(fileName);
                 }
                 catch (Exception ex)
@@ -31,9 +45,17 @@ namespace OutlookSync
                     Debug.WriteLine("Error opening log: " + ex.Message);
                 }
             }
+            instance = this;
         }
 
-        public static void CloseLog()
+        public string FileName { get { return this.fileName; } }
+
+        public static Log OpenLog(string fileName)
+        {
+            return new Log(fileName);
+        }
+
+        public void CloseLog()
         {
             using (log)
             {
@@ -46,25 +68,18 @@ namespace OutlookSync
             }
         }
 
+
         public static void WriteLine(string message, params object[] args)
         {
-            if (log != null)
+            if (instance != null)
             {
-                log.WriteLine(message, args);
-                log.Flush();
+                instance.WriteLog(string.Format(message, args));
             }
-            Debug.WriteLine(message, args);
         }
 
 
         public static void WriteException(string message, Exception ex)
         {
-            if (log != null)
-            {
-                log.WriteLine(message);
-                log.Flush();
-            }
-            Debug.WriteLine(message);
             WriteException(ex);
         }
 
@@ -73,6 +88,16 @@ namespace OutlookSync
             WriteLine("Exception: {0}", ex.GetType().FullName);
             WriteLine(ex.ToString());
             WriteLine("------------------------------------------------------------------------------");
+        }
+
+        private void WriteLog(string content)
+        {
+            if (log != null)
+            {
+                log.WriteLine(content);
+                log.Flush();
+            }
+            Debug.WriteLine(content);
         }
     }
 }

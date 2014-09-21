@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
-
+using OutlookSync.Utilities;
 
 namespace OutlookSync.Model
 {
@@ -315,7 +315,7 @@ namespace OutlookSync.Model
                     else
                     {
                         // any other types to check here?
-                        Debug.WriteLine("Should we be compressing property values of type: {0}", v.GetType().FullName);
+                        Log.WriteLine("Should we be compressing property values of type: {0}", v.GetType().FullName);
                     }
                 }
 
@@ -360,7 +360,7 @@ namespace OutlookSync.Model
                 {
                     if (v.Value != null)
                     {
-                        Debug.WriteLine("Why wasn't this list diffed?");
+                        Log.WriteLine("Why wasn't this list diffed?");
                     }
                     v.Value = value;
                     v.VersionNumber = UnifiedStore.SyncTime;
@@ -369,7 +369,7 @@ namespace OutlookSync.Model
                 {
                     if (v.Value != null)
                     {
-                        Debug.WriteLine("Why wasn't this property bag diffed?");
+                        Log.WriteLine("Why wasn't this property bag diffed?");
                     }
                     v.Value = value;
                     v.VersionNumber = UnifiedStore.SyncTime;
@@ -863,7 +863,7 @@ namespace OutlookSync.Model
                         string b = otherValue == null ? "" : otherValue.ToString();
                         if (a != b)
                         {
-                            Debug.WriteLine("scalar list was updated, but the list version wasn't changed???");
+                            Log.WriteLine("scalar list was updated, but the list version wasn't changed???");
                             if (otherMoreRecent)
                             {
                                 // perhaps it was edited in outlook
