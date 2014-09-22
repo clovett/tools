@@ -21,6 +21,7 @@ namespace HtmlScraper
         string userid;
         string password;
         WebClient client;
+        string xmlFile;
 
         static void Main(string[] args)
         {
@@ -44,6 +45,7 @@ namespace HtmlScraper
             Console.WriteLine("    /inner           print the inner text of the matching nodes");
             Console.WriteLine("    [/userid userid]         credentials for https login if required");
             Console.WriteLine("    [/password password]     credentials for https login if required");
+            Console.WriteLine("    [/xml filename]  XMLify an HTML table (row header contains xml tagnames), select the table and write to filename");
         }
 
         private bool ParseCommandLine(string[] args)
@@ -85,7 +87,13 @@ namespace HtmlScraper
                             {
                                 password = args[++i];
                             }
-                            continue;                             
+                            continue;
+                        case "xml":
+                            if (i + 1 < args.Length)
+                            {
+                                xmlFile = args[++i];
+                            }
+                            continue;    
                     }
                 }
                 
@@ -204,7 +212,11 @@ namespace HtmlScraper
                 foreach (XmlNode d in Select(root, select))
                 {
                     count++;
-                    if (inner)
+                    if (xmlFile != null)
+                    {
+                        ConvertTableToXml(d);
+                    }
+                    else if (inner)
                     {
                         Console.WriteLine(d.InnerText);
                     }
@@ -223,6 +235,145 @@ namespace HtmlScraper
                 Console.WriteLine();
                 Console.WriteLine("found {0} matches", count);
             }
+        }
+
+        private void ConvertTableToXml(XmlNode d)
+        {
+            if (d.LocalName != "table")
+            {
+                Console.WriteLine("### xtable expecting a 'table' tag, but select found '{0}'", d.LocalName); 
+                return;
+            }
+
+            // see if it has any row headers.  
+            string prefix = "";
+            XmlDocument doc = d.OwnerDocument;
+            XmlNamespaceManager mgr = new XmlNamespaceManager(doc.NameTable);
+            if (!string.IsNullOrWhiteSpace(doc.DocumentElement.NamespaceURI))
+            {
+                if (!string.IsNullOrWhiteSpace(doc.DocumentElement.Prefix))
+                {
+                    prefix = doc.DocumentElement.Prefix;
+                    mgr.AddNamespace(prefix, doc.DocumentElement.NamespaceURI);
+                }
+                else {
+                    prefix = "x";
+                    mgr.AddNamespace(prefix, doc.DocumentElement.NamespaceURI);
+                }
+            }
+            List<string> headers = new List<string>();
+
+                      
+            string headerquery = (prefix == "") ? "//th" : "//" + prefix + ":th";         
+            string rowquery = (prefix == "") ? "//tr" : "//" + prefix + ":tr";         
+            string cellquery = (prefix == "") ? "td" : prefix + ":td";        
+            string aquery = (prefix == "") ? "a" : prefix + ":a";     
+
+            foreach (XmlNode th in d.SelectNodes(headerquery, mgr))
+            {
+                string h = th.InnerText;
+                headers.Add(h);
+            }
+
+            XDocument result = new XDocument(new XElement("data"));
+            
+            int count = 0;
+            foreach (XmlNode tr in d.SelectNodes(rowquery, mgr))
+            {
+                if (headers.Count > 0 && count == 0)
+                {
+                    // skip header row
+                }
+                else 
+                {
+                    XElement row = new XElement("row");
+                    result.Root.Add(row);
+                    int col = 0;
+                    foreach (XmlNode td in tr.SelectNodes(cellquery, mgr))
+                    {
+                        string header = (col < headers.Count) ? headers[col] : "col" + col;
+
+                        if (col == 0)
+                        {
+                            XmlNode a = td.SelectSingleNode(aquery, mgr);
+                            if (a != null)
+                            {
+                                XmlNode href = a.Attributes.GetNamedItem("href");
+                                if (href != null)
+                                {
+                                    XElement uri = new XElement("uri", href.InnerText);
+                                    row.Add(uri);
+                                }
+                            }
+                        }
+
+                        string content = MakeValidXml(td.InnerText);
+                        XElement e = new XElement(header, content);
+                        row.Add(e);
+                        col++;
+                    }
+                }
+                count++;
+            }
+
+            Console.WriteLine("Converted table to XML, found {0} rows", count);
+            result.Save(xmlFile);
+        }
+
+        private string MakeValidXml(string content)
+        {
+            StringBuilder sb = new StringBuilder();
+            char previous = '\0';
+            foreach (char c in content)
+            {
+                    int i = Convert.ToInt32(c);
+                if (XmlConvert.IsXmlChar(c))
+                {
+                    sb.Append(c);
+                }
+                else if (IsHighSurrogate(i))
+                {
+                    previous = c;
+                } 
+                else if (IsLowSurrogate(i))
+                {
+                    if (previous != '\0')
+                    {
+                        sb.Append(previous);
+                        sb.Append(c);
+                        previous = '\0';
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("### stripping illegal character 0x{0}", i.ToString("x"));
+                }
+            }
+            return sb.ToString();
+        }
+
+
+        // Surrogate methods
+        internal static bool IsHighSurrogate(int ch)
+        {
+            return InRange(ch, SurHighStart, SurHighEnd);
+        }
+
+        internal static bool IsLowSurrogate(int ch)
+        {
+            return InRange(ch, SurLowStart, SurLowEnd);
+        }
+
+        // Surrogate constants
+        internal const int SurHighStart = 0xd800;    // 1101 10xx
+        internal const int SurHighEnd = 0xdbff;
+        internal const int SurLowStart = 0xdc00;    // 1101 11xx
+        internal const int SurLowEnd = 0xdfff;
+
+        // This method tests whether a value is in a given range with just one test; start and end should be constants
+        private static bool InRange(int value, int start, int end)
+        {
+            return (uint)(value - start) <= (uint)(end - start);
         }
 
         private XmlDocument LoadHtmlPage(Uri url)
