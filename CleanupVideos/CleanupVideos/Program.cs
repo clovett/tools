@@ -10,10 +10,76 @@ namespace CleanupVideos
 {
     class Program
     {
+        string source;
+        string target;
+
         static void Main(string[] args)
         {
             Program p = new Program();
+            if (!p.ParseCommandLine(args))
+            {
+                PrintUsage();
+                return;
+            }
             p.Run();
+        }
+
+        private bool ParseCommandLine(string[] args)
+        {
+            for (int i = 0, n = args.Length; i < n; i++)
+            {
+                string arg = args[i];
+                if (arg[0] == '-' || arg[0] == '/')
+                {
+                    switch (arg.Substring(1).ToLowerInvariant())
+                    {
+                        case "h":
+                        case "?":
+                        case "help":
+                            return false;
+                    }
+                }
+                else if (source == null)
+                {
+                    source = arg;
+                }
+                else if (target == null)
+                {
+                    target = arg;
+                }
+            }
+            if (source == null)
+            {
+                Console.WriteLine("### Error: missing 'source' argument");
+                return false;
+            }
+            if (!Directory.Exists(source))
+            {
+                Console.WriteLine("### Error: source directory does not exist, are you sure it is correct?");
+                Console.WriteLine("Source:" + source);
+                return false;
+            }
+
+            if (!Directory.Exists(target))
+            {
+                Console.WriteLine("### Error: target directory does not exist, are you sure it is correct?");
+                Console.WriteLine("Source:" + source);
+                return false;
+            }
+
+
+            if (target == null)
+            {
+                Console.WriteLine("### Error: missing 'target' argument");
+                return false;
+            }
+            return true;
+        }
+
+        private static void PrintUsage()
+        {
+            Console.WriteLine("Usage: CleanupVideos <source> <target>");
+            Console.WriteLine("Finds all video files in the source directory and moves them to the matching location in the target directory");
         }
 
         int files;
@@ -21,8 +87,8 @@ namespace CleanupVideos
         private void Run()
         {
 
-            string pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-            string videos = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+            string pictures = this.source;
+            string videos = this.target;
             if (pictures == videos)
             {
                 Console.WriteLine("Cannot cleanup videos because pictures and videos library are in the same place, namely:");
