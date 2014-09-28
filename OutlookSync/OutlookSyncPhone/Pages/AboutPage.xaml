@@ -66,12 +66,15 @@
                     </Grid>
 
                     <TextBlock Text="Changes:" Margin="0,20,0,0" Foreground="{StaticResource PhoneAccentBrush}"/>
-                    
-                    <TextBlock Text="Version 1.2.2.3: search for free UDP port to make server connection more reliable."
+
+                    <TextBlock Text="Version 1.2.2.5: fix sync bug to do with email addresses."
                                TextWrapping="Wrap"/>
 
+                    <TextBlock Text="Version 1.2.2.3: search for free UDP port to make server connection more reliable."
+                               TextWrapping="Wrap" Foreground="#F0F0F0"/>
+
                     <TextBlock Text="Version 1.2.2.0: fixed some sync bugs and added ability to remove advertising on the help page."
-                               TextWrapping="Wrap"/>
+                               TextWrapping="Wrap" Foreground="#E8E8E8"/>
 
                 </StackPanel>
 

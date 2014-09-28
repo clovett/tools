@@ -17,6 +17,10 @@ namespace Microsoft.Networking
         public ServerProxy Server { get; set; }
     }
 
+    public class NoPortsAvailableException : Exception
+    {
+    }
+
     public class ConnectionManager
     {
         int m_portNumber;
@@ -32,11 +36,36 @@ namespace Microsoft.Networking
         public event EventHandler<ServerEventArgs> ServerFound;
         public event EventHandler<ServerExceptionEventArgs> ServerLost;
 
-        public ConnectionManager(string applicationId, string clientName, int udpPort)
+        public ConnectionManager(string applicationId, string clientName)
         {
-            m_portNumber = udpPort;
             m_udpMessage = "Client:" + applicationId + ":" + clientName;
             m_udpServerMessage = "Server:" + applicationId;
+        }
+
+        // cannot be completely random, the PC app has to use the same seed.
+        const int randomSeed = 1980527718;
+
+        IEnumerable<int> GetRandomPortNumber()
+        {
+            // this is what the original phone app is expecting in case user still has old version.
+            yield return 12777;
+
+            Random r = new Random(randomSeed);
+
+            // according to wikipedia ports 1024 to 49151 are available
+            const int min = 1024;
+            const int max = 49151;
+            int count = 0;
+
+            while (count++ < 20)
+            {
+                int port = r.Next(min, max);
+                if (port != 12777)
+                {
+                    yield return port;
+                }
+            }
+            yield return 0;
         }
 
         public void Start()
@@ -71,7 +100,9 @@ namespace Microsoft.Networking
                 var cancellationToken = cancellationSource.Token;
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    // send out the UDP ping every few seconds.
+                   // send out the UDP ping every few seconds, searching each port number in sequence till we find the one
+                   // the server is listening on.
+                                        
                     Guid adapter = Guid.Empty;
                     foreach (var hostName in Windows.Networking.Connectivity.NetworkInformation.GetHostNames())
                     {
@@ -84,7 +115,23 @@ namespace Microsoft.Networking
                                 if (hostName.IPInformation.NetworkAdapter != null && !hostName.CanonicalName.StartsWith("169."))
                                 {
                                     localAddresses.Add(hostName.CanonicalName);
-                                    SendUdpPing(hostName).Wait();
+
+                                    foreach (int port in GetRandomPortNumber())
+                                    {
+                                        if (port == 0)
+                                        {
+                                            break;
+                                        }
+                                        if (cancellationToken.IsCancellationRequested)
+                                        {
+                                            break;
+                                        }
+                                        // give each UDP socket it's own thread (doesn't work otherwise)
+                                        Task.Run(new Action(() =>
+                                        {
+                                            SendUdpPing(hostName, port).Wait();
+                                        }));
+                                    }
                                 }
                             }
                             catch (Exception ex)
@@ -95,7 +142,8 @@ namespace Microsoft.Networking
                     }
                     try
                     {
-                        Task.Delay(3000).Wait(cancellationToken);
+                        // give each ping time to answer...
+                        Task.Delay(5000).Wait(cancellationToken);
                         if (cancellationToken.IsCancellationRequested)
                         {
                             cancelled.Set();
@@ -117,27 +165,35 @@ namespace Microsoft.Networking
 
         int udpPing;
 
-        private async Task SendUdpPing(HostName hostName)
+        private async Task SendUdpPing(HostName hostName, int portNumber)
         {
-            string ipAddress = hostName.CanonicalName;
+            string ipAddress = hostName.CanonicalName + ":" + portNumber;
             DatagramSocket socket;
-            if (!sockets.TryGetValue(ipAddress, out socket))
+            lock (sockets)
+            {
+                sockets.TryGetValue(ipAddress, out socket);
+            }
+            if (socket == null)
             {
                 // setup the socket for this network adapter.
                 socket = new DatagramSocket();
                 socket.MessageReceived += OnDatagramMessageReceived;
-                sockets[ipAddress] = socket;
-                await socket.BindEndpointAsync(hostName, m_portNumber.ToString());
+                lock (sockets)
+                {
+                    sockets[ipAddress] = socket;
+                }
+                await socket.BindEndpointAsync(hostName, portNumber.ToString());
             }
 
-            using (IOutputStream os = await socket.GetOutputStreamAsync(new HostName("255.255.255.255"), m_portNumber.ToString()))
+            using (IOutputStream os = await socket.GetOutputStreamAsync(new HostName("255.255.255.255"), portNumber.ToString()))
             {
                 DataWriter writer = new DataWriter(os);
-                byte[] bytes = UTF8Encoding.UTF8.GetBytes(m_udpMessage + "/" + ipAddress + ":" + m_portNumber);
+                byte[] bytes = UTF8Encoding.UTF8.GetBytes(m_udpMessage + "/" + ipAddress );
                 writer.WriteBytes(bytes);
                 await writer.StoreAsync();
-                Debug.WriteLine("Sent UDP ping " + udpPing++);
+                Debug.WriteLine("Sent UDP ping " + udpPing++ + " to " + ipAddress);
             }
+            
         }
 
         private void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
@@ -147,7 +203,7 @@ namespace Microsoft.Networking
             // don't receive our own datagrams...
             if (!localAddresses.Contains(remoteHost))
             {
-                Debug.WriteLine("OnDatagramMessageReceived from " + remoteHost);
+                Debug.WriteLine("OnDatagramMessageReceived from " + remoteHost + " on port " + args.RemotePort);
 
                 var reader = args.GetDataReader();
                 uint bytesRead = reader.UnconsumedBufferLength;
@@ -159,6 +215,8 @@ namespace Microsoft.Networking
 
                 if (s.StartsWith(m_udpServerMessage))
                 {
+                    m_portNumber = int.Parse(args.RemotePort);
+
                     string[] addresses = s.Substring(m_udpServerMessage.Length + 1).Split('/');
 
                     var nowait = TryConnectServer(addresses);
@@ -254,15 +312,17 @@ namespace Microsoft.Networking
                 // wait for FindDevices to terminate so we can tear down the sockets cleanly.
                 cancelled.WaitOne(5000);
             }
-
-            foreach (var socket in sockets.Values)
+            lock (sockets)
             {
-                // dispose the socket.
-                using (socket)
+                foreach (var socket in sockets.Values)
                 {
+                    // dispose the socket.
+                    using (socket)
+                    {
+                    }
                 }
+                sockets.Clear();
             }
-            sockets.Clear();
         }
 
     }
