@@ -48,6 +48,7 @@ namespace OutlookSync
 
             log = Log.OpenLog(GetLogFileName());
 
+
             // this is for debugging synchronization itself.
             //Log.WriteLine("Starting time " + UnifiedStore.SyncTime);
 
@@ -550,6 +551,7 @@ namespace OutlookSync
 
             settings.FirstLoad = false;
             await settings.SaveAsync();
+            
             this.log.CloseLog();
             base.OnClosed(e);
         }

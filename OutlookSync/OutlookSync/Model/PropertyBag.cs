@@ -376,8 +376,8 @@ namespace OutlookSync.Model
                 }
                 else
                 {
-                    string a = (v.Value == null) ? "" : v.Value.ToString();
-                    string b = (value == null) ? "" : value.ToString();
+                    string a = UnifyNewLines((string)v.Value);
+                    string b = UnifyNewLines(value.ToString());
                     if (a != b)
                     {
                         v.Value = value;
@@ -400,6 +400,33 @@ namespace OutlookSync.Model
                 v = new PropertyValue() { Value = value, VersionNumber = UnifiedStore.SyncTime };
                 bag[key] = v;
             }
+        }
+
+        private string UnifyNewLines(string s)
+        {
+            if (s == null) return "";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0, n = s.Length; i<n; i++)
+            {
+                char c = s[i];
+                if (c == '\r')
+                {
+                    if (i + 1 < n && s[i+1] == '\n')
+                    {
+                        // convert "\r\n" into "\n";
+                        continue;
+                    }
+                    else
+                    {
+                        sb.Append('\n');
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
         }
 
         public void SetValue<T>(string key, T value)
@@ -952,7 +979,7 @@ namespace OutlookSync.Model
                 {
                     result = Math.Max(result, pv.VersionNumber);
 
-                    IList list = pv as IList;
+                    IList list = pv.Value as IList;
                     if (list != null)
                     {
                         foreach (object item in list)

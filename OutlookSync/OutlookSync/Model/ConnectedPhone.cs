@@ -268,7 +268,7 @@ namespace OutlookSync.Model
                         string xml = "null";
                         if (uc != null)
                         {
-                            Log.WriteLine("Sending contact to phone: [{0}]", uc.CompleteName);
+                            Log.WriteLine("Sending contact to phone: [{0}]", uc.DisplayName);
                             xml = uc.ToXml();
                         }
                         response = new Message() { Command = "Contact", Parameters = xml };
@@ -313,6 +313,8 @@ namespace OutlookSync.Model
 
         private Message HandleSync(string xml)
         {
+            Log.WriteLine("### Begin sync for phone: " + this.Name);
+
             // this message tells us what happened on the phone, what was deleted, inserted, and 
             // the latest version numbers on phone contacts.
             SyncMessage msg = SyncMessage.Parse(xml);

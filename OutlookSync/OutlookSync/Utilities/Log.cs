@@ -22,6 +22,8 @@ namespace OutlookSync
             }
         }
 
+        const string openPrefix = "==================== Opened";
+
         private Log(string fileName)
         {
             if (log == null)
@@ -34,11 +36,11 @@ namespace OutlookSync
                         Directory.CreateDirectory(dir);
                     }
                     this.fileName = fileName;
-                    if (File.Exists(fileName))
-                    {
-                        File.Delete(fileName);
-                    }
-                    log = new StreamWriter(fileName);
+                    OpenAndTruncate(fileName);
+
+                    // put opening marker in the log so we can truncate the log after a week.
+                    WriteLog(string.Format("{0} {1} ========================================", openPrefix, DateTime.Now.ToString()));
+
                 }
                 catch (Exception ex)
                 {
@@ -46,6 +48,59 @@ namespace OutlookSync
                 }
             }
             instance = this;
+        }
+
+        private void OpenAndTruncate(string fileName)
+        {
+
+            List<string> history = new List<string>();
+
+            // load and truncate the log so anything older than 1 week is deleted.
+            DateTime truncateDate = DateTime.Now.AddDays(-7);
+            if (File.Exists(fileName))
+            {
+                try
+                {
+                    bool truncate = true;
+                    using (var reader = new StreamReader(fileName))
+                    {
+                        while (true)
+                        {
+                            string line = reader.ReadLine();
+                            if (line == null)
+                            {
+                                break;
+                            }
+                            if (truncate && line.StartsWith(openPrefix))
+                            {
+                                string timestamp = line.Substring(openPrefix.Length).Replace("=", "").Trim();
+                                DateTime date;
+                                if (DateTime.TryParse(timestamp, out date))
+                                {
+                                    if (date >= truncateDate)
+                                    {
+                                        truncate = false;
+                                    }
+                                }
+                            }
+                            if (!truncate)
+                            {
+                                history.Add(line);
+                            }
+                        }
+                    }
+                }
+                catch { }
+
+                File.Delete(fileName);
+            }
+
+            log = new StreamWriter(fileName);
+
+            foreach (string past in history)
+            {
+                log.WriteLine(past);
+            }
         }
 
         public string FileName { get { return this.fileName; } }

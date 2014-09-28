@@ -213,7 +213,7 @@ namespace OutlookSync.Model
             }
         }
 
-        internal void DeleteContact(SyncItem s)
+        internal UnifiedContact DeleteContact(SyncItem s)
         {
             string id = s.Id;
             UnifiedContact cached = this.store.FindContactById(id);
@@ -229,9 +229,10 @@ namespace OutlookSync.Model
                     cached.LocalStoreObject = null;
                 }
             }
+            return cached;
         }
 
-        private void DeleteAppointment(SyncItem s)
+        private UnifiedAppointment DeleteAppointment(SyncItem s)
         {
             string id = s.Id;
             UnifiedAppointment cached = this.store.FindAppointmentById(id);
@@ -245,6 +246,7 @@ namespace OutlookSync.Model
                     item.Delete();
                 }
             }
+            return cached;
         }
 
         private void MergeAppointment(AppointmentItem appointment)
@@ -1052,30 +1054,35 @@ namespace OutlookSync.Model
 
         internal SyncMessage PhoneSync(SyncMessage msg, SyncResult status, out int identical)
         {
+            
             int same = 0;
             SyncMessage response = new SyncMessage() { Version = msg.Version }; // preserve phone version.
 
             // first, our local deletes take precedence...
             foreach (var pair in this.contactsDeletedLocally)
             {
+                Log.WriteLine("Contact deleted locally {0}", pair.Value.DisplayName);
                 response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
             }
 
             // and our local inserts the phone won't know about yet
             foreach (var pair in this.contactsAddedLocally)
             {
+                Log.WriteLine("Contact inserted locally {0}", pair.Value.DisplayName);
                 response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
             }
 
             // first, our local deletes take precedence...
             foreach (var pair in this.appointmentsDeletedLocally)
             {
+                Log.WriteLine("Appointment deleted locally: {0}", pair.Value.ToString());
                 response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Delete });
             }
 
             // and our local inserts the phone won't know about yet
             foreach (var pair in this.appointmentsAddedLocally)
             {
+                Log.WriteLine("Appointment Added locally: {0}", pair.Value.ToString());
                 response.Items.Add(new SyncItem(pair.Value) { Change = ChangeType.Insert });
             }
 
@@ -1089,11 +1096,19 @@ namespace OutlookSync.Model
                 {
                     if (item.Type == "C")
                     {
-                        DeleteContact(item);
+                        var deleted = DeleteContact(item);
+                        if (deleted != null)
+                        {
+                            Log.WriteLine("Cantact deleted on phone {0}", deleted.DisplayName);
+                        }
                     }
                     else
                     {
-                        DeleteAppointment(item);
+                        var deleted =  DeleteAppointment(item);                        
+                        if (deleted != null)
+                        {
+                            Log.WriteLine("Appointment deleted on phone {0}", deleted.ToString());
+                        }
                     }
                     status.PhoneDeleted.Add(item);
                 }
@@ -1101,6 +1116,13 @@ namespace OutlookSync.Model
                 {
                     // wait for actual upload
                     //status.PhoneInserted.Add(contact);
+
+                    UnifiedContact cached = this.store.FindContactById(item.Id);
+                    if (cached != null)
+                    {
+                        Log.WriteLine("Contact inserted on phone {0}", cached.DisplayName);
+                    }
+
                 }
                 else
                 {
@@ -1124,6 +1146,7 @@ namespace OutlookSync.Model
                     SyncItem phone = null;
                     if (map.TryGetValue(id, out phone))
                     {
+                        UnifiedContact cached = this.store.FindContactById(phone.Id);
                         if (phone.VersionNumber == version)
                         {
                             same++;
@@ -1132,10 +1155,18 @@ namespace OutlookSync.Model
                         {
                             // wait for actual upload
                             //status.PhoneUpdated.Add(phone);
+                            if (cached != null)
+                            {
+                                Log.WriteLine("Contact newer on phone {0}", cached.DisplayName);
+                            }
                         }
                         else if (phone.VersionNumber < version)
                         {
                             status.ServerUpdated.Add(phone);
+                            if (cached != null)
+                            {
+                                Log.WriteLine("Contact newer locally {0}", cached.DisplayName);
+                            }
                         }
                     }
 
@@ -1160,6 +1191,7 @@ namespace OutlookSync.Model
                     SyncItem phone = null;
                     if (map.TryGetValue(id, out phone))
                     {
+                        UnifiedAppointment cached = this.store.FindAppointmentById(id);
                         if (phone.VersionNumber == version)
                         {
                             same++;
@@ -1168,11 +1200,18 @@ namespace OutlookSync.Model
                         {
                             // wait for actual upload
                             //status.PhoneUpdated.Add(phone);
+                            if (cached != null)
+                            {
+                                Log.WriteLine("Appointment newer on phone {0}", cached.ToString());
+                            }
                         }
                         else if (phone.VersionNumber < version)
                         {
                             status.ServerUpdated.Add(phone);
-
+                            if (cached != null)
+                            {
+                                Log.WriteLine("Appointment newer locally {0}", cached.ToString());
+                            }
                         }
                     }
                     response.Items.Add(new SyncItem(appointment));
@@ -1195,6 +1234,8 @@ namespace OutlookSync.Model
                 ua.ClearValue("Details");
                 return xml;
             }
+
+            Log.WriteLine("Appointment is missing in Outlook: {0}", ua.ToString());
             throw new System.Exception("Why is AppointmentItem missing?");
         }
     }

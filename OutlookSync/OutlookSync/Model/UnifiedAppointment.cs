@@ -57,6 +57,10 @@ namespace OutlookSync.Model
             set { SetValue<string>("Location", value); }
         }
 
+        public override string ToString()
+        {
+            return string.Format("Appointment by {0}, about {1} from {2} to {3}", Organizer.Email, this.Subject, this.Start.ToString(), this.End.ToString());
+        }
 
         public DateTimeOffset Start
         {
