@@ -240,6 +240,7 @@
       <SubType>Designer</SubType>
       <DependentUpon>XsltViewer.cs</DependentUpon>
     </EmbeddedResource>
+    <Content Include="bugs.xml" />
     <Content Include="Resources\BlueBall.gif" />
     <Content Include="Resources\Copy.bmp" />
     <Content Include="Resources\Cut.bmp" />
