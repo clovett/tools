@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="email">
+		<param name="Name" value="Contact">
+		<param name="Local" value="Contact.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Colors">
+		<param name="Name" value="Options Dialog">
+		<param name="Local" value="Options.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Fonts">
+		<param name="Name" value="Options Dialog">
+		<param name="Local" value="Options.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Keyboard">
+		<param name="Name" value="XML Notepad">
+		<param name="Local" value="Keyboard.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Options">
+		<param name="Name" value="Options Dialog">
+		<param name="Local" value="Options.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Schemas">
+		<param name="Name" value="XML Schema Dialog">
+		<param name="Local" value="Schemas.htm">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Validation">
+		<param name="Name" value="XML Schema Validation">
+		<param name="Local" value="Validation.htm">
+		</OBJECT>
+</UL>
+</BODY></HTML>

@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" 
+           xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+           xmlns:vs="http://schemas.microsoft.com/Visual-Studio-Intellisense">
+  <xs:element name="Basket">
+    <xs:complexType>
+      <xs:sequence maxOccurs="2">
+        <xs:element name="color" type="color" />
+        <xs:element name="date" type="xs:date" />
+        <xs:element name="dateTime" type="xs:dateTime" />
+        <xs:choice maxOccurs="3">
+          <xs:element name="fruit" type="fruits" />
+          <xs:element name="vegetable" type="veges" />
+          <xs:element name="berry" type="berries" />
+        </xs:choice>
+        <xs:element name="weight" type="xs:decimal" />
+      </xs:sequence>
+      <xs:attribute name="language" type="xs:language" />
+      <xs:attribute name="sold" type="xs:boolean" />
+      <xs:attribute name="time" type="xs:time" />
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="fruits">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="apricot" />
+      <xs:enumeration value="banana" />
+      <xs:enumeration value="grape" />
+      <xs:enumeration value="nectrine" />
+      <xs:enumeration value="peach" />
+      <xs:enumeration value="pear" />
+      <xs:enumeration value="pineapple" />
+      <xs:enumeration value="plum" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="veges">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="carrot" />
+      <xs:enumeration value="cantelope" />
+      <xs:enumeration value="corn" />
+      <xs:enumeration value="cucumber" />
+      <xs:enumeration value="egg plant" />
+      <xs:enumeration value="lettuce" />
+      <xs:enumeration value="potato" />
+      <xs:enumeration value="pumpkin" />
+      <xs:enumeration value="squash" />
+      <xs:enumeration value="tomato" />
+      <xs:enumeration value="yam" />
+      <xs:enumeration value="zucchini" />
+      <xs:enumeration value="watermelon" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="berries">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="blackberry" />
+      <xs:enumeration value="blueberry" />
+      <xs:enumeration value="cranberry" />
+      <xs:enumeration value="huckleberry" />
+      <xs:enumeration value="strawberry" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="color" vs:builder="XmlNotepad.ColorBuilder">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Aliceblue" />
+      <xs:enumeration value="Antiquewhite" />
+      <xs:enumeration value="Aqua" />
+      <xs:enumeration value="Aquamarine" />
+      <xs:enumeration value="Azure" />
+      <xs:enumeration value="Beige" />
+      <xs:enumeration value="Bisque" />
+      <xs:enumeration value="Black" />
+      <xs:enumeration value="Blanchedalmond" />
+      <xs:enumeration value="Blue" />
+      <xs:enumeration value="Blueviolet" />
+      <xs:enumeration value="Brown" />
+      <xs:enumeration value="Burlywood" />
+      <xs:enumeration value="Cadetblue" />
+      <xs:enumeration value="Chartreuse" />
+      <xs:enumeration value="Chocolate" />
+      <xs:enumeration value="Coral" />
+      <xs:enumeration value="Cornflowerblue" />
+      <xs:enumeration value="Cornsilk" />
+      <xs:enumeration value="Crimson" />
+      <xs:enumeration value="Cyan" />
+      <xs:enumeration value="Darkblue" />
+      <xs:enumeration value="Darkcyan" />
+      <xs:enumeration value="Darkgoldenrod" />
+      <xs:enumeration value="Darkgray" />
+      <xs:enumeration value="Darkgreen" />
+      <xs:enumeration value="Darkkhaki" />
+      <xs:enumeration value="Darkmagenta" />
+      <xs:enumeration value="Darkolivegreen" />
+      <xs:enumeration value="Darkorange" />
+      <xs:enumeration value="Darkorchid" />
+      <xs:enumeration value="Darkred" />
+      <xs:enumeration value="Darksalmon" />
+      <xs:enumeration value="Darkseagreen" />
+      <xs:enumeration value="Darkslateblue" />
+      <xs:enumeration value="Darkslategray" />
+      <xs:enumeration value="Darkturquoise" />
+      <xs:enumeration value="Darkviolet" />
+      <xs:enumeration value="deeppink" />
+      <xs:enumeration value="Deepskyblue" />
+      <xs:enumeration value="Dimgray" />
+      <xs:enumeration value="Dodgerblue" />
+      <xs:enumeration value="Firebrick" />
+      <xs:enumeration value="Floralwhite" />
+      <xs:enumeration value="Forestgreen" />
+      <xs:enumeration value="Fuchsia" />
+      <xs:enumeration value="Gainsboro" />
+      <xs:enumeration value="Ghostwhite" />
+      <xs:enumeration value="Gold" />
+      <xs:enumeration value="Goldenrod" />
+      <xs:enumeration value="Gray" />
+      <xs:enumeration value="Green" />
+      <xs:enumeration value="Greenyellow" />
+      <xs:enumeration value="Honeydew" />
+      <xs:enumeration value="Hotpink" />
+      <xs:enumeration value="Indianred" />
+      <xs:enumeration value="Indigo" />
+      <xs:enumeration value="Ivory" />
+      <xs:enumeration value="Khaki" />
+      <xs:enumeration value="Lavender" />
+      <xs:enumeration value="Lavenderblush" />
+      <xs:enumeration value="Lawngreen" />
+      <xs:enumeration value="Lemonchiffon" />
+      <xs:enumeration value="Lightblue" />
+      <xs:enumeration value="Lightcoral" />
+      <xs:enumeration value="Lightcyan" />
+      <xs:enumeration value="Lightgoldenrodyellow" />
+      <xs:enumeration value="Lightgreen" />
+      <xs:enumeration value="Lightgrey" />
+      <xs:enumeration value="Lightpink" />
+      <xs:enumeration value="Lightsalmon" />
+      <xs:enumeration value="Lightseagreen" />
+      <xs:enumeration value="Lightskyblue" />
+      <xs:enumeration value="Lightslategray" />
+      <xs:enumeration value="Lightsteelblue" />
+      <xs:enumeration value="Lightyellow" />
+      <xs:enumeration value="Lime" />
+      <xs:enumeration value="Limegreen" />
+      <xs:enumeration value="Linen" />
+      <xs:enumeration value="Magenta" />
+      <xs:enumeration value="Maroon" />
+      <xs:enumeration value="Mediumauqamarine" />
+      <xs:enumeration value="Mediumblue" />
+      <xs:enumeration value="Mediumorchid" />
+      <xs:enumeration value="Mediumpurple" />
+      <xs:enumeration value="Mediumseagreen" />
+      <xs:enumeration value="Mediumslateblue" />
+      <xs:enumeration value="Mediumspringgreen" />
+      <xs:enumeration value="Mediumturquoise" />
+      <xs:enumeration value="Mediumvioletred" />
+      <xs:enumeration value="Midnightblue" />
+      <xs:enumeration value="Mintcream" />
+      <xs:enumeration value="Mistyrose" />
+      <xs:enumeration value="Moccasin" />
+      <xs:enumeration value="Navajowhite" />
+      <xs:enumeration value="Navy" />
+      <xs:enumeration value="Oldlace" />
+      <xs:enumeration value="Olive" />
+      <xs:enumeration value="Olivedrab" />
+      <xs:enumeration value="Orange" />
+      <xs:enumeration value="Orangered" />
+      <xs:enumeration value="Orchid" />
+      <xs:enumeration value="Palegoldenrod" />
+      <xs:enumeration value="Palegreen" />
+      <xs:enumeration value="Paleturquoise" />
+      <xs:enumeration value="Palevioletred" />
+      <xs:enumeration value="Papayawhip" />
+      <xs:enumeration value="Peachpuff" />
+      <xs:enumeration value="Peru" />
+      <xs:enumeration value="Pink" />
+      <xs:enumeration value="Plum" />
+      <xs:enumeration value="Powderblue" />
+      <xs:enumeration value="Purple" />
+      <xs:enumeration value="Red" />
+      <xs:enumeration value="Rosybrown" />
+      <xs:enumeration value="Royalblue" />
+      <xs:enumeration value="Saddlebrown" />
+      <xs:enumeration value="Salmon" />
+      <xs:enumeration value="Sandybrown" />
+      <xs:enumeration value="Seagreen" />
+      <xs:enumeration value="Seashell" />
+      <xs:enumeration value="Sienna" />
+      <xs:enumeration value="Silver" />
+      <xs:enumeration value="Skyblue" />
+      <xs:enumeration value="Slateblue" />
+      <xs:enumeration value="Slategray" />
+      <xs:enumeration value="Snow" />
+      <xs:enumeration value="Springgreen" />
+      <xs:enumeration value="Steelblue" />
+      <xs:enumeration value="Tan" />
+      <xs:enumeration value="Teal" />
+      <xs:enumeration value="Thistle" />
+      <xs:enumeration value="Tomato" />
+      <xs:enumeration value="Turquoise" />
+      <xs:enumeration value="Violet" />
+      <xs:enumeration value="Wheat" />
+      <xs:enumeration value="White" />
+      <xs:enumeration value="Whitesmoke" />
+      <xs:enumeration value="Yellow" />
+      <xs:enumeration value="YellowGreen" />
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
