@@ -10,7 +10,7 @@
     <ApplicationIcon>App.ico</ApplicationIcon>
     <AssemblyKeyContainerName />
     <AssemblyName>xmlint</AssemblyName>
-    <AssemblyOriginatorKeyFile />
+    <AssemblyOriginatorKeyFile>$(MYKEYFILE)</AssemblyOriginatorKeyFile>
     <DefaultClientScript>JScript</DefaultClientScript>
     <DefaultHTMLPageLayout>Grid</DefaultHTMLPageLayout>
     <DefaultTargetSchema>IE50</DefaultTargetSchema>
@@ -80,6 +80,9 @@
     <WarningLevel>4</WarningLevel>
     <DebugType>none</DebugType>
     <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System">
