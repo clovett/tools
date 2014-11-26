@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<bugs>
-  <bug title="Find window should hide when XML Notepad window is not active"/>
-  <bug title="Error list text should word wrap so you can read the entire message"/>
-</bugs>
