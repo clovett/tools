@@ -81,6 +81,11 @@ namespace Whereis
             bool found = false;
             string file = this.filename;
             string path = Environment.GetEnvironmentVariable(this.variable);
+            if (string.IsNullOrEmpty(path))
+            {
+                Console.WriteLine("environment variable {0} not found", this.variable);
+                return;
+            }
             string[] parts = path.Split(';');
             foreach (string p in parts)
             {
