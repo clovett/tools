@@ -91,11 +91,16 @@ namespace Whereis
             {
                 if (!string.IsNullOrWhiteSpace(p))
                 {
-                    string fullPath = Path.Combine(p, file);
-                    if (File.Exists(fullPath) )
+                    try
                     {
-                        Console.WriteLine(fullPath);
-                        found = true;
+                        string fullPath = Path.Combine(p, file);
+                        if (File.Exists(fullPath))
+                        {
+                            Console.WriteLine(fullPath);
+                            found = true;
+                        }
+                    } catch (Exception) {
+                        Console.WriteLine("Skipping illformed path '{0}'", p);
                     }
                 }
             }
