@@ -55,7 +55,7 @@ namespace Whereis
                 }
                 else
                 {
-                    Console.WriteLine("### Error: too many arguments");
+                    Console.WriteLine("### Error: too many arguments, unexpected: " + arg);
                     return false;
                 }
             }
@@ -73,7 +73,7 @@ namespace Whereis
                 Console.WriteLine("Usage: whereis [options] <filename>");                
                 Console.WriteLine("Searches your PATH for the given file");
                 Console.WriteLine("Options:");
-                Console.WriteLine("   var=other    specifies a different environment variable besides the default PATH variable");
+                Console.WriteLine("   /var other    specifies a different environment variable besides the default PATH variable");
         }
 
         private void Run()
