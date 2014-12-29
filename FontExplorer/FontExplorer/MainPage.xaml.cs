@@ -22,6 +22,8 @@ namespace FontExplorer
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        FontFamily font;
+
         public MainPage()
         {
             this.InitializeComponent();
@@ -36,7 +38,7 @@ namespace FontExplorer
         {
             try
             {
-                ResultList.FontFamily = new FontFamily((string)FontCombo.SelectedItem);
+                font = new FontFamily((string)FontCombo.SelectedItem);
                 UpdatePage();
             }
             catch
@@ -62,14 +64,20 @@ namespace FontExplorer
             int ch = 32;
             int.TryParse(text, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out ch);
 
-            List<string> list = new List<string>();
+            List<FontItem> list = new List<FontItem>();
 
             for (int i = ch; i < ch + 1000; i++)
             {
-                list.Add(Convert.ToChar(i).ToString());
+                list.Add(new FontItem()
+                {
+                    Symbol = Convert.ToChar(i).ToString(),
+                    Label = i.ToString("x"),
+                    Font = this.font
+                });
             }
 
             ResultList.ItemsSource = list;
+            ResultList.ScrollIntoView(list[0]);
         }
 
         private void OnListViewKeyDown(object sender, KeyRoutedEventArgs e)

@@ -12,12 +12,16 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="5,0,5,0"/>
         </Style>
-        <local:FontPointConverter x:Key="FontPointConverter"/>
+
         <DataTemplate x:Key="FontIconTemplate">
-            <StackPanel Orientation="Vertical">
-                <TextBlock Text="{Binding}" FontSize="18" HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding Converter={StaticResource FontPointConverter}}" FontSize="12" HorizontalAlignment="Center" />
-            </StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="{Binding Symbol}" FontSize="48" HorizontalAlignment="Center" FontFamily="{Binding Font}" />
+                <TextBlock Grid.Row="1" Text="{Binding Label}" FontSize="12" HorizontalAlignment="Center" Foreground="{ThemeResource BackButtonDisabledForegroundThemeBrush}" />
+            </Grid>
         </DataTemplate>
     </Page.Resources>
 
@@ -26,14 +30,16 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal" Margin="5">
             <TextBlock Text="Font:"/>
             <ComboBox x:Name="FontCombo" Width="200" SelectionChanged="OnFontSelected"/>
             <TextBlock Text="Start:"/>
             <TextBox x:Name="StartTextBox" Width="200" Text="20" KeyDown="OnTextKeyDown"/>
             <TextBlock Text="(hex)"/>
         </StackPanel>
-        <ListView x:Name="ResultList" KeyDown="OnListViewKeyDown" Grid.Row="1" ItemTemplate="{StaticResource FontIconTemplate}">
+
+        <ListView x:Name="ResultList" KeyDown="OnListViewKeyDown" Grid.Row="1" ItemTemplate="{StaticResource FontIconTemplate}"
+                  ScrollViewer.HorizontalScrollMode="Enabled">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapGrid/>
