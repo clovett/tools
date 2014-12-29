@@ -32,6 +32,32 @@ namespace FontExplorer
             fonts.Sort();
             FontCombo.ItemsSource = fonts;
             FontCombo.SelectedIndex = 0;
+
+            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
+        }
+
+        void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            if (args.VirtualKey == Windows.System.VirtualKey.PageDown)
+            {
+                int ch = GetCurrentPage();
+                ch += 0x100;
+                if (ch > 0xfE00)
+                {
+                    ch = 0xfe00;
+                }
+                SetCurrentPage(ch);
+            }
+            else if (args.VirtualKey == Windows.System.VirtualKey.PageUp)
+            {
+                int ch = GetCurrentPage();
+                ch -= 0x100;
+                if (ch < 0)
+                {
+                    ch = 0;
+                }
+                SetCurrentPage(ch);
+            }
         }
 
         private void OnFontSelected(object sender, SelectionChangedEventArgs e)
@@ -54,7 +80,7 @@ namespace FontExplorer
             }
         }
 
-        void UpdatePage()
+        int GetCurrentPage()
         {
             string text = StartTextBox.Text.Trim();
             if (text.StartsWith("0x"))
@@ -64,9 +90,20 @@ namespace FontExplorer
             int ch = 32;
             int.TryParse(text, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out ch);
 
-            List<FontItem> list = new List<FontItem>();
+            return ch;
+        }
 
-            for (int i = ch; i < ch + 1000; i++)
+        void SetCurrentPage(int page)
+        {
+            StartTextBox.Text = page.ToString("x");
+            UpdatePage();
+        }
+
+        void UpdatePage()
+        {
+            List<FontItem> list = new List<FontItem>();
+            int ch = GetCurrentPage();
+            for (int i = ch; i < ch + 0x100; i++)
             {
                 list.Add(new FontItem()
                 {
@@ -82,7 +119,7 @@ namespace FontExplorer
 
         private void OnListViewKeyDown(object sender, KeyRoutedEventArgs e)
         {
-
+            
         }
     }
 }

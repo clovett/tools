@@ -33,8 +33,8 @@
         <StackPanel Orientation="Horizontal" Margin="5">
             <TextBlock Text="Font:"/>
             <ComboBox x:Name="FontCombo" Width="200" SelectionChanged="OnFontSelected"/>
-            <TextBlock Text="Start:"/>
-            <TextBox x:Name="StartTextBox" Width="200" Text="20" KeyDown="OnTextKeyDown"/>
+            <TextBlock Text="Page:"/>
+            <TextBox x:Name="StartTextBox" Width="200" Text="0" KeyDown="OnTextKeyDown"/>
             <TextBlock Text="(hex)"/>
         </StackPanel>
 
