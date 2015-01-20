@@ -19,11 +19,6 @@
         <DefaultTile ShowName="allLogos" WideLogo="Assets\Wide.png" />
         <SplashScreen Image="Assets\SplashScreen.png" />
       </VisualElements>
-      <Extensions>
-        <Extension Category="windows.backgroundTasks">
-          <BackgroundTasks />
-        </Extension>
-      </Extensions>
     </Application>
   </Applications>
   <Capabilities>
