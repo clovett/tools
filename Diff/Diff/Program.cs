@@ -67,10 +67,7 @@ namespace Diff
                     cl.inserted = true;
                     result.Insert(pos, cl);
                 }
-                else
-                {
-                    pos++;
-                }
+                pos++;
             }
 
             WriteHeader();
