@@ -89,11 +89,6 @@ namespace PhoneIconMaker
 
             NumberFormatInfo info = new NumberFormatInfo();
 
-            int i = 0;
-            if (int.TryParse(text, System.Globalization.NumberStyles.HexNumber, info, out i))
-            {
-                CharacterText.Text = Convert.ToChar(i).ToString();
-            }
 
         }
     }
