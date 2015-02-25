@@ -377,7 +377,7 @@ namespace OutlookSync.Model
 
         private void MergeContact(ContactItem contact)
         {
-            if (contact == null)
+            if (contact == null || store == null)
             {
                 return ;
             }

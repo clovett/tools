@@ -166,6 +166,7 @@ namespace OutlookSync
                 if (!conmgr.HasInternet())
                 {
                     ShowMessage(Properties.Resources.NoNetwork);
+                    return;
                 }
                 else
                 {
@@ -173,12 +174,10 @@ namespace OutlookSync
 
                     conmgr.MessageReceived += OnMessageReceived;
                     conmgr.ReadException += OnServerException;
-                    if (conmgr != null)
-                    {
-                        ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
-                        store = await UnifiedStore.LoadAsync(GetStoreFileName());
-                    }
-
+                    
+                    ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
+                    store = await UnifiedStore.LoadAsync(GetStoreFileName());
+                    
                     firewall.StartCheckingFirewall();
                 }
 
@@ -195,12 +194,12 @@ namespace OutlookSync
                     }                
                     catch (Exception ex)
                     {
-                        ShowMessage(string.Format(Properties.Resources.OutlookUnavailable, ex.Message));
+                        ShowMessage(string.Format(Properties.Resources.OutlookUnavailable, ex.ToString()));
                     }
                 }
                 catch (Exception ex)
                 {
-                    ShowMessage(string.Format(Properties.Resources.NoOutlook, ex.Message));
+                    ShowMessage(string.Format(Properties.Resources.NoOutlook, ex.ToString()));
                 }
 
             }
