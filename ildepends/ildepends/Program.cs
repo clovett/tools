@@ -17,7 +17,114 @@ namespace ildepends
         static GraphCategory AssemblyCategory;
         static ConsoleHostEnvironment host;
 
+        List<string> assemblies = new List<string>();
+        uint levels = int.MaxValue;
+        string outputFileName = "out.dgml";
+
         static void Main(string[] args)
+        {
+            Program p = new Program();
+            if (p.ParseCommandLine(args))
+            {
+                try
+                {
+                    p.Run();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("### Unexpected exception: {0}", ex.Message);
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+            else
+            {
+                PrintUsage();
+            }
+        }
+
+        private static void PrintUsage()
+        {
+            Console.WriteLine("ildepends [options] assemblies");
+            Console.WriteLine("Loads all the given .NET assemblies, walks their referenced assemblies and dumps out DGML graph of the result");
+            Console.WriteLine("Options:");
+            Console.WriteLine("    /out:filename.dgml       (default out.dgml)");
+            Console.WriteLine("    /levels:n                (how many levels of references to traverse, default int.MaxValue)");
+        }
+
+        bool ParseCommandLine(string[] args)
+        {
+            for (int i = 0, n = args.Length; i < n; i++)
+            {
+                string arg = args[i];
+                if (arg[0] == '-' || arg[0] == '/')
+                {
+                    int colon = arg.IndexOf(':');
+                    string value = null;
+                    if (colon > 0 && colon < arg.Length - 1)
+                    {
+                        value = arg.Substring(colon + 1);
+                        arg = arg.Substring(0, colon);
+                    }
+
+                    switch (arg.Substring(1).ToLowerInvariant().Trim())
+                    {
+                        case "?":
+                        case "help":
+                            return false;
+                        case "out":
+                            outputFileName = value;
+                            break;
+                        case "levels":
+                            {
+                                uint x = 0;
+                                if (uint.TryParse(value, out x))
+                                {
+                                    levels = x;
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Levels should provide a value integer value : {0}", value);
+                                    return false;
+                                }
+                            }
+                            break;
+                        default:
+                            Console.WriteLine("Unrecognized command line argument: {0}", args[i]);
+                            return false;
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        String fullPath = Path.GetFullPath(arg);
+                        if (!File.Exists(fullPath))
+                        {
+                            Console.WriteLine("File not found: {0}", fullPath);
+                            return false;
+                        }
+                        else
+                        {
+                            assemblies.Add(fullPath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Invalid file name: {0}", arg);
+                        Console.WriteLine(ex.Message);
+                        return false;
+                    }
+                }
+            }
+            if (assemblies.Count == 0)
+            {
+                Console.WriteLine("Missing assemblies to process");
+                return false;
+            }
+            return true;
+        }
+
+        void Run()
         {
             GraphSchema assemblySchema = new GraphSchema("ildependsSchema");
             UnresolvedCategory = assemblySchema.Categories.AddNewCategory("Unresolved");
@@ -41,23 +148,30 @@ namespace ildepends
             setter.Value = "pack://application:,,,/Microsoft.VisualStudio.Progression.GraphControl;component/Icons/kpi_red_sym2_large.png";
             graph.Styles.Add(errorStyle);
 
-            foreach (String fileName in args)
+            foreach (String fullPath in this.assemblies)
             {
-                String fullPath = Path.GetFullPath(fileName);
                 try
                 {
                     Console.WriteLine("Processing: " + fullPath);
-                    IAssembly assembly = host.LoadUnitFrom(args[0]) as IAssembly;
+                    IAssembly assembly = host.LoadUnitFrom(fullPath) as IAssembly;
                     GraphNode root = graph.Nodes.GetOrCreate(GetNodeID(assembly.AssemblyIdentity), assembly.AssemblyIdentity.Name.Value, AssemblyCategory);
-                    WalkDependencies(graph, root, assembly, new HashSet<IAssembly>());
+                    WalkDependencies(graph, root, assembly, levels, new HashSet<IAssembly>());
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("#Error: " + ex.Message);
+                    Console.WriteLine("### Error processing assembly: " + ex.Message);
+                    Console.WriteLine(ex.ToString());
                 }
             }
 
-            graph.Save("out.dgml");
+            try
+            {
+                graph.Save(this.outputFileName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error saving output file: {0}\n{1}", this.outputFileName, ex.Message);
+            }
         }
 
         static GraphNodeIdName AssemblyName = GraphNodeIdName.Get("Assembly", "Assembly", typeof(Uri));
@@ -115,7 +229,7 @@ namespace ildepends
                 GraphNodeId.GetPartial(AssemblyName, FindAssembly(id)) });
         }
 
-        private static void WalkDependencies(Graph graph, GraphNode root, IAssembly assembly, HashSet<IAssembly> visited)
+        private static void WalkDependencies(Graph graph, GraphNode root, IAssembly assembly, uint level, HashSet<IAssembly> visited)
         {
             visited.Add(assembly);
             foreach (IAssemblyReference r in assembly.AssemblyReferences)
@@ -126,9 +240,9 @@ namespace ildepends
                 IAssembly referenced = r.ResolvedAssembly;
                 if (referenced != null)
                 {
-                    if (!visited.Contains(referenced))
+                    if (!visited.Contains(referenced) && level > 1)
                     {
-                        WalkDependencies(graph, node, referenced, visited);
+                        WalkDependencies(graph, node, referenced, level - 1, visited);
                     }
                 }
                 else
