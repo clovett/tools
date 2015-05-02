@@ -20,20 +20,26 @@ namespace AutomaticPairingDemo.Bluetooth
             _taskCompleteEvent = new AutoResetEvent(false);
         }
 
-        public void EnableRadio(TimeSpan timeout)
+        public async Task EnableRadioAsync(TimeSpan timeout)
         {
             _taskError = null;
             _taskCompleteEvent.Reset();
+            // note: this must happen on UI thread.
             _radioController.EnableBluetoothRadio(1, this, 0);
-            if (!_taskCompleteEvent.WaitOne(timeout))
+
+            await Task.Run(new Action(() =>
             {
-                _taskError = new Exception("Enable Bluetooth Radio timed out");
-            }
+                if (!_taskCompleteEvent.WaitOne(timeout))
+                {
+                    _taskError = new Exception("Enable Bluetooth Radio timed out");
+                }
+            }));
+
             if (_taskError != null)
             {
                 throw _taskError;
             }
-        }
+        }        
 
         public void CommandCompleted(int pvContext, int hrError)
         {

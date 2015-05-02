@@ -14,14 +14,22 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBox Header="Device Address:" Margin="10" x:Name="DeviceAddress" Width="300" HorizontalAlignment="Left"
-                 TextChanged="OnDeviceAddressChanged"/>
+                 TextChanged="OnDeviceAddressChanged"
+                 Text="84eb18714757"/>
 
-        <Button x:Name="PairingButton" Click="OnStartPairing" Grid.Row="1" Margin="10" >Start Pairing</Button>
+        <TextBox Header="Pin Code:" Grid.Row="1" Margin="10" x:Name="DevicePinCode" Width="300" HorizontalAlignment="Left"
+                 Text="0000"/>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" >
+            <Button x:Name="PairingButton" Click="OnStartPairing" Margin="10" >Start Pairing</Button>
+            <Button x:Name="UnpairButton" Margin="10" Click="OnStartUnpairing">Unpair</Button>
+        </StackPanel>
+
+        <ProgressBar Grid.Row="3" x:Name="PairingProgress" Margin="10" Visibility="Collapsed"/>
         
-        <ProgressBar Grid.Row="2" x:Name="PairingProgress" Margin="10" Visibility="Collapsed"/>
-        
-        <TextBlock x:Name="MessageText" Grid.Row="3" Margin="10" TextWrapping="Wrap" FontSize="18"/>
+        <TextBlock x:Name="MessageText" Grid.Row="4" Margin="10" TextWrapping="Wrap" FontSize="18"/>
     </Grid>
 </Page>

@@ -1,6 +1,8 @@
 ﻿using AutomaticPairingDemo.Bluetooth;
+using SharedLibrary;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -25,13 +27,27 @@ namespace AutomaticPairingDemo
     {
         BluetoothConnectionManager _manager;
         bool _pairingInProgress;
+        bool _unpairingInProgress;
+        bool _paired;
 
         public MainPage()
         {
             this.InitializeComponent();
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
+
+            this.Unloaded += MainPage_Unloaded;
         }
+
+        private void MainPage_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (_manager != null)
+            {
+                _manager.Dispose();
+                _manager = null;
+            }
+        }
+
 
         /// <summary>
         /// Invoked when this page is about to be displayed in a Frame.
@@ -40,6 +56,13 @@ namespace AutomaticPairingDemo
         /// This parameter is typically used to configure the page.</param>
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
+            var settings = Settings.Instance;
+            if (!string.IsNullOrEmpty(settings.DeviceAddress))
+            {
+                DeviceAddress.Text = settings.DeviceAddress;
+                DevicePinCode.Text = settings.PinCode;
+            }
+
             UpdateButtonState();
 
             if (string.IsNullOrWhiteSpace(DeviceAddress.Text))
@@ -76,7 +99,7 @@ namespace AutomaticPairingDemo
                 if (string.IsNullOrWhiteSpace(DeviceAddress.Text))
                 {
                     PairingButton.IsEnabled = false;
-                    ShowMessage("Please enter device MAC address");
+                    ShowMessage("Please enter device MAC address in HEX, something like this: 84eb18714757 ");
                 }
                 else
                 {
@@ -84,17 +107,53 @@ namespace AutomaticPairingDemo
                 }
             }
 
+            if (_unpairingInProgress)
+            {
+                UnpairButton.Content = "Cancel";
+                UnpairButton.Tag = "Cancel";
+                UnpairButton.IsEnabled = true;
+            }
+            else
+            {
+                UnpairButton.Content = "Unpair";
+
+                if (_paired)
+                {
+                    UnpairButton.IsEnabled = true;
+                }
+                else
+                {
+                    PairingButton.Focus(FocusState.Programmatic);
+                    UnpairButton.IsEnabled = false;
+                }
+            }
         }
 
         private async void OnStartPairing(object sender, RoutedEventArgs e)
         {
             string state = (string)PairingButton.Tag;
+
             if (state == "Cancel")
             {
                 StopPairing();
             }
             else
             {
+
+                ulong addr;
+                if (!ulong.TryParse(DeviceAddress.Text, System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out addr))
+                {
+                    ShowMessage("Please enter valid hexidecimal number for device address");
+                    DeviceAddress.Focus(FocusState.Programmatic);
+                    DeviceAddress.SelectAll();
+                    return;
+                }
+
+                var settings = Settings.Instance;
+                settings.DeviceAddress = DeviceAddress.Text;
+                settings.PinCode = DevicePinCode.Text;
+                var nowait = settings.SaveAsync();
+
                 if (_manager == null)
                 {
                     _manager = new BluetoothConnectionManager();
@@ -102,16 +161,29 @@ namespace AutomaticPairingDemo
 
                 PairingProgress.Visibility = Visibility.Visible;
                 PairingProgress.IsIndeterminate = true;
+
                 PairingButton.Content = "Cancel";
+                PairingButton.Tag = "Cancel";
+
+                _pairingInProgress = true;
+                _paired = false;
 
                 try
                 {
-                    await _manager.PairAsync("123", TimeSpan.FromSeconds(10000));
+                    int start = Environment.TickCount;
+                    ShowMessage("pairing started...");
 
-                    ShowMessage("pairing successful");
+                    // Finding and pairing a device can take a while, sometimes up to a minute.
+                    await _manager.PairDeviceAsync(addr, DevicePinCode.Text, TimeSpan.FromSeconds(60));
+
+                    int end = Environment.TickCount;
+                    ShowMessage(string.Format("pairing completed in {0} seconds", (end - start) / 1000));
+
+                    _paired = true;
                 }
                 catch (Exception ex)
                 {
+                    _pairingInProgress = false;
                     ShowMessage(ex.Message);
                 }
 
@@ -124,10 +196,91 @@ namespace AutomaticPairingDemo
 
         private void StopPairing()
         {
+            if (_manager != null)
+            {
+                _manager.Cancel();
+                _manager.Dispose();
+                _manager = null;
+            }
+
             PairingButton.Tag = null;
             PairingButton.Content = "Start Pairing";
             PairingProgress.Visibility = Visibility.Collapsed;
             PairingProgress.IsIndeterminate = false;
+            _pairingInProgress = false;
+            UpdateButtonState();
+        }
+
+        private void StopUnpairing()
+        {
+            if (_manager != null)
+            {
+                _manager.Cancel();
+                _manager.Dispose();
+                _manager = null;
+            }
+
+            UnpairButton.Tag = null;
+            UnpairButton.Content = "Unpair";
+            PairingProgress.Visibility = Visibility.Collapsed;
+            PairingProgress.IsIndeterminate = false;
+            _unpairingInProgress = false;
+            UpdateButtonState();
+        }
+
+        private async void OnStartUnpairing(object sender, RoutedEventArgs e)
+        {
+            string state = (string)UnpairButton.Tag;
+            if (state == "Cancel")
+            {
+                StopPairing();
+            }
+            else
+            {
+
+                ulong addr;
+                if (!ulong.TryParse(DeviceAddress.Text, System.Globalization.NumberStyles.HexNumber, CultureInfo.CurrentCulture, out addr))
+                {
+                    ShowMessage("Please enter valid hexidecimal number for device address");
+                    DeviceAddress.Focus(FocusState.Programmatic);
+                    DeviceAddress.SelectAll();
+                    return;
+                }
+
+                if (_manager == null)
+                {
+                    _manager = new BluetoothConnectionManager();
+                }
+
+                PairingProgress.Visibility = Visibility.Visible;
+                PairingProgress.IsIndeterminate = true;
+
+                UnpairButton.Content = "Cancel";
+                UnpairButton.Tag = "Cancel";
+                _unpairingInProgress = true;
+
+                try
+                {
+                    int start = Environment.TickCount;
+                    ShowMessage("unpairing started...");
+
+                    await _manager.UnpairDeviceAsync(addr, TimeSpan.FromSeconds(60));
+
+                    int end = Environment.TickCount;
+                    ShowMessage(string.Format("unpairing completed in {0} seconds", (end - start) / 1000));
+
+                    _paired = false;
+                }
+                catch (Exception ex)
+                {
+                    ShowMessage(ex.Message);
+                }
+
+                if (UnpairButton.Tag != null)
+                {
+                    StopUnpairing();
+                }
+            }
         }
     }
 }

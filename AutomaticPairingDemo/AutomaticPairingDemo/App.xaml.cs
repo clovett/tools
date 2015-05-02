@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharedLibrary;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,7 +44,7 @@ namespace AutomaticPairingDemo
         /// search results, and so forth.
         /// </summary>
         /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected async override void OnLaunched(LaunchActivatedEventArgs e)
         {
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
@@ -51,6 +52,8 @@ namespace AutomaticPairingDemo
                 this.DebugSettings.EnableFrameRateCounter = true;
             }
 #endif
+
+            await Settings.LoadAsync();
 
             Frame rootFrame = Window.Current.Content as Frame;
 
