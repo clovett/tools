@@ -433,7 +433,14 @@ namespace AutomaticPairingDemo.Bluetooth
             {
                 if (hr != 0)
                 {
-                    _error = new Exception(string.Format("Pairing failed with error code {0:x}", (uint)hr));
+                    if ((uint)hr == 0x80070575)
+                    {
+                        _error = new Exception("Pairing failed because pin code is incorrect");
+                    }
+                    else
+                    {
+                        _error = new Exception(string.Format("Pairing failed with error code {0:x}", (uint)hr));
+                    }
                 }
                 if (Completed != null)
                 {
