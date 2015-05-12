@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:EnergyHub"
+    xmlns:c="using:EnergyHub.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -11,12 +12,18 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Background="#5060c0">
             <TextBlock Text="Energy Hub" FontSize="24" Margin="20,10"/>
         </Border>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <RichTextBlock x:Name="ResponseText" Margin="20" FontSize="18" TextWrapping="Wrap"/>
+
+            <c:ScrollingGraph x:Name="Graph" FillGraph="False" Minimum="0" Maximum="5000"
+                          Stroke="LimeGreen"
+                          StrokeThickness="2"
+                          ScrollSpeed="30"/>
         </ScrollViewer>
+        <TextBlock Text="MessageText" FontSize="18" Margin="20,10" Grid.Row="2"/>
     </Grid>
 </Page>

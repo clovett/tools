@@ -116,16 +116,26 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Database.cs" />
+    <Compile Include="Data\Database.cs" />
+    <Compile Include="Data\EnergyData.cs" />
+    <Compile Include="Filters\BaseFilter.cs" />
+    <Compile Include="Filters\LowPassFilter.cs" />
+    <Compile Include="Filters\TimeSampleFilter.cs" />
     <Compile Include="Pages\CreateDatabasePage.xaml.cs">
       <DependentUpon>CreateDatabasePage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ScrollingGraph.xaml.cs">
+      <DependentUpon>ScrollingGraph.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\Brushes.cs" />
     <Compile Include="Utilities\IsolatedStorage.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\Settings.cs" />
+    <Compile Include="Utilities\SQLite.cs" />
+    <Compile Include="Utilities\SQLiteAsync.cs" />
     <Compile Include="Utilities\UiDispatcher.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -153,6 +163,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\ScrollingGraph.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <SDKReference Include="Microsoft.VCLibs, version=12.0">
+      <Name>Microsoft Visual C++ 2013 Runtime Package for Windows</Name>
+    </SDKReference>
+    <SDKReference Include="SQLite.WinRT81, Version=3.8.9">
+      <Name>SQLite for Windows Runtime %28Windows 8.1%29</Name>
+    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
