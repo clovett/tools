@@ -16,12 +16,12 @@ WARRANTIES REGARDING THIS SOFTWARE, EXPRESS OR IMPLIED, AS TO ITS
 SUITABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 Compile:
-
-gcc -lm -o efergy efergy.c
+Use "scons".
 
 Execute using the following parameters:
 
-rtl_fm -f 433510000 -s 200000 -r 96000 | ./efergy log.csv
+sudo rmmod dvb_usb_rtl28xxu
+rtl_fm -f 433510000 -s 200000 -r 96000 | ./EnergyService ~/log.csv
 
 --------------------------------------------------------------------- */
 // Trivial Modifications for Data Logging by Gough (me@goughlui.com)
@@ -58,6 +58,7 @@ rtl_fm -f 433510000 -s 200000 -r 96000 | ./efergy log.csv
 // but play with the value for gain (in this case, 19.7) to achieve best result.
 
 #include <stdio.h>
+#include <signal.h>
 #include <stdint.h>
 #include <time.h>
 #include <math.h>
@@ -65,11 +66,22 @@ rtl_fm -f 433510000 -s 200000 -r 96000 | ./efergy log.csv
 #include "Log.h"
 #include "EnergyService.h"
 
+#include <alljoyn/AllJoynStd.h>
+
 #ifdef QCC_OS_LINUX
 #define Sleep _sleep
 #else
 #include <Windows.h>
 #endif
+
+
+static volatile sig_atomic_t s_interrupt = false;
+
+static void CDECL_CALL SigIntHandler(int sig)
+{
+    QCC_UNUSED(sig);
+    s_interrupt = true;
+}
 
 #define VOLTAGE 		240	/* Refernce Voltage */
 #define CENTERSAMP		100	/* Number of samples needed to compute for the wave center */
@@ -112,12 +124,12 @@ int calculate_watts(char bytes[])
         current_adc = (bytes[4] * 256) + bytes[5];
         result = (VOLTAGE * current_adc) / ((double)32768 / (double)pow(2.0, bytes[6]));
 
-        printf("%s,%f", timebuffer, result);
+        printf("%s,%f\n", timebuffer, result);
         fflush(stdout);
 
         // log
-        sprintf(logbuffer, "%s,%f", timebuffer, result);
-        WriteLog(logbuffer);
+        sprintf(logbuffer, "%s,%f\n", timebuffer, result);
+        Log::Instance()->WriteLog(logbuffer);
 
         return 1;
     }
@@ -160,7 +172,7 @@ void ReadEnergyData()
     dcenter = CENTERSAMP;
     center = 0;
 
-    while (!feof(stdin))
+    while (!s_interrupt && !feof(stdin))
     {
 
         cursamp = (int16_t)(fgetc(stdin) | fgetc(stdin) << 8);
@@ -268,13 +280,16 @@ void ReadEnergyData()
 
 int main(int argc, char**argv)
 {
-    InitLog();
+    Log log;
+
+    /* Install SIGINT handler */
+    signal(SIGINT, SigIntHandler);
 
     char* logFile = nullptr;
 
     if (argc == 2) {
         logFile = argv[1];
-        int rc = AppendLog(logFile);
+        int rc = log.AppendLog(logFile);
         if (rc != 0)
         {
             exit(EXIT_FAILURE);
@@ -285,8 +300,8 @@ int main(int argc, char**argv)
 
     ReadEnergyData();
 
-    CloseLog();
-
+    TerminateEnergyService();
+    
     return 0;
 }
 

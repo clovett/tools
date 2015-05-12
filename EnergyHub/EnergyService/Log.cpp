@@ -6,15 +6,32 @@
 #include <Windows.h>
 #endif
 
-FILE* filePtr;
+Log* Log::_instance = nullptr;
 
-void InitLog()
+Log::Log()
 {
     filePtr = nullptr;
+    reading = false;
+    _instance = this;
 }
 
-int AppendLog(const char* filename)
+Log* Log::Instance()
 {
+    return _instance;
+}
+
+Log::~Log()
+{
+    CloseLog();
+    _instance = nullptr;
+}
+
+
+int Log::AppendLog(const char* filename)
+{
+    if (reading) {
+        return 1;
+    }
     CloseLog();
     filePtr = fopen(filename, "a");
     if (filePtr == nullptr)
@@ -24,28 +41,13 @@ int AppendLog(const char* filename)
     return 0;
 }
 
-void WriteLog(char* line)
+int Log::Truncate(const char* filename)
 {
-    if (filePtr != nullptr)
-    {
-        fwrite(line, 1, strlen(line), filePtr);
-        fflush(filePtr);
+    if (reading) {
+        return 1;
     }
-}
-
-void CloseLog()
-{
-    if (filePtr != nullptr){
-        fclose(filePtr);
-        filePtr = nullptr;
-    }
-}
-
-// reading
-int OpenLog(const char* filename)
-{
     CloseLog();
-    filePtr = fopen(filename, "r");
+    filePtr = fopen(filename, "w");
     if (filePtr == nullptr)
     {
         return -1;
@@ -53,8 +55,46 @@ int OpenLog(const char* filename)
     return 0;
 }
 
-int ReadLog(char* buffer, int bufsize)
+void Log::WriteLog(char* line)
 {
+    if (reading) {
+        return;
+    }
+    if (filePtr != nullptr)
+    {
+        fwrite(line, 1, strlen(line), filePtr);
+        fflush(filePtr);
+    }
+}
+
+void Log::CloseLog()
+{
+    if (filePtr != nullptr){
+        fclose(filePtr);
+        filePtr = nullptr;
+    }
+    reading = false;
+}
+
+// reading
+int Log::OpenLog(const char* filename)
+{
+    CloseLog();
+    filePtr = fopen(filename, "r");
+    if (filePtr == nullptr)
+    {
+        return -1;
+    }
+    reading = true;
+    return 0;
+}
+
+int Log::ReadLog(char* buffer, int bufsize)
+{
+    if (!reading)
+    {
+        return 1;
+    }
     buffer[0] = '\0';
     if (filePtr != nullptr){
         
@@ -81,4 +121,38 @@ int ReadLog(char* buffer, int bufsize)
         }
     }
     return 0;
+}
+
+
+int Log::CountLines()
+{
+    if (!reading)
+    {
+        return 1;
+    }
+    int count = 0;
+    if (filePtr != nullptr){
+
+        int ch = fgetc(filePtr);
+        if (ch == EOF)
+        {
+            return EOF;
+        }
+        int pos = 0;
+        while (ch != -1)
+        {
+            if (ch == '\r' || ch == '\n')
+            {
+                if (pos > 0) {
+                    count++;
+                    pos = 0;
+                }
+            }
+            else {
+                pos++;
+            }
+            ch = fgetc(filePtr);
+        }
+    }
+    return count;
 }

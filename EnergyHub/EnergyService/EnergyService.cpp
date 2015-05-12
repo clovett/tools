@@ -54,14 +54,6 @@ static const char* SERVICE_NAME = "org.alljoyn.Bus.energy";
 static const char* SERVICE_PATH = "/energy";
 static const SessionPort SERVICE_PORT = 25;
 
-static volatile sig_atomic_t s_interrupt = false;
-
-static void CDECL_CALL SigIntHandler(int sig)
-{
-    QCC_UNUSED(sig);
-    s_interrupt = true;
-}
-
 class EnergyService : public BusObject {
 private:
     const char* logFile;
@@ -69,8 +61,8 @@ public:
     EnergyService(BusAttachment& bus, const char* path, const char* logFile) :
         BusObject(path)
     {
-        this->logFile = logFile;
         this->reading = false;
+        this->logFile = logFile;
 
         /** Add the test interface to this object */
         const InterfaceDescription* exampleIntf = bus.GetInterface(INTERFACE_NAME);
@@ -93,12 +85,22 @@ public:
         printf("ObjectRegistered has been called.\n");
     }
 
-
-    void Read(const InterfaceDescription::Member* member, Message& msg)
+    void Open(const InterfaceDescription::Member* member, Message& msg)
     {
         QCC_UNUSED(member);
 
-        qcc::String outStr = GetNextLine();
+        Log* log = Log::Instance();
+        log->CloseLog();
+        log->OpenLog(logFile);
+        int count = log->CountLines();
+        log->CloseLog();
+        log->OpenLog(logFile);
+        reading = true;
+
+        char buffer[100];
+        sprintf(buffer, "%d", count);
+
+        qcc::String outStr(buffer);
 
         MsgArg outArg("s", outStr.c_str());
         QStatus status = MethodReply(msg, &outArg, 1);
@@ -106,31 +108,69 @@ public:
             printf("Read: Error sending reply.\n");
         }
     }
-private:
-    bool reading;
-    char buffer[1000];
 
-    qcc::String GetNextLine()
+    void Close(const InterfaceDescription::Member* member, Message& msg)
     {
+        QCC_UNUSED(member);
+        Log* log = Log::Instance();
+        log->CloseLog();
+        log->AppendLog(logFile);
+        reading = false;
+
+        MsgArg outArg("s", "ok");
+        QStatus status = MethodReply(msg, &outArg, 1);
+        if (ER_OK != status) {
+            printf("Read: Error sending reply.\n");
+        }
+    }
+
+    void Truncate(const InterfaceDescription::Member* member, Message& msg)
+    {
+        QCC_UNUSED(member);
+        Log* log = Log::Instance();
+        log->CloseLog();
+        log->Truncate(logFile);
+
+        MsgArg outArg("s", "ok");
+        QStatus status = MethodReply(msg, &outArg, 1);
+        if (ER_OK != status) {
+            printf("Read: Error sending reply.\n");
+        }
+    }
+
+    void Read(const InterfaceDescription::Member* member, Message& msg)
+    {
+        QCC_UNUSED(member);
+
+        qcc::String outStr;
+
         if (!reading)
         {
-            reading = true;
-            CloseLog();
-            OpenLog(logFile);
-        }     
-        int rc = ReadLog(buffer, 1000);
-        if (rc == 0)
-        {
-            return qcc::String(buffer);
+            outStr = qcc::String("error:not open for reading");
         }
         else 
         {
-            reading = false;
-            CloseLog();
-            AppendLog(logFile);
+            Log* log = Log::Instance();
+            int rc = log->ReadLog(buffer, 1000);
+            if (rc == 0)
+            {
+                outStr = qcc::String(buffer);
+            }
+            else {
+                outStr = qcc::String("EOF");
+            }
         }
-        return qcc::String("EOF");
+
+        MsgArg outArg("s", outStr.c_str());
+        QStatus status = MethodReply(msg, &outArg, 1);
+        if (ER_OK != status) {
+            printf("Read: Error sending reply.\n");
+        }
     }
+
+private:
+    bool reading;
+    char buffer[1000];
 };
 
 
@@ -171,7 +211,10 @@ QStatus CreateInterface(void)
 
     if (status == ER_OK) {
         printf("Interface created.\n");
+        testIntf->AddMethod("open", nullptr, "s", "outStr", 0);
         testIntf->AddMethod("read", nullptr, "s", "outStr", 0);
+        testIntf->AddMethod("close", nullptr, "s", "outStr", 0);
+        testIntf->AddMethod("truncate", nullptr, "s", "outStr", 0);
         testIntf->Activate();
     }
     else {
@@ -274,17 +317,7 @@ QStatus RequestName(void)
     return status;
 }
 
-/** Wait for SIGINT before continuing. */
-void WaitForSigInt(void)
-{
-    while (s_interrupt == false) {
-#ifdef _WIN32
-        Sleep(100);
-#else
-        usleep(100 * 1000);
-#endif
-    }
-}
+EnergyService* testObj = NULL;
 
 /** Main entry point */
 int InitializeEnergyService(char* logFile)
@@ -302,11 +335,7 @@ int InitializeEnergyService(char* logFile)
     //printf("AllJoyn Library version: %s.\n", ajn::GetVersion());
     //printf("AllJoyn Library build info: %s.\n", ajn::GetBuildInfo());
 
-    /* Install SIGINT handler */
-    signal(SIGINT, SigIntHandler);
-
     QStatus status = ER_OK;
-    EnergyService* testObj = NULL;
 
     /* Create message bus */
     s_msgBus = new BusAttachment("Efergy", true);
@@ -356,26 +385,28 @@ int InitializeEnergyService(char* logFile)
             status = AdvertiseName(SERVICE_TRANSPORT_TYPE);
         }
 
-        /* Perform the service asynchronously until the user signals for an exit. */
-        if (ER_OK == status) {
-            WaitForSigInt();
-        }
     }
     else {
         status = ER_OUT_OF_MEMORY;
     }
 
-    /* Clean up */
-    delete s_msgBus;
-    s_msgBus = NULL;
-    delete testObj;
-    testObj = NULL;
+    return status;
+}
 
-    printf("Basic service exiting with status 0x%04x (%s).\n", status, QCC_StatusText(status));
+
+int TerminateEnergyService()
+{
+    if (s_msgBus != NULL) {
+        delete s_msgBus;
+        s_msgBus = NULL;
+        delete testObj;
+        testObj = NULL;
+    }
+    printf("EnergyService exiting.\n");
 
 #ifdef ROUTER
     AllJoynRouterShutdown();
 #endif
     AllJoynShutdown();
-    return (int)status;
+    return 0;
 }
