@@ -155,6 +155,9 @@ QStatus EnergyClient::CreateInterface(void)
     if (status == ER_OK) {
         printf("Interface '%s' created.\n", INTERFACE_NAME);
         testIntf->AddMethod("read", "", "s", "outStr", 0);
+        testIntf->AddMethod("open", "", "s", "outStr", 0);
+        testIntf->AddMethod("close", "", "s", "outStr", 0);
+        testIntf->AddMethod("truncate", "", "s", "outStr", 0);
         testIntf->Activate();
     }
     else {
@@ -238,13 +241,35 @@ QStatus EnergyClient::WaitForJoinSessionCompletion(void)
 #endif
     }
 
-    return s_joinComplete  ? ER_OK : ER_ALLJOYN_JOINSESSION_REPLY_CONNECT_FAILED;
+    return s_joinComplete ? ER_OK : ER_ALLJOYN_JOINSESSION_REPLY_CONNECT_FAILED;
+}
+
+
+Platform::String^ EnergyClient::OpenLog()
+{
+    return CallMethod("open");
 }
 
 
 Platform::String^ EnergyClient::ReadLog()
 {
+    return CallMethod("read");
+}
 
+
+Platform::String^ EnergyClient::CloseLog()
+{
+    return CallMethod("close");
+}
+
+
+Platform::String^ EnergyClient::TruncateLog()
+{
+    return CallMethod("truncate");
+}
+
+Platform::String^ EnergyClient::CallMethod(const char* methodName)
+{
     ProxyBusObject remoteObj(*g_msgBus, SERVICE_NAME, SERVICE_PATH, s_sessionId);
     const InterfaceDescription* alljoynTestIntf = g_msgBus->GetInterface(INTERFACE_NAME);
 
@@ -256,13 +281,13 @@ Platform::String^ EnergyClient::ReadLog()
     //inputs[0].Set("s", "Hello ");
     //inputs[1].Set("s", "World!");
 
-    QStatus status = remoteObj.MethodCall(INTERFACE_NAME, "read", NULL, 0, reply, 5000);
+    QStatus status = remoteObj.MethodCall(INTERFACE_NAME, methodName, NULL, 0, reply, 5000);
 
     if (ER_OK == status) {
         /*printf("'%s.%s' (path='%s') returned '%s'.\n", SERVICE_NAME, "cat",
             SERVICE_PATH, reply->GetArg(0)->v_string.str);*/
         ajn::AllJoynString line = reply->GetArg(0)->v_string;
-        return ToString(line.str, line.len );
+        return ToString(line.str, line.len);
     }
     else {
         //printf("MethodCall on '%s.%s' failed.", SERVICE_NAME, "cat");
@@ -285,3 +310,4 @@ Platform::String^ EnergyClient::ToString(const char* line, int len)
     }
     return result;
 }
+

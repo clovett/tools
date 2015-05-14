@@ -71,7 +71,10 @@ public:
 
         /** Register the method handlers with the object */
         const MethodEntry methodEntries[] = {
-            { exampleIntf->GetMember("read"), static_cast<MessageReceiver::MethodHandler>(&EnergyService::Read) }
+            { exampleIntf->GetMember("read"), static_cast<MessageReceiver::MethodHandler>(&EnergyService::Read) },
+            { exampleIntf->GetMember("open"), static_cast<MessageReceiver::MethodHandler>(&EnergyService::Open) },
+            { exampleIntf->GetMember("close"), static_cast<MessageReceiver::MethodHandler>(&EnergyService::Close) },
+            { exampleIntf->GetMember("truncate"), static_cast<MessageReceiver::MethodHandler>(&EnergyService::Truncate) }
         };
         QStatus status = AddMethodHandlers(methodEntries, sizeof(methodEntries) / sizeof(methodEntries[0]));
         if (ER_OK != status) {
@@ -105,7 +108,7 @@ public:
         MsgArg outArg("s", outStr.c_str());
         QStatus status = MethodReply(msg, &outArg, 1);
         if (ER_OK != status) {
-            printf("Read: Error sending reply.\n");
+            printf("Open: Error sending reply.\n");
         }
     }
 
@@ -120,7 +123,7 @@ public:
         MsgArg outArg("s", "ok");
         QStatus status = MethodReply(msg, &outArg, 1);
         if (ER_OK != status) {
-            printf("Read: Error sending reply.\n");
+            printf("Close: Error sending reply.\n");
         }
     }
 
@@ -134,7 +137,7 @@ public:
         MsgArg outArg("s", "ok");
         QStatus status = MethodReply(msg, &outArg, 1);
         if (ER_OK != status) {
-            printf("Read: Error sending reply.\n");
+            printf("Truncate: Error sending reply.\n");
         }
     }
 

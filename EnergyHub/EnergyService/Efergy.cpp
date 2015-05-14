@@ -64,24 +64,12 @@ rtl_fm -f 433510000 -s 200000 -r 96000 | ./EnergyService ~/log.csv
 #include <math.h>
 #include <stdlib.h> // For exit function
 #include "Log.h"
-#include "EnergyService.h"
-
-#include <alljoyn/AllJoynStd.h>
 
 #ifdef QCC_OS_LINUX
 #define Sleep _sleep
 #else
 #include <Windows.h>
 #endif
-
-
-static volatile sig_atomic_t s_interrupt = false;
-
-static void CDECL_CALL SigIntHandler(int sig)
-{
-    QCC_UNUSED(sig);
-    s_interrupt = true;
-}
 
 #define VOLTAGE 		240	/* Refernce Voltage */
 #define CENTERSAMP		100	/* Number of samples needed to compute for the wave center */
@@ -137,7 +125,7 @@ int calculate_watts(char bytes[])
     return 0;
 }
 
-void ReadEnergyData()
+void ReadEnergyData(volatile sig_atomic_t* cancelSignal)
 {
     char bytearray[9];
     char bytedata;
@@ -172,7 +160,7 @@ void ReadEnergyData()
     dcenter = CENTERSAMP;
     center = 0;
 
-    while (!s_interrupt && !feof(stdin))
+    while (!*cancelSignal && !feof(stdin))
     {
 
         cursamp = (int16_t)(fgetc(stdin) | fgetc(stdin) << 8);
@@ -275,33 +263,5 @@ void ReadEnergyData()
 
     } /* while */
 
-}
-
-
-int main(int argc, char**argv)
-{
-    Log log;
-
-    /* Install SIGINT handler */
-    signal(SIGINT, SigIntHandler);
-
-    char* logFile = nullptr;
-
-    if (argc == 2) {
-        logFile = argv[1];
-        int rc = log.AppendLog(logFile);
-        if (rc != 0)
-        {
-            exit(EXIT_FAILURE);
-        }
-    }
-
-    InitializeEnergyService(logFile);
-
-    ReadEnergyData();
-
-    TerminateEnergyService();
-    
-    return 0;
 }
 

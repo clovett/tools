@@ -30,9 +30,13 @@ namespace EnergyHub
         int InitializeAlljoynClient();
         void Close();
 
+        Platform::String^ OpenLog();
         Platform::String^ ReadLog();
+        Platform::String^ CloseLog();
+        Platform::String^ TruncateLog();
 
     private:
+        Platform::String^ CallMethod(const char* methodName);
         Platform::String^ ToString(const char* line, int len);
 
         QStatus WaitForJoinSessionCompletion(void);

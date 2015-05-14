@@ -22,7 +22,7 @@
     <ProjectGuid>{A1101596-A4C6-4CDC-AB0D-C7C310495BF8}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Sockets</RootNamespace>
-    <ProjectName>EfergyServer</ProjectName>
+    <ProjectName>EnergyService</ProjectName>
     <SccProjectName>SAK</SccProjectName>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
@@ -184,6 +184,7 @@
     <Text Include="SConscript.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Efergy.h" />
     <ClInclude Include="EnergyService.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="targetver.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="Efergy.cpp" />
     <ClCompile Include="EnergyService.cpp" />
     <ClCompile Include="Log.cpp" />
+    <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
