@@ -1,0 +1,29 @@
+﻿<Page
+    x:Class="GasBook.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GasBook"
+    xmlns:s="using:SharedLibrary"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border Background="Blue">
+            <TextBlock Text="Gas Book" FontSize="24" Margin="10"/>
+        </Border>
+
+        <s:LogListView x:Name="LogListView" Grid.Row="1" Margin="10"
+                       SelectionChanged="OnSelectionChanged"/>
+    </Grid>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton x:Name="AddButton" Icon="Add" Click="OnAddItem"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>
