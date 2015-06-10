@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph Layout="Sugiyama" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="CheckNewVersion" Bounds="188.903333333333,447.68,118.333333333333,25.96" Label="Check new version" />
+    <Node Id="DownloadHttp://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip" Bounds="2.8421709430404E-14,111.92,496.14,25.96" Label="download http://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip" />
+    <Node Id="EnsureCameraIsPluggedIn" Bounds="163.563333333333,223.84,169.013333333333,25.96" Label="ensure camera is plugged in" />
+    <Node Id="Extract" Bounds="201.296666666667,167.88,93.5466666666667,25.96" Label="extract zip file" />
+    <Node Id="FI8910W" Bounds="214.998333333333,0,66.1433333333333,25.96" />
+    <Node Id="HasVersion11.22.2.xx" Bounds="181.198333333333,55.96,133.743333333333,25.96" Label="has version 11.22.2.xx" />
+    <Node Id="RebootCamera" Bounds="197.838333333333,391.72,100.463333333333,25.96" Label="Reboot camera" />
+    <Node Id="Update_firmwareUsingLr_cmos_11_22_2_51.bin" Bounds="119.473333333333,279.8,257.193333333333,25.96" Label="upgrade_firmware(&quot;lr_cmos_11_22_2_51.bin&quot;)" />
+    <Node Id="Upgrade_htmls(&quot;&quot;)" Bounds="160.64,335.76,174.86,25.96" Label="upgrade_htmls(&quot;2.4.10.5.bin&quot;)" />
+  </Nodes>
+  <Links>
+    <Link Source="DownloadHttp://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip" Target="Extract" Bounds="248.070007324219,137.880004882813,0,21" />
+    <Link Source="EnsureCameraIsPluggedIn" Target="Update_firmwareUsingLr_cmos_11_22_2_51.bin" Bounds="248.070007324219,249.800003051758,0,20.9999847412109" />
+    <Link Source="Extract" Target="EnsureCameraIsPluggedIn" Bounds="248.070007324219,193.839996337891,0,21" />
+    <Link Source="FI8910W" Target="HasVersion11.22.2.xx" Bounds="248.070007324219,25.9599990844727,0,21" />
+    <Link Source="HasVersion11.22.2.xx" Target="DownloadHttp://foscam.us/downloads/MJPEG%20indoor%20PT%20camera-11.22.2.51.zip" Bounds="248.070007324219,81.9199981689453,0,21" />
+    <Link Source="RebootCamera" Target="CheckNewVersion" Bounds="248.070007324219,417.679992675781,0,21" />
+    <Link Source="Update_firmwareUsingLr_cmos_11_22_2_51.bin" Target="Upgrade_htmls(&quot;&quot;)" Bounds="248.070007324219,305.760009765625,0,21" />
+    <Link Source="Upgrade_htmls(&quot;&quot;)" Target="RebootCamera" Bounds="248.070007324219,361.720001220703,0,21" />
+  </Links>
+  <Properties>
+    <Property Id="Bounds" DataType="System.Windows.Rect" />
+    <Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+    <Property Id="Layout" DataType="System.String" />
+  </Properties>
+</DirectedGraph>
