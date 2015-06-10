@@ -12,13 +12,13 @@
     <DefaultLanguage>en-US</DefaultLanguage>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>FoscamExplorer_StoreKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>FoscamExplorer_TemporaryKey.pfx</PackageCertificateKeyFile>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <PackageCertificateThumbprint>FC770C7E4F7A68F85342B47C5A0E4DEC3EE5C076</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>780DF6FB6484C76C6A66F226950F616A4098343D</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -159,8 +159,6 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="Docs\ipcam_cgi_sdk.pdf" />
-    <None Include="FoscamExplorer_StoreKey.pfx" />
-    <None Include="FoscamExplorer_TemporaryKey.pfx" />
     <PRIResource Include="StringResources.resw">
       <Generator>ResWFileCodeGenerator</Generator>
       <LastGenOutput>StringResources.cs</LastGenOutput>
@@ -176,6 +174,7 @@
     <Content Include="Assets\SmallLogo.png" />
     <Content Include="Assets\SplashScreen.png" />
     <Content Include="Assets\StoreLogo.png" />
+    <None Include="FoscamExplorer_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
   <ItemGroup>
