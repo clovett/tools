@@ -20,6 +20,7 @@ namespace ildepends
         List<string> assemblies = new List<string>();
         uint levels = int.MaxValue;
         string outputFileName = "out.dgml";
+        bool verbose = false;
 
         static void Main(string[] args)
         {
@@ -73,6 +74,10 @@ namespace ildepends
                             return false;
                         case "out":
                             outputFileName = value;
+                            break;
+                        case "v":
+                        case "verbose":
+                            verbose = true;
                             break;
                         case "levels":
                             {
@@ -155,7 +160,7 @@ namespace ildepends
                     Console.WriteLine("Processing: " + fullPath);
                     IAssembly assembly = host.LoadUnitFrom(fullPath) as IAssembly;
                     GraphNode root = graph.Nodes.GetOrCreate(GetNodeID(assembly.AssemblyIdentity), assembly.AssemblyIdentity.Name.Value, AssemblyCategory);
-                    WalkDependencies(graph, root, assembly, levels, new HashSet<IAssembly>());
+                    WalkDependencies(graph, root, assembly, 0, new HashSet<IAssembly>());
                 }
                 catch (Exception ex)
                 {
@@ -179,7 +184,7 @@ namespace ildepends
 
         static Dictionary<string, Uri> assemblyMap = new Dictionary<string, Uri>();
 
-        static Uri FindAssembly(AssemblyIdentity id)
+        Uri FindAssembly(AssemblyIdentity id)
         {
             if (!string.IsNullOrEmpty(id.Location))
             {
@@ -211,11 +216,19 @@ namespace ildepends
             return result;
         }
 
-        private static void FindAssemblies(string path)
+        private void FindAssemblies(string path)
         {
             foreach (string file in Directory.GetFiles(path, "*.dll"))
             {
-                assemblyMap.Add(Path.GetFileNameWithoutExtension(file).ToLowerInvariant(), new Uri(file));
+                string key = Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
+                if (!assemblyMap.ContainsKey(key))
+                {
+                    assemblyMap.Add(key, new Uri(file));
+                }
+                else if (verbose)
+                {
+                    Console.WriteLine("### skipping dll because it is already found: " + key);
+                }
             }
             foreach (string dir in Directory.GetDirectories(path))
             {
@@ -223,14 +236,19 @@ namespace ildepends
             }
         }
 
-        static GraphNodeId GetNodeID(AssemblyIdentity id)
+        GraphNodeId GetNodeID(AssemblyIdentity id)
         {
             return GraphNodeId.GetNested(new GraphNodeId[] {
                 GraphNodeId.GetPartial(AssemblyName, FindAssembly(id)) });
         }
 
-        private static void WalkDependencies(Graph graph, GraphNode root, IAssembly assembly, uint level, HashSet<IAssembly> visited)
+        private void WalkDependencies(Graph graph, GraphNode root, IAssembly assembly, uint level, HashSet<IAssembly> visited)
         {
+            if (verbose)
+            {
+                Console.Write(new string(' ', (int)(level * 2)));
+                Console.WriteLine(assembly.Location);
+            }
             visited.Add(assembly);
             foreach (IAssemblyReference r in assembly.AssemblyReferences)
             {
@@ -240,9 +258,9 @@ namespace ildepends
                 IAssembly referenced = r.ResolvedAssembly;
                 if (referenced != null)
                 {
-                    if (!visited.Contains(referenced) && level > 1)
+                    if (!visited.Contains(referenced) && level <= levels)
                     {
-                        WalkDependencies(graph, node, referenced, level - 1, visited);
+                        WalkDependencies(graph, node, referenced, level + 1, visited);
                     }
                 }
                 else
