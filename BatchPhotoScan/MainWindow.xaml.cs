@@ -206,9 +206,21 @@ namespace BatchPhotoScan
                 if (scanner != null)
                 {
                     WIA.Item scannerItem = scanner.Items[1];
+                    int dpi = 600;
+                    while (dpi > 100)
+                    {
+                        try
+                        {
+                            SetDPI(scannerItem, dpi);
+                            SetScannerBounds(scannerItem, 0, 0, (int)(dpi * selectedPageSize.Width), (int)(dpi * selectedPageSize.Height));
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            dpi = dpi / 2;
+                        }
+                    }
 
-                    SetDPI(scannerItem, 600);
-                    SetScannerBounds(scannerItem, 0, 0, (int)(600 * selectedPageSize.Width), (int)(600 * selectedPageSize.Height));
                     const string wiaFormatPNG = "{B96B3CAF-0728-11D3-9D7B-0000F81EF32E}";
                     object scanResult = cdc.ShowTransfer(scannerItem, wiaFormatPNG, false);
                     imageFile = (WIA.ImageFile)scanResult;
@@ -232,12 +244,16 @@ namespace BatchPhotoScan
                     ZoomToFit(this, new RoutedEventArgs());
                     SetDirty();
                 }
+                else
+                {
+                    MessageBox.Show("No image returned from scanner", "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
-            catch
+            catch (Exception ex)
             {
                 if (scanner != null)
                 {
-                    MessageBox.Show("Error scanning, please check your scanner and try again", "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(string.Format("Error: {0}, please check your scanner and try again", ex.Message), "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
                 scanner = null;
             }

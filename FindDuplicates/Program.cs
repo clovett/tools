@@ -14,15 +14,17 @@ namespace FindDuplicates
         int files;
         int dups;
         bool verbose;
-        string fullPath;
+        bool compare;
+        List<string> fullPaths = new List<string>();
         Dictionary<HashedFile, List<HashedFile>> fileIndex = new Dictionary<HashedFile, List<HashedFile>>();
 
         private static void PrintUsage()
         {
-            Console.WriteLine("Usage: FindDuplicates [options] <dir>");
-            Console.WriteLine("Searches directory for any duplicate files and prints out their full path.");
+            Console.WriteLine("Usage: FindDuplicates [options] <dirs>");
+            Console.WriteLine("Searches given directories for any duplicate files and prints out their full path.");
             Console.WriteLine("Options:");
             Console.WriteLine("    -v    verbose output");
+            Console.WriteLine("    -c    compare directories");
         }
 
         static void Main(string[] args)
@@ -38,9 +40,15 @@ namespace FindDuplicates
 
         void Run()
         {
+
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            CreateIndex(fullPath);
+
+            foreach (string path in this.fullPaths)
+            {
+                CreateIndex(path);
+            }
+
             watch.Stop();
             long total = watch.ElapsedMilliseconds;
             Console.WriteLine("Hashed {0} files in {1:N3} seconds", files, (double)watch.ElapsedMilliseconds / 1000.0);
@@ -81,37 +89,41 @@ namespace FindDuplicates
                         case "verbose":
                             verbose = true;
                             break;
+                        case "c":
+                            compare = true;
+                            break;
                         default:
                             Console.WriteLine("Unexpected argument: " + arg);
                             return false;
                     }
                 }
-                else if (fullPath == null)
+                else 
                 {
                     try
                     {
-                        fullPath = Path.GetFullPath(args[0]);
+                        var path = Path.GetFullPath(arg);
+                        if (!Directory.Exists(path))
+                        {
+                            Console.WriteLine("Directory not found: " + path);
+                            return false;
+                        }
+                        fullPaths.Add(path);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex.Message);
+                        Console.WriteLine("### error with directory: {0}\n{1}", arg, ex.Message);
                         return false;
                     }
 
                 }
             }
 
-            if (fullPath == null)
+            if (fullPaths.Count == 0)
             {
                 Console.WriteLine("Missing directory argument to search");
                 return false;
             }
 
-            if (!Directory.Exists(fullPath))
-            {
-                Console.WriteLine("Directory not found: " + fullPath);
-                return false;
-            }
 
             return true;
         }

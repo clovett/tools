@@ -19,21 +19,9 @@
             <TextBox x:Name="CharacterBox" Grid.Column="1" Text="E124" HorizontalAlignment="Left" VerticalAlignment="Top" Width="200"
                      TextChanged="OnCharacterChanged"/>
         </Grid>
-        <Border x:Name="IconBorder" Width="100" Height="100" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" Grid.Row="1"
+        <Border x:Name="IconBorder" Width="40" Height="40" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Transparent" Grid.Row="1"
                 >
-            <Grid  Width="100" Height="100">
-                <Ellipse Width="40" Height="30" Fill="White"/>
-                <Path Stroke="White" StrokeThickness="10" StrokeEndLineCap="Round" StrokeStartLineCap="Round">
-                    <Path.Data>
-                        <PathGeometry>
-                            <PathFigure StartPoint="5,50">
-                                <ArcSegment Point="95,50" Size="50,50" RotationAngle="180" SweepDirection="Clockwise"/>
-                            </PathFigure>
-                        </PathGeometry>
-                    </Path.Data>
-                </Path>
-
-            </Grid>
+            
         </Border>
 
         <Grid Grid.Row="2">

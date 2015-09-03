@@ -15,7 +15,6 @@ namespace FindDuplicates
         int hashCode;
         string path;
 
-
         static HashAlgorithm hasher = HashAlgorithm.Create("SHA256");
 
         public HashedFile(string path)

@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -33,12 +34,25 @@ namespace EnergyHub
     public sealed partial class MainPage : Page
     {
         EnergyClient client;
+        bool closed;
+        ManualResetEvent readThreadTerminated = new ManualResetEvent(false);
 
         public MainPage()
         {
             this.InitializeComponent();
 
             Graph.ValueGetter = OnGetNextValue;
+
+            Window.Current.Closed -= OnWindowClosed;
+            Window.Current.Closed += OnWindowClosed;
+        }
+
+        private void OnWindowClosed(object sender, Windows.UI.Core.CoreWindowEventArgs e)
+        {
+            this.closed = true;
+            readThreadTerminated.WaitOne(20000);
+            client.CloseLog();
+            client.Close();
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -48,7 +62,7 @@ namespace EnergyHub
 
 
             var path = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "energy.sqlite");
-            SqlDatabase database = SqlDatabase.OpenDatabase(path);
+            //SqlDatabase database = SqlDatabase.OpenDatabase(path);
             
 
             client = ((App)App.Current).EnergyClient;
@@ -62,14 +76,16 @@ namespace EnergyHub
 
         private void GetEnergyData()
         {
+            readThreadTerminated.Reset();
             int rc = client.InitializeAlljoynClient();
             string line = client.ReadLog();
-            while (line != "EOF")
+            while (line != "EOF" && !closed)
             {
                 ParseEnergyData(line);
 
                 line = client.ReadLog();
             }
+            readThreadTerminated.Set();
         }
 
         private void ParseEnergyData(string line)

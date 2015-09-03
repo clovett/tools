@@ -44,43 +44,43 @@ namespace PhoneIconMaker
         
         private async void OnSaveIcon(object sender, RoutedEventArgs e)
         {
-            var bitmap = new RenderTargetBitmap();
-            await bitmap.RenderAsync(IconBorder);
+            //var bitmap = new RenderTargetBitmap();
+            //await bitmap.RenderAsync(IconBorder);
 
-            // 1. Get the pixels
-            IBuffer pixelBuffer = await bitmap.GetPixelsAsync();
-            byte[] pixels = pixelBuffer.ToArray();
+            //// 1. Get the pixels
+            //IBuffer pixelBuffer = await bitmap.GetPixelsAsync();
+            //byte[] pixels = pixelBuffer.ToArray();
 
-            // 2. Write the pixels to a InMemoryRandomAccessStream
-            var stream = new InMemoryRandomAccessStream();
-            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+            //// 2. Write the pixels to a InMemoryRandomAccessStream
+            //var stream = new InMemoryRandomAccessStream();
+            //var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
 
-            encoder.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Straight, (uint)bitmap.PixelWidth, (uint)bitmap.PixelHeight, 96, 96, pixels);
-            await encoder.FlushAsync();
+            //encoder.SetPixelData(BitmapPixelFormat.Rgba8, BitmapAlphaMode.Straight, (uint)bitmap.PixelWidth, (uint)bitmap.PixelHeight, 96, 96, pixels);
+            //await encoder.FlushAsync();
 
-            stream.Seek(0);
+            //stream.Seek(0);
 
-            FileSavePicker fs = new FileSavePicker(); 
-            fs.FileTypeChoices.Add("PNG Images", new List<string>() { ".png" });
+            //FileSavePicker fs = new FileSavePicker(); 
+            //fs.FileTypeChoices.Add("PNG Images", new List<string>() { ".png" });
 
-            StorageFile file = await fs.PickSaveFileAsync();
-            if (file != null)
-            {
-                using (Stream encodedImageStream = stream.AsStreamForRead())
-                {
-                    byte[] buffer = new byte[64000];
+            //StorageFile file = await fs.PickSaveFileAsync();
+            //if (file != null)
+            //{
+            //    using (Stream encodedImageStream = stream.AsStreamForRead())
+            //    {
+            //        byte[] buffer = new byte[64000];
 
-                    using (Stream fileStream = await file.OpenStreamForWriteAsync())
-                    {
-                        int len = encodedImageStream.Read(buffer, 0, buffer.Length);
-                        while (len > 0)
-                        {
-                            fileStream.Write(buffer, 0, len);
-                            len = encodedImageStream.Read(buffer, 0, buffer.Length);
-                        }
-                    }
-                }
-            }
+            //        using (Stream fileStream = await file.OpenStreamForWriteAsync())
+            //        {
+            //            int len = encodedImageStream.Read(buffer, 0, buffer.Length);
+            //            while (len > 0)
+            //            {
+            //                fileStream.Write(buffer, 0, len);
+            //                len = encodedImageStream.Read(buffer, 0, buffer.Length);
+            //            }
+            //        }
+            //    }
+            //}
         }
 
         private void OnCharacterChanged(object sender, TextChangedEventArgs e)

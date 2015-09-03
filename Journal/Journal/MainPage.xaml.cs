@@ -111,11 +111,11 @@ namespace Microsoft.Journal
             }
         }
 
-        DateTime previousTime;
+        DateTime previousDate;
 
         private void StartTimer()
         {
-            previousTime = DateTime.Now;
+            previousDate = DateTime.Today;
             StopTimer();
             timer = new DispatcherTimer()
             {
@@ -139,9 +139,9 @@ namespace Microsoft.Journal
         {
             if (journal != null && journal.Entries.Count > 0)
             {
-                if (previousTime.Date != DateTime.Now.Date)
+                if (previousDate != DateTime.Today)
                 {
-                    previousTime = DateTime.Now;
+                    previousDate = DateTime.Today;
                     OnDayChanged();
                 }
 

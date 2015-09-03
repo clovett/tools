@@ -64,6 +64,13 @@ EnergyClient::EnergyClient()
 EnergyClient::~EnergyClient()
 {
     Close();
+
+	if (g_msgBus != NULL)
+	{
+		/* Deallocate bus */
+		delete g_msgBus;
+		g_msgBus = NULL;
+	}
 }
 
 void EnergyClient::Close()
@@ -72,21 +79,19 @@ void EnergyClient::Close()
     {
         s_terminated = true;
 
-        if (g_msgBus != NULL && busListener != NULL)
-        {
-            g_msgBus->UnregisterBusListener(*busListener);
-            delete busListener;
-            /* Deallocate bus */
-            delete g_msgBus;
-            g_msgBus = NULL;
-        }
-
         //    printf("Basic client exiting with status 0x%04x (%s).\n", status, QCC_StatusText(status));
+		if (busListener != NULL)
+		{
+			g_msgBus->UnregisterBusListener(*busListener);
+			delete busListener;
+			busListener = NULL;
+		}
 
 #ifdef ROUTER
         AllJoynRouterShutdown();
 #endif
         AllJoynShutdown();
+
     }
 }
 
