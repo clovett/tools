@@ -1,0 +1,58 @@
+﻿<Page
+    x:Class="Chimpmunk.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Chimpmunk.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+    <Page.Resources>
+
+        <local:StringBrushConverter x:Key="StringBrushConverter"/>
+    </Page.Resources>
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="TextBoxQty" Header="Quantity" Margin="4" TextChanged="OnQuantityChanged"/>
+        <TextBox x:Name="TextBoxLength" Header="Length" Grid.Column="1" Margin="4" TextChanged="OnLengthChanged"/>
+        
+        <TextBlock x:Name="QuantityMessage" TextWrapping="Wrap" Grid.Row="1" Margin="4,0" Text="" Foreground="Red"/>
+        <TextBlock x:Name="LengthMessage" TextWrapping="Wrap" Grid.Row="1" Grid.Column="1" Margin="4,0" Text="" Foreground="Red"/>
+        
+        <Button x:Name="AddPatternButton" Grid.Row="2" Margin="4" Click="OnAddPattern">Add Pattern</Button>
+        <Button x:Name="AddStockButton" Grid.Row="2" Grid.Column="1" Margin="4" Click="OnAddStock">Add Stock</Button>
+
+        <ListView x:Name="PatternListView" Grid.Row="3" ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <local:StockView />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <ListView x:Name="StockListView" Grid.Row="3" Grid.Column="1"  ScrollViewer.VerticalScrollBarVisibility="Auto">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <local:StockView />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <TextBlock Grid.Row="4" Margin="4" x:Name="ErrorMessage" TextWrapping="Wrap"/>
+    </Grid>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Clear" Label="Clear" Click="OnClear"/>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>
