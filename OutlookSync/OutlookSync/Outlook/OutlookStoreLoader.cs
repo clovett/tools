@@ -64,7 +64,10 @@ namespace OutlookSync.Model
                     foreach (AddressEntry e in addressBook.AddressEntries)
                     {
                         count++;
-                        localAddresses[e.Name] = e;
+                        if (!string.IsNullOrEmpty(e.Name))
+                        {
+                            localAddresses[e.Name] = e;
+                        }
                     }
                     Log.WriteLine("Loading address book: [" + name + "], found " + count + " contacts");                    
                 }
