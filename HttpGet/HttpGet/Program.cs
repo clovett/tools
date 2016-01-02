@@ -12,6 +12,8 @@ namespace HttpGet
     class Program
     {
         bool all;
+        bool headers;
+        string filename;
         string url;
         string rootDir;
 
@@ -28,11 +30,25 @@ namespace HttpGet
             {
                 p.Run();
             }
+            catch (WebException e)
+            {
+                Console.WriteLine("### Error: {0}", e.Message);
+                if (e.Response.ContentLength > 0)
+                {
+                    using (Stream s = e.Response.GetResponseStream())
+                    {
+                        using (StreamReader reader = new StreamReader(s))
+                        {
+                            Console.WriteLine(reader.ReadToEnd());
+                        }
+                    }
+                }
+            }
             catch (Exception e)
             {
-                Console.WriteLine("### Error: " + e.Message);
+                Console.WriteLine("### Error: {0} {1}", e.GetType().FullName, e.Message);
             }
-        }
+}
 
         private bool ParseCommandLine(string[] args)
         {
@@ -52,6 +68,20 @@ namespace HttpGet
                         case "h":
                         case "help":
                             return false;
+                        case "filename":
+                            if (i + 1 < args.Length)
+                            {
+                                this.filename = Path.GetFullPath(args[++i]);
+                            }
+                            else
+                            {
+                                Console.WriteLine("### missing file name argument");
+                                return false;
+                            }
+                            break;
+                        case "headers":
+                            this.headers = true;
+                            break;
                     }
                 }
                 else if (url == null)
@@ -77,6 +107,10 @@ namespace HttpGet
         {
             Uri baseUri = new Uri(url);
             string path = Download(baseUri, null);
+            if (path == null)
+            {
+                return;
+            }
             string fullPath = Path.GetFullPath(path);
             if (all)
             {
@@ -233,13 +267,37 @@ namespace HttpGet
             req.Method = "GET";
 
             WebResponse resp = req.GetResponse();
+
+            if (headers)
+            {
+                foreach (string key in resp.Headers.AllKeys)
+                {
+                    Console.WriteLine(key + "=" + resp.Headers[key]);
+                }
+                return null;
+            }
+
             using (var stream = resp.GetResponseStream())
             {
-                string fname = uri.Segments[uri.Segments.Length - 1];
-                CopyToFile(stream, fname);
-                if (result == null)
+                if (string.IsNullOrEmpty(relative))
                 {
-                    result = fname;
+                    if (this.filename == null)
+                    {
+                        CopyToFile(stream, this.filename);
+                        if (result == null)
+                        {
+                            result = this.filename;
+                        }
+                    }
+                    else
+                    {
+                        string fname = uri.Segments[uri.Segments.Length - 1];
+                        CopyToFile(stream, fname);
+                        if (result == null)
+                        {
+                            result = fname;
+                        }
+                    }
                 }
             }
             if (rootDir == null)
@@ -272,7 +330,9 @@ namespace HttpGet
             Console.WriteLine("HttpGet [options] <url>");
             Console.WriteLine("Fetches the resource at the given URL and saves it locally");
             Console.WriteLine("Options:");
-            Console.WriteLine("   -all    if url is xhtml it brings down all locally referenced resources with the file");
+            Console.WriteLine("   -all      if url is xhtml it brings down all locally referenced resources with the file");
+            Console.WriteLine("   -filename the name of the file to save http content into (default writes to stdout)");
+            Console.WriteLine("   -headers  just print http headers to stdout");
         }
     }
 }
