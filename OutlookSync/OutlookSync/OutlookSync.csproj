@@ -19,7 +19,7 @@
     <SccProvider>SAK</SccProvider>
     <IsWebBootstrapper>true</IsWebBootstrapper>
     <PublishUrl>ftp://www.lovettsoftware.com/LovettSoftware/Downloads/OutlookSync/</PublishUrl>
-    <Install>true</Install>
+    <Install>false</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Background</UpdateMode>
