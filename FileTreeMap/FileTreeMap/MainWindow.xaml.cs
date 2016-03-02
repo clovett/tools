@@ -37,8 +37,19 @@ namespace FileTreeMap
             UiDispatcher.Initialize(this.Dispatcher);
             InitializeComponent();
             this.TreeMap.SelectionChanged += OnTreeMapSelectionChanged;
+            this.Loaded += OnMainWindowLoaded;
         }
-        
+
+        private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            App app = (App)App.Current;
+            if (app.Arguments != null && app.Arguments.Length > 0)
+            {
+                LocationTextBox.Text = app.Arguments[0];
+                Analyze();
+            }
+        }
+
         private void OnTreeMapSelectionChanged(object sender, TreeMaps.Controls.TreeNodeSelectedEventArgs e)
         {
             if (e.Selection != null && e.Selection.Children != null)
@@ -96,6 +107,7 @@ namespace FileTreeMap
                     UiDispatcher.RunOnUIThread(() => { this.TreeMap.TreeData = tree; });
                 }
                 StopProgress();
+                busy = false;
             });
 
         }

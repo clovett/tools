@@ -13,5 +13,12 @@ namespace FileTreeMap
     /// </summary>
     public partial class App : Application
     {
+        public string[] Arguments;
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            Arguments = e.Args;
+            base.OnStartup(e);
+        }
     }
 }
