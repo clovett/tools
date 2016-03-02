@@ -56,6 +56,7 @@ namespace FileTreeMap
             {
                 double total = (from n in e.Selection.Children select n.Size).Sum();
                 StatusMessage.Text = total + " lines";
+                LocationTextBox.Text = e.Selection.Id;
             }
         }
 
