@@ -1,0 +1,80 @@
+﻿<Window x:Class="FileTreeMap.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:FileTreeMap"
+        xmlns:l="clr-namespace:TreeMaps.Controls;assembly=TreeMap"
+        mc:Ignorable="d"
+        Title="lines of code" Height="800" Width="1200">
+    <Window.Resources>
+        <l:SolidColorBrushConverter x:Key="SolidColorBrushConverter"/>
+
+        <ContextMenu x:Key="ContextMenu">
+            <MenuItem Header="Open..." Command="ApplicationCommands.Open" />
+            <MenuItem Header="Open Containing Folder" Command="local:MainWindow.OpenContainingFolderCommand" />
+        </ContextMenu>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open" Executed="OnOpenFile" CanExecute="CanOpenFile"/>
+        <CommandBinding Command="local:MainWindow.OpenContainingFolderCommand" Executed="OnOpenFolder" CanExecute="CanOpenFolder" />
+    </Window.CommandBindings>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Location: " Margin="4" VerticalAlignment="Center"/>
+            <TextBox x:Name="LocationTextBox" Grid.Column="1" Margin="4,5,4,4" Background="LemonChiffon" KeyDown="OnTextBoxKeyDown"/>
+            <Button Grid.Column="2" Margin="2" Padding="4" Click="OnAnalyzeClick">Analyze</Button>
+            
+        </Grid>
+
+        <l:SquarifiedTreeMapsPanel x:Name="TreeMap" Grid.Column="0" Grid.Row="1" Focusable="True" ContextMenu="{StaticResource ContextMenu}"/>
+
+        <RichTextBox Grid.Column="0" Grid.Row="1"  x:Name="Help" Margin="15" BorderThickness="0">
+            <RichTextBox.Document>
+                <FlowDocument FontFamily="Segoe UI" Foreground="SteelBlue">
+                    <Paragraph FontSize="18">Usage</Paragraph>
+                    <Paragraph>Enter the location of a directory of a Make log file and hit enter to load that into the tree map.</Paragraph>
+                    <Paragraph>When tree map is open use the following special keys to navigate:</Paragraph>
+                    <List>
+                        <ListItem>
+                            <Paragraph>Left click to drill down</Paragraph>
+                        </ListItem>
+                        <ListItem>
+                            <Paragraph>Shift+Left click to go back up</Paragraph>
+                        </ListItem>
+                        <ListItem>
+                            <Paragraph>Ctrl+Left click to add children in place</Paragraph>
+                        </ListItem>
+                        <ListItem>
+                            <Paragraph>Right click to get open file context menu</Paragraph>
+                        </ListItem>
+                    </List>
+                </FlowDocument>
+            </RichTextBox.Document>
+        </RichTextBox>
+
+        <StatusBar Grid.Row="2">
+            <StatusBarItem >
+                <TextBlock x:Name="StatusMessage" FontSize="11"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <ProgressBar x:Name="Progress" Width="300" Height="24" Visibility="Collapsed"/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
+
+
+    
