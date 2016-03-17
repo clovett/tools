@@ -23,10 +23,11 @@ namespace Microsoft.Networking.SmartSockets
         bool closed;
         EventHandler<Message> messageHandler;
         bool receiving;
-
-
-        public SmartSocketClient(StreamSocket socket)
+        SmartSocketListener server;
+        
+        internal SmartSocketClient(SmartSocketListener server, StreamSocket socket)
         {
+            this.server = server;
             this.socket = socket;
             this.reader = new BinaryReader(socket.InputStream.AsStreamForRead(), Encoding.UTF8, true);
             this.writer = new BinaryWriter(socket.OutputStream.AsStreamForWrite(), Encoding.UTF8, true);
@@ -74,7 +75,7 @@ namespace Microsoft.Networking.SmartSockets
                     // ah! server has responded then
                     StreamSocket socket = new StreamSocket();
                     await socket.ConnectAsync(new HostName(serverIp), serverPort);
-                    var client = new SmartSocketClient(socket);
+                    var client = new SmartSocketClient(null, socket);
                     client.Name = socket.Information.LocalAddress.CanonicalName;
                     client.ServerName = socket.Information.RemoteHostName.CanonicalName;
                     return client;
@@ -198,17 +199,15 @@ namespace Microsoft.Networking.SmartSockets
 
         private void OnError(Exception ex)
         {
-            // todo: can we figure out how to do this book keeping with StreamSockets?
-            //SocketException se = ex as SocketException;
-            //if (se != null && se.SocketErrorCode == SocketError.ConnectionReset)
-            //{
-            //    // we're toast!
-            //    server.RemoveClient(this);
-            //}
-            //else
-            //{
-            //    Debug.WriteLine("OnError: " + ex.Message);
-            //}
+            if ((uint)ex.HResult == 0x80072746) // SocketError.ConnectionReset
+            {
+                if (server != null)
+                {
+                    // we're toast!
+                    server.RemoveClient(this);
+                }
+                receiving = false;
+            }
             if (Error != null)
             {
                 Error(this, ex);

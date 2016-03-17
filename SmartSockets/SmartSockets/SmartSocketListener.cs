@@ -32,11 +32,16 @@ namespace Microsoft.Networking.SmartSockets
 
         public void Close()
         {
-            foreach (SmartSocketClient client in clients)
+            SmartSocketClient[] snapshot = null;
+            lock (this.clients)
+            {
+                snapshot = this.clients.ToArray();
+                this.clients.Clear();
+            }
+            foreach (SmartSocketClient client in snapshot)
             {
                 client.Close();
             }
-            clients.Clear();
         }
 
         async void OnNetworkStatusChanged(object sender)
@@ -174,29 +179,17 @@ namespace Microsoft.Networking.SmartSockets
         void OnConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
         {
             var socket = args.Socket;
-            var client = new SmartSocketClient(socket);
+            var client = new SmartSocketClient(this, socket);
 
             client.Name = socket.Information.RemoteHostName.CanonicalName;
             client.ServerName = socket.Information.LocalAddress.CanonicalName;
-
-            client.Error += OnClientError;
             lock (this.clients)
             {
                 this.clients.Add(client);
             }
             OnClientConnected(client);
         }
-
-        private void OnClientError(object sender, Exception e)
-        {
-            SmartSocketClient client = (SmartSocketClient)sender;
-            lock (this.clients)
-            {
-                this.clients.Remove(client);
-            }
-            OnClientDisconnected(client);
-        }
-
+        
         private void OnClientDisconnected(SmartSocketClient client)
         {
             if (ClientDisconnected != null)
@@ -211,6 +204,16 @@ namespace Microsoft.Networking.SmartSockets
             {
                 ClientConnected(this, client);
             }
+        }
+
+        internal void RemoveClient(SmartSocketClient client)
+        {
+            lock (this.clients)
+            {
+                this.clients.Remove(client);
+            }
+
+            OnClientDisconnected(client);
         }
     }
 }
