@@ -63,7 +63,8 @@ namespace Microsoft.Networking.SmartSockets
         private void UdpListener()
         {
             var localHost = SmartSocketClient.FindLocalHostName();
-            if (localHost == null)
+            List<string> addresses = SmartSocketClient.FindLocalIpAddresses();
+            if (localHost == null || addresses.Count == 0)
             {
                 return; // no network.
             }
@@ -83,7 +84,7 @@ namespace Microsoft.Networking.SmartSockets
                     {
                         // send response back with info on how to connect to this server.
                         IPEndPoint localEp = (IPEndPoint)listener.LocalEndPoint;
-                        string addr = localHost + ":" + localEp.Port;
+                        string addr = localEp.Port.ToString();
                         MemoryStream ms = new MemoryStream();
                         BinaryWriter writer = new BinaryWriter(ms);
                         writer.Write(addr.Length);

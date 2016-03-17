@@ -123,6 +123,20 @@ namespace Microsoft.Networking.SmartSockets
 
         internal static string FindLocalHostName()
         {
+            try
+            {
+                IPHostEntry e = Dns.GetHostEntry(IPAddress.Loopback);
+                return e.HostName;
+            }
+            catch
+            {
+            }
+            return null;
+        }
+
+
+        internal static List<string> FindLocalIpAddresses()
+        {
             foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if (ni.OperationalStatus == OperationalStatus.Up &&
@@ -133,7 +147,12 @@ namespace Microsoft.Networking.SmartSockets
                     if (props.IsDnsEnabled || props.IsDynamicDnsEnabled)
                     {
                         IPHostEntry e = Dns.GetHostEntry(IPAddress.Loopback);
-                        return e.HostName;
+                        List<string> ipAddresses = new List<string>();
+                        foreach (var addr in e.AddressList)
+                        {
+                            ipAddresses.Add(addr.ToString());
+                        }
+                        return ipAddresses;
                     }
                 }
             }
@@ -282,9 +301,12 @@ namespace Microsoft.Networking.SmartSockets
                         }
                         msg.Read(new BinaryReader(new MemoryStream(block)));
                     }
-
                     OnMessageReceived(msg);
-
+                }
+                catch (EndOfStreamException eos)
+                {
+                    OnError(eos);
+                    receiving = false;
                 }
                 catch (Exception ex)
                 {
