@@ -56,7 +56,7 @@ namespace Microsoft.Networking.SmartSockets
         /// <summary>
         /// Port used for UDP broadcasts.
         /// </summary>
-        internal static int GroupPort = 4096;
+        internal static int GroupPort = 37992;
 
         UdpClient udpListener;
 

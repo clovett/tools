@@ -126,7 +126,7 @@ namespace Microsoft.Networking.SmartSockets
             dgramSocket.JoinMulticastGroup(new HostName(GroupAddress.ToString()));
         }
 
-        private void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
+        private async void OnDatagramMessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
             HostName localHost = GetLocalHostName(out _adapter);
             using (var stream = args.GetDataStream().AsStreamForRead())
@@ -139,14 +139,15 @@ namespace Microsoft.Networking.SmartSockets
                     if (msg == serviceName)
                     {
                         // ooh, this is for us then, so let's respond
-                        using (var output = sender.OutputStream.AsStreamForWrite())
+                        DatagramSocket udpSocket = new DatagramSocket();
+                        await udpSocket.ConnectAsync(args.RemoteAddress, args.RemotePort);
+                        using (var output = udpSocket.OutputStream.AsStreamForWrite())
                         {
-                            string addr = localHost.CanonicalName + ":" + listener.Information.LocalPort;
+                            string addr = listener.Information.LocalPort;
                             using (BinaryWriter writer = new BinaryWriter(output, Encoding.UTF8, true))
                             {
                                 writer.Write(addr.Length);
                                 writer.Write(addr);
-                                writer.Flush();
                             }
                         }
                     }

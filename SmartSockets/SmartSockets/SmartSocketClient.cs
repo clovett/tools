@@ -52,34 +52,32 @@ namespace Microsoft.Networking.SmartSockets
         {
             NetworkAdapter adapter;
             HostName localName = SmartSocketListener.GetLocalHostName(out adapter);
-            string serverEndPoint = null;
+            string serverPort = null;
+            string serverIp = null;
             var dgramSocket = new DatagramSocket();            
             await dgramSocket.BindServiceNameAsync("", adapter);
             dgramSocket.MessageReceived += (/*DatagramSocket*/ sender, /*DatagramSocketMessageReceivedEventArgs*/ args) =>
             {
+                serverIp = args.RemoteAddress.CanonicalName;
                 using (var stream = args.GetDataStream().AsStreamForRead())
                 {
                     BinaryReader reader = new BinaryReader(stream);
                     int len = reader.ReadInt32();
-                    serverEndPoint = reader.ReadString();
+                    serverPort = reader.ReadString();
                 }
             };
 
             while (!token.IsCancellationRequested)
             {
-                if (serverEndPoint != null)
+                if (serverPort != null && serverIp != null)
                 {
                     // ah! server has responded then
                     StreamSocket socket = new StreamSocket();
-                    string[] parts = serverEndPoint.Split(':');
-                    if (parts.Length == 2)
-                    {
-                        await socket.ConnectAsync(new HostName(parts[0]), parts[1]);
-                        var client = new SmartSocketClient(socket);
-                        client.Name = socket.Information.LocalAddress.CanonicalName;
-                        client.ServerName = socket.Information.RemoteHostName.CanonicalName;
-                        return client;
-                    }
+                    await socket.ConnectAsync(new HostName(serverIp), serverPort);
+                    var client = new SmartSocketClient(socket);
+                    client.Name = socket.Information.LocalAddress.CanonicalName;
+                    client.ServerName = socket.Information.RemoteHostName.CanonicalName;
+                    return client;
                 }
 
                 using (var stream = await dgramSocket.GetOutputStreamAsync(new HostName(SmartSocketListener.GroupAddress.ToString()), SmartSocketListener.GroupPort.ToString()))

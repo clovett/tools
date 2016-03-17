@@ -24,7 +24,7 @@
             <TextBox x:Name="SendText" Margin="8" Grid.Column="1" Text="" KeyDown="OnSendTextKeyDown"/>
         </Grid>
 
-        <RichEditBox x:Name="TestOutput" ScrollViewer.VerticalScrollBarVisibility="Auto" >
+        <RichEditBox x:Name="TestOutput" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1">
         </RichEditBox>
 
         <Border Background="#CCEECC" Grid.Row="2"  >
