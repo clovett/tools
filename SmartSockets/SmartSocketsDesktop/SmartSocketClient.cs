@@ -48,7 +48,7 @@ namespace Microsoft.Networking.SmartSockets
             client.NoDelay = true;
         }
 
-        internal Socket Socket  { get { return this.client; } }
+        internal Socket Socket { get { return this.client; } }
 
         public string Name { get; set; }
 
@@ -67,58 +67,97 @@ namespace Microsoft.Networking.SmartSockets
                 }
                 while (!token.IsCancellationRequested)
                 {
-                    IPEndPoint remoteEP = new IPEndPoint(SmartSocketListener.GroupAddress, SmartSocketListener.GroupPort);
-                    UdpClient udpClient = new UdpClient(0);
-                    MemoryStream ms = new MemoryStream();
-                    BinaryWriter writer = new BinaryWriter(ms);
-                    writer.Write(serviceName.Length);
-                    writer.Write(serviceName);
-                    byte[] bytes = ms.ToArray();
-                    udpClient.Send(bytes, bytes.Length, remoteEP);
 
-                    CancellationTokenSource receiveTaskSource = new CancellationTokenSource();
-                    Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
-                    if (receiveTask.Wait(5000, receiveTaskSource.Token))
+                    try
                     {
-                        UdpReceiveResult result = receiveTask.Result;
-                        IPEndPoint serverEP = result.RemoteEndPoint;
-                        byte[] buffer = result.Buffer;
-                        BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
-                        int len = reader.ReadInt32();
-                        string msg = reader.ReadString();
-                        Debug.WriteLine("Found server :" + serverEP.ToString() + ": " + msg);
+                        IPEndPoint remoteEP = new IPEndPoint(SmartSocketListener.GroupAddress, SmartSocketListener.GroupPort);
+                        UdpClient udpClient = new UdpClient(0);
+                        MemoryStream ms = new MemoryStream();
+                        BinaryWriter writer = new BinaryWriter(ms);
+                        writer.Write(serviceName.Length);
+                        writer.Write(serviceName);
+                        byte[] bytes = ms.ToArray();
+                        udpClient.Send(bytes, bytes.Length, remoteEP);
 
-                        string[] parts = msg.Split(':');
-                        if (parts.Length == 2)
+                        CancellationTokenSource receiveTaskSource = new CancellationTokenSource();
+                        Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
+                        if (receiveTask.Wait(5000, receiveTaskSource.Token))
                         {
-                            string hostName = parts[0];
-                            int port = int.Parse(parts[1]);
-                            var entry = Dns.GetHostEntry(hostName);
-                            IPAddress ipAddress = null;
-                            foreach (var ip in entry.AddressList)
+                            UdpReceiveResult result = receiveTask.Result;
+                            IPEndPoint serverEP = result.RemoteEndPoint;
+                            byte[] buffer = result.Buffer;
+                            BinaryReader reader = new BinaryReader(new MemoryStream(buffer));
+                            int len = reader.ReadInt32();
+                            string port = reader.ReadString();
+                            SmartSocketClient client = Connect(new IPEndPoint(serverEP.Address, int.Parse(port)));
+                            if (client != null)
                             {
-                                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                                {
-                                    ipAddress = ip;
-                                    break;
-                                }
+                                client.Name = localHost;
+                                return client;
                             }
-                            Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                            client.Connect(new IPEndPoint(ipAddress, port));
-                            return new SmartSocketClient(null, client)
-                            {
-                                Name = localHost,
-                                ServerName = entry.HostName
-                            };
+                        }
+                        else
+                        {
+                            receiveTaskSource.Cancel();
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        receiveTaskSource.Cancel();
+                        Debug.WriteLine("Something went wrong with Udp connection: " + ex.Message);
                     }
                 }
                 return null;
             });
+        }
+
+        private static SmartSocketClient Connect(IPEndPoint serverEP)
+        {
+            Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            bool connected = false;
+            CancellationTokenSource src = new CancellationTokenSource();
+            try
+            {
+                Task task = Task.Run(() =>
+                {
+                    client.Connect(serverEP);
+                    connected = true;
+                }, src.Token);
+
+                // give it 30 seconds to connect...
+                if (!task.Wait(60000))
+                {
+                    src.Cancel();
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // move on...
+            }
+            if (connected)
+            {
+                return new SmartSocketClient(null, client)
+                {
+                    ServerName = GetHostName(serverEP.Address)
+                };
+            }
+            return null;
+        }
+
+        static string GetHostName(IPAddress addr)
+        {
+            try
+            {
+                var entry = Dns.GetHostEntry(addr);
+                if (!string.IsNullOrEmpty(entry.HostName))
+                {
+                    return entry.HostName;
+                }
+            }
+            catch
+            {
+                // this can fail if machines are in different domains.
+            }
+            return addr.ToString();
         }
 
         internal static string FindLocalHostName()
@@ -195,7 +234,7 @@ namespace Microsoft.Networking.SmartSockets
             remove
             {
                 messageHandler = (EventHandler<Message>)Delegate.Remove(messageHandler, value);
-                if (messageHandler== null)
+                if (messageHandler == null)
                 {
                     receiving = false;
                 }
@@ -211,7 +250,7 @@ namespace Microsoft.Networking.SmartSockets
         {
             try
             {
-                Send(new Message() { Type = MessageType.Disconnect});
+                Send(new Message() { Type = MessageType.Disconnect });
 
                 Thread.Sleep(1000); // give message time to get there.
 
