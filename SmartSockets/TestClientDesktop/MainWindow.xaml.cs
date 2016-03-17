@@ -33,6 +33,7 @@ namespace TestClientDesktop
         private async void OnMainWindowLoaded(object sender, RoutedEventArgs e)
         {
             Status.Text = "Connecting...";
+            SendText.Focus();
 
             CancellationTokenSource source = new CancellationTokenSource();
             try

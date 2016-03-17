@@ -29,6 +29,12 @@ namespace TestServerDesktop
             server.ClientDisconnected += OnClientDisconnected;            
             var nowait = server.StartListening("SmartSocketTestService");
             this.InitializeComponent();
+            this.Loaded += OnMainWindowLoaded;
+        }
+
+        private void OnMainWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            SendText.Focus();
         }
 
         private void OnClientConnected(object sender, SmartSocketClient e)
