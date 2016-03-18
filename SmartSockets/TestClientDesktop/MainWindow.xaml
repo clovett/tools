@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestClientDesktop"
         mc:Ignorable="d"
+        AutomationProperties.AutomationId="TestClientDesktop"
         Title="TestClientDesktop" Height="500" Width="900">
 
     <Grid >

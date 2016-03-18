@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TestServerDesktop"
         mc:Ignorable="d"
+        AutomationProperties.AutomationId="TestServerDesktop"
         Title="TestServerDesktop" Height="500" Width="900">
     <Grid>
         <Grid.RowDefinitions>
@@ -19,7 +20,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <TextBlock Text="Server:" Margin="10" VerticalAlignment="Center"/>
-            <TextBox x:Name="SendText" Margin="8" Grid.Column="1" Text="" KeyDown="OnSendTextKeyDown"/>
+            <TextBox x:Name="SendText" Margin="8" Grid.Column="1" Text="" KeyDown="OnSendTextKeyDown" />
         </Grid>
 
         <RichTextBox x:Name="TestOutput" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Row="1" >
