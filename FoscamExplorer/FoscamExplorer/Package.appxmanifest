@@ -1,24 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest">
-  <Identity Name="43906ChrisLovett.FoscamExplorer" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.0.0.8" />
+<Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
+  <Identity Name="43906ChrisLovett.FoscamExplorer" Publisher="CN=BC801FCC-0BF8-49D7-9F51-1B625C3BE476" Version="1.1.0.8" />
   <Properties>
     <DisplayName>Foscam Explorer</DisplayName>
     <PublisherDisplayName>Chris Lovett</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
   <Prerequisites>
-    <OSMinVersion>6.2.1</OSMinVersion>
-    <OSMaxVersionTested>6.2.1</OSMaxVersionTested>
+    <OSMinVersion>6.3.0</OSMinVersion>
+    <OSMaxVersionTested>6.3.0</OSMaxVersionTested>
   </Prerequisites>
   <Resources>
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="FoscamExplorer.App">
-      <VisualElements DisplayName="Foscam Explorer" Logo="Assets\Logo.png" SmallLogo="Assets\SmallLogo.png" Description="Foscam Explorer automatically discovers Foscam cameras on your local network and provides simple and elegant control over them.  You can watch the video stream, rename your cameras, set brightness, contrast, FPS, camera position, and wifi settings." ForegroundText="light" BackgroundColor="#464646">
-        <DefaultTile ShowName="allLogos" WideLogo="Assets\Wide.png" />
-        <SplashScreen Image="Assets\SplashScreen.png" />
-      </VisualElements>
+      <m2:VisualElements DisplayName="Foscam Explorer" Description="Foscam Explorer automatically discovers Foscam cameras on your local network and provides simple and elegant control over them.  You can watch the video stream, rename your cameras, set brightness, contrast, FPS, camera position, and wifi settings." BackgroundColor="#464646" ForegroundText="light" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png">
+        <m2:DefaultTile Wide310x150Logo="Assets\Wide.png">
+          <m2:ShowNameOnTiles>
+            <m2:ShowOn Tile="square150x150Logo" />
+            <m2:ShowOn Tile="wide310x150Logo" />
+          </m2:ShowNameOnTiles>
+        </m2:DefaultTile>
+        <m2:SplashScreen Image="Assets\SplashScreen.png" />
+      </m2:VisualElements>
     </Application>
   </Applications>
   <Capabilities>
