@@ -31,31 +31,6 @@ namespace Microsoft.Networking
             server = new Server(applicationId);            
         }
 
-        public bool HasInternet()
-        {
-            bool internet = false;
-            foreach (var adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
-            {
-                switch (adapter.NetworkInterfaceType)
-                {
-                    case System.Net.NetworkInformation.NetworkInterfaceType.Loopback:
-                    case System.Net.NetworkInformation.NetworkInterfaceType.Tunnel:
-                        break;
-                    default:
-                        var props = adapter.GetIPProperties();
-                        var stats = adapter.GetIPStatistics();
-                        if (adapter.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && 
-                            props != null && 
-                            props.DhcpServerAddresses.Count > 0)
-                        {
-                            internet = true;
-                        }
-                        break;
-                }
-            }
-            return internet;
-        }
-
         // cannot be completely random, the phone has to use the same seed.
         const int randomSeed = 1980527718;
 

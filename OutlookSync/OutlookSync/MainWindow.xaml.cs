@@ -163,23 +163,16 @@ namespace OutlookSync
                 }
 
                 conmgr = new ConnectionManager("F657DBF0-AF29-408F-8F4A-B662D7EA4440");
-                if (!conmgr.HasInternet())
-                {
-                    ShowMessage(Properties.Resources.NoNetwork);
-                    return;
-                }
-                else
-                {
-                    conmgr.StartListening();
 
-                    conmgr.MessageReceived += OnMessageReceived;
-                    conmgr.ReadException += OnServerException;
+                conmgr.StartListening();
+
+                conmgr.MessageReceived += OnMessageReceived;
+                conmgr.ReadException += OnServerException;
                     
-                    ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
-                    store = await UnifiedStore.LoadAsync(GetStoreFileName());
+                ShowStatus(OutlookSync.Properties.Resources.WaitingForPhone);
+                store = await UnifiedStore.LoadAsync(GetStoreFileName());
                     
-                    firewall.StartCheckingFirewall();
-                }
+                firewall.StartCheckingFirewall();
 
                 // get new contact info from outlook ready for syncing with this phone.
                 var loader = new OutlookStoreLoader();
