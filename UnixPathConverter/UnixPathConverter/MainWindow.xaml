@@ -14,8 +14,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock Text="Windows:" Margin="10"/>
-        <TextBox x:Name="WindowsPath" Grid.Row="1" Margin="10" TextChanged="OnWindowsPathChanged"/>
+        <TextBox x:Name="WindowsPath" Grid.Row="1" Margin="10" TextChanged="OnWindowsPathChanged" Padding="2"/>
         <TextBlock Text="Unix:" Grid.Row="2" Margin="10"/>
-        <TextBox x:Name="UnixPath" Grid.Row="3" Margin="10" TextChanged="OnUnixPathChanged"/>
+        <TextBox x:Name="UnixPath" Grid.Row="3" Margin="10" TextChanged="OnUnixPathChanged" Padding="2"/>
     </Grid>
 </Window>
