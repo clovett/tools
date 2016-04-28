@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25123.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogViewer", "LogViewer.csproj", "{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|ARM.ActiveCfg = Debug|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|ARM.Build.0 = Debug|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|ARM.Deploy.0 = Debug|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x64.ActiveCfg = Debug|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x64.Build.0 = Debug|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x64.Deploy.0 = Debug|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x86.ActiveCfg = Debug|x86
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x86.Build.0 = Debug|x86
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Debug|x86.Deploy.0 = Debug|x86
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|ARM.ActiveCfg = Release|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|ARM.Build.0 = Release|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|ARM.Deploy.0 = Release|ARM
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x64.ActiveCfg = Release|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x64.Build.0 = Release|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x64.Deploy.0 = Release|x64
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x86.ActiveCfg = Release|x86
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x86.Build.0 = Release|x86
+		{1C5FFDFE-D76D-4EB8-85D3-B478A9B2A614}.Release|x86.Deploy.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = LogViewer.csproj
+		SccLocalPath1 = .
+	EndGlobalSection
+EndGlobal
