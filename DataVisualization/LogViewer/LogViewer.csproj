@@ -110,6 +110,7 @@
     <Compile Include="SimpleLineChart.xaml.cs">
       <DependentUpon>SimpleLineChart.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utilities\BinaryLog.cs" />
     <Compile Include="Utilities\XmlCsvReader.cs" />
   </ItemGroup>
   <ItemGroup>

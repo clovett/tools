@@ -43,16 +43,57 @@ namespace LogViewer
             FileOpenPicker fo = new FileOpenPicker();
             fo.ViewMode = PickerViewMode.Thumbnail;
             fo.FileTypeFilter.Add(".csv");
+            fo.FileTypeFilter.Add(".bin");
             StorageFile file = await fo.PickSingleFileAsync();
             if (file != null)
             {
-                await LoadCsvFile(file);
+                string ext = System.IO.Path.GetExtension(file.Path).ToLowerInvariant();
+                if (ext == "csv")
+                {
+                    await LoadCsvFile(file);
+                }
+                else if (ext == "bin")
+                {
+                    await LoadBinaryFile(file);
+                }
+                else
+                {
+                    ShowStatus(string.Format("File extension '{0}' not supported", ext));
+                }
             }
 
             button.IsEnabled = true;
         }
 
-        
+
+        private async Task LoadBinaryFile(StorageFile file)
+        {
+            try
+            {
+                ShowStatus("Loading " + file.Path);
+                using (Stream s = await file.OpenStreamForReadAsync())
+                {
+                    XmlNameTable nametable = new NameTable();
+                    using (XmlCsvReader reader = new XmlCsvReader(s, System.Text.Encoding.UTF8, new Uri(file.Path), nametable))
+                    {
+                        reader.FirstRowHasColumnNames = true;
+                        data = XDocument.Load(reader);
+
+                        string[] names = reader.ColumnNames;
+                        if (names != null)
+                        {
+                            CategoryList.ItemsSource = names;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowStatus(ex.Message);
+            }
+            ShowStatus("");
+        }
+
         private async Task LoadCsvFile(StorageFile file)
         {
             try
