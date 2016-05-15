@@ -36,49 +36,37 @@ namespace Chimpmunk.Model
         /// </summary>
         public List<IItem> Items { get; }
 
-        private void SimplePack()
+        private void GreedyPack()
         {
-            // start off by just packing what we can into each node.
-            foreach (var n in Nodes)
-            {
-                foreach (var i in Items.ToArray())
-                {
-                    if (n.Cost > n.TrySwap(null, i))
-                    {
-                        n.Add(i);
-                        Items.Remove(i);
-                    }
-                }
-            }
-
-            // if we have some left over stuff them in anyway, we will try and fix it during Solve.
-            foreach (var i in Items.ToArray())
-            {
-                INode best = null;
-                double leastDamage = 0;
-
-                // find the best place to stuff it
+            while (Items.Count > 0)
+            { 
+                // start off by just packing what we can into each node.
                 foreach (var n in Nodes)
                 {
-                    double delta = n.TrySwap(null, i) - n.Cost;
-                    if (delta < leastDamage || best == null)
+                    foreach (var i in Items.ToArray())
                     {
-                        best = n;
-                        leastDamage = delta;
+                        if (n.Cost > n.TrySwap(null, i))
+                        {
+                            n.Add(i);
+                            Items.Remove(i);
+                        }
                     }
                 }
 
-                if (best != null)
-                {
-                    best.Add(i);
-                    Items.Remove(i);
-                }
+                // if we have some left over then we need to add more stock.
+                INode node = Nodes.Last();
+                Nodes.Add(node.Clone());
             }
         }
 
         public string Solve(ProgressHandler progressHandler)
         {
-            SimplePack();
+            if (Nodes.Count == 0)
+            {
+                return "must have some nodes";
+            }
+
+            GreedyPack();
 
             FindPaths();
 
@@ -130,7 +118,36 @@ namespace Chimpmunk.Model
 
         private bool FindBestFlow(INode[] path)
         {
+            // Ok, the path establishes the flow of movement of items between nodes.
+            // So here all we need to do is find the best flow given the existing item layout
+            // where the flow of items also must satisfy the constraints of not overfilling each node.
+            // To help prune the search we need only consider nodes that will fit in the next path.
+
+            int[] flow = new int[path.Length];
+            
             return false;
+        }
+
+        private bool TryFlow(INode[] path, int[] flow, int pos)
+        {
+            INode source = path[pos];
+            if (pos + 1 < path.Length)
+            {
+                INode target = path[pos + 1];
+                int i = 0;
+                foreach (IItem item in source.Items)
+                {
+                    foreach (IItem toRemove in target.Items)
+                    {
+                        if (target.TrySwap(toRemove, item) < target.Cost)
+                        { 
+
+                            flow[pos] = i;
+                        }
+                    }
+                    i++;
+                }
+            }
         }
 
         private double TotalCost
@@ -240,6 +257,8 @@ namespace Chimpmunk.Model
         /// </summary>
         /// <param name="item"></param>
         void Add(IItem item);
+
+        INode Clone();
     }
 
 
