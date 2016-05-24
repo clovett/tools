@@ -16,6 +16,7 @@ namespace HttpGet
         string filename;
         string url;
         string rootDir;
+        bool stats;
 
         static void Main(string[] args)
         {
@@ -48,7 +49,7 @@ namespace HttpGet
             {
                 Console.WriteLine("### Error: {0} {1}", e.GetType().FullName, e.Message);
             }
-}
+        }
 
         private bool ParseCommandLine(string[] args)
         {
@@ -64,6 +65,9 @@ namespace HttpGet
                         case "all":
                             all = true;
                             break;
+                        case "s":
+                            stats = true;
+                            break;
                         case "?":
                         case "h":
                         case "help":
@@ -72,12 +76,12 @@ namespace HttpGet
                             if (i + 1 < args.Length)
                             {
                                 this.filename = Path.GetFullPath(args[++i]);
-                            }
+                    }
                             else
                             {
                                 Console.WriteLine("### missing file name argument");
                                 return false;
-                            }
+                }
                             break;
                         case "headers":
                             this.headers = true;
@@ -291,13 +295,22 @@ namespace HttpGet
                     }
                     else
                     {
-                        string fname = uri.Segments[uri.Segments.Length - 1];
-                        CopyToFile(stream, fname);
-                        if (result == null)
-                        {
-                            result = fname;
-                        }
-                    }
+                string fname = uri.Segments[uri.Segments.Length - 1];
+                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                watch.Start();
+                long length = CopyToFile(stream, fname);
+                watch.Stop();
+                if (stats)
+                {
+                    double bps = (double)length / watch.Elapsed.TotalSeconds;
+                    Console.WriteLine("Download speed: {0} bytes per second", Math.Round(bps,3));
+                }
+
+                if (result == null)
+                {
+                    result = fname;
+                }
+            }
                 }
             }
             if (rootDir == null)
@@ -311,8 +324,9 @@ namespace HttpGet
             return result;
         }
 
-        private static void CopyToFile(Stream stream, string path)
+        private static long CopyToFile(Stream stream, string path)
         {
+            long length = 0;
             byte[] buffer = new byte[64000];
             using (var file = new FileStream(path, FileMode.Create, FileAccess.Write))
             {
@@ -320,9 +334,11 @@ namespace HttpGet
                 while (len > 0) 
                 {
                     file.Write(buffer, 0, len);
+                    length += len;
                     len = stream.Read(buffer, 0, buffer.Length);
                 }
             }
+            return length;
         }
 
         private static void PrintUsage()
