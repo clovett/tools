@@ -10,6 +10,7 @@ namespace dumphex
     class Program
     {
         List<string> files = new List<string>();
+        int count;
 
         static void Main(string[] args)
         {
@@ -27,8 +28,10 @@ namespace dumphex
 
         private static void PrintUeage()
         {
-            Console.WriteLine("Usage: DumpHex <files>");
+            Console.WriteLine("Usage: DumpHex [options] <files>");
             Console.WriteLine("Outputs the content of the given binary file(s) in hex format");
+            Console.WriteLine("Options:");
+            Console.WriteLine("   -c count    dumps the first count bytes only");
         }
 
         private void Run()
@@ -69,6 +72,14 @@ namespace dumphex
                         case "?":
                         case "help":
                             return false;
+                        case "c":
+                            int count = 0;
+                            if (i + 1 < n && int.TryParse(args[i+1], out count))
+                            {
+                                this.count = count;
+                                i++;
+                            }
+                            break;
                     }
                 }
                 else
@@ -104,15 +115,18 @@ namespace dumphex
 
         private void DumpHex(Stream stream)
         {
+            int total = 0;
             byte[] line = new byte[16];
             while (true)
             {
-                int lineLnegth = stream.Read(line, 0, 16);
-                if (lineLnegth == 0)
+                int lineLength = stream.Read(line, 0, 16);
+                if (lineLength == 0)
                 {
                     break;
                 }
-                for (int j = 0; j < lineLnegth; j++)
+                total += lineLength;
+
+                for (int j = 0; j < lineLength; j++)
                 {
                     if (j > 0)
                     {
@@ -124,7 +138,7 @@ namespace dumphex
 
                 Console.Write("  ");
 
-                for (int j = 0; j < lineLnegth; j++)
+                for (int j = 0; j < lineLength; j++)
                 {
                     byte b = line[j];
                     char c = Convert.ToChar(b);
@@ -139,6 +153,11 @@ namespace dumphex
                 }
 
                 Console.WriteLine();
+
+                if (this.count != 0 && total >= this.count)
+                {
+                    break;
+                }
             }
         }
 
