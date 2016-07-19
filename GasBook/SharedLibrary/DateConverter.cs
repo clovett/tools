@@ -7,13 +7,23 @@ using Windows.UI.Xaml.Data;
 
 namespace SharedLibrary
 {
-    class DateConverter : IValueConverter
+    public class DateConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (value is DateTime)
             {
                 DateTime dt = (DateTime)value;
+                string format = parameter as string;
+                if (format != null)
+                {
+                    return dt.ToString(format);
+                }
+                return dt.ToString();
+            }
+            else if (value is DateTimeOffset)
+            {
+                DateTimeOffset dt = (DateTimeOffset)value;
                 string format = parameter as string;
                 if (format != null)
                 {

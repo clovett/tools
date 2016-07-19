@@ -6,18 +6,27 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:s="using:SharedLibrary"
-    mc:Ignorable="d"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <Grid>
+    >
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Background="Blue">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Background="Blue" Grid.ColumnSpan="2">
             <TextBlock Text="Gas Book" FontSize="24" Margin="10"/>
         </Border>
-        
-        <s:LogListView x:Name="LogListView"/>
+
+        <s:LogListView x:Name="LogListView" Grid.Row="1" Margin="10" Grid.Column="0"
+                       SelectionChanged="OnSelectionChanged"/>
+
+        <s:LogDetailView x:Name="DetailView" Grid.Row="1" Margin="10" Grid.Column="1"/>
+
+
     </Grid>
 </Page>

@@ -30,7 +30,8 @@
         </DataTemplate>
         <Style x:Key="SimpleListItemStyle" TargetType="ListViewItem">
             <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         </Style>
     </UserControl.Resources>
     <Grid>

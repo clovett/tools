@@ -8,14 +8,14 @@ namespace SharedLibrary
 {
     public class LogBookEntry : INotifyPropertyChanged
     {
-        DateTime date;
+        DateTimeOffset date;
         decimal amount;
         decimal gallons;
         decimal miles;
         decimal mpg;
         string gps;
 
-        public DateTime Date
+        public DateTimeOffset Date
         {
             get
             {

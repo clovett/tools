@@ -27,6 +27,7 @@ namespace GasBook
         {
             this.InitializeComponent();
 
+            this.SizeChanged += OnSizeChanged;
 
             var book = LogListView.LogBook;
             var rand = new Random();
@@ -44,10 +45,20 @@ namespace GasBook
             }
         }
 
-        private void OnAddItem(object sender, RoutedEventArgs e)
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-
+            if (e.NewSize.Width <= 600)
+            {
+                DetailView.Visibility = Visibility.Collapsed;
+                Grid.SetColumnSpan(LogListView, 2);
+            }
+            else
+            {
+                DetailView.Visibility = Visibility.Visible;
+                Grid.SetColumnSpan(LogListView, 1);
+            }
         }
+
         private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
@@ -55,7 +66,14 @@ namespace GasBook
                 LogBookEntry entry = e.AddedItems[0] as LogBookEntry;
                 if (entry != null)
                 {
-                    this.Frame.Navigate(typeof(AddEntryPage), entry);
+                    if (DetailView.Visibility == Visibility.Visible)
+                    {
+                        DetailView.DataContext = entry;
+                    }
+                    else
+                    {
+                        this.Frame.Navigate(typeof(AddEntryPage), entry);
+                    }
                 }
             }
         }

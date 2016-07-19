@@ -12,7 +12,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
+
         <!-- Back button and page title -->
         <Grid Background="#00b2f0">
             <Grid.ColumnDefinitions>

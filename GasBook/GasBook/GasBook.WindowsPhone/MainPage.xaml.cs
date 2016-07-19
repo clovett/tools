@@ -31,39 +31,55 @@ namespace GasBook
 
             this.NavigationCacheMode = NavigationCacheMode.Required;
 
-            book = LogListView.LogBook;
+            this.SizeChanged += OnSizeChanged;
 
-            book.Entries.Add(new LogBookEntry()
+            var book = LogListView.LogBook;
+            var rand = new Random();
+            DateTime start = DateTime.Today.AddDays(-100);
+            for (int i = 0; i < 100; i++)
             {
-                Amount = 33.45M,
-                Date = DateTime.Now,
-                Gallons = 16M,
-                Mpg = 22M
-            });
-            book.Entries.Add(new LogBookEntry()
-            {
-                Amount = 27.16M,
-                Date = DateTime.Now,
-                Gallons = 11M,
-                Mpg = 21.2M
-            });
-
+                book.Entries.Add(new LogBookEntry()
+                {
+                    Amount = (decimal)rand.NextDouble() * 50,
+                    Date = start,
+                    Gallons = (decimal)rand.NextDouble() * 16,
+                    Mpg = (decimal)rand.NextDouble() * 30
+                });
+                start = start.AddDays(1);
+            }
         }
 
-        /// <summary>
-        /// Invoked when this page is about to be displayed in a Frame.
-        /// </summary>
-        /// <param name="e">Event data that describes how this page was reached.
-        /// This parameter is typically used to configure the page.</param>
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // TODO: Prepare page for display here.
+            if (e.NewSize.Width <= 600)
+            {
+                DetailView.Visibility = Visibility.Collapsed;
+                Grid.SetColumnSpan(LogListView, 2);
+            }
+            else
+            {
+                DetailView.Visibility = Visibility.Visible;
+                Grid.SetColumnSpan(LogListView, 1);
+            }
+        }
 
-            // TODO: If your application contains multiple pages, ensure that you are
-            // handling the hardware Back button by registering for the
-            // Windows.Phone.UI.Input.HardwareButtons.BackPressed event.
-            // If you are using the NavigationHelper provided by some templates,
-            // this event is handled for you.
+        private void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                LogBookEntry entry = e.AddedItems[0] as LogBookEntry;
+                if (entry != null)
+                {
+                    if (DetailView.Visibility == Visibility.Visible)
+                    {
+                        DetailView.DataContext = entry;
+                    }
+                    else
+                    {
+                        this.Frame.Navigate(typeof(AddEntryPage), entry);
+                    }
+                }
+            }
         }
     }
 }

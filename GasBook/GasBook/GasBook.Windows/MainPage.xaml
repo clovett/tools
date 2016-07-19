@@ -14,16 +14,19 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Border Background="Blue">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Background="Blue" Grid.ColumnSpan="2">
             <TextBlock Text="Gas Book" FontSize="24" Margin="10"/>
         </Border>
 
-        <s:LogListView x:Name="LogListView" Grid.Row="1" Margin="10"
+        <s:LogListView x:Name="LogListView" Grid.Row="1" Margin="10" Grid.Column="0"
                        SelectionChanged="OnSelectionChanged"/>
+
+        <s:LogDetailView x:Name="DetailView" Grid.Row="1" Margin="10" Grid.Column="1"/>
+
+        
     </Grid>
-    <Page.BottomAppBar>
-        <CommandBar>
-            <AppBarButton x:Name="AddButton" Icon="Add" Click="OnAddItem"/>
-        </CommandBar>
-    </Page.BottomAppBar>
 </Page>

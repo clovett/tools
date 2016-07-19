@@ -863,17 +863,18 @@
         <Setter Property="FontFamily" Value="Segoe UI Symbol"/>
         <Setter Property="FontWeight" Value="Normal"/>
         <Setter Property="FontSize" Value="40"/>
+        <Setter Property="MinWidth" Value="50"/>
         <Setter Property="AutomationProperties.AutomationId" Value="BackButton"/>
         <Setter Property="AutomationProperties.Name" Value="Back"/>
         <Setter Property="AutomationProperties.ItemType" Value="Navigation Button"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid x:Name="RootGrid">
-                        <Grid Margin="0,-4,0,0">
+                    <Grid x:Name="RootGrid" >
+                        <Grid Margin="4,-4,0,0">
                             <TextBlock x:Name="BackgroundGlyph" Text="&#xE0A8;" Foreground="{StaticResource BackButtonBackgroundThemeBrush}"/>
                             <TextBlock x:Name="NormalGlyph" Text="{StaticResource BackButtonGlyph}" Foreground="{StaticResource BackButtonForegroundThemeBrush}"/>
-                            <TextBlock x:Name="ArrowGlyph" Text="&#xE0A6;" Foreground="{StaticResource BackButtonPressedForegroundThemeBrush}" Opacity="0" Margin="6,0,0,0"/>
+                            <TextBlock x:Name="ArrowGlyph" Text="&#xE0A6;" Foreground="{StaticResource BackButtonPressedForegroundThemeBrush}" Opacity="0" Margin="0,0,0,0"/>
                         </Grid>
 
                         <VisualStateManager.VisualStateGroups>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.22823.1
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GasBook", "GasBook", "{DF27FA5D-F9D5-432E-A4F6-773FDA846923}"
 EndProject
@@ -95,5 +95,23 @@ Global
 		{8B849ABD-F0CC-47DF-85DE-39A5E940DC86} = {DF27FA5D-F9D5-432E-A4F6-773FDA846923}
 		{02726BA5-AE7A-4494-A96B-F02E004F3E83} = {DF27FA5D-F9D5-432E-A4F6-773FDA846923}
 		{89D79CF5-B009-40BF-8C5E-0C320F70E9FD} = {DF27FA5D-F9D5-432E-A4F6-773FDA846923}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = GasBook\\GasBook.Windows\\GasBook.Windows.csproj
+		SccProjectTopLevelParentUniqueName1 = GasBook.sln
+		SccProjectName1 = GasBook/GasBook.Windows
+		SccLocalPath1 = GasBook\\GasBook.Windows
+		SccProjectUniqueName2 = GasBook\\GasBook.WindowsPhone\\GasBook.WindowsPhone.csproj
+		SccProjectTopLevelParentUniqueName2 = GasBook.sln
+		SccProjectName2 = GasBook/GasBook.WindowsPhone
+		SccLocalPath2 = GasBook\\GasBook.WindowsPhone
+		SccProjectUniqueName3 = SharedLibrary\\SharedLibrary.csproj
+		SccProjectTopLevelParentUniqueName3 = GasBook.sln
+		SccProjectName3 = SharedLibrary
+		SccLocalPath3 = SharedLibrary
 	EndGlobalSection
 EndGlobal
