@@ -64,7 +64,7 @@ the following order: newline, word, character, byte, maximum line length.
                 string arg = args[i];
                 if (arg[0] == '-' || arg[0] == '/')
                 {
-                    switch (arg.Substring(1).ToLowerInvariant())
+                    switch (arg.Substring(1))
                     {
                         case "c":
                             charCount = 0;
