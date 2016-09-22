@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.blogml.com/2006/09/BlogML" xmlns="http://www.blogml.com/2006/09/BlogML">
+  <xs:element name="blog" type="blogType" />
+  <xs:complexType name="blogType">
+    <xs:annotation>
+      <xs:documentation>
+				Content of a blog
+			</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="title" type="titleType">
+        <xs:annotation>
+          <xs:documentation>
+					blog title
+					</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="sub-title" type="titleType">
+        <xs:annotation>
+          <xs:documentation>
+					Blog sub-title
+					</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="authors" type="authorsType" minOccurs="1" maxOccurs="1" />
+      <xs:element name="extended-properties" minOccurs="0" maxOccurs="1" type="extendedpropertiesType" />
+      <xs:element name="categories" type="categoriesType" minOccurs="0" maxOccurs="1" />
+      <xs:element name="posts" type="postsType" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+    <xs:attribute name="date-created" type="xs:dateTime" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+					creation date time of this document
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="root-url" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="postsType">
+    <xs:annotation>
+      <xs:documentation>
+				List of blog posts
+			</xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="post" type="postType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="postType">
+    <xs:annotation>
+      <xs:documentation>
+				A blog post containg the content, comments, attachments and
+				trackbacks
+			</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent mixed="false">
+      <xs:extension base="nodeType">
+        <xs:sequence>
+          <xs:element name="content" type="contentType" minOccurs="1" maxOccurs="1" />
+          <xs:element name="post-name" type="titleType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="excerpt" type="contentType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="categories" type="categoriesRefType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="comments" type="commentsType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="trackbacks" type="trackbacksType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="attachments" type="attachmentsType" minOccurs="0" maxOccurs="1" />
+          <xs:element name="authors" type="authorsRefType" minOccurs="1" maxOccurs="1" />
+          <xs:element name="tags" type="tagsRefType" minOccurs="1" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="post-url" type="xs:string" />
+        <xs:attribute name="type" type="blogpostTypes" />
+        <xs:attribute name="hasexcerpt" type="xs:boolean" />
+        <xs:attribute name="views" type="xs:string" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="nodeType">
+    <xs:sequence>
+      <xs:element name="title" type="titleType" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+					Identification string
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="date-created" type="xs:dateTime" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+					Creation date time
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="date-modified" type="xs:dateTime" use="optional">
+      <xs:annotation>
+        <xs:documentation>
+					Last modification date time
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="approved" type="xs:boolean" use="optional" default="true">
+      <xs:annotation>
+        <xs:documentation>
+					A value indicating wheter this post is public
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="trackbacksType">
+    <xs:annotation>
+      <xs:documentation>
+				List of trackbakcs
+			</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="trackback" type="trackbackType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="trackbackType">
+    <xs:annotation>
+      <xs:documentation>
+				A blog post trackback
+			</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent mixed="false">
+      <xs:extension base="nodeType">
+        <xs:attribute name="url" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation>
+							Trackback URL
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="contentType">
+    <xs:annotation>
+      <xs:documentation>
+				A blog post text body
+			</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="contentTypes" use="optional" default="text" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="commentType">
+    <xs:annotation>
+      <xs:documentation>
+				A post comment
+			</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent mixed="false">
+      <xs:extension base="nodeType">
+        <xs:sequence>
+          <xs:element name="content" type="contentType" minOccurs="1" maxOccurs="1" />
+        </xs:sequence>
+        <xs:attribute name="user-name" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation>
+							Comment author's name
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="user-email" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							Comment author's email
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="user-url" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							Comment author's home page or blog URL
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="commentsType">
+    <xs:sequence>
+      <xs:element name="comment" type="commentType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="categoriesType">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="category" type="categoryType" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="categoryType">
+    <xs:complexContent mixed="false">
+      <xs:extension base="nodeType">
+        <xs:attribute name="parentref" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							Reference key to a parent category
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="description" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							Description of the category
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="categoryRefType">
+    <xs:attribute name="ref" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+					Reference to a category
+				</xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+  <xs:complexType name="categoriesRefType">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="category" type="categoryRefType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="attachmentType">
+    <xs:annotation>
+      <xs:documentation>
+				A blog post attachment. An attachment can be any document (image, video) 
+				related to a blog post. The attachment can be lazily stored as an URL or 
+				fully embedded in the body of the node (base64 encoded). In both cases, 
+				the URL must be specified so that the implementor can figure out where to dump
+				the attachment to.
+			</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="embedded" type="xs:boolean" use="required">
+          <xs:annotation>
+            <xs:documentation>
+							A value indicating if the attachment is embedded (base64 encoded) in the 
+							text of the node.
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="mime-type" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation>
+							A value indicating the mime-type of the attachment resource.
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="size" type="xs:double" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							A value which indicates the size of a resource.
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="external-uri" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							A value which indicates either a relative or fully qualified URL
+							to the attachment resource.
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="url" type="xs:string" use="optional">
+          <xs:annotation>
+            <xs:documentation>
+							URL of the original attachment.
+						</xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="attachmentsType">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="attachment" type="attachmentType" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="contentTypes">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="html" />
+      <xs:enumeration value="xhtml" />
+      <xs:enumeration value="text" />
+      <xs:enumeration value="base64" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="titleType" mixed="true">
+    <xs:annotation>
+      <xs:documentation>
+				Textual content
+			</xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="contentTypes" use="optional" default="text" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="authorsType">
+    <xs:sequence>
+      <xs:element name="author" type="authorType" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="authorType">
+    <xs:complexContent>
+      <xs:extension base="nodeType">
+        <xs:sequence>
+        </xs:sequence>
+        <xs:attribute name="email" type="xs:string" />
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="authorsRefType">
+    <xs:sequence>
+      <xs:element name="author" type="authorRefType" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="authorRefType">
+    <xs:sequence>
+    </xs:sequence>
+    <xs:attribute name="ref" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="tagsRefType">
+    <xs:sequence>
+      <xs:element name="tag" type="tagRefType"  maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="tagRefType">
+    <xs:sequence>
+    </xs:sequence>
+    <xs:attribute name="ref" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="blogpostTypes">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="normal" />
+      <xs:enumeration value="article" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="extendedpropertiesType">
+    <xs:sequence>
+      <xs:element name="property" type="extendedpropertyType" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="extendedpropertyType">
+    <xs:sequence>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="value" type="xs:string" />
+  </xs:complexType>
+</xs:schema>
