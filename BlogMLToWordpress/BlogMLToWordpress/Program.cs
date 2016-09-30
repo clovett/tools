@@ -104,6 +104,7 @@ namespace BlogMLToWordpress
         private void Convert(blogType blogData, XmlWriter writer)
         {
             int postNumber = 0;
+            int commentId = 200;
 
             writer.WriteStartDocument();
             writer.WriteStartElement("rss");
@@ -233,6 +234,8 @@ namespace BlogMLToWordpress
                     {
                         commentType currComment = currPost.comments[k];
                         writer.WriteStartElement("wp", "comment", wpns);
+                        writer.WriteElementString("wp", "comment_id", wpns, commentId++.ToString());
+                        commentId++;
                         writer.WriteElementString("wp", "comment_date", wpns, currComment.datecreated.ToString("yyyy-MM-dd HH:mm:ss"));
                         writer.WriteElementString("wp", "comment_date_gmt", wpns, currComment.datecreated.ToString("yyyy-MM-dd HH:mm:ss"));
                         writer.WriteStartElement("wp", "comment_author", wpns);
