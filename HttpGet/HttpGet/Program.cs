@@ -76,12 +76,12 @@ namespace HttpGet
                             if (i + 1 < args.Length)
                             {
                                 this.filename = Path.GetFullPath(args[++i]);
-                    }
+                            }
                             else
                             {
                                 Console.WriteLine("### missing file name argument");
                                 return false;
-                }
+                            }
                             break;
                         case "headers":
                             this.headers = true;
@@ -263,11 +263,10 @@ namespace HttpGet
                     }
                 }
             }
-                    
 
             Console.WriteLine("Fetching: " + uri.AbsoluteUri);
             WebRequest req = WebRequest.Create(uri);
-            req.Credentials = CredentialCache.DefaultNetworkCredentials;            
+            req.Credentials = CredentialCache.DefaultNetworkCredentials;
             req.Method = "GET";
 
             WebResponse resp = req.GetResponse();
@@ -285,7 +284,7 @@ namespace HttpGet
             {
                 if (string.IsNullOrEmpty(relative))
                 {
-                    if (this.filename == null)
+                    if (!string.IsNullOrEmpty(this.filename))
                     {
                         CopyToFile(stream, this.filename);
                         if (result == null)
@@ -295,22 +294,22 @@ namespace HttpGet
                     }
                     else
                     {
-                string fname = uri.Segments[uri.Segments.Length - 1];
-                System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
-                watch.Start();
-                long length = CopyToFile(stream, fname);
-                watch.Stop();
-                if (stats)
-                {
-                    double bps = (double)length / watch.Elapsed.TotalSeconds;
-                    Console.WriteLine("Download speed: {0} bytes per second", Math.Round(bps,3));
-                }
+                        string fname = uri.Segments[uri.Segments.Length - 1];
+                        System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
+                        watch.Start();
+                        long length = CopyToFile(stream, fname);
+                        watch.Stop();
+                        if (stats)
+                        {
+                            double bps = (double)length / watch.Elapsed.TotalSeconds;
+                            Console.WriteLine("Download speed: {0} bytes per second", Math.Round(bps, 3));
+                        }
 
-                if (result == null)
-                {
-                    result = fname;
-                }
-            }
+                        if (result == null)
+                        {
+                            result = fname;
+                        }
+                    }
                 }
             }
             if (rootDir == null)
@@ -331,7 +330,7 @@ namespace HttpGet
             using (var file = new FileStream(path, FileMode.Create, FileAccess.Write))
             {
                 int len = stream.Read(buffer, 0, buffer.Length);
-                while (len > 0) 
+                while (len > 0)
                 {
                     file.Write(buffer, 0, len);
                     length += len;
