@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="Clocks.Controls.TimeEntryBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Clocks.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="24" d:DesignWidth="300">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBox x:Name="Hour" MinWidth="50" TextChanged="OnHourChanged" Padding="0" />
+        <Label Content=":" Grid.Column="1" VerticalAlignment="Center"/>
+        <TextBox x:Name="Minute" Grid.Column="2"  MinWidth="50"  TextChanged="OnMinuteChanged"  Padding="0" />
+        <Label Content=":" Grid.Column="3"  VerticalAlignment="Center"/>
+        <TextBox x:Name="Second" Grid.Column="4"  MinWidth="50"  TextChanged="OnSecondChanged"  Padding="0" />
+        <Popup x:Name="HourPopup" PopupAnimation="Slide" >
+            <Border Background="#F0C0C0">
+                <TextBox x:Name="HourPopupText" MinWidth="50"  Background="#F0C0C0"/>
+            </Border>
+        </Popup>
+        <Popup x:Name="MinutePopup" PopupAnimation="Slide" >
+            <Border Background="#F0C0C0">
+                <TextBox x:Name="MinutePopupText" MinWidth="50"  Background="#F0C0C0"/>
+            </Border>
+        </Popup>
+        <Popup x:Name="SecondPopup" PopupAnimation="Slide" >
+            <Border>
+                <TextBox x:Name="SecondPopupText" MinWidth="50"  Background="#F0C0C0"/>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

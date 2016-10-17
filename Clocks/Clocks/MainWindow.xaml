@@ -1,0 +1,44 @@
+﻿<Window x:Class="Clocks.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Clocks.Controls"
+        mc:Ignorable="d"
+        Title="Clocks" Height="888" Width="1200" Icon="Stopwatch.ico">
+    <Grid Background="Black">
+        
+        <Grid Margin="20">
+            <local:ClockFace x:Name="Face"/>
+            <Label x:Name="Progress" Margin="20">1 of 25</Label>
+
+            <local:TimeEntryBox Margin="20" HorizontalAlignment="Right" VerticalAlignment="Top" x:Name="TimeEntry" FontSize="18"
+                                FontWeight="Bold"/>
+        </Grid>
+
+        <Grid Background="Black" x:Name="StatsPage">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Style="{StaticResource AppBarGrid}" >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="PlayButton"  Grid.Column="0" Style="{StaticResource AppBarButtonStyle}" ToolTip="Play" Click="OnPlay" >&#xE102;</Button>
+                <Button x:Name="PauseButton"  Grid.Column="1" Style="{StaticResource AppBarButtonStyle}" ToolTip="Pause" Click="OnPause">&#xE103;</Button>
+                <Button x:Name="RefreshButton"  Grid.Column="2" Style="{StaticResource AppBarButtonStyle}" ToolTip="Restart" Click="OnClear">&#xE117;</Button>
+            </Grid>
+
+            <local:SessionGraph x:Name="Graph"  Margin="20" Grid.Row="1" Foreground="#503080"/>
+        </Grid>
+    </Grid>
+</Window>
