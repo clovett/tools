@@ -27,7 +27,7 @@ namespace Clocks.Storage
         public Session AddNew()
         {
             Session s = new Session();
-           s.Date = DateTime.Now;
+            s.Date = DateTime.Now;
             History.Add(s);
             OnChanged();
             return s;
@@ -89,11 +89,11 @@ namespace Clocks.Storage
             Times = new List<ulong>();
         }
 
-        public bool Completed { get; set; }
-
         public DateTime Date { get; set; }
 
         public List<ulong> Times { get; set; }
+
+        public int Correct { get; set; }
     }
 
 }

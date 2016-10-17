@@ -17,19 +17,19 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBox x:Name="Hour" MinWidth="50" TextChanged="OnHourChanged" Padding="0" />
+        <TextBox x:Name="Hour" MinWidth="50" TextChanged="OnHourChanged" Padding="0" PreviewKeyDown="OnTextKeyDown" />
         <Label Content=":" Grid.Column="1" VerticalAlignment="Center"/>
-        <TextBox x:Name="Minute" Grid.Column="2"  MinWidth="50"  TextChanged="OnMinuteChanged"  Padding="0" />
+        <TextBox x:Name="Minute" Grid.Column="2"  MinWidth="50"  TextChanged="OnMinuteChanged"  Padding="0" PreviewKeyDown="OnTextKeyDown"/>
         <Label Content=":" Grid.Column="3"  VerticalAlignment="Center"/>
-        <TextBox x:Name="Second" Grid.Column="4"  MinWidth="50"  TextChanged="OnSecondChanged"  Padding="0" />
+        <TextBox x:Name="Second" Grid.Column="4"  MinWidth="50"  TextChanged="OnSecondChanged"  Padding="0" PreviewKeyDown="OnTextKeyDown"/>
         <Popup x:Name="HourPopup" PopupAnimation="Slide" >
             <Border Background="#F0C0C0">
-                <TextBox x:Name="HourPopupText" MinWidth="50"  Background="#F0C0C0"/>
+                <TextBox x:Name="HourPopupText" MinWidth="50"  Background="#F0C0C0" />
             </Border>
         </Popup>
         <Popup x:Name="MinutePopup" PopupAnimation="Slide" >
             <Border Background="#F0C0C0">
-                <TextBox x:Name="MinutePopupText" MinWidth="50"  Background="#F0C0C0"/>
+                <TextBox x:Name="MinutePopupText" MinWidth="50"  Background="#F0C0C0" />
             </Border>
         </Popup>
         <Popup x:Name="SecondPopup" PopupAnimation="Slide" >

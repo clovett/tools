@@ -24,8 +24,7 @@ namespace Clocks
     /// </summary>
     public partial class MainWindow : Window
     {
-        int count = 1;
-        int correct = 0;
+        int count = 0;
         const int TotalQuestions = 25;
         Random rand = new Random();
         Data data;
@@ -66,13 +65,7 @@ namespace Clocks
             }
 
         }
-
-        void Start()
-        {
-            count = 1;
-            ShowNext();
-        }
-
+        
         DateTime answer;
 
         private void ShowNext()
@@ -103,23 +96,36 @@ namespace Clocks
             this.data.Current.Times.Add((ulong)elapsed.TotalMilliseconds);
 
             watch.Reset();
-            DateTime entry = TimeEntry.Time;
-            // normalize the hours.
-            if (entry.Hour == 0)
+
+            bool error = false;
+            if (TimeEntry.Time.HasValue)
             {
-                entry = entry.AddHours(12);
-            }
-            if (answer.Hour == 0)
-            {
-                answer = answer.AddHours(12);
-            }
-            if (entry == answer)
-            {
-                correct++;
-                TimeEntry.Correct();
+                DateTime entry = TimeEntry.Time.Value;
+                // normalize the hours.
+                if (entry.Hour == 0)
+                {
+                    entry = entry.AddHours(12);
+                }
+                if (answer.Hour == 0)
+                {
+                    answer = answer.AddHours(12);
+                }
+                if (entry == answer)
+                {
+                    data.Current.Correct++;
+                    TimeEntry.Correct();
+                }
+                else
+                {
+                    error = true;
+                }
             }
             else
             {
+                error = true;
+            }
+            if (error)
+            { 
                 // show error.
                 TimeEntry.ShowError(answer);
             }
@@ -131,6 +137,7 @@ namespace Clocks
 
         private void OnPlay(object sender, RoutedEventArgs e)
         {
+            count = 0;
             if (data.Current == null)
             {
                 if (data.History.Count > 0)
@@ -148,8 +155,8 @@ namespace Clocks
                 }
             }
             paused = false;
-            StatsPage.Visibility = Visibility.Collapsed;
-            Start();
+            Graph.Visibility = Visibility.Collapsed;
+            ShowNext();
         }
 
         private void OnPause(object sender, RoutedEventArgs e)
@@ -160,7 +167,8 @@ namespace Clocks
         void Pause()
         {
             paused = true;
-            StatsPage.Visibility = Visibility.Visible;
+            TimeEntry.HidePopups();
+            Graph.Visibility = Visibility.Visible;
             Graph.Data = data;
         }
 

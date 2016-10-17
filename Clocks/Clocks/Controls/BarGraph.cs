@@ -302,8 +302,7 @@ namespace Clocks.Controls
                 animation.To = h;
                 animation.Duration = new Duration(BarAnimationTime);
                 animation.Completed += new EventHandler(OnAnimationCompleted);
-                bar.BeginAnimation(Rectangle.HeightProperty, animation);
-                Debug.WriteLine("animate {0} to height {1}", bar.GetHashCode(), h);
+                bar.BeginAnimation(Rectangle.HeightProperty, animation);                
             }
         }
 

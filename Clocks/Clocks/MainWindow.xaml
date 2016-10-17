@@ -6,17 +6,8 @@
         xmlns:local="clr-namespace:Clocks.Controls"
         mc:Ignorable="d"
         Title="Clocks" Height="888" Width="1200" Icon="Stopwatch.ico">
-    <Grid Background="Black">
         
-        <Grid Margin="20">
-            <local:ClockFace x:Name="Face"/>
-            <Label x:Name="Progress" Margin="20">1 of 25</Label>
-
-            <local:TimeEntryBox Margin="20" HorizontalAlignment="Right" VerticalAlignment="Top" x:Name="TimeEntry" FontSize="18"
-                                FontWeight="Bold"/>
-        </Grid>
-
-        <Grid Background="Black" x:Name="StatsPage">
+        <Grid Background="Black">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -38,7 +29,14 @@
                 <Button x:Name="RefreshButton"  Grid.Column="2" Style="{StaticResource AppBarButtonStyle}" ToolTip="Restart" Click="OnClear">&#xE117;</Button>
             </Grid>
 
-            <local:SessionGraph x:Name="Graph"  Margin="20" Grid.Row="1" Foreground="#503080"/>
+            <Grid Margin="20" Grid.Row="1">
+                <local:ClockFace x:Name="Face"/>
+                <Label x:Name="Progress" Margin="20">1 of 25</Label>
+
+                <local:TimeEntryBox Margin="20" HorizontalAlignment="Right" VerticalAlignment="Top" x:Name="TimeEntry" FontSize="18"
+                                FontWeight="Bold"/>
+            </Grid>
+
+            <local:SessionGraph x:Name="Graph"  Margin="20" Grid.Row="1" Foreground="#503080" Background="Black"/>
         </Grid>
-    </Grid>
 </Window>
