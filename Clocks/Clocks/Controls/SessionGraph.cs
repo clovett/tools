@@ -15,7 +15,6 @@ namespace Clocks.Controls
     public partial class SessionGraph : BarGraph
     {
         Data data;
-        bool updating = false;
 
         public SessionGraph()
         {
@@ -55,54 +54,82 @@ namespace Clocks.Controls
             this.Clear();
             foreach (Session session in data.History)
             {
-                BarSeries s = AddSeries(session);
+                StackedBar s = AddSeries(session);
                 UpdateSeries(session, s);
             }
             this.InvalidateArrange();
         }
 
-        public BarSeries AddSeries(Session session)
+        public StackedBar AddSeries(Session session)
         {
-            BarSeries bar = base.AddSeries(session.Times.Count);
+            StackedBar bar = base.AddSeries(2);
             bar.UserData = session;
-            bar.Changed += new EventHandler(OnBarChanged);
             return bar;
         }
 
-        void UpdateSeries(Session data, BarSeries series)
+        void UpdateSeries(Session data, StackedBar series)
         {
-            updating = true;
             series.Clear();
             series.BeginUpdate();
-            foreach (ulong time in data.Times)
+
+            List<Test> correct = new List<Test>(from t in data.Times
+                                                where t.Answer == t.Entry
+                                                select t);
+            double totalCorrectMs = (from t in correct select (double)t.ElapsedMilliseconds).Sum();
+
+            List<Test> errors = new List<Test>(from t in data.Times
+                                               where t.Answer != t.Entry
+                                               select t);
+            double totalIncorrectMs = (from t in errors select (double)t.ElapsedMilliseconds).Sum();
+
+            series.AddDataValue(new Controls.DataValue()
             {
-                series.AddDataPoint(time);
-            }
+                Value = totalCorrectMs,
+                Color = ColorFromBrush(GoodBrush),
+                Tooltip = correct.Count + " good answers in " + TimeSpan.FromSeconds((long)(totalCorrectMs / 1000)).ToString()
+                 + " for a total time of " + TimeSpan.FromSeconds((long)((totalCorrectMs + totalIncorrectMs )/ 1000)).ToString()
+            });
+            series.AddDataValue(new Controls.DataValue()
+            {
+                Value = totalIncorrectMs,
+                Color = ColorFromBrush(ErrorBrush),
+                Tooltip = errors.Count + " wrong answers in " + TimeSpan.FromSeconds((long)(totalIncorrectMs / 1000)).ToString()
+            });
             series.EndUpdate();
-            updating = false;
-            OnBarChanged(series, EventArgs.Empty);
         }
 
-        void OnBarChanged(object sender, EventArgs e)
+        public Color ColorFromBrush(Brush brush)
         {
-            if (!updating)
+            SolidColorBrush solidBrush = brush as SolidColorBrush;
+            if (solidBrush != null)
             {
-                BarSeries bar = (BarSeries)sender;
-                Session session = (Session)bar.UserData;
-                bar.Bar.Fill = this.Foreground;
+                return solidBrush.Color;
             }
+            return Colors.White;
         }
 
 
-        public Brush Foreground
+        public Brush GoodBrush
         {
-            get { return (Brush)GetValue(ForegroundProperty); }
-            set { SetValue(ForegroundProperty, value); }
+            get { return (Brush)GetValue(GoodBrushProperty); }
+            set { SetValue(GoodBrushProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Foreground.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ForegroundProperty =
-            DependencyProperty.Register("Foreground", typeof(Brush), typeof(SessionGraph), new PropertyMetadata(Brushes.White));
+        public static readonly DependencyProperty GoodBrushProperty =
+            DependencyProperty.Register("GoodBrush", typeof(Brush), typeof(SessionGraph), new PropertyMetadata(Brushes.White));
+
+
+
+        public Brush ErrorBrush
+        {
+            get { return (Brush)GetValue(ErrorBrushProperty); }
+            set { SetValue(ErrorBrushProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Foreground.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ErrorBrushProperty =
+            DependencyProperty.Register("ErrorBrush", typeof(Brush), typeof(SessionGraph), new PropertyMetadata(Brushes.Red));
 
 
     }

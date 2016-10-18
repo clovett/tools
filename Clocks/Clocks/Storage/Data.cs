@@ -27,7 +27,7 @@ namespace Clocks.Storage
         public Session AddNew()
         {
             Session s = new Session();
-            s.Date = DateTime.Now;
+            s.StartDate = DateTime.Now;
             History.Add(s);
             OnChanged();
             return s;
@@ -86,14 +86,35 @@ namespace Clocks.Storage
     {
         public Session()
         {
-            Times = new List<ulong>();
+            Times = new List<Test>();
         }
 
-        public DateTime Date { get; set; }
+        public DateTime StartDate { get; set; }
 
-        public List<ulong> Times { get; set; }
+        public List<Test> Times { get; set; }
 
         public int Correct { get; set; }
+    }
+
+    public class Test
+    {
+        /// <summary>
+        /// The correct time shown on the clock
+        /// </summary>
+        [XmlAttribute]
+        public DateTime Answer { get; set; }
+
+        /// <summary>
+        /// The user's attempt
+        /// </summary>
+        [XmlAttribute]
+        public DateTime Entry { get; set; }
+
+        /// <summary>
+        /// How long it took to get this answer
+        /// </summary>
+        [XmlAttribute]
+        public ulong ElapsedMilliseconds { get; set; }
     }
 
 }

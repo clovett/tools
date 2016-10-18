@@ -57,6 +57,13 @@ namespace Clocks
             try
             {
                 data = Data.LoadData();
+                foreach (var session in data.History.ToArray())
+                {
+                    if (session.Times.Count == 0)
+                    {
+                        data.History.Remove(session);
+                    }
+                }
                 Graph.Data = data;
             }
             catch (Exception ex)
@@ -83,7 +90,9 @@ namespace Clocks
             {
                 count++;
                 var now = DateTime.Now;
-                Face.Time = answer = new DateTime(now.Year, now.Month, now.Day, rand.Next(0, 12), rand.Next(0, 60), rand.Next(0, 60));
+                answer = new DateTime(now.Year, now.Month, now.Day, rand.Next(1, 13), rand.Next(0, 60), rand.Next(0, 60));
+                Face.Time = answer;
+
                 Progress.Content = count + " of " + TotalQuestions;
                 TimeEntry.Reset();
                 watch.Start();
@@ -93,23 +102,20 @@ namespace Clocks
         {
             watch.Stop();
             TimeSpan elapsed = watch.Elapsed;
-            this.data.Current.Times.Add((ulong)elapsed.TotalMilliseconds);
-
             watch.Reset();
 
             bool error = false;
+
+            Test record = new Test()
+            {
+                Answer = answer,
+                ElapsedMilliseconds = (ulong)elapsed.TotalMilliseconds
+            };
+
             if (TimeEntry.Time.HasValue)
             {
                 DateTime entry = TimeEntry.Time.Value;
-                // normalize the hours.
-                if (entry.Hour == 0)
-                {
-                    entry = entry.AddHours(12);
-                }
-                if (answer.Hour == 0)
-                {
-                    answer = answer.AddHours(12);
-                }
+                record.Entry = entry;
                 if (entry == answer)
                 {
                     data.Current.Correct++;
@@ -124,6 +130,9 @@ namespace Clocks
             {
                 error = true;
             }
+
+            this.data.Current.Times.Add(record);
+
             if (error)
             { 
                 // show error.

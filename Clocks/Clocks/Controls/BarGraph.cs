@@ -10,9 +10,18 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Windows.Foundation;
+using System.Windows.Input;
 
 namespace Clocks.Controls
 {
+    public class DataValue
+    {
+        public double Value { get; set; }
+
+        public Color Color { get; set; }
+
+        public string Tooltip { get; set; }
+    }
 
     /// <summary>
     /// Interaction logic for BarGraph.xaml
@@ -20,8 +29,7 @@ namespace Clocks.Controls
     public partial class BarGraph : Canvas
     {
         int columnWidth = 20;
-        bool showLevels;
-        List<BarSeries> series = new List<BarSeries>();
+        List<StackedBar> series = new List<StackedBar>();
         Size size;
 
         public BarGraph()
@@ -44,13 +52,12 @@ namespace Clocks.Controls
         /// <summary>
         /// Add a series to the graph, each series represents one bar in the graph
         /// </summary>
-        /// <param name="capacity">The total number of data points you will add to this series</param>
-        public BarSeries AddSeries(int capacity)
+        /// <param name="capacity">The total number of DataValues you will add to this series</param>
+        public StackedBar AddSeries(int capacity)
         {
-            var s = new BarSeries(capacity);
+            var s = new StackedBar(capacity);
             s.Changed += new EventHandler(OnBarChanged);
-            this.Children.Add(s.Bar);
-            this.Children.Add(s.Level);
+            this.Children.Add(s);
             series.Add(s);
             this.size = new Size(ActualWidth, ActualHeight);
             OnScaleChanged();
@@ -59,26 +66,24 @@ namespace Clocks.Controls
 
         void OnBarChanged(object sender, EventArgs e)
         {
-            OnLevelChanged();
-            BarSeries bar = (BarSeries)sender;
-            if (bar.AvailableHeight != 0)
+            StackedBar bar = (StackedBar)sender;
+            if (bar.Height != 0)
             {
-                if (bar.Height > bar.MaxHeight)
+                if (bar.Sum * bar.YScale > bar.Height)
                 {
                     this.size = new Size(this.ActualWidth, this.ActualHeight);
                     OnScaleChanged();
                 }
                 else
                 {
-                    bar.Animate(bar.AvailableHeight, bar.MaxHeight);
+                    bar.Animate();
                 }
             }
         }
 
-        public void RemoveSeries(BarSeries bar)
+        public void RemoveSeries(StackedBar bar)
         {
-            this.Children.Remove(bar.Bar);
-            this.Children.Remove(bar.Level);
+            this.Children.Remove(bar);
             series.Remove(bar);
         }
 
@@ -86,22 +91,11 @@ namespace Clocks.Controls
         {
             foreach (var s in this.series)
             {
-                this.Children.Remove(s.Bar);
-                this.Children.Remove(s.Level);
+                this.Children.Remove(s);
             }
             this.series.Clear();
         }
-
-        double SumOf(int n)
-        {
-            double r = 0;
-            for (int i = 0; i <= n; i++)
-            {
-                r += i;
-            }
-            return r;
-        }
-
+        
         public HorizontalAlignment HorizontalContentAlignment
         {
             get
@@ -129,8 +123,13 @@ namespace Clocks.Controls
             
             for (int i = 0; i < n; i++)
             {
-                BarSeries bar = this.series[i];
-                max = Math.Max(max, bar.Height);
+                StackedBar bar = this.series[i];
+                max = Math.Max(max, bar.Sum);
+            }
+
+            if (max == 0)
+            {
+                return;
             }
 
             double width = columnWidth - 2;
@@ -139,13 +138,13 @@ namespace Clocks.Controls
             double x = 0;
             for (int i = 0; i < n; i++)
             {
-                BarSeries bar = this.series[i];
-                Rectangle r = bar.Bar;
-                r.Width = width;
-                r.Height = bar.Height * scale;
-                Canvas.SetLeft(r, x);
-                Canvas.SetTop(r, s.Height);
-                bar.Animate(s.Height, max);
+                StackedBar bar = this.series[i];
+                bar.Width = width;
+                bar.Height = s.Height;
+                bar.YScale = scale;
+                Canvas.SetLeft(bar, x);
+                Canvas.SetTop(bar, 0);
+                bar.Animate();
                 x += columnWidth;
             }
 
@@ -169,56 +168,13 @@ namespace Clocks.Controls
                 {
                     for (int i = 0; i < n; i++)
                     {
-                        BarSeries bar = this.series[i];
-                        Rectangle r = bar.Bar;
-                        Canvas.SetLeft(r, Canvas.GetLeft(r) + alignment);
+                        StackedBar bar = this.series[i];
+                        Canvas.SetLeft(bar, Canvas.GetLeft(bar) + alignment);
                     }
                 }
             }
         }
-
-        public bool ShowLevels
-        {
-            get
-            {
-                return this.showLevels;
-            }
-            set
-            {
-                this.showLevels = value;
-                if (!value)
-                    HideLevels();
-            }
-        }
-
-        // The last column is adding data, so show where corresponding location is on other columns
-        public void OnLevelChanged()
-        {
-            if (!ShowLevels)
-                return;
-            int n = this.series.Count;
-            Size s = this.RenderSize;
-            if (s == Size.Empty || s.Width == 0 || s.Height == 0 || double.IsInfinity(s.Width) || double.IsInfinity(s.Height) || n == 0)
-            {
-                return; // not ready yet.
-            }
-            BarSeries lastSeries = this.series[n - 1];
-            int points = lastSeries.Count;
-            for (int i = 0; i < n - 1; i++)
-            {
-                BarSeries bar = this.series[i];
-                bar.SetLevel(points);
-            }
-        }
-
-        void HideLevels()
-        {
-            foreach (BarSeries bar in this.series)
-            {
-                bar.Level.Height = 0;
-            }
-        }
-
+        
         void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             this.size = e.NewSize;
@@ -229,33 +185,29 @@ namespace Clocks.Controls
     }
 
     /// <summary>
-    /// A BarSeries is one bar in the BarGraph which is the sum of all the given data points that make up the bar.
-    /// The bar will grow as data points are added to this series.  The BarGraph can also animate side by side
-    /// the relative position in two bars so you can see where you are in the new series relative to previous series.
+    /// A StackedBar is one bar in the BarGraph which stacks a bunch of datavalues in the bar showing the color of each. 
     /// </summary>
-    public class BarSeries
+    public class StackedBar : UserControl
     {
-        List<double> data = new List<double>();
+        List<DataValue> data = new List<DataValue>();
         Rectangle bar;
         double sum;
-        Rectangle level;
         int capacity;
         bool updating;
+        ToolTip tip;
         public event EventHandler Changed;
 
-        public BarSeries(int capacity)
-        {
+        public StackedBar(int capacity)
+        {            
             this.capacity = capacity;
-            bar = new Rectangle();            
-            level = new Rectangle()
-            {
-                Fill = Brushes.White
+            bar = new Rectangle();  
+            this.tip = new ToolTip() {
+                Background = Brushes.DarkSlateBlue,
+                Placement = System.Windows.Controls.Primitives.PlacementMode.Mouse
             };
-            bar.RenderTransform = new ScaleTransform()
-            {
-                ScaleX = 1,
-                ScaleY = -1
-            }; // flip it vertically.
+            bar.VerticalAlignment = VerticalAlignment.Bottom;
+            bar.ToolTip = this.tip;
+            this.Content = bar;
         }
 
         public void Clear()
@@ -265,16 +217,58 @@ namespace Clocks.Controls
             OnDataChanged();
         }
 
-        public void AddDataPoint(double y)
+        public void AddDataValue(DataValue d)
         {
-            data.Add(y);
-            sum += y;
+            data.Add(d);
+            sum += d.Value;
             if (!updating)
             {
                 OnDataChanged();
             }
-            TimeSpan elapsed = TimeSpan.FromSeconds((long)(sum / 1000));
-            bar.ToolTip = new ToolTip() { Content = elapsed.ToString(), Background = Brushes.DarkSlateBlue };
+
+            CreateGradientBrush();
+        }
+
+        void CreateGradientBrush()
+        { 
+            LinearGradientBrush brush = new LinearGradientBrush();
+            brush.StartPoint = new Point(0, 0);
+            brush.EndPoint = new Point(0, 1);
+            double offset = 0;
+            for (int i = 0, n = data.Count; i < n; i++)
+            {
+                var d = data[i];
+                brush.GradientStops.Add(new GradientStop(d.Color, offset));
+                offset += d.Value / Sum;
+                brush.GradientStops.Add(new GradientStop(d.Color, offset));
+            }
+            bar.Fill = brush;
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            Point pos = e.GetPosition(this);
+            double my = pos.Y;
+            double y = this.Height;
+            DataValue hit = null;
+            for (int i = data.Count - 1; i >= 0; i--)
+            {
+                DataValue d = data[i];
+                double y2 = y - (d.Value * this.YScale);
+                if (my <= y && my >= y2)
+                {
+                    hit = d;
+                    break;
+                }
+                y = y2;
+            }
+            if (hit != null)
+            {
+                tip.Background = new SolidColorBrush(hit.Color);
+                tip.Content = hit.Tooltip;
+            }
+
+            base.OnMouseMove(e);
         }
 
         public int Count
@@ -284,22 +278,23 @@ namespace Clocks.Controls
                 return data.Count;
             }
         }
+
+        public double YScale { get; set; }
         
         public static TimeSpan BarAnimationTime = TimeSpan.FromSeconds(1);
 
-        public void Animate(double availableHeight, double max)
+
+        public void Animate()
         {
-            this.AvailableHeight = availableHeight;
-            this.MaxHeight = max;
-            if (this.Height != 0)
+            if (this.Sum != 0)
             {
-                double h = (availableHeight * this.Height) / max;
-                double current = bar.Height;
-                if (double.IsNaN(current))
-                    current = 0;
+                bar.Width = this.Width;
+                bar.Height = this.sum * this.YScale;
+                double h = this.Sum * this.YScale;
                 DoubleAnimation animation = new DoubleAnimation();
                 animation.From = 0;
                 animation.To = h;
+                Debug.WriteLine("Animating bar to height {0} from StackedBar of height {1}", h, this.Height);
                 animation.Duration = new Duration(BarAnimationTime);
                 animation.Completed += new EventHandler(OnAnimationCompleted);
                 bar.BeginAnimation(Rectangle.HeightProperty, animation);                
@@ -315,53 +310,12 @@ namespace Clocks.Controls
             OnChanged();
         }
 
-        public double Height
+        public double Sum
         {
             get
             {
                 return sum;
             }
-        }
-
-        public Rectangle Bar
-        {
-            get
-            {
-                return bar;
-            }
-        }
-
-        public Rectangle Level
-        {
-            get
-            {
-                return level;
-            }
-        }
-
-        // space available for all bars
-        public double AvailableHeight { get; set; }
-
-        // max height of all bars used to scale this bar.
-        public double MaxHeight { get; set; }
-
-        public void SetLevel(int position)
-        {
-            level.Width = this.bar.Width;
-            level.Height = 2;
-            double y = GetHeightAt(position);
-            Canvas.SetLeft(this.level, Canvas.GetLeft(this.bar));
-            Canvas.SetTop(this.level, this.AvailableHeight - (this.AvailableHeight * y) / this.MaxHeight);
-        }
-
-        double GetHeightAt(int position)
-        {
-            double height = 0;
-            for (int i = 0, n = data.Count; i < position && i < n; i++)
-            {
-                height += data[i];
-            }
-            return height;
         }
 
         void OnChanged()
@@ -384,7 +338,7 @@ namespace Clocks.Controls
             updating = false;
             OnDataChanged();
         }
-
+        
     }
 
 }

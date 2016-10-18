@@ -33,7 +33,6 @@
     <SupportUrl>http://www.lovettsoftware.com</SupportUrl>
     <ProductName>Clocks</ProductName>
     <PublisherName>Lovett Software</PublisherName>
-    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <ApplicationRevision>6</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>

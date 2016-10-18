@@ -37,6 +37,7 @@
                                 FontWeight="Bold"/>
             </Grid>
 
-            <local:SessionGraph x:Name="Graph"  Margin="20" Grid.Row="1" Foreground="#503080" Background="Black"/>
+            <local:SessionGraph x:Name="Graph"  Margin="20" Grid.Row="1" GoodBrush="#503080" Background="Black"
+                                ErrorBrush="#903040"/>
         </Grid>
 </Window>

@@ -73,6 +73,10 @@ namespace Clocks.Controls
         {
             int i = 0;
             int.TryParse(Hour.Text, out i);
+            if (i == 0)
+            {
+                i = 12;
+            }
             return i;
         }
         int GetMinute()
@@ -138,7 +142,7 @@ namespace Clocks.Controls
                 int h = GetHour();
                 int m = GetMinute();
                 int s = GetSecond();
-                if (h <= 12 && h >= 0 && m >= 0 && m < 60 && s >= 0 && s < 60)
+                if (h <= 12 && h > 0 && m >= 0 && m < 60 && s >= 0 && s < 60)
                 {
                     return new DateTime(now.Year, now.Month, now.Day, h, m, s);
                 }
