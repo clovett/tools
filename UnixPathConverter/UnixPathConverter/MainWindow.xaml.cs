@@ -45,11 +45,15 @@ namespace UnixPathConverter
 
         private void UpdateWindowsPath(string unixPath)
         {
-            string windowsPath = unixPath.Replace('/', '\\');
-            if (windowsPath.Length > 2 && windowsPath[0] == '\\' && windowsPath[2] == '\\')
+            string[] parts = unixPath.Split('/');
+            string windowsPath = "";
+            int offset = 0;
+            if (parts.Length > 2 && parts[0] == "" && parts[1] == "mnt")
             {
-                windowsPath = windowsPath[1] + ":" + windowsPath.Substring(2);
+                offset = 3;
+                windowsPath = parts[2] + ":\\";
             }
+            windowsPath += string.Join("\\", parts, offset, parts.Length - offset);
             programaticChange = true;
             WindowsPath.Text = windowsPath;
             programaticChange = false;
@@ -60,7 +64,7 @@ namespace UnixPathConverter
             string unixpath = windowsPath.Replace('\\', '/');
             if (unixpath.Length > 1 && unixpath[1] == ':')
             {
-                unixpath = "/" + unixpath[0] + "/" + unixpath.Substring(3);
+                unixpath = "/mnt/" + unixpath[0] + "/" + unixpath.Substring(3);
             }
             programaticChange = true;
             UnixPath.Text = unixpath;
