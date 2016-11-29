@@ -85,9 +85,63 @@ namespace CIncludeGraph
                     ProcessFile(file);
                 }
             }
+            DivideLargeGroups();
 
             graph.Save("includes.dgml");
             Console.WriteLine("Generated 'includes.dgml'");
+        }
+
+        private void DivideLargeGroups()
+        {
+            foreach (var node in graph.Nodes)
+            {
+                if (node.IsGroup)
+                {
+                    if (node.OutgoingLinkCount > 30)
+                    {
+                        SubdivideGroup(node);
+                    }
+                }
+            }
+        }
+
+        private void SubdivideGroup(GraphNode node)
+        {
+            string path = node.Id.ToString();
+
+            using (var scope = graph.BeginUpdate(new object(), "", UndoOption.Disable))
+            {
+                foreach (var link in node.OutgoingLinks.ToArray())
+                {
+                    if (link.IsContainment)
+                    {
+                        GraphNode source = link.Source;
+                        GraphNode target = link.Target;
+                        string childPath = target.Id.ToString();
+                        if (childPath.StartsWith(path, StringComparison.OrdinalIgnoreCase))
+                        {
+                            string tail = childPath.Substring(path.Length);
+                            string[] parts = tail.Split(new char[] { '\\' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length > 1)
+                            {
+                                link.Remove();
+                                string newGroup = parts[0];
+                                string groupId = Path.Combine(path, newGroup);
+                                GraphNode groupNode = graph.Nodes.Get(groupId);
+                                if (groupNode == null)
+                                {
+                                    groupNode = graph.Nodes.GetOrCreate(groupId, newGroup, null);
+                                    groupNode.SetValue<GraphGroupStyle>(GraphCommonSchema.Group, GraphGroupStyle.Expanded);
+                                    // nest the new group
+                                    graph.Links.GetOrCreate(source, groupNode, "", GraphCommonSchema.Contains);
+                                }
+                                graph.Links.GetOrCreate(groupNode, target, "", GraphCommonSchema.Contains);
+                            }
+                        }
+                    }
+                }
+                scope.Complete();
+            }
         }
 
         private void ProcessFile(string file)
@@ -148,6 +202,7 @@ namespace CIncludeGraph
             Uri baseUri = new Uri(file);
             string rel = sb.ToString();
             string resolved = null;
+            string group = "root";
             if (!ResolveUri(baseUri, rel, out resolved))
             {
                 // use include paths to find it.
@@ -160,12 +215,40 @@ namespace CIncludeGraph
                     }
                 }
             }
-
             if (resolved != null)
             {
-                GraphNode source = graph.Nodes.GetOrCreate(file, Path.GetFileName(file), null);
-                GraphNode target = graph.Nodes.GetOrCreate(resolved, Path.GetFileName(resolved), null);
-                graph.Links.GetOrCreate(source, target);
+
+                // see if we are IN one of the include paths...
+                foreach (string path in includePaths)
+                {
+                    if (resolved.StartsWith(path))
+                    {
+                        // pick the longest one (closest match)
+                        if (group == "root" || path.Length > group.Length)
+                        {
+                            group = path;
+                        }
+                    }
+                }
+
+                using (var scope = graph.BeginUpdate(new object(), "", UndoOption.Disable))
+                {
+                    GraphNode source = graph.Nodes.GetOrCreate(file, Path.GetFileName(file), null);
+                    GraphNode target = graph.Nodes.GetOrCreate(resolved, Path.GetFileName(resolved), null);
+                    graph.Links.GetOrCreate(source, target);
+
+                    if (group != null)
+                    {
+                        var groupNode = graph.Nodes.Get(group);
+                        if (groupNode == null)
+                        {
+                            groupNode = graph.Nodes.GetOrCreate(group, group, null);
+                            groupNode.SetValue<GraphGroupStyle>(GraphCommonSchema.Group, GraphGroupStyle.Expanded);
+                        }
+                        graph.Links.GetOrCreate(groupNode, target, "", GraphCommonSchema.Contains);
+                    }
+                    scope.Complete();
+                }
                 stack.Enqueue(resolved);
             }
             else
