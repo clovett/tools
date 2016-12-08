@@ -126,7 +126,8 @@ namespace dumphex
                 }
                 total += lineLength;
 
-                for (int j = 0; j < lineLength; j++)
+                int j = 0;
+                for (j = 0; j < lineLength; j++)
                 {
                     if (j > 0)
                     {
@@ -136,9 +137,14 @@ namespace dumphex
                     Console.Write(b.ToString("x2"));
                 }
 
+                while (j++ < 16)
+                {
+                    Console.Write("   ");
+                }
+
                 Console.Write("  ");
 
-                for (int j = 0; j < lineLength; j++)
+                for (j = 0; j < lineLength; j++)
                 {
                     byte b = line[j];
                     char c = Convert.ToChar(b);
