@@ -10,7 +10,6 @@ namespace RemoveBOM
     class Program
     {
         List<string> files = new List<string>();
-        bool toWin;
 
         static void Main(string[] args)
         {
@@ -58,36 +57,45 @@ namespace RemoveBOM
                         int len = input.Read(buffer, 0, bufsize);
                         while (len > 0)
                         {
+                            int start = 0;
                             if (first)
                             {
                                 if (len >= 3 && buffer[0] == 0xef && buffer[1] == 0xbb  && buffer[2] == 0xbf)
                                 {
                                     message = "removed UTF8 byte order mark (0xef 0xbb 0xbf)";
-                                    len += 3;
+                                    start += 3;
                                 }
                                 else if (len >= 2 && buffer[0] == 0xfe && buffer[1] == 0xff)
                                 {
                                     message = "removed big endian UTF-16 byte oder mark (0xfe 0xff)";
-                                    len += 2;
+                                    start += 2;
                                 }
                                 else if (len >= 2 && buffer[0] == 0xff && buffer[1] == 0xfe)
                                 {
                                     message = "removed little endian UTF-16 byte oder mark (0xff 0xfe)";
-                                    len += 2;
+                                    start += 2;
                                 }
                                 else if (len >= 4 && buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xfe && buffer[3] == 0xff)
                                 {
                                     message = "removed big endian UTF-32 byte oder mark (0x00 0x00 0xfe 0xff)";
-                                    len += 4;
+                                    start += 4;
                                 }
                                 else if (len >= 4 && buffer[0] == 0x00 && buffer[1] == 0x00 && buffer[2] == 0xff && buffer[3] == 0xfe)
                                 {
                                     message = "removed big endian UTF-32 byte oder mark (0x00 0x00 0xff 0xfe)";
-                                    len += 4;
+                                    start += 4;
                                 }
-                                removed = (len > 0);
+                                removed = (start > 0);
                                 first = false;
                             }
+
+                            if (buffer[len-1] == '\0' && buffer[len - 2] == '\0' && buffer[len - 3] == '\0')
+                            {
+                                len -= 3;
+                            }
+
+                            output.Write(buffer, start, len - start);
+
                             len = input.Read(buffer, 0, bufsize);
                         }
                     }
