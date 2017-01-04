@@ -97,6 +97,7 @@ namespace Microsoft.Storage
                 {
                     XmlSerializer mySerializer = new XmlSerializer(typeof(T));
                     mySerializer.Serialize(stream, data);
+                    stream.SetLength(stream.Position);
                 }
             }
             catch (Exception e)
