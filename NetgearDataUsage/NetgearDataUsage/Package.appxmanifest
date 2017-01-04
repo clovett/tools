@@ -26,5 +26,6 @@
     <Capability Name="internetClient" />
     <Capability Name="internetClientServer" />
     <Capability Name="privateNetworkClientServer" />
+    <uap:Capability Name="removableStorage" />
   </Capabilities>
 </Package>

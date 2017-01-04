@@ -33,9 +33,12 @@ namespace NetgearDataUsage.Controls
             this.InitializeComponent();
             this.SizeChanged += BarGraph_SizeChanged;
             this.AnimationTime = TimeSpan.FromMilliseconds(100);
+            this.LastAnimationTime = TimeSpan.FromMilliseconds(1000);
         }
 
         public TimeSpan AnimationTime { get; set; }
+
+        public TimeSpan LastAnimationTime { get; set; }
 
         private void BarGraph_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -115,6 +118,7 @@ namespace NetgearDataUsage.Controls
 
             if (animate)
             {
+                Rectangle last = BarGrid.Children.LastOrDefault() as Rectangle;
                 foreach (Rectangle bar in BarGrid.Children)
                 {
                     DoubleAnimation grow = new DoubleAnimation();
@@ -122,7 +126,14 @@ namespace NetgearDataUsage.Controls
                     grow.From = 0;
                     grow.To = bar.Height;
                     bar.Height = 0;
-                    grow.Duration = new Windows.UI.Xaml.Duration(AnimationTime);
+                    if (bar == last)
+                    {
+                        grow.Duration = new Windows.UI.Xaml.Duration(LastAnimationTime);
+                    }
+                    else
+                    {
+                        grow.Duration = new Windows.UI.Xaml.Duration(AnimationTime);
+                    }
                     bar.BeginAnimation(grow, "Height");
                     await Task.Delay(30);
                 }

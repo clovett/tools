@@ -11,6 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -29,8 +32,8 @@ namespace NetgearDataUsage
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        static string RouterTrafficMeterUri = "http://192.168.1.1/traffic_meter.htm";
         TrafficMeter model;
+        StorageFile file;
 
         public MainPage()
         {
@@ -40,17 +43,46 @@ namespace NetgearDataUsage
 
         private async void OnPageLoaded(object sender, RoutedEventArgs e)
         {
-            model = await TrafficMeter.LoadAsync();
+            StorageFile file = null;
+            string fileName = Settings.Instance.FileName;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                file = (StorageFile)(await Windows.Storage.ApplicationData.Current.LocalFolder.TryGetItemAsync("data.xml"));
+            }
+            else
+            {
+                // get access to this file again using the saved token.
+                if (Settings.Instance.FileAccessToken != null)
+                {
+                    file = await StorageApplicationPermissions.FutureAccessList.GetFileAsync(Settings.Instance.FileAccessToken);
+                }
+                else
+                {
+                    file = await StorageFile.GetFileFromPathAsync(fileName);
+                }
+                if (file == null)
+                {
+                    ShowStatus(string.Format("Cannot find file, or we lost permission to access it: '{0}'", fileName));
+                }
+            }
 
+            await LoadModel(file);
+        }
+
+        private async Task LoadModel(StorageFile file)
+        {
+            model = await TrafficMeter.LoadAsync(file);
+            this.file = file;
             await GetTrafficMeter(null);
         }
 
         private async void UpdateModel(string html)
         {
             model.ScrapeDataFromHtmlPage(html);
-            await model.SaveAsync();
+            await model.SaveAsync(this.file);
 
             var today = model.GetRow(DateTime.Today);
+
             ShowStatus("Today: upload=" + today.Upload + ", download=" + today.Download );
 
             ShowGraph(model);
@@ -62,7 +94,7 @@ namespace NetgearDataUsage
             List<DailyTraffic> rows = new List<Model.DailyTraffic>();
             var today = DateTime.Today;
 
-            double max = 1024000; // 1024 gigabytes.
+            double max = Settings.Instance.TargetUsage * 1000; // 1024 gigabytes.
             List<double> values = new List<double>();
 
             var start = new DateTime(today.Year, today.Month, 1);
@@ -96,7 +128,7 @@ namespace NetgearDataUsage
 
                 if (credential == null)
                 {
-                    credential = WebCredential.LoadCredential(RouterTrafficMeterUri);
+                    credential = WebCredential.LoadCredential(Settings.Instance.TrafficMeterUri);
                 }
                 
                 HttpClient client = new HttpClient();
@@ -112,7 +144,7 @@ namespace NetgearDataUsage
                     client.DefaultRequestHeaders.Add("Authorization", "Basic " + base64String);
                 }
 
-                HttpResponseMessage response = await client.GetAsync(RouterTrafficMeterUri);
+                HttpResponseMessage response = await client.GetAsync(Settings.Instance.TrafficMeterUri);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     byte[] data = await response.Content.ReadAsByteArrayAsync();
@@ -200,7 +232,7 @@ namespace NetgearDataUsage
 
         private void PromptForCredentials(string realm, WebCredential credentials)
         {
-            Flyout flyout = new Flyout();
+            Flyout flyout = new Flyout();            
             var panel = new LoginPanel();
             panel.Height = this.Height;
             panel.Width = 400;
@@ -242,14 +274,68 @@ namespace NetgearDataUsage
             {
                 WebCredential credential = new Model.WebCredential()
                 {
-                    Uri = RouterTrafficMeterUri,
+                    Uri = Settings.Instance.TrafficMeterUri,
                     UserName = panel.UserName,
                     Password = panel.Password,
                     RememberCredentials = panel.RememberCredentials
                 };
 
-                UiDispatcher.RunOnUIThread(() => GetTrafficMeter(credential));
+                UiDispatcher.RunOnUIThread(() => { var nowait = GetTrafficMeter(credential); });
             }
+        }
+
+        private async void OnOpenFile(object sender, RoutedEventArgs e)
+        {
+            FileOpenPicker fo = new FileOpenPicker();
+            fo.ViewMode = PickerViewMode.Thumbnail;
+            fo.FileTypeFilter.Add(".xml");
+            StorageFile file = await fo.PickSingleFileAsync();
+            if (file != null)
+            {
+                try
+                {
+                    await LoadModel(file);
+                    await SaveFileAccess(file);
+                }
+                catch (Exception ex)
+                {
+                    // unrecoverable error... 
+                    ShowStatus("Error Loading File: " + ex.Message);
+                }
+            }
+        }
+
+        const string FileAccessToken = "Settings.FileName";
+
+        private async Task SaveFileAccess(StorageFile file)
+        {            
+            // remember we have access to this file.
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace(FileAccessToken, file);
+
+            if (Settings.Instance.FileAccessToken != FileAccessToken ||
+                Settings.Instance.FileName != file.Path)
+            {
+                Settings.Instance.FileAccessToken = FileAccessToken;
+                Settings.Instance.FileName = file.Path;
+                await Settings.Instance.SaveAsync();
+            }
+        }
+
+        private void OnSettingsClick(object sender, RoutedEventArgs e)
+        {
+            Flyout flyout = new Flyout();
+            var panel = new SettingsPanel();
+            panel.Height = this.Height;
+            panel.Width = 400;
+            panel.OkCancelClick += (s,argse) =>
+            {
+                flyout.Hide();
+                ShowGraph(model);
+            };
+            flyout.Content = panel;
+            Flyout.SetAttachedFlyout(panel, flyout);
+            flyout.Placement = FlyoutPlacementMode.Right;
+            flyout.ShowAt(this);
         }
     }
 }

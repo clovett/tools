@@ -36,14 +36,20 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <TextBlock x:Name="PromptText" Text="The server {0} is asking for your user name and password.  The server reports that is is from {1}."/>
-        <TextBlock Grid.Row="1" Text="Warning: Your user name and password will be sent using basic authentication on a connection that is not secure."/>
-        <TextBox x:Name="UserNameText" Grid.Row="2" GotFocus="OnTextBoxGotFocus" KeyDown="OnUserNameKeyDown"/>
-        <PasswordBox x:Name="PasswordText" Grid.Row="3" GotFocus="OnPasswordBoxGotFocus" KeyDown="OnPasswordKeyDown"/>
-        <CheckBox x:Name="RememberCredentialsCheckBox" Grid.Row="4">Remember my credentials in the Windows Credential Manager</CheckBox>
-        <Grid Grid.Row="5" Margin="0,10">
+
+        <Border  Background="{StaticResource FlyoutHeadingBackgroundBrush}" Margin="0,0,0,10">
+            <TextBlock Text="Login" FontSize="18"
+                       Foreground="{StaticResource FlyoutHeadingForegroundBrush}"/>
+        </Border>
+        <TextBlock x:Name="PromptText" Grid.Row="1" Text="The server {0} is asking for your user name and password.  The server reports that is is from {1}."/>
+        <TextBlock Grid.Row="2" Text="Warning: Your user name and password will be sent using basic authentication on a connection that is not secure."/>
+        <TextBox x:Name="UserNameText" Grid.Row="3" GotFocus="OnTextBoxGotFocus" KeyDown="OnUserNameKeyDown"/>
+        <PasswordBox x:Name="PasswordText" Grid.Row="4" GotFocus="OnPasswordBoxGotFocus" KeyDown="OnPasswordKeyDown"/>
+        <CheckBox x:Name="RememberCredentialsCheckBox" Grid.Row="5">Remember my credentials in the Windows Credential Manager</CheckBox>
+        <Grid Grid.Row="6" Margin="0,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>

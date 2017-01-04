@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using Windows.Storage;
+using Windows.Storage.AccessCache;
 
 namespace NetgearDataUsage.Model
 {
@@ -78,22 +80,22 @@ namespace NetgearDataUsage.Model
             return (from e in Data where e.Date == dt select e).FirstOrDefault();
         }
 
-        public static async Task<TrafficMeter> LoadAsync()
+        public static async Task<TrafficMeter> LoadAsync(StorageFile file)
         {
             var store = new IsolatedStorage<TrafficMeter>();
-            TrafficMeter result = await store.LoadFromFileAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "data.xml");
+            TrafficMeter result = await store.LoadFromFileAsync(file);
             if (result == null)
             {
                 result = new TrafficMeter();
-                await result.SaveAsync();
+                await result.SaveAsync(file);
             }
             return result;
         }
 
-        public async Task SaveAsync()
+        public async Task SaveAsync(StorageFile file)
         {
             var store = new IsolatedStorage<TrafficMeter>();
-            await store.SaveToFileAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "data.xml", this);
+            await store.SaveToFileAsync(file, this);
         }
 
 

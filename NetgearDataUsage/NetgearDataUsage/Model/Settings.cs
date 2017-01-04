@@ -13,6 +13,9 @@ namespace NetgearDataUsage.Model
     {
         static Settings _instance;
         string fileName;
+        string accessToken;
+        int targetUsage = 1024;
+        string trafficMeterUri = "http://192.168.1.1/traffic_meter.htm";
 
         private Settings()
         {
@@ -44,6 +47,45 @@ namespace NetgearDataUsage.Model
             }
         }
 
+        public string TrafficMeterUri
+        {
+            get { return this.trafficMeterUri; }
+            set
+            {
+                if (this.trafficMeterUri != value)
+                {
+                    this.trafficMeterUri = value;
+                    OnPropertyChanged("TrafficMeterUri");
+                }
+            }
+        }
+
+        public string FileAccessToken
+        {
+            get { return this.accessToken; }
+            set
+            {
+                if (this.accessToken != value)
+                {
+                    this.accessToken = value;
+                    OnPropertyChanged("FileAccessTokenName");
+                }
+            }
+        }
+
+        public int TargetUsage
+        {
+            get { return this.targetUsage; }
+            set
+            {
+                if (this.targetUsage != value)
+                {
+                    this.targetUsage = value;
+                    OnPropertyChanged("TargetUsage");
+                }
+            }
+        }
+
         private void OnPropertyChanged(string name)
         {
             if (PropertyChanged != null)
@@ -57,7 +99,7 @@ namespace NetgearDataUsage.Model
         public static async Task<Settings> LoadAsync()
         {
             var store = new IsolatedStorage<Settings>();
-            Settings result = await store.LoadFromFileAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "settings.xml");
+            Settings result = await store.LoadFromFolderAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "settings.xml");
             if (result == null)
             {
                 result = new Settings();
@@ -69,7 +111,7 @@ namespace NetgearDataUsage.Model
         public async Task SaveAsync()
         {
             var store = new IsolatedStorage<Settings>();
-            await store.SaveToFileAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "settings.xml", this);
+            await store.SaveToFolderAsync(Windows.Storage.ApplicationData.Current.LocalFolder, "settings.xml", this);
         }
 
     }

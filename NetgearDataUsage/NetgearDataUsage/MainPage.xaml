@@ -29,4 +29,11 @@
 
         <TextBlock x:Name="StatusText" Grid.Row="2" Margin="5"/>
     </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton x:Name="OpenButton" Label="Open" Icon="OpenFile" Click="OnOpenFile"/>
+            <AppBarButton x:Name="SettingsButton" Label="Settings" Icon="Setting" Click="OnSettingsClick"/>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

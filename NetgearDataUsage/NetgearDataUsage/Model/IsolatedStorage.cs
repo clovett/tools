@@ -15,6 +15,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using NetgearDataUsage.Model;
 using Windows.ApplicationModel;
 using Windows.Storage;
 
@@ -37,7 +38,7 @@ namespace Microsoft.Storage
         /// <param name="folder">The folder to get the file from</param>
         /// <param name="fileName">Name of the file to read.</param>
         /// <returns>Deserialized data object</returns>
-        public async Task<T> LoadFromFileAsync(StorageFolder folder, string fileName)
+        public async Task<T> LoadFromFolderAsync(StorageFolder folder, string fileName)
         {
             T loadedFile = default(T);
 
@@ -72,7 +73,7 @@ namespace Microsoft.Storage
         /// </summary>
         /// <param name="fileName">Name of the file to write to</param>
         /// <param name="data">The data to save</param>
-        public async Task SaveToFileAsync(StorageFolder folder, string fileName, T data)
+        public async Task SaveToFolderAsync(StorageFolder folder, string fileName, T data)
         {
             try {
                 StorageFile storageFile = await folder.CreateFileAsync(fileName, CreationCollisionOption.ReplaceExisting);
@@ -88,5 +89,42 @@ namespace Microsoft.Storage
             }      
         }
 
+        internal async Task SaveToFileAsync(StorageFile storageFile, T data)
+        {
+            try
+            {
+                using (var stream = await storageFile.OpenStreamForWriteAsync())
+                {
+                    XmlSerializer mySerializer = new XmlSerializer(typeof(T));
+                    mySerializer.Serialize(stream, data);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(string.Format("Exception saving file '{0}':{1}", storageFile.Path, e.ToString()));
+            }
+        }
+
+        public async Task<T> LoadFromFileAsync(StorageFile storageFile)
+        {
+            T loadedFile = default(T);
+
+            try
+            {
+                if (storageFile != null)
+                {
+                    using (Stream myFileStream = await storageFile.OpenStreamForReadAsync())
+                    {
+                        // Call the Deserialize method and cast to the object type.
+                        return LoadFromStream(myFileStream);
+                    }
+                }
+            }
+            catch
+            {
+                // silently rebuild data file if it got corrupted.
+            }
+            return loadedFile;
+        }
     }
 }
