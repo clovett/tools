@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NetgearDataUsage.Model
 {
-    class WebCredential
+    public class WebCredential
     {
         public string Uri { get; set; }
 
@@ -14,6 +14,8 @@ namespace NetgearDataUsage.Model
         public string Password { get; set; }
 
         public bool RememberCredentials { get; set; }
+
+        public string Realm { get; set; }
 
         public static WebCredential LoadCredential(string uri)
         {

@@ -14,6 +14,7 @@ namespace NetgearDataUsage.Model
         static Settings _instance;
         string fileName;
         string accessToken;
+        bool firstLaunch = true;
         int targetUsage = 1024;
         string trafficMeterUri = "http://192.168.1.1/traffic_meter.htm";
 
@@ -33,7 +34,20 @@ namespace NetgearDataUsage.Model
                 return _instance;
             }
         }
-        
+
+        public bool FirstLaunch
+        {
+            get { return this.firstLaunch; }
+            set
+            {
+                if (this.firstLaunch != value)
+                {
+                    this.firstLaunch = value;
+                    OnPropertyChanged("FirstLaunch");
+                }
+            }
+        }
+
         public string FileName
         {
             get { return this.fileName; }

@@ -32,13 +32,22 @@ namespace NetgearDataUsage
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        const string FileAccessToken = "Settings.FileName";
         TrafficMeter model;
-        StorageFile file;
 
         public MainPage()
         {
             this.InitializeComponent();
             this.Loaded += OnPageLoaded;
+            Window.Current.CoreWindow.KeyDown += OnWindowKeyDown;
+        }
+
+        private async void OnWindowKeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        {
+            if (args.VirtualKey == Windows.System.VirtualKey.F5)
+            {
+                await GetTrafficMeter(null);
+            }
         }
 
         private async void OnPageLoaded(object sender, RoutedEventArgs e)
@@ -67,20 +76,39 @@ namespace NetgearDataUsage
             }
 
             await LoadModel(file);
+
+            if (Settings.Instance.FirstLaunch)
+            {
+                Settings.Instance.FirstLaunch = false;
+                ShowSettings();
+                await Settings.Instance.SaveAsync();
+            }
+            else
+            {
+                await GetTrafficMeter(null);
+            }
         }
 
         private async Task LoadModel(StorageFile file)
         {
             model = await TrafficMeter.LoadAsync(file);
-            this.file = file;
-            await GetTrafficMeter(null);
+            OnFileChanged();
+            ShowGraph(model);
         }
 
-        private async void UpdateModel(string html)
+        private async Task SaveModel(StorageFile file)
         {
-            model.ScrapeDataFromHtmlPage(html);
-            await model.SaveAsync(this.file);
+            await model.SaveAsync(file);
+            OnFileChanged();
+        }
 
+        public void OnFileChanged()
+        {
+            Windows.UI.ViewManagement.ApplicationView.GetForCurrentView().Title = model.File.Path;
+        }
+
+        private void OnModelUpdated()
+        {
             var today = model.GetRow(DateTime.Today);
 
             ShowStatus("Today: upload=" + today.Upload + ", download=" + today.Download );
@@ -95,7 +123,7 @@ namespace NetgearDataUsage
             var today = DateTime.Today;
 
             double max = Settings.Instance.TargetUsage * 1000; // 1024 gigabytes.
-            List<double> values = new List<double>();
+            List<DataValue> values = new List<DataValue>();
 
             var start = new DateTime(today.Year, today.Month, 1);
             var last = start.AddMonths(1).AddDays(-1);
@@ -104,9 +132,18 @@ namespace NetgearDataUsage
             double total = 0;
             for (var i = start; i <= today; i = i.AddDays(1))
             {
+                DataValue dv = new Controls.DataValue()
+                {
+                    TipFormat = i.ToString("M") + "\nActual: {0:N0}\nMaximum: {1:N0}",
+                    ShortLabel = i.Day.ToString()
+                };
                 var numbers = model.GetRow(i);
-                total += numbers.Download;
-                values.Add(total);
+                if (numbers != null)
+                {
+                    total += numbers.Download;
+                }
+                dv.Value = total;
+                values.Add(dv);
                 rows.Add(numbers);
             }
 
@@ -130,74 +167,21 @@ namespace NetgearDataUsage
                 {
                     credential = WebCredential.LoadCredential(Settings.Instance.TrafficMeterUri);
                 }
-                
-                HttpClient client = new HttpClient();
-                client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
-                client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.14986");
-                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
-                if (credential != null)
-                {
-                    // "Basic YWRtaW46aW5hbWJlcmNsYWQ="
-                    var byteArray = System.Text.Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password);
-                    var base64String = Convert.ToBase64String(byteArray);
-                    client.DefaultRequestHeaders.Add("Authorization", "Basic " + base64String);
-                }
 
-                HttpResponseMessage response = await client.GetAsync(Settings.Instance.TrafficMeterUri);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    byte[] data = await response.Content.ReadAsByteArrayAsync();
-                    var contentType = response.Content.Headers.ContentType;
-                    string html = DecodeHtml(data, contentType.MediaType, contentType.CharSet);
-
-                    UpdateModel(html);
-
-                    if (credential.RememberCredentials)
-                    {
-                        WebCredential.SavePassword(credential);
-                    }
+                if (!await model.GetTrafficMeter(credential))
+                { 
+                    // prompt for userid and password.
+                    PromptForCredentials(credential.Realm, credential);
                 }
                 else
                 {
-                    byte[] data = await response.Content.ReadAsByteArrayAsync();
-                    var contentType = response.Content.Headers.ContentType;
-                    string html = DecodeHtml(data, contentType.MediaType, contentType.CharSet);
-
-                    ShowStatus(response.StatusCode.ToString());
-                    string realm = GetBasicRealm(response);
-                    if (realm != null)
-                    {
-                        // prompt for userid and password.
-                        PromptForCredentials(realm, credential);
-                    }
-                    else
-                    {
-                        ShowStatus("Access denied and basic authentication is not supported by this router");
-                    }
+                    OnModelUpdated();
                 }
             }
             catch (Exception ex)
             {
                 ShowStatus(ex.Message);
             }
-        }
-
-        private string GetBasicRealm(HttpResponseMessage response)
-        {
-            foreach (var authType in response.Headers.WwwAuthenticate)
-            {
-                if (authType.Scheme == "Basic")
-                {
-                    string realm = authType.Parameter;
-                    if (realm.StartsWith("realm="))
-                    {
-                        return realm.Substring(6).Trim('"');
-                    }
-                }
-                Debug.WriteLine(authType.Scheme + ": " + authType.Parameter);
-            }
-            return null;
         }
 
         private void ShowStatus(string message)
@@ -208,35 +192,16 @@ namespace NetgearDataUsage
             });
         }
 
-        private string DecodeHtml(byte[] data, string mediaType, string charSet)
-        {
-            if (string.Compare(mediaType, "text/html", StringComparison.OrdinalIgnoreCase) != 0)
-            {
-                throw new Exception("Unexpected media type returned, expecting 'text/html' but received: " + mediaType);
-            }
-            charSet = (""+charSet).Trim('"');
-            if (string.Compare(charSet, "utf-8", StringComparison.OrdinalIgnoreCase) == 0)
-            {
-                return Encoding.UTF8.GetString(data);
-            }
-            else if (string.IsNullOrWhiteSpace(charSet))
-            {
-                return Encoding.ASCII.GetString(data);
-            }
-            else
-            { 
-                throw new Exception("Unexpected charset returned, expecting 'utf-8' but received: " + mediaType);
-            }
-
-        }
-
         private void PromptForCredentials(string realm, WebCredential credentials)
         {
             Flyout flyout = new Flyout();            
             var panel = new LoginPanel();
             panel.Height = this.Height;
             panel.Width = 400;
-            panel.Prompt = string.Format(panel.Prompt, "192.168.1.1", realm);
+
+            Uri uri = new Uri(Settings.Instance.TrafficMeterUri);
+            if (string.IsNullOrWhiteSpace(realm)) realm = "Unknown";
+            panel.Prompt = string.Format(panel.Prompt, uri.Host, realm);
             if (credentials != null)
             {
                 panel.UserName = credentials.UserName;
@@ -296,6 +261,7 @@ namespace NetgearDataUsage
                 {
                     await LoadModel(file);
                     await SaveFileAccess(file);
+                    await GetTrafficMeter(null);
                 }
                 catch (Exception ex)
                 {
@@ -304,8 +270,6 @@ namespace NetgearDataUsage
                 }
             }
         }
-
-        const string FileAccessToken = "Settings.FileName";
 
         private async Task SaveFileAccess(StorageFile file)
         {            
@@ -323,6 +287,11 @@ namespace NetgearDataUsage
 
         private void OnSettingsClick(object sender, RoutedEventArgs e)
         {
+            ShowSettings();
+        }
+
+        void ShowSettings()
+        { 
             Flyout flyout = new Flyout();
             var panel = new SettingsPanel();
             panel.Height = this.Height;
@@ -330,12 +299,42 @@ namespace NetgearDataUsage
             panel.OkCancelClick += (s,argse) =>
             {
                 flyout.Hide();
-                ShowGraph(model);
+                OnSettingsUpdated();
             };
             flyout.Content = panel;
             Flyout.SetAttachedFlyout(panel, flyout);
             flyout.Placement = FlyoutPlacementMode.Right;
             flyout.ShowAt(this);
+        }
+
+        private async void OnSettingsUpdated()
+        {
+            await GetTrafficMeter(null);
+        }
+
+        private async void OnSaveFile(object sender, RoutedEventArgs e)
+        {
+            FileSavePicker fo = new FileSavePicker();
+            fo.DefaultFileExtension = ".xml";
+            if (this.model.File != null)
+            {
+                fo.SuggestedSaveFile = this.model.File;
+            }
+            fo.FileTypeChoices.Add("XML File", new List<string>() { ".xml" });
+            StorageFile file = await fo.PickSaveFileAsync();
+            if (file != null)
+            {
+                try
+                {
+                    await SaveModel(file);
+                    await SaveFileAccess(file);
+                }
+                catch (Exception ex)
+                {
+                    // unrecoverable error... 
+                    ShowStatus("Error Loading File: " + ex.Message);
+                }
+            }
         }
     }
 }

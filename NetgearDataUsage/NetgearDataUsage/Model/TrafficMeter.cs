@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -31,6 +32,7 @@ namespace NetgearDataUsage.Model
 
     public class TrafficMeter
     {
+        StorageFile file;
         static string Heading = "Internet Traffic Statistics";
         static string CurrentDatePrefix= "Current Date/Time:";
         static string TodayHeader = "Today";
@@ -42,6 +44,8 @@ namespace NetgearDataUsage.Model
         }
 
         public List<DailyTraffic> Data { get; set; }
+
+        public StorageFile File { get { return file; } }
 
         private void AddRecord(DailyTraffic numbers)
         {
@@ -91,6 +95,7 @@ namespace NetgearDataUsage.Model
                 result = new TrafficMeter();
                 await result.SaveAsync(file);
             }
+            result.file = file;
             return result;
         }
 
@@ -98,8 +103,112 @@ namespace NetgearDataUsage.Model
         {
             var store = new IsolatedStorage<TrafficMeter>();
             await store.SaveToFileAsync(file, this);
+            this.file = file;
         }
 
+        /// <summary>
+        /// Get current traffic data
+        /// </summary>
+        /// <param name="credential"></param>
+        /// <returns>Returns false if web credential didn't work and re-authentication is required.</returns>
+        public async Task<bool> GetTrafficMeter(WebCredential credential)
+        {
+            try
+            { 
+                HttpClient client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.14986");
+                client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+                if (credential != null)
+                {
+                    // "Basic YWRtaW46aW5hbWJlcmNsYWQ="
+                    var byteArray = System.Text.Encoding.UTF8.GetBytes(credential.UserName + ":" + credential.Password);
+                    var base64String = Convert.ToBase64String(byteArray);
+                    client.DefaultRequestHeaders.Add("Authorization", "Basic " + base64String);
+                }
+
+                HttpResponseMessage response = await client.GetAsync(Settings.Instance.TrafficMeterUri);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    byte[] data = await response.Content.ReadAsByteArrayAsync();
+                    var contentType = response.Content.Headers.ContentType;
+                    string html = DecodeHtml(data, contentType.MediaType, contentType.CharSet);
+
+                    UpdateModel(html);
+
+                    if (credential.RememberCredentials)
+                    {
+                        WebCredential.SavePassword(credential);
+                    }
+                }
+                else
+                {
+                    byte[] data = await response.Content.ReadAsByteArrayAsync();                 
+                    string realm = GetBasicRealm(response);
+                    if (realm != null)
+                    {
+                        // prompt for userid and password.
+                        credential.Realm = realm;
+                        return false;
+                    }
+                    else
+                    {
+                        throw new Exception("Access denied and basic authentication is not supported by this router");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(string.Format("Exception from {0}: ", Settings.Instance.TrafficMeterUri, ex.Message));
+            }
+            return true;
+        }
+
+        private string DecodeHtml(byte[] data, string mediaType, string charSet)
+        {
+            if (string.Compare(mediaType, "text/html", StringComparison.OrdinalIgnoreCase) != 0)
+            {
+                throw new Exception("Unexpected media type returned, expecting 'text/html' but received: " + mediaType);
+            }
+            charSet = ("" + charSet).Trim('"');
+            if (string.Compare(charSet, "utf-8", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                return Encoding.UTF8.GetString(data);
+            }
+            else if (string.IsNullOrWhiteSpace(charSet))
+            {
+                return Encoding.ASCII.GetString(data);
+            }
+            else
+            {
+                throw new Exception("Unexpected charset returned, expecting 'utf-8' but received: " + mediaType);
+            }
+
+        }
+
+        private string GetBasicRealm(HttpResponseMessage response)
+        {
+            foreach (var authType in response.Headers.WwwAuthenticate)
+            {
+                if (authType.Scheme == "Basic")
+                {
+                    string realm = authType.Parameter;
+                    if (realm.StartsWith("realm="))
+                    {
+                        return realm.Substring(6).Trim('"');
+                    }
+                }
+                Debug.WriteLine(authType.Scheme + ": " + authType.Parameter);
+            }
+            return null;
+        }
+
+        private async void UpdateModel(string html)
+        {
+            this.ScrapeDataFromHtmlPage(html);
+            await this.SaveAsync(this.file);
+        }
 
         public void ScrapeDataFromHtmlPage(string html)
         {

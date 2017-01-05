@@ -21,10 +21,17 @@ using Windows.UI.Xaml.Shapes;
 
 namespace NetgearDataUsage.Controls
 {
+    public class DataValue
+    {
+        public string TipFormat; // has two arguments, the {0} actual and {1} target (or max value)
+        public string ShortLabel;
+        public double Value;
+    }
+
     public sealed partial class BarGraph : UserControl
     {
         DelayedActions layoutAction = new DelayedActions();
-        List<double> values = new List<double>();
+        List<DataValue> values = new List<DataValue>();
         int columnCount;
         bool layoutBusy;
 
@@ -33,7 +40,7 @@ namespace NetgearDataUsage.Controls
             this.InitializeComponent();
             this.SizeChanged += BarGraph_SizeChanged;
             this.AnimationTime = TimeSpan.FromMilliseconds(100);
-            this.LastAnimationTime = TimeSpan.FromMilliseconds(1000);
+            this.LastAnimationTime = TimeSpan.FromMilliseconds(500);
         }
 
         public TimeSpan AnimationTime { get; set; }
@@ -52,7 +59,7 @@ namespace NetgearDataUsage.Controls
 
         public double TargetValue { get; set; }
 
-        public List<double> DataValues
+        public List<DataValue> DataValues
         {
             get
             {
@@ -65,81 +72,120 @@ namespace NetgearDataUsage.Controls
             }
         }
 
-        private async void OnLayout(bool animate)
+        private void OnLayout(bool animate)
         {
-            if (layoutBusy || this.columnCount == 0)
+            if (this.columnCount == 0)
             {
                 return;
             }
+            if (layoutBusy)
+            {
+                // try again later.
+                layoutAction.StartDelayedAction("Layout", () => OnLayout(true), TimeSpan.FromMilliseconds(100));
+                return;
+            }
             layoutBusy = true;
-
-            BarGrid.Children.Clear();
-            BarGrid.ColumnDefinitions.Clear();
-            double sum = values.Sum();
-            double h = this.ActualHeight;
-            double w = this.ActualWidth;
-            double colWidth = w / this.columnCount;
-
-            for (int i = 0; i < this.columnCount; i++)
+            try
             {
-                BarGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new Windows.UI.Xaml.GridLength(1, GridUnitType.Star) });
-            }
+                BarGrid.Children.Clear();
+                BarGrid.ColumnDefinitions.Clear();
+                double sum = (from dv in values select dv.Value).Sum();
+                double h = this.ActualHeight;
+                double w = this.ActualWidth;
+                double colWidth = w / this.columnCount;
 
-            double max = TargetValue;
-            if (max < sum)
-            {
-                max = sum;
-            }
-
-            TargetLine.X1 = colWidth / 2;
-            double step = max / this.columnCount;
-
-            bool first = true;
-            int col = 0;
-            foreach (var y in values)
-            {
-                Rectangle bar = new Rectangle();
-                bar.Fill = this.Foreground;
-                bar.Height = h * y / max;
-
-                string tip = y.ToString("N0") + " of " + (step * (col + 1)).ToString("N0");
-                ToolTipService.SetToolTip(bar, tip);
-                if (first)
+                for (int i = 0; i < this.columnCount; i++)
                 {
-                    first = false;
-                    TargetLine.Y1 = this.ActualHeight - bar.Height;
+                    BarGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new Windows.UI.Xaml.GridLength(1, GridUnitType.Star) });
                 }
-                bar.VerticalAlignment = VerticalAlignment.Bottom;
-                Grid.SetColumn(bar, col++);
-                BarGrid.Children.Add(bar);
-            }
-            TargetLine.X2 = this.ActualWidth - (colWidth / 2);
-            TargetLine.Y2 = 0;
 
-            if (animate)
-            {
-                Rectangle last = BarGrid.Children.LastOrDefault() as Rectangle;
-                foreach (Rectangle bar in BarGrid.Children)
+                double max = TargetValue;
+                if (max < sum)
                 {
-                    DoubleAnimation grow = new DoubleAnimation();
-                    grow.EnableDependentAnimation = true;
-                    grow.From = 0;
-                    grow.To = bar.Height;
-                    bar.Height = 0;
-                    if (bar == last)
+                    max = sum;
+                }
+
+                TargetLine.X1 = colWidth / 2;
+                double step = max / this.columnCount;
+
+                List<Rectangle> bars = new List<Rectangle>();
+                bool first = true;
+                int col = 0;
+                double labelHeight = 16;
+
+                foreach (var dv in values)
+                {
+                    double y = dv.Value;
+                    Rectangle bar = new Rectangle();
+                    bar.Fill = this.Foreground;
+                    bar.Height = h * y / max;
+
+                    string tip = string.Format(dv.TipFormat, y, (step * (col + 1)));
+
+                    ToolTipService.SetToolTip(bar, tip);
+                    bar.VerticalAlignment = VerticalAlignment.Bottom;
+                    Grid.SetColumn(bar, col);
+                    BarGrid.Children.Add(bar);
+
+                    TextBlock label = new TextBlock() { Text = dv.ShortLabel };
+                    label.HorizontalAlignment = HorizontalAlignment.Center;
+                    label.Margin = new Thickness() { Top = 2, Bottom = 5 };
+
+                    if (first)
                     {
-                        grow.Duration = new Windows.UI.Xaml.Duration(LastAnimationTime);
+                        first = false;
+                        TargetLine.Y1 = this.ActualHeight - bar.Height;
+                        label.SizeChanged += (sender, args) =>
+                        {
+                            TargetLine.Y1 -= args.NewSize.Height;
+                        };
                     }
-                    else
+                    Grid.SetColumn(label, col);
+                    Grid.SetRow(label, 1);
+
+                    BarGrid.Children.Add(label);
+                    col++;
+
+                    bars.Add(bar);
+                }
+
+                TargetLine.X2 = this.ActualWidth - (colWidth / 2);
+                TargetLine.Y2 = 0;
+
+                if (animate)
+                {
+                    int start = 0;
+                    Rectangle last = bars.LastOrDefault() as Rectangle;
+                    foreach (var bar in bars)
                     {
-                        grow.Duration = new Windows.UI.Xaml.Duration(AnimationTime);
+                        DoubleAnimation grow = new DoubleAnimation();
+                        grow.EnableDependentAnimation = true;
+                        grow.From = 0;
+                        grow.To = bar.Height;
+                        grow.BeginTime = TimeSpan.FromMilliseconds(start);
+                        bar.Height = 0;
+                        if (bar == last)
+                        {
+                            grow.Duration = new Windows.UI.Xaml.Duration(LastAnimationTime);
+                        }
+                        else
+                        {
+                            grow.Duration = new Windows.UI.Xaml.Duration(AnimationTime);
+                        }
+                        bar.BeginAnimation(grow, "Height");
+                        start += 30;
                     }
-                    bar.BeginAnimation(grow, "Height");
-                    await Task.Delay(30);
                 }
             }
+            finally
+            {
+                layoutBusy = false;
+            }
+        }
 
-            layoutBusy = false;
+        private void Label_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

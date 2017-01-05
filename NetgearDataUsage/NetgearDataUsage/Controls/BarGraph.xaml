@@ -12,6 +12,10 @@
 
     <Grid>
         <Grid x:Name="BarGrid">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
         </Grid>
         <Canvas x:Name="Overlay">
             <Line x:Name="TargetLine" StrokeThickness="1" StrokeDashArray="3,3" Stroke="Yellow" />
