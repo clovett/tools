@@ -69,8 +69,10 @@ namespace NetgearDataUsage.Model
             }
             else
             {
-                dt.Upload = numbers.Upload;
-                dt.Download = numbers.Download;
+                // the numbers can't go down, unfortunately, the router has a bug and sometimes forgets
+                // yesterday's numbers...
+                dt.Upload = Math.Max(dt.Upload, numbers.Upload);
+                dt.Download = Math.Max(dt.Download, numbers.Download);
             }
         }
 
