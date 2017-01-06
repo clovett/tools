@@ -18,7 +18,14 @@
             </Grid.RowDefinitions>
         </Grid>
         <Canvas x:Name="Overlay">
-            <Line x:Name="TargetLine" StrokeThickness="1" StrokeDashArray="3,3" Stroke="Yellow" />
+            <Line x:Name="TargetLine" StrokeThickness="{StaticResource BarGraphTargetStrokeThickness}" 
+                  StrokeDashArray="3,3" 
+                  Stroke="{StaticResource BarGraphTargetStrokeBrush}" />
+            <Path x:Name="Pointer" Fill="{StaticResource BarGraphTooltipForeground}" Data="M0,-5 L 5,0 0,5 -5 0z" Visibility="Collapsed"/>
+            <Border x:Name="PointerBorder"  Visibility="Collapsed" Padding="2" HorizontalAlignment="Left" VerticalAlignment="Top" BorderThickness="1"
+                    CornerRadius="3" BorderBrush="{StaticResource BarGraphTooltipForeground}" Background="{StaticResource BarGraphTooltipBackground}">
+                <TextBlock x:Name="PointerLabel" Foreground="{StaticResource BarGraphTooltipForeground}"/>
+            </Border>
         </Canvas>
 
     </Grid>

@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
+using Windows.Devices.Input;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -30,10 +32,11 @@ namespace NetgearDataUsage.Controls
 
     public sealed partial class BarGraph : UserControl
     {
-        DelayedActions layoutAction = new DelayedActions();
+        DelayedActions delayedActions = new DelayedActions();
         List<DataValue> values = new List<DataValue>();
         int columnCount;
         bool layoutBusy;
+        const double TooltipThreshold = 20;
 
         public BarGraph()
         {
@@ -41,6 +44,9 @@ namespace NetgearDataUsage.Controls
             this.SizeChanged += BarGraph_SizeChanged;
             this.AnimationTime = TimeSpan.FromMilliseconds(100);
             this.LastAnimationTime = TimeSpan.FromMilliseconds(500);
+            this.PointerMoved += OnPointerMoved;
+            // so we get all mouse moves.
+            BarGrid.Background = new SolidColorBrush(Colors.Transparent);
         }
 
         public TimeSpan AnimationTime { get; set; }
@@ -49,7 +55,7 @@ namespace NetgearDataUsage.Controls
 
         private void BarGraph_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            layoutAction.StartDelayedAction("Layout", () => OnLayout(false), TimeSpan.FromMilliseconds(10));
+            delayedActions.StartDelayedAction("Layout", () => OnLayout(false), TimeSpan.FromMilliseconds(10));
         }
 
         public void SetColumnCount(int count)
@@ -68,7 +74,7 @@ namespace NetgearDataUsage.Controls
             set
             {
                 values = value;
-                layoutAction.StartDelayedAction("Layout", () => OnLayout(true), TimeSpan.FromMilliseconds(10));
+                delayedActions.StartDelayedAction("Layout", () => OnLayout(true), TimeSpan.FromMilliseconds(10));
             }
         }
 
@@ -81,7 +87,7 @@ namespace NetgearDataUsage.Controls
             if (layoutBusy)
             {
                 // try again later.
-                layoutAction.StartDelayedAction("Layout", () => OnLayout(true), TimeSpan.FromMilliseconds(100));
+                delayedActions.StartDelayedAction("Layout", () => OnLayout(true), TimeSpan.FromMilliseconds(100));
                 return;
             }
             layoutBusy = true;
@@ -111,7 +117,6 @@ namespace NetgearDataUsage.Controls
                 List<Rectangle> bars = new List<Rectangle>();
                 bool first = true;
                 int col = 0;
-                double labelHeight = 16;
 
                 foreach (var dv in values)
                 {
@@ -183,9 +188,67 @@ namespace NetgearDataUsage.Controls
             }
         }
 
-        private void Label_SizeChanged(object sender, SizeChangedEventArgs e)
+        private void OnPointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            throw new NotImplementedException();
+            var pos = e.GetCurrentPoint(this).Position;
+            UpdatePointer(pos);
         }
+
+
+        void UpdatePointer(Point pos)
+        {
+            // transform top Graph coordinates (which could be constantly changing because of zoom and scrolling.
+            pos = this.TransformToVisual(Overlay).TransformPoint(pos);
+
+            double offset = Overlay.Margin.Left;
+            double x1 = TargetLine.X1;
+            double y1 = TargetLine.Y1;
+            double x2 = TargetLine.X2;
+            double y2 = TargetLine.Y2;
+            double x = pos.X;
+            double w = this.ActualWidth;
+            double colWidth = w / this.columnCount;
+
+            double slope = (y2 - y1) / (x2 - x1);
+            double y = (slope * (x - x1)) + y1;
+
+            double distance = Math.Abs(y - pos.Y);
+            if (x1 < x2 && x >= x1 && x <= x2 && distance < TooltipThreshold)
+            {
+                PointerLabel.Text = string.Format("Maximum Target: {0:N0}", this.TargetValue * ((x - colWidth/2) / (x2 - x1)));
+                PointerBorder.UpdateLayout();
+
+                double tipPositionX = pos.X + offset;
+                if (tipPositionX + PointerBorder.ActualWidth > this.ActualWidth)
+                {
+                    tipPositionX = this.ActualWidth - PointerBorder.ActualWidth;
+                }
+                double tipPositionY = pos.Y - PointerLabel.ActualHeight - 4;
+                if (tipPositionY < 0)
+                {
+                    tipPositionY = 0;
+                }
+                PointerBorder.Margin = new Thickness(tipPositionX, tipPositionY, 0, 0);
+                PointerBorder.Visibility = Visibility.Visible;
+                
+                Point pointerPosition = new Point(x, y);
+                Pointer.RenderTransform = new TranslateTransform() { X = pointerPosition.X, Y = pointerPosition.Y };
+                Pointer.Visibility = Visibility.Visible;
+
+                delayedActions.StartDelayedAction("HideTip", () => {
+
+                    PointerBorder.Visibility = Visibility.Collapsed;
+                    Pointer.Visibility = Visibility.Collapsed;
+
+                }, TimeSpan.FromSeconds(2));
+            }
+            else
+            {
+                PointerBorder.Visibility = Visibility.Collapsed;
+                Pointer.Visibility = Visibility.Collapsed;
+            }
+
+        }
+
     }
 }

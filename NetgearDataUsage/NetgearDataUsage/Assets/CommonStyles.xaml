@@ -7,4 +7,11 @@
 
     <Thickness x:Key="FlyoutContentThemePadding">0</Thickness>
     
+    <!-- BarGraph styles -->
+    <SolidColorBrush x:Key="BarGraphTooltipForeground" Color="Yellow"/>
+    <SolidColorBrush x:Key="BarGraphTooltipBackground" Color="#80303030"/>
+    <SolidColorBrush x:Key="BarGraphTargetStrokeBrush" Color="Yellow"/>
+    <DoubleCollection x:Key="BarGraphTargetStrokeDashArray">3,3</DoubleCollection>
+    <x:Double x:Key="BarGraphTargetStrokeThickness">1</x:Double>
+    
 </ResourceDictionary>
