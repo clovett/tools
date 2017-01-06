@@ -44,7 +44,7 @@
             <TextBlock Text="Login" FontSize="18"
                        Foreground="{StaticResource FlyoutHeadingForegroundBrush}"/>
         </Border>
-        <TextBlock x:Name="PromptText" Grid.Row="1" Text="The server {0} is asking for your user name and password.  The server reports that is is from {1}."/>
+        <TextBlock x:Name="PromptText" Grid.Row="1" Text="The server at {1} with address {0} is asking for your user name and password."/>
         <TextBlock Grid.Row="2" Text="Warning: Your user name and password will be sent using basic authentication on a connection that is not secure."/>
         <TextBox x:Name="UserNameText" Grid.Row="3" GotFocus="OnTextBoxGotFocus" KeyDown="OnUserNameKeyDown"/>
         <PasswordBox x:Name="PasswordText" Grid.Row="4" GotFocus="OnPasswordBoxGotFocus" KeyDown="OnPasswordKeyDown"/>
