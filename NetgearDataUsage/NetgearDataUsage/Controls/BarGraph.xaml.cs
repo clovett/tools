@@ -95,7 +95,6 @@ namespace NetgearDataUsage.Controls
             {
                 BarGrid.Children.Clear();
                 BarGrid.ColumnDefinitions.Clear();
-                double sum = (from dv in values select dv.Value).Sum();
                 double h = this.ActualHeight;
                 double w = this.ActualWidth;
                 double colWidth = w / this.columnCount;
@@ -105,6 +104,7 @@ namespace NetgearDataUsage.Controls
                     BarGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new Windows.UI.Xaml.GridLength(1, GridUnitType.Star) });
                 }
 
+                double sum = (from dv in values select dv.Value).Sum();
                 double max = TargetValue;
                 if (max < sum)
                 {
@@ -208,6 +208,13 @@ namespace NetgearDataUsage.Controls
             double x = pos.X;
             double w = this.ActualWidth;
             double colWidth = w / this.columnCount;
+            double sum = (from dv in values select dv.Value).Sum();
+            double max = TargetValue;
+            if (max < sum)
+            {
+                max = sum;
+            }
+            double min = max / this.columnCount; // bottom of the target line 
 
             double slope = (y2 - y1) / (x2 - x1);
             double y = (slope * (x - x1)) + y1;
@@ -215,7 +222,7 @@ namespace NetgearDataUsage.Controls
             double distance = Math.Abs(y - pos.Y);
             if (x1 < x2 && x >= x1 && x <= x2 && distance < TooltipThreshold)
             {
-                PointerLabel.Text = string.Format("Maximum Target: {0:N0}", this.TargetValue * ((x - colWidth/2) / (x2 - x1)));
+                PointerLabel.Text = string.Format("Maximum Target: {0:N0}", min + this.TargetValue * ((x - colWidth/2) / (x2 - x1)));
                 PointerBorder.UpdateLayout();
 
                 double tipPositionX = pos.X + offset;
