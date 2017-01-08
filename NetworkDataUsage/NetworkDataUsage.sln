@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetworkDataUsage", "NetworkDataUsage\NetworkDataUsage.csproj", "{7DA52C3E-9406-40B1-B160-2B87F78CC322}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotifyIconWpf", "NotifyIconWpf\NotifyIconWpf.csproj", "{7AC63864-7638-41C4-969C-D3197EF2BED9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7DA52C3E-9406-40B1-B160-2B87F78CC322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DA52C3E-9406-40B1-B160-2B87F78CC322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DA52C3E-9406-40B1-B160-2B87F78CC322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DA52C3E-9406-40B1-B160-2B87F78CC322}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AC63864-7638-41C4-969C-D3197EF2BED9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = NetworkDataUsage\\NetworkDataUsage.csproj
+		SccProjectName1 = NetworkDataUsage
+		SccLocalPath1 = NetworkDataUsage
+		SccProjectUniqueName2 = NotifyIconWpf\\NotifyIconWpf.csproj
+		SccProjectName2 = NotifyIconWpf
+		SccLocalPath2 = NotifyIconWpf
+	EndGlobalSection
+EndGlobal
