@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
+using Walkabout.Utilities;
 
 namespace NetworkDataUsage
 {
@@ -19,15 +20,40 @@ namespace NetworkDataUsage
     {
         class CounterInfo
         {
-            public PerformanceCounter Counter;
-            public double Sum;
-            public string Name;
+            private PerformanceCounter counter;
+            private double sum;
+            private string name;
+            private double lastValue;
+
+            public CounterInfo(PerformanceCounter counter, string name)
+            {
+                this.counter = counter;
+                this.name = name;
+            }
+
+            public double GetSum()
+            {
+                lock (counter)
+                {
+                    return this.sum;
+                }
+            }
+            public double GetLastValue()
+            {
+                lock (counter)
+                {
+                    return this.lastValue;
+                }
+            }
 
             internal double GetDelta()
             {
-                double value = Counter.NextValue(); 
-                Sum += value;
-                return value;
+                lock (counter)
+                {
+                    lastValue = counter.NextValue();
+                    sum += lastValue;
+                    return lastValue;
+                }
             }
         }
 
@@ -35,10 +61,55 @@ namespace NetworkDataUsage
         private List<CounterInfo> receivedCounters = new List<CounterInfo>();
         const string BytesSentPerSec = "Bytes Sent/sec";
         const string BytesReceivedPerSec = "Bytes Received/sec";
+        DelayedActions updateAction;
+
+        public event EventHandler Updated;
 
         public NetworkTraffic()
         {
             TryToInitializeCounters();
+        }
+
+        public void Start()
+        {
+            updateAction = new DelayedActions();
+            updateAction.StartDelayedAction("Update", OnUpdate, TimeSpan.FromSeconds(1));
+        }
+
+        private void OnUpdate()
+        {
+            if (updateAction != null)
+            {
+                updateAction.StartDelayedAction("Update", OnUpdate, TimeSpan.FromSeconds(1));
+            }
+            foreach (var counter in sentCounters)
+            {
+                counter.GetDelta();
+            }
+            foreach (var counter in receivedCounters)
+            {
+                counter.GetDelta();
+            }
+            OnUpdated();
+        }
+
+        private void OnUpdated()
+        {
+            EventHandler handler = Updated;
+            if (handler != null)
+            {
+                handler(this, EventArgs.Empty);
+            }
+        }
+
+        public void Stop()
+        {
+            var action = updateAction;
+            updateAction = null;
+            if (action != null)
+            {
+                action.CancelDelayedAction("Update");
+            }
         }
 
         private void TryToInitializeCounters()
@@ -55,11 +126,7 @@ namespace NetworkDataUsage
                     bytesSentCounter.CounterName = BytesSentPerSec;
                     bytesSentCounter.InstanceName = name;
                     bytesSentCounter.ReadOnly = true;
-                    sentCounters.Add(new CounterInfo()
-                    {
-                        Counter = bytesSentCounter,
-                        Name = name
-                    });
+                    sentCounters.Add(new CounterInfo(bytesSentCounter, name));
                 }
 
                 if (category.CounterExists(BytesReceivedPerSec))
@@ -69,23 +136,29 @@ namespace NetworkDataUsage
                     bytesReceivedCounter.CounterName = BytesReceivedPerSec;
                     bytesReceivedCounter.InstanceName = name;
                     bytesReceivedCounter.ReadOnly = true;
-                    receivedCounters.Add(new CounterInfo()
-                    {
-                        Counter = bytesReceivedCounter,
-                        Name = name
-                    });
+                    receivedCounters.Add(new CounterInfo(bytesReceivedCounter, name));
                 }
             }
         }
 
         public double GetCurrentBytesSent()
         {
-            return (from info in sentCounters select info.GetDelta()).Sum();
+            return (from info in sentCounters select info.GetLastValue()).Sum();
         }
 
         public double GetCurrentBytesReceived()
         {
-            return (from info in receivedCounters select info.GetDelta()).Sum();
+            return (from info in receivedCounters select info.GetLastValue()).Sum();
+        }
+
+        public double GetTotalBytesSent()
+        {
+            return (from info in sentCounters select info.GetSum()).Sum();
+        }
+
+        public double GetTotalBytesReceived()
+        {
+            return (from info in receivedCounters select info.GetSum()).Sum();
         }
     }
 }

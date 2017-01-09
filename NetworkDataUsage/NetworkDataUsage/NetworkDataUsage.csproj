@@ -65,12 +65,28 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\SimpleLineChart.xaml.cs">
+      <DependentUpon>SimpleLineChart.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TrafficGraphControl.xaml.cs">
+      <DependentUpon>TrafficGraphControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Model\ChartModels.cs" />
     <Compile Include="Utilities\CommandBase.cs" />
     <Compile Include="Utilities\Commands.cs" />
     <Compile Include="Utilities\Credential.cs" />
     <Compile Include="Utilities\DelayedAction.cs" />
+    <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\WindowPositionTracker.cs" />
+    <Page Include="Controls\SimpleLineChart.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\ToastMessage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\TrafficGraphControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

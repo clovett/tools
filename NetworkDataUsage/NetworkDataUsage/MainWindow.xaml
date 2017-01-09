@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:tb="http://www.hardcodet.net/taskbar"
+        xmlns:c="clr-namespace:NetworkDataUsage.Controls"
         xmlns:Commands="clr-namespace:NetworkDataUsage.Commands"
         xmlns:local="clr-namespace:NetworkDataUsage"
         mc:Ignorable="d"
@@ -26,10 +27,8 @@
 
     </Window.Resources>
     <Grid Style="{StaticResource AppGridBackground}">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="68*"/>
-            <ColumnDefinition Width="449*"/>
-        </Grid.ColumnDefinitions>
+        
+        <c:TrafficGraphControl x:Name="Chart"  />
 
         <tb:TaskbarIcon 
             x:Name="tb"
