@@ -4,6 +4,8 @@ using System.Windows.Controls.Primitives;
 using System.ComponentModel;
 using NetworkDataUsage.Utilities;
 using System;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
 
 namespace NetworkDataUsage
 {
@@ -19,10 +21,17 @@ namespace NetworkDataUsage
             InitializeComponent();
             this.Loaded += OnWindowLoaded;
             tracker.Open(this);
+            LoginFlyout.OkCancelClick += LoginFlyout_OkCancelClick;
+        }
+
+        private void LoginFlyout_OkCancelClick(object sender, EventArgs e)
+        {
+            LoginFlyout.Visibility = Visibility.Collapsed;
         }
 
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
+            Flyout(LoginFlyout);
         }
 
         protected override void OnClosing(CancelEventArgs e)
@@ -40,6 +49,18 @@ namespace NetworkDataUsage
         {
             base.OnClosed(e);
             tracker.Close();
+        }
+
+        private void Flyout(FrameworkElement e)
+        {
+            e.Visibility = Visibility.Visible;
+            TranslateTransform transform = new TranslateTransform(e.Width, 0);
+            e.RenderTransform = transform;
+            transform.BeginAnimation(TranslateTransform.XProperty,
+                new DoubleAnimation(0, new Duration(TimeSpan.FromSeconds(0.2)))
+                {
+                    EasingFunction = new ExponentialEase() { EasingMode = EasingMode.EaseOut }
+                });
         }
     }
 }

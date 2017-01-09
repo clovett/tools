@@ -65,6 +65,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\BarGraph.xaml.cs">
+      <DependentUpon>BarGraph.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\LoginPanel.xaml.cs">
+      <DependentUpon>LoginPanel.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SettingsPanel.xaml.cs">
+      <DependentUpon>SettingsPanel.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\SimpleLineChart.xaml.cs">
       <DependentUpon>SimpleLineChart.xaml</DependentUpon>
     </Compile>
@@ -78,6 +87,18 @@
     <Compile Include="Utilities\DelayedAction.cs" />
     <Compile Include="Utilities\HlsColor.cs" />
     <Compile Include="Utilities\WindowPositionTracker.cs" />
+    <Page Include="Controls\BarGraph.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\LoginPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Controls\SettingsPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="Controls\SimpleLineChart.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

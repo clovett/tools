@@ -10,8 +10,7 @@
         mc:Ignorable="d"
         Title="Network Data Usage" Height="800" Width="1280">
     <Window.Resources>
-        <ContextMenu x:Shared="false"
-                 x:Key="tbMenu">
+        <ContextMenu x:Shared="false" x:Key="tbMenu">
            
             <MenuItem Header="Quit"
                   Command="{Commands:QuitCommand}"
@@ -22,7 +21,6 @@
                        Source="/Images/Add.png" />
                 </MenuItem.Icon>-->
             </MenuItem>
-
         </ContextMenu>
 
     </Window.Resources>
@@ -61,5 +59,6 @@
 
         </tb:TaskbarIcon>
 
+        <c:LoginPanel x:Name="LoginFlyout" Width="300" HorizontalAlignment="Right" Visibility="Collapsed"/>
     </Grid>
 </Window>
