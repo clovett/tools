@@ -104,14 +104,7 @@ namespace NetgearDataUsage.Controls
                     BarGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new Windows.UI.Xaml.GridLength(1, GridUnitType.Star) });
                 }
 
-                double sum = (from dv in values select dv.Value).Sum();
-                double max = TargetValue;
-                if (max < sum)
-                {
-                    max = sum;
-                }
-
-                TargetLine.X1 = colWidth / 2;
+                double max = Math.Max(TargetValue, (from dv in values select dv.Value).Max());
                 double step = max / this.columnCount;
 
                 List<Rectangle> bars = new List<Rectangle>();
@@ -142,7 +135,7 @@ namespace NetgearDataUsage.Controls
                         TargetLine.Y1 = this.ActualHeight - bar.Height;
                         label.SizeChanged += (sender, args) =>
                         {
-                            TargetLine.Y1 -= args.NewSize.Height;
+                            TargetLine.Y1 = this.ActualHeight - args.NewSize.Height - label.Margin.Top - label.Margin.Bottom;
                         };
                     }
                     Grid.SetColumn(label, col);
@@ -154,7 +147,9 @@ namespace NetgearDataUsage.Controls
                     bars.Add(bar);
                 }
 
-                TargetLine.X2 = this.ActualWidth - (colWidth / 2);
+                TargetLine.X1 = 0;
+                TargetLine.Y1 = this.ActualHeight;
+                TargetLine.X2 = this.ActualWidth;
                 TargetLine.Y2 = 0;
 
                 if (animate)
@@ -222,7 +217,8 @@ namespace NetgearDataUsage.Controls
             double distance = Math.Abs(y - pos.Y);
             if (x1 < x2 && x >= x1 && x <= x2 && distance < TooltipThreshold)
             {
-                PointerLabel.Text = string.Format("Maximum Target: {0:N0}", min + this.TargetValue * ((x - colWidth/2) / (x2 - x1)));
+                double valueOnLine = this.TargetValue * (x - x1) / (x2 - x1);
+                PointerLabel.Text = string.Format("Maximum Target: {0:N0}", valueOnLine);
                 PointerBorder.UpdateLayout();
 
                 double tipPositionX = pos.X + offset;
