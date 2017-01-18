@@ -86,24 +86,50 @@ namespace NetgearDataUsage.Model
             return (from e in Data where e.Date == dt select e).FirstOrDefault();
         }
 
+        public static string DefaultFileName { get { return "data.xml"; } }
+
+        public static string DefaultFilePath
+        {
+            get
+            {
+                return Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, DefaultFileName);
+            }
+        }
+
+
         public static async Task<TrafficMeter> LoadAsync(StorageFile file)
         {
-            var store = new IsolatedStorage<TrafficMeter>();
-            TrafficMeter result = await store.LoadFromFileAsync(file);
+            TrafficMeter result = null;
+            if (file != null)
+            {
+                var store = new IsolatedStorage<TrafficMeter>();
+                result = await store.LoadFromFileAsync(file);
+            }
             if (result == null)
             {
                 result = new TrafficMeter();
                 await result.SaveAsync(file);
             }
-            result.file = file;
+            else
+            {
+                result.file = file;
+            }
             return result;
         }
 
         public async Task SaveAsync(StorageFile file)
         {
             var store = new IsolatedStorage<TrafficMeter>();
-            await store.SaveToFileAsync(file, this);
-            this.file = file;
+            if (file == null)
+            {
+                await store.SaveToFolderAsync(Windows.Storage.ApplicationData.Current.LocalFolder, DefaultFileName, this);
+                this.file = await StorageFile.GetFileFromPathAsync(DefaultFilePath);
+            }
+            else
+            {
+                await store.SaveToFileAsync(file, this);
+                this.file = file;
+            }
         }
 
         /// <summary>

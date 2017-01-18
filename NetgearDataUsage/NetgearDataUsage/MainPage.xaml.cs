@@ -56,22 +56,38 @@ namespace NetgearDataUsage
             string fileName = Settings.Instance.FileName;
             if (string.IsNullOrEmpty(fileName))
             {
-                file = (StorageFile)(await Windows.Storage.ApplicationData.Current.LocalFolder.TryGetItemAsync("data.xml"));
+                fileName = TrafficMeter.DefaultFilePath;
+                try
+                {
+                    file = await StorageFile.GetFileFromPathAsync(fileName);
+                }
+                catch
+                {
+                    // doesn't exist!
+                }
             }
-            else
+
+            if (file == null)
             {
                 // get access to this file again using the saved token.
                 if (Settings.Instance.FileAccessToken != null)
                 {
                     file = await StorageApplicationPermissions.FutureAccessList.GetFileAsync(Settings.Instance.FileAccessToken);
+                    if (file == null)
+                    {
+                        ShowStatus(string.Format("Cannot find file, or we lost permission to access it: '{0}'", fileName));
+                    }
                 }
                 else
                 {
-                    file = await StorageFile.GetFileFromPathAsync(fileName);
-                }
-                if (file == null)
-                {
-                    ShowStatus(string.Format("Cannot find file, or we lost permission to access it: '{0}'", fileName));
+                    try
+                    {
+                        file = await StorageFile.GetFileFromPathAsync(fileName);
+                    }
+                    catch
+                    {
+                        // doesn't exist then!
+                    }
                 }
             }
 
