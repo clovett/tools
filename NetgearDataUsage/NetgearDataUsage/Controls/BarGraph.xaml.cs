@@ -105,7 +105,6 @@ namespace NetgearDataUsage.Controls
                 }
 
                 double max = Math.Max(TargetValue, (from dv in values select dv.Value).Max());
-                double step = max / this.columnCount;
 
                 List<Rectangle> bars = new List<Rectangle>();
                 bool first = true;
@@ -118,7 +117,7 @@ namespace NetgearDataUsage.Controls
                     bar.Fill = this.Foreground;
                     bar.Height = h * y / max;
 
-                    string tip = string.Format(dv.TipFormat, y, (step * (col + 1)));
+                    string tip = string.Format(dv.TipFormat, y);
 
                     ToolTipService.SetToolTip(bar, tip);
                     bar.VerticalAlignment = VerticalAlignment.Bottom;

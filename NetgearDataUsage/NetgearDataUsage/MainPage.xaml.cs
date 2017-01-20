@@ -125,9 +125,17 @@ namespace NetgearDataUsage
 
         private void OnModelUpdated()
         {
-            var today = model.GetRow(DateTime.Today);
+            var totalDownload = (from i in model.Data select i.Download).Sum();
 
-            ShowStatus("Today: upload=" + today.Upload + ", download=" + today.Download );
+            double max = Settings.Instance.TargetUsage * 1000; // 1024 gigabytes.
+            var today = DateTime.Today;
+            var start = new DateTime(today.Year, today.Month, 1);
+            var last = start.AddMonths(1).AddDays(-1);
+            int columnCount = last.Day;
+            double step = max / columnCount;
+            double dailyTarget = (step * today.Day);
+            double percent = (totalDownload * 100) / dailyTarget;
+            ShowStatus(string.Format("You are at {0:N0}% of your allocated target at this point in the month", percent));
 
             ShowGraph(model);
         }
@@ -143,14 +151,19 @@ namespace NetgearDataUsage
 
             var start = new DateTime(today.Year, today.Month, 1);
             var last = start.AddMonths(1).AddDays(-1);
-            Graph.SetColumnCount(last.Day);
+            int columnCount = last.Day;
+            Graph.SetColumnCount(columnCount);
+            double step = max / columnCount;
 
             double total = 0;
+            double col = 1;
             for (var i = start; i <= today; i = i.AddDays(1))
             {
+                string dailyTarget = string.Format("{0:N0}", (step * col));
+                
                 DataValue dv = new Controls.DataValue()
                 {
-                    TipFormat = i.ToString("M") + "\nActual: {0:N0}\nMaximum: {1:N0}",
+                    TipFormat = i.ToString("M") + "\nActual: {0:N0}\nMaximum: " + dailyTarget,
                     ShortLabel = i.Day.ToString()
                 };
                 var numbers = model.GetRow(i);
@@ -161,6 +174,7 @@ namespace NetgearDataUsage
                 dv.Value = total;
                 values.Add(dv);
                 rows.Add(numbers);
+                col++;
             }
 
             if (total > max)

@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
+using Windows.UI.Popups;
 
 namespace NetgearDataUsage.Model
 {
@@ -141,11 +142,13 @@ namespace NetgearDataUsage.Model
         {
             try
             { 
+
                 HttpClient client = new HttpClient();
                 client.DefaultRequestHeaders.Add("Accept", "text/html, application/xhtml+xml, image/jxr, */*");
                 client.DefaultRequestHeaders.Add("Accept-Language", "en-US");
                 client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.14986");
                 client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
+
                 if (credential != null)
                 {
                     // "Basic YWRtaW46aW5hbWJlcmNsYWQ="
@@ -155,6 +158,15 @@ namespace NetgearDataUsage.Model
                 }
 
                 HttpResponseMessage response = await client.GetAsync(Settings.Instance.TrafficMeterUri);
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    if (credential != null)
+                    {
+                        // try again, the second attempt to send the Authorization info usually works.
+                        response = await client.GetAsync(Settings.Instance.TrafficMeterUri);
+                    }
+                }
+
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     byte[] data = await response.Content.ReadAsByteArrayAsync();
