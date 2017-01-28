@@ -295,6 +295,10 @@ namespace HttpGet
                     else
                     {
                         string fname = uri.Segments[uri.Segments.Length - 1];
+                        if (fname == "/")
+                        {
+                            fname = "default.htm";
+                        }
                         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
                         long length = CopyToFile(stream, fname);
@@ -309,6 +313,7 @@ namespace HttpGet
                         {
                             result = fname;
                         }
+                        Console.WriteLine("Saved local file: " + Path.GetFullPath(fname));
                     }
                 }
             }
