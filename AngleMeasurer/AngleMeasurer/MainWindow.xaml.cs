@@ -75,13 +75,18 @@ namespace AngleMeasurer
                 arcSegment.Point = point;
                 arcSegment.SweepDirection = (angle > 0) ? SweepDirection.Clockwise : SweepDirection.Counterclockwise;
 
+                try
+                {
+                    PathGeometry g = (PathGeometry)arc.Data;
+                    Point tangent;
+                    g.GetPointAtFractionLength(0.5, out point, out tangent);
 
-                PathGeometry g = (PathGeometry)arc.Data;
-                Point tangent;
-                g.GetPointAtFractionLength(0.5, out point, out tangent);
+                    Canvas.SetLeft(label, point.X);
+                    Canvas.SetTop(label, point.Y);
+                } catch 
+                {
 
-                Canvas.SetLeft(label, point.X);
-                Canvas.SetTop(label, point.Y);
+                }
 
             }
             else if (current != null)
@@ -148,6 +153,15 @@ namespace AngleMeasurer
                 arc = null;
                 arcSegment = null;
                 label = null;
+            }
+        }
+
+        private void OnPaste(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (Clipboard.ContainsImage())
+            {
+                var image = Clipboard.GetImage();
+                ImageHolder.Source = image;
             }
         }
     }

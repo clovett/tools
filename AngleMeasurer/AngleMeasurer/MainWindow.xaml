@@ -6,8 +6,11 @@
         xmlns:local="clr-namespace:AngleMeasurer"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1280">
+    <Window.CommandBindings>
+        <CommandBinding Command="Paste" Executed="OnPaste"/>
+    </Window.CommandBindings>
     <Grid>
-        <Image Source="blacksheep.jpg"/>
+        <Image x:Name="ImageHolder" Source="blacksheep.jpg"/>
         <Canvas x:Name="Scratch" Background="Transparent" MouseDown="OnCanvasMouseDown"
                 MouseMove="OnCanvasMouseMove" MouseUp="OnCanvasMouseUp" LostMouseCapture="OnCanvasLostCapture"
                 KeyDown="OnCanvasKeyDown" Focusable="true">
