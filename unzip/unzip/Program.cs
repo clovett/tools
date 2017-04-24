@@ -11,10 +11,12 @@ namespace unzip
     class Program
     {
         List<string> files = new List<string>();
+        string targetdir = Directory.GetCurrentDirectory();
 
         bool ParseCommandLine(string[] args)
         {
-            for (int i = 0; i < args.Length; i++)
+            int len = args.Length;
+            for (int i = 0; i < len; i++)
             {
                 string arg = args[i];
                 if (arg[0] == '-' || arg[0] == '/')
@@ -25,6 +27,12 @@ namespace unzip
                         case "help":
                         case "?":
                             return false;
+                        case "d":
+                            if (i + 1 < len)
+                            {
+                                targetdir = args[++i];
+                            }
+                            break;
                         default:
                             Console.WriteLine("Unknown argument: {0}", arg);
                             return false;
@@ -72,6 +80,8 @@ namespace unzip
         {
             Console.WriteLine("Usage: unzip file.zip");
             Console.WriteLine("Unzips the given file in the current directory");
+            Console.WriteLine("Options:");
+            Console.WriteLine("  -d dir     extract files into this directory (renaming the directory listed inside the zip file)");
         }
 
         void Run()
@@ -87,8 +97,8 @@ namespace unzip
             using (Stream stream = new FileStream(filename, FileMode.Open, FileAccess.Read, FileShare.None))
             {
                 using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read))
-                {
-                    archive.ExtractToDirectory(Directory.GetCurrentDirectory());
+                {                    
+                    archive.ExtractToDirectory(targetdir);
                 }
             }
         }
