@@ -6,6 +6,12 @@
         xmlns:local="clr-namespace:FileSync"
         mc:Ignorable="d"
         Title="File Sync" Height="800" Width="1024">
+    <Window.InputBindings>
+        <KeyBinding Command="Open" Key="O" Modifiers="Ctrl"/>
+    </Window.InputBindings>
+    <Window.CommandBindings>
+        <CommandBinding Command="Open" Executed="OnOpenFile"/>
+    </Window.CommandBindings>
     <Grid Background="{StaticResource WorkspaceBackground}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -21,7 +27,7 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button Style="{StaticResource AppBarButtonStyle}">
+            <Button Style="{StaticResource AppBarButtonStyle}" Command="Open">
                 <StackPanel Orientation="Vertical">
                     <TextBlock FontFamily="Segoe UI Symbol" Text="&#xE1c1;" FontSize="36"></TextBlock>
                     <TextBlock FontFamily="Segoe UI" Text="Open" TextAlignment="Center"></TextBlock>
