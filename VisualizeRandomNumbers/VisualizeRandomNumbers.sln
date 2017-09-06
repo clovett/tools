@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RandomNumbers", "RandomNumbers\RandomNumbers.csproj", "{B3292670-B992-4339-9BA3-AB29F9807ABA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Generator", "Generator\Generator.vcxproj", "{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|ARM.ActiveCfg = Debug|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|ARM.Build.0 = Debug|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|ARM.Deploy.0 = Debug|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x64.ActiveCfg = Debug|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x64.Build.0 = Debug|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x64.Deploy.0 = Debug|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x86.ActiveCfg = Debug|x86
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x86.Build.0 = Debug|x86
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Debug|x86.Deploy.0 = Debug|x86
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|ARM.ActiveCfg = Release|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|ARM.Build.0 = Release|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|ARM.Deploy.0 = Release|ARM
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x64.ActiveCfg = Release|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x64.Build.0 = Release|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x64.Deploy.0 = Release|x64
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x86.ActiveCfg = Release|x86
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x86.Build.0 = Release|x86
+		{B3292670-B992-4339-9BA3-AB29F9807ABA}.Release|x86.Deploy.0 = Release|x86
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|ARM.ActiveCfg = Debug|ARM
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|ARM.Build.0 = Debug|ARM
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|x64.ActiveCfg = Debug|x64
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|x64.Build.0 = Debug|x64
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|x86.ActiveCfg = Debug|Win32
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Debug|x86.Build.0 = Debug|Win32
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|ARM.ActiveCfg = Release|ARM
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|ARM.Build.0 = Release|ARM
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|x64.ActiveCfg = Release|x64
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|x64.Build.0 = Release|x64
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|x86.ActiveCfg = Release|Win32
+		{094DE7A3-9C46-45A1-BEAB-F0E07EBBFB7F}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Generator\\Generator.vcxproj
+		SccProjectName1 = Generator
+		SccLocalPath1 = Generator
+		SccProjectUniqueName2 = RandomNumbers\\RandomNumbers.csproj
+		SccProjectName2 = RandomNumbers
+		SccLocalPath2 = RandomNumbers
+	EndGlobalSection
+EndGlobal
