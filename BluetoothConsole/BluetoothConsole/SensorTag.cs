@@ -20,7 +20,6 @@ namespace BluetoothConsole
     {
         GattDeviceService service;
         ILog log;
-        bool listening;
 
         public SensorTag(ILog log)
         {
