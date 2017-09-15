@@ -104,7 +104,7 @@ bool labels_match(std::string label1, std::string label2)
                 pos2 = len2;
             }
             else {
-                part2 = label1.substr(pos2, comma - pos2);
+                part2 = label2.substr(pos2, comma - pos2);
                 pos2 = comma + 1;
             }
             trim(part2);
