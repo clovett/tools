@@ -97,9 +97,10 @@ void mean_cpu(float *x, int batch, int filters, int spatial, float *mean)
     int i, j, k;
     for (i = 0; i < filters; ++i) {
         mean[i] = 0;
+        int l = j*filters*spatial + i*spatial;
         for (j = 0; j < batch; ++j) {
             for (k = 0; k < spatial; ++k) {
-                int index = j*filters*spatial + i*spatial + k;
+                int index = l + k;
                 mean[i] += x[index];
             }
         }
@@ -113,10 +114,12 @@ void variance_cpu(float *x, float *mean, int batch, int filters, int spatial, fl
     int i, j, k;
     for (i = 0; i < filters; ++i) {
         variance[i] = 0;
+        float m = mean[i];
         for (j = 0; j < batch; ++j) {
+            int l = j*filters*spatial + i*spatial;
             for (k = 0; k < spatial; ++k) {
-                int index = j*filters*spatial + i*spatial + k;
-                variance[i] += pow((x[index] - mean[i]), 2);
+                int index = l + k;
+                variance[i] += pow((x[index] - m), 2);
             }
         }
         variance[i] *= scale;
@@ -128,9 +131,12 @@ void normalize_cpu(float *x, float *mean, float *variance, int batch, int filter
     int b, f, i;
     for (b = 0; b < batch; ++b) {
         for (f = 0; f < filters; ++f) {
+            float m = mean[f];
+            float v = (sqrt(variance[f]) + .000001f);
+            int p = b*filters*spatial + f*spatial;
             for (i = 0; i < spatial; ++i) {
-                int index = b*filters*spatial + f*spatial + i;
-                x[index] = (x[index] - mean[f]) / (sqrt(variance[f]) + .000001f);
+                int index = p + i;
+                x[index] = (x[index] - m) / v;
             }
         }
     }

@@ -12,7 +12,7 @@ void gemm_bin(int M, int N, int K, float ALPHA,
     float *B, int ldb,
     float *C, int ldc)
 {
-    int i, j, k;
+    int i, j, k; 
     for (i = 0; i < M; ++i) {
         for (k = 0; k < K; ++k) {
             char A_PART = A[i*lda + k];
