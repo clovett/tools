@@ -187,14 +187,13 @@ int main(int argc, char**argv)
     {
         count++;
         entry e = *ptr;
-        bool passed = test(net, labels, truthlabels, e, top);
-        if (passed) {
+        if (test(net, labels, truthlabels, e, top)) {
             passed++;
-            std::cout << "Test passed (" << count << "), current pass rate " << get_rate(count, passed) << "%" << std::endl;
+            std::cout << "  Test passed (" << count << "), current pass rate " << get_rate(count, passed) << "%" << std::endl;
         }
         else {
-            std::cout << "Test failed (" << count << "), current pass rate " << get_rate(count, passed) << "%" << std::endl;
-            std::cout << "   ===> Expecting: " << truthlabels[e.prediction] << std::endl;
+            std::cout << "  Test failed (" << count << "), current pass rate " << get_rate(count, passed) << "%" << std::endl;
+            std::cout << "  ===> Expecting: " << truthlabels[e.prediction] << std::endl;
         }
     }
 
