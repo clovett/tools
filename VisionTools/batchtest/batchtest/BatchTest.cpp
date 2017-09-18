@@ -135,7 +135,7 @@ bool BatchTest::Test(entry& e)
 
 	top_k(&predictions[0], output_size, top, indexes);
 	double end = what_time_is_it_now();
-	std::cout << e.name << ": Predicted in " << end - start << "seconds.\n";
+	std::cout << e.name << ": Predicted in " << end - start << " seconds.\n";
 	bool passed = false;
 	for (int i = 0; i < top; ++i) {
 		int index = indexes[i];
