@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<uninstall title="Visual Studio 2010 - Everything!">
+  <group>
+    <item>SQL Server System CLR Types</item>
+    <item>Microsoft SQL Server 2008 Management Objects</item>
+    <item>Microsoft SQL Server Database Publishing Wizard 1.4</item>
+    <item>Microsoft Sync Framework Services v1.0</item>
+  </group>
+  <group>
+    <item>Microsoft Visual Studio 2010 Performance Collection Tools</item>
+    <item>Microsoft Network Emulation</item>
+    <item>Microsoft Visual Studio 2010 Remote Debugger</item>
+    <item>Microsoft Visual Studio 2010 Visual Studio Trace Debugger Instrumentation</item>
+    <item>Microsoft Sync Services for ADO.NET v2.0</item>
+    <item>Visual Studio Tools for the Office system 4.0 Runtime</item>
+  </group>
+  <group>
+    <item>Microsoft Sync Framework SDK v1.0</item>
+    <item>Microsoft Sync Framework Runtime v1.0</item>
+    <item>Microsoft SQL Server Compact 4.0 Design Tools</item>
+    <item>SQL Server Compact Tools for Visual Studio 2010</item>
+  </group>
+  <group>
+    <item>Web Deployment Tool</item>
+    <item>Microsoft SQL Server Compact 3.5 SP1</item>
+  </group>
+  <group>
+    <item>Microsoft Visual Studio Team System 2010 Team Suite</item>
+  </group>
+    <item>Microsoft Visual Studio Macro Tools</item>
+    <item>Microsoft Help Viewer 3.0</item>
+    <item>Microsoft Help 3.0</item>
+    <item>Microsoft Team Foundation Server 2010 Beta 1 Object Model</item>
+  <group>
+    <item>Visual Studio 2010 Prerequisites</item>
+    <item>Microsoft .NET Compact Framework 3.5</item>
+    <item>Microsoft .NET Framework 4 Extended</item>
+    <item>Microsoft .NET Framework 4 Client Profile</item>
+  </group>
+  <group>
+    <item>Microsoft Visual C++ 2010</item>
+  </group>
+</uninstall>

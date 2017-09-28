@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>10.0.20402</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{63D3DD6E-05BF-4938-A98F-4CF4F5BD7C47}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Uninstall</RootNamespace>
+    <AssemblyName>Uninstall</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DTF\ColumnCollection.cs" />
+    <Compile Include="DTF\ColumnEnums.cs" />
+    <Compile Include="DTF\ColumnInfo.cs" />
+    <Compile Include="DTF\ComponentInfo.cs" />
+    <Compile Include="DTF\ComponentInstallation.cs" />
+    <Compile Include="DTF\CustomActionAttribute.cs" />
+    <Compile Include="DTF\customactiondata.cs" />
+    <Compile Include="DTF\CustomActionProxy.cs" />
+    <Compile Include="DTF\Database.cs" />
+    <Compile Include="DTF\DatabaseQuery.cs" />
+    <Compile Include="DTF\DatabaseTransform.cs" />
+    <Compile Include="DTF\EmbeddedUIProxy.cs" />
+    <Compile Include="DTF\Enumerable.cs" />
+    <Compile Include="DTF\Enums.cs" />
+    <Compile Include="DTF\Exceptions.cs" />
+    <Compile Include="DTF\ExternalUIHandler.cs" />
+    <Compile Include="DTF\FeatureInfo.cs" />
+    <Compile Include="DTF\FeatureInstallation.cs" />
+    <Compile Include="DTF\Handle.cs" />
+    <Compile Include="DTF\IEmbeddedUI.cs" />
+    <Compile Include="DTF\Installation.cs" />
+    <Compile Include="DTF\InstallationPart.cs" />
+    <Compile Include="DTF\InstallCost.cs" />
+    <Compile Include="DTF\Installer.cs" />
+    <Compile Include="DTF\InstallerAdvertise.cs" />
+    <Compile Include="DTF\InstallerUtils.cs" />
+    <Compile Include="DTF\MediaDisk.cs" />
+    <Compile Include="DTF\NativeMethods.cs" />
+    <Compile Include="DTF\PatchInstallation.cs" />
+    <Compile Include="DTF\ProductInstallation.cs" />
+    <Compile Include="DTF\Record.cs" />
+    <Compile Include="DTF\RecordStream.cs" />
+    <Compile Include="DTF\RemotableNativeMethods.cs" />
+    <Compile Include="DTF\Session.cs" />
+    <Compile Include="DTF\ShortcutTarget.cs" />
+    <Compile Include="DTF\SourceList.cs" />
+    <Compile Include="DTF\SourceMediaList.cs" />
+    <Compile Include="DTF\SummaryInfo.cs" />
+    <Compile Include="DTF\TableCollection.cs" />
+    <Compile Include="DTF\TableInfo.cs" />
+    <Compile Include="DTF\Transaction.cs" />
+    <Compile Include="DTF\ValidationErrorInfo.cs" />
+    <Compile Include="DTF\View.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="vs.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
