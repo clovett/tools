@@ -377,7 +377,7 @@ namespace HttpGet
                             string fname = uri.Segments[uri.Segments.Length - 1];
                             if (fname == "/")
                             {
-                                fname = "default.htm";
+                                fname = "index.html";
                             }
                             result = fname;
                         }
@@ -387,7 +387,7 @@ namespace HttpGet
                         }
                         if (string.IsNullOrEmpty(System.IO.Path.GetExtension(result).ToLowerInvariant()))
                         {
-                            result += ".htm";
+                            result += ".html";
                         }
 
                         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
