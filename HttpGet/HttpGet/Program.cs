@@ -20,7 +20,7 @@ namespace HttpGet
         string rootDir;
         bool stats;
         int depth;
-        Dictionary<Uri, string> fetched = new Dictionary<Uri, string>();
+        Dictionary<Uri, bool> fetched = new Dictionary<Uri, bool>();
 
         static void Main(string[] args)
         {
@@ -37,11 +37,11 @@ namespace HttpGet
             }
             catch (WebException e)
             {
-                Console.WriteLine("### Error: {0}", e.Message);
+                WriteError("### Error: {0}", e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine("### Error: {0} {1}", e.GetType().FullName, e.Message);
+                WriteError("### Error: {0} {1}", e.GetType().FullName, e.Message);
             }
         }
 
@@ -64,6 +64,7 @@ namespace HttpGet
                             deep = true;
                             break;
                         case "s":
+                        case "stats":
                             stats = true;
                             break;
                         case "?":
@@ -77,7 +78,7 @@ namespace HttpGet
                             }
                             else
                             {
-                                Console.WriteLine("### missing file name argument");
+                                WriteError("### missing file name argument");
                                 return false;
                             }
                             break;
@@ -92,13 +93,13 @@ namespace HttpGet
                 }
                 else
                 {
-                    Console.WriteLine("### Too many arguments");
+                    WriteError("### Too many arguments");
                     return false;
                 }
             }
             if (baseUrl == null)
             {
-                Console.WriteLine("### Missing url argument");
+                WriteError("### Missing url argument");
                 return false;
             }
 
@@ -151,7 +152,7 @@ namespace HttpGet
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("### Error saving XML file: " + ex.Message);
+                        WriteError("### Error saving XML file: " + ex.Message);
                     }
 
                     if (deep)
@@ -161,23 +162,7 @@ namespace HttpGet
                 }
             }
         }
-
-        private void CheckValidLink(Uri uri)
-        {
-            Console.WriteLine("Fetching: " + uri.AbsoluteUri);
-            WebRequest req = WebRequest.Create(uri);
-
-            req.Credentials = CredentialCache.DefaultNetworkCredentials;
-            req.Method = "GET";
-            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-            if (resp.StatusCode != HttpStatusCode.OK)
-            {
-                Console.WriteLine("### Error returned from : " + uri.ToString());
-                Console.WriteLine("### " + resp.StatusDescription);
-            }
-
-        }
-
+        
         private void TraverseLinks(Uri baseUri, XDocument doc)
         {
             // ok, now check all <a> links in this page and if they are local download them, if they are remote
@@ -215,9 +200,9 @@ namespace HttpGet
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("### Error: " + ex.Message);
-                        Console.WriteLine("### Error: broken link: " + href);
-                        Console.WriteLine("### Error: referenced : " + baseUri.ToString());
+                        WriteError("### Error: " + ex.Message);
+                        WriteError("### Error: broken link: " + href);
+                        WriteError("### Error: referenced : " + baseUri.ToString());
                     }
                 }
             }
@@ -306,6 +291,12 @@ namespace HttpGet
                 return null;
             }
 
+            if (fetched.ContainsKey(new Uri(uri.ToString() + "/")))
+            {
+                // see if we used optional trailing slash last time...
+                return null;
+            }
+
             bool external = (uri.Host != this.baseUrl.Host);
 
             try
@@ -344,26 +335,32 @@ namespace HttpGet
                     }
                 }
 
-                fetched[uri] = null;
+                // mark it as done even if request fails so we don't keep retrying.
+                fetched[uri] = true;
 
                 if (uri.Scheme != "http" && uri.Scheme != "https")
                 {
                     return null;
                 }
 
-                Console.WriteLine(depth + ") Fetching: " + uri.AbsoluteUri);
-                WebRequest req = WebRequest.Create(uri);
+                string verb = external ? "Checking" : "Fetching";
+                string indent = new string(' ', depth);
+                WriteNormal(depth + ": " + indent + verb + ": " + uri.AbsoluteUri);
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(uri);
+                req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063";
                 req.Credentials = CredentialCache.DefaultNetworkCredentials;
                 req.Method = external ? "HEAD" : "GET";
 
                 using (WebResponse resp = req.GetResponse())
                 {
+                    // in case it is an HTTP redirect.
+                    fetched[resp.ResponseUri] = true;
 
                     if (headers)
                     {
                         foreach (string key in resp.Headers.AllKeys)
                         {
-                            Console.WriteLine(key + "=" + resp.Headers[key]);
+                            WriteNormal(key + "=" + resp.Headers[key]);
                         }
                         return null;
                     }
@@ -400,11 +397,11 @@ namespace HttpGet
                         if (stats)
                         {
                             double bps = (double)length / watch.Elapsed.TotalSeconds;
-                            Console.WriteLine("Download speed: {0} bytes per second", Math.Round(bps, 3));
+                            WriteInfo("Download speed: {0} bytes per second", Math.Round(bps, 3));
                         }
                         if (stats)
                         {
-                            Console.WriteLine("Saved local file: " + Path.GetFullPath(result));
+                            WriteInfo("Saved local file: " + Path.GetFullPath(result));
                         }
                     }
                 }
@@ -412,14 +409,49 @@ namespace HttpGet
                 {
                     rootDir = Path.GetDirectoryName(Path.GetFullPath(result));
                 }
-                fetched[uri] = result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error downloading URL: " + ex.Message);
+                WriteError("### Error downloading URL: " + ex.Message);
                 return null;
             }
             return result;
+        }
+
+        private static void WriteError(string format, params object[] args)
+        {
+            string msg = format;
+            if (args != null)
+            {
+                msg = string.Format(format, args);
+            }
+            var saved = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(msg);
+            Console.ForegroundColor = saved;
+        }
+
+        private static void WriteInfo(string format, params object[] args)
+        {
+            string msg = format;
+            if (args != null)
+            {
+                msg = string.Format(format, args);
+            }
+            var saved = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(msg);
+            Console.ForegroundColor = saved;
+        }
+
+        private static void WriteNormal(string format, params object[] args)
+        {
+            string msg = format;
+            if (args != null)
+            {
+                msg = string.Format(format, args);
+            }
+            Console.WriteLine(msg);
         }
 
         private static long CopyToFile(Stream stream, string path)
