@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace HttpGet
@@ -12,11 +13,14 @@ namespace HttpGet
     class Program
     {
         bool all;
+        bool deep;
         bool headers;
         string filename;
-        string url;
+        Uri baseUrl;
         string rootDir;
         bool stats;
+        int depth;
+        Dictionary<Uri, string> fetched = new Dictionary<Uri, string>();
 
         static void Main(string[] args)
         {
@@ -34,16 +38,6 @@ namespace HttpGet
             catch (WebException e)
             {
                 Console.WriteLine("### Error: {0}", e.Message);
-                if (e.Response.ContentLength > 0)
-                {
-                    using (Stream s = e.Response.GetResponseStream())
-                    {
-                        using (StreamReader reader = new StreamReader(s))
-                        {
-                            Console.WriteLine(reader.ReadToEnd());
-                        }
-                    }
-                }
             }
             catch (Exception e)
             {
@@ -64,6 +58,10 @@ namespace HttpGet
                         case "a":
                         case "all":
                             all = true;
+                            break;
+                        case "d":
+                        case "deep":
+                            deep = true;
                             break;
                         case "s":
                             stats = true;
@@ -88,9 +86,9 @@ namespace HttpGet
                             break;
                     }
                 }
-                else if (url == null)
+                else if (baseUrl == null)
                 {
-                    url = arg;
+                    baseUrl = new Uri(arg);
                 }
                 else
                 {
@@ -98,7 +96,7 @@ namespace HttpGet
                     return false;
                 }
             }
-            if (url == null)
+            if (baseUrl == null)
             {
                 Console.WriteLine("### Missing url argument");
                 return false;
@@ -109,24 +107,93 @@ namespace HttpGet
 
         private void Run()
         {
-            Uri baseUri = new Uri(url);
-            string path = Download(baseUri, null);
+            Process(this.baseUrl);
+        }
+
+        private void Process(Uri uri)
+        {
+            string path = Download(uri);
             if (path == null)
             {
                 return;
             }
-            string fullPath = Path.GetFullPath(path);
-            if (all)
+            if (all || deep)
             {
-                XDocument doc = XDocument.Load(path);
-                FetchCss(baseUri, doc);
-                FetchAudio(baseUri, doc);
-                FetchImages(baseUri, doc);
-                FetchSvgImages(baseUri, doc);
-                FetchScripts(baseUri, doc);
+                string fullPath = Path.GetFullPath(path);
+                string ext = Path.GetExtension(uri.ToString()).ToLowerInvariant();
+                if (ext == "htm" || ext == "html" || ext == "")
+                {
+                    XDocument doc = null;
+                    using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
+                    {
+                        using (var reader = new StreamReader(stream))
+                        {
+                            // setup SgmlReader
+                            Sgml.SgmlReader sgmlReader = new Sgml.SgmlReader();
+                            sgmlReader.DocType = "HTML";
+                            sgmlReader.WhitespaceHandling = WhitespaceHandling.All;
+                            sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
+                            sgmlReader.InputStream = reader;
 
-                doc.Save(fullPath);
+                            doc = XDocument.Load(sgmlReader);
+                            FetchCss(uri, doc);
+                            FetchAudio(uri, doc);
+                            FetchImages(uri, doc);
+                            FetchSvgImages(uri, doc);
+                            FetchScripts(uri, doc);
+                        }
+                    }
+
+                    // save valid XML version
+                    try
+                    {
+                        doc.Save(fullPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("### Error saving XML file: " + ex.Message);
+                    }
+
+                    if (deep)
+                    {
+                        TraverseLinks(uri, doc);
+                    }
+                }
             }
+        }
+
+        private void CheckValidLink(Uri uri)
+        {
+            Console.WriteLine("Fetching: " + uri.AbsoluteUri);
+            WebRequest req = WebRequest.Create(uri);
+
+            req.Credentials = CredentialCache.DefaultNetworkCredentials;
+            req.Method = "GET";
+            HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+            if (resp.StatusCode != HttpStatusCode.OK)
+            {
+                Console.WriteLine("### Error returned from : " + uri.ToString());
+                Console.WriteLine("### " + resp.StatusDescription);
+            }
+
+        }
+
+        private void TraverseLinks(Uri baseUri, XDocument doc)
+        {
+            // ok, now check all <a> links in this page and if they are local download them, if they are remote
+            // check that they are valid, but don't traverse them.
+            depth++;
+            XNamespace ns = doc.Root.Name.Namespace;
+            foreach (XElement link in doc.Descendants(ns + "a"))
+            {
+                string href = (string)link.Attribute("href");
+                if (!string.IsNullOrWhiteSpace(href))
+                {
+                    Uri resolved = new Uri(baseUri, href);
+                    Process(resolved);
+                }
+            }
+            depth--;
         }
 
         private void FetchCss(Uri baseUri, XDocument doc)
@@ -137,10 +204,20 @@ namespace HttpGet
                 string href = (string)link.Attribute("href");
                 if (!string.IsNullOrWhiteSpace(href))
                 {
-                    string local = Download(baseUri, href);
-                    if (local != null && local != href)
+                    try
                     {
-                        link.SetAttributeValue("href", local);
+                        Uri resolved = new Uri(baseUri, href);
+                        string local = Download(resolved);
+                        if (local != null && local != href)
+                        {
+                            link.SetAttributeValue("href", local);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("### Error: " + ex.Message);
+                        Console.WriteLine("### Error: broken link: " + href);
+                        Console.WriteLine("### Error: referenced : " + baseUri.ToString());
                     }
                 }
             }
@@ -154,7 +231,8 @@ namespace HttpGet
                 string href = (string)link.Attribute("src");
                 if (!string.IsNullOrWhiteSpace(href))
                 {
-                    string local = Download(baseUri, href);
+                    Uri resolved = new Uri(baseUri, href);
+                    string local = Download(resolved);
                     if (local != null && local != href)
                     {
                         link.SetAttributeValue("src", local);
@@ -171,7 +249,8 @@ namespace HttpGet
                 string href = (string)link.Attribute("src");
                 if (!string.IsNullOrWhiteSpace(href))
                 {
-                    string local = Download(baseUri, href);
+                    Uri resolved = new Uri(baseUri, href);
+                    string local = Download(resolved);
                     if (local != null && local != href)
                     {
                         link.SetAttributeValue("src", local);
@@ -189,7 +268,8 @@ namespace HttpGet
                 string href = (string)link.Attribute(xlinkns + "href");
                 if (!string.IsNullOrWhiteSpace(href))
                 {
-                    string local = Download(baseUri, href);
+                    Uri resolved = new Uri(baseUri, href);
+                    string local = Download(resolved);
                     if (local != null && local != href)
                     {
                         link.SetAttributeValue(xlinkns + "href", local);
@@ -197,6 +277,7 @@ namespace HttpGet
                 }
             }
         }
+
         private void FetchScripts(Uri baseUri, XDocument doc)
         {
             XNamespace ns = doc.Root.Name.Namespace;
@@ -205,7 +286,8 @@ namespace HttpGet
                 string href = (string)link.Attribute("src");
                 if (!string.IsNullOrWhiteSpace(href))
                 {
-                    string local = Download(baseUri, href);
+                    Uri resolved = new Uri(baseUri, href);
+                    string local = Download(resolved);
                     if (local != null && local != href)
                     {
                         link.SetAttributeValue("src", local);
@@ -214,116 +296,128 @@ namespace HttpGet
             }
         }
 
-        private string Download(Uri uri, string relative)
+        private string Download(Uri uri)
         {
             string result = null;
 
-            if (!string.IsNullOrWhiteSpace(relative))
+            if (fetched.ContainsKey(uri))
             {
-                if (relative.StartsWith("#") || relative.StartsWith("data:"))
-                {
-                    // content is inline
-                    return null;
-                }
-
-                Uri resolved = new Uri(uri, relative);
-                Uri rel = resolved.MakeRelativeUri(uri);
-                if (rel.IsAbsoluteUri)
-                {
-                    // don't download from different places
-                    return null;
-                }
-                string subs = "";
-                string[] dirs = relative.Split('/', '\\');
-                for (int i = 0; i < dirs.Length; i++)
-                {
-                    string dir = dirs[i];
-                    if (dir == ".." || string.IsNullOrWhiteSpace(dir))
-                    {
-                        // ignore this
-                    }
-                    else if (i == dirs.Length - 1)
-                    {
-                        // the file
-                        string fname = dir;
-                        result = Path.Combine(subs, fname);
-                        uri = resolved;
-                        subs = "";
-                    }
-                    else
-                    {
-                        // a directory
-                        subs = Path.Combine(subs, dir);
-                        string newPath = Path.Combine(this.rootDir, subs);
-                        if (!Directory.Exists(newPath))
-                        {
-                            Directory.CreateDirectory(newPath);
-                        }
-                        Directory.SetCurrentDirectory(newPath);
-                    }
-                }
-            }
-
-            Console.WriteLine("Fetching: " + uri.AbsoluteUri);
-            WebRequest req = WebRequest.Create(uri);
-            req.Credentials = CredentialCache.DefaultNetworkCredentials;
-            req.Method = "GET";
-
-            WebResponse resp = req.GetResponse();
-
-            if (headers)
-            {
-                foreach (string key in resp.Headers.AllKeys)
-                {
-                    Console.WriteLine(key + "=" + resp.Headers[key]);
-                }
+                // already taken care of
                 return null;
             }
 
-            using (var stream = resp.GetResponseStream())
+            bool external = (uri.Host != this.baseUrl.Host);
+
+            try
             {
-                if (string.IsNullOrEmpty(relative))
+
+                Uri rel = this.baseUrl.MakeRelativeUri(uri);
+                string relative = rel.ToString();                
+                if (relative != "" && !external)
                 {
-                    if (!string.IsNullOrEmpty(this.filename))
+                    string subs = "";
+                    string[] dirs = relative.Split('/', '\\');
+                    for (int i = 0; i < dirs.Length; i++)
                     {
-                        CopyToFile(stream, this.filename);
-                        if (result == null)
+                        string dir = dirs[i];
+                        if (dir == ".." || string.IsNullOrWhiteSpace(dir))
                         {
-                            result = this.filename;
+                            // ignore this
+                        }
+                        else if (i == dirs.Length - 1)
+                        {
+                            // the file
+                            string fname = dir;
+                            result = Path.Combine(subs, fname);
+                            subs = "";
+                        }
+                        else
+                        {
+                            // a directory
+                            subs = Path.Combine(subs, dir);
+                            string newPath = Path.Combine(this.rootDir, subs);
+                            if (!Directory.Exists(newPath))
+                            {
+                                Directory.CreateDirectory(newPath);
+                            }
                         }
                     }
-                    else
+                }
+
+                fetched[uri] = null;
+
+                if (uri.Scheme != "http" && uri.Scheme != "https")
+                {
+                    return null;
+                }
+
+                Console.WriteLine(depth + ") Fetching: " + uri.AbsoluteUri);
+                WebRequest req = WebRequest.Create(uri);
+                req.Credentials = CredentialCache.DefaultNetworkCredentials;
+                req.Method = external ? "HEAD" : "GET";
+
+                using (WebResponse resp = req.GetResponse())
+                {
+
+                    if (headers)
                     {
-                        string fname = uri.Segments[uri.Segments.Length - 1];
-                        if (fname == "/")
+                        foreach (string key in resp.Headers.AllKeys)
                         {
-                            fname = "default.htm";
+                            Console.WriteLine(key + "=" + resp.Headers[key]);
                         }
+                        return null;
+                    }
+
+                    if (external)
+                    {
+                        // stop here, don't traverse into external links, just check they are ok.
+                        return null;
+                    }
+                    using (var stream = resp.GetResponseStream())
+                    {
+                        if (string.IsNullOrEmpty(result))
+                        {
+                            string fname = uri.Segments[uri.Segments.Length - 1];
+                            if (fname == "/")
+                            {
+                                fname = "default.htm";
+                            }
+                            result = fname;
+                        }
+                        if (result.EndsWith("/"))
+                        {
+                            result = result.Trim('/');
+                        }
+                        if (string.IsNullOrEmpty(System.IO.Path.GetExtension(result).ToLowerInvariant()))
+                        {
+                            result += ".htm";
+                        }
+
                         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
-                        long length = CopyToFile(stream, fname);
+                        long length = CopyToFile(stream, result);
                         watch.Stop();
                         if (stats)
                         {
                             double bps = (double)length / watch.Elapsed.TotalSeconds;
                             Console.WriteLine("Download speed: {0} bytes per second", Math.Round(bps, 3));
                         }
-
-                        if (result == null)
+                        if (stats)
                         {
-                            result = fname;
+                            Console.WriteLine("Saved local file: " + Path.GetFullPath(result));
                         }
-                        Console.WriteLine("Saved local file: " + Path.GetFullPath(fname));
                     }
                 }
+                if (rootDir == null)
+                {
+                    rootDir = Path.GetDirectoryName(Path.GetFullPath(result));
+                }
+                fetched[uri] = result;
             }
-            if (rootDir == null)
+            catch (Exception ex)
             {
-                rootDir = Path.GetDirectoryName(Path.GetFullPath(result));
-            }
-            else
-            {
-                Directory.SetCurrentDirectory(rootDir);
+                Console.WriteLine("Error downloading URL: " + ex.Message);
+                return null;
             }
             return result;
         }
