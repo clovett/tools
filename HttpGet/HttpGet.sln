@@ -1,20 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21120.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpGet", "HttpGet\HttpGet.csproj", "{C8326EC2-5635-4C75-BEC5-889E196F9A16}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SgmlReaderDll", "..\SGMLReader\sgmlreaderdll\SgmlReaderDll.csproj", "{499527FF-AE52-450F-B3E3-4AD53E1712AD}"
+EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = HttpGet\\HttpGet.csproj
-		SccProjectName1 = HttpGet
-		SccLocalPath1 = HttpGet
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -24,8 +17,27 @@ Global
 		{C8326EC2-5635-4C75-BEC5-889E196F9A16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8326EC2-5635-4C75-BEC5-889E196F9A16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8326EC2-5635-4C75-BEC5-889E196F9A16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{499527FF-AE52-450F-B3E3-4AD53E1712AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{499527FF-AE52-450F-B3E3-4AD53E1712AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{499527FF-AE52-450F-B3E3-4AD53E1712AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{499527FF-AE52-450F-B3E3-4AD53E1712AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {693BB772-84AE-49F5-A9F8-645BA5EC274A}
+	EndGlobalSection
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 3
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = HttpGet\\HttpGet.csproj
+		SccProjectName1 = HttpGet
+		SccLocalPath1 = HttpGet
+		SccProjectUniqueName2 = ..\\SGMLReader\\sgmlreaderdll\\SgmlReaderDll.csproj
+		SccProjectName2 = ../SGMLReader/sgmlreaderdll
+		SccLocalPath2 = ..\\SGMLReader\\sgmlreaderdll
 	EndGlobalSection
 EndGlobal

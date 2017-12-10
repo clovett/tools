@@ -476,7 +476,8 @@ namespace HttpGet
             Console.WriteLine("HttpGet [options] <url>");
             Console.WriteLine("Fetches the resource at the given URL and saves it locally");
             Console.WriteLine("Options:");
-            Console.WriteLine("   -all      if url is xhtml it brings down all locally referenced resources with the file");
+            Console.WriteLine("   -all      if url is html it brings down all locally referenced resources with the file including css, scripts and images");
+            Console.WriteLine("   -deep     does -all deeply (traverses <a> links in same domain)");
             Console.WriteLine("   -filename the name of the file to save http content into (default writes to stdout)");
             Console.WriteLine("   -headers  just print http headers to stdout");
         }
