@@ -20,7 +20,8 @@ namespace HttpGet
         string rootDir;
         bool stats;
         int depth;
-        Dictionary<Uri, bool> fetched = new Dictionary<Uri, bool>();
+        List<Uri> merge = new List<Uri>();
+        Dictionary<Uri, string> fetched = new Dictionary<Uri, string>();
 
         static void Main(string[] args)
         {
@@ -62,6 +63,13 @@ namespace HttpGet
                         case "d":
                         case "deep":
                             deep = true;
+                            break;
+                        case "m":
+                        case "merge":
+                            if (i + 1 < args.Length)
+                            {
+                                merge.Add(new Uri(args[++i]));
+                            }
                             break;
                         case "s":
                         case "stats":
@@ -111,12 +119,18 @@ namespace HttpGet
             Process(this.baseUrl);
         }
 
-        private void Process(Uri uri)
+        private string Process(Uri uri)
         {
-            string path = Download(uri);
-            if (path == null)
+            if (fetched.ContainsKey(uri))
             {
-                return;
+                // already done!
+                return fetched[uri];
+            }
+
+            string path = Download(uri);
+            if (string.IsNullOrEmpty(path))
+            {
+                return "";
             }
             if (all || deep)
             {
@@ -142,7 +156,13 @@ namespace HttpGet
                             FetchImages(uri, doc);
                             FetchSvgImages(uri, doc);
                             FetchScripts(uri, doc);
+                            FetchZipFiles(uri, doc);
                         }
+                    }
+
+                    if (deep)
+                    {
+                        TraverseLinks(uri, doc);
                     }
 
                     // save valid XML version
@@ -155,12 +175,9 @@ namespace HttpGet
                         WriteError("### Error saving XML file: " + ex.Message);
                     }
 
-                    if (deep)
-                    {
-                        TraverseLinks(uri, doc);
-                    }
                 }
             }
+            return path;
         }
         
         private void TraverseLinks(Uri baseUri, XDocument doc)
@@ -172,10 +189,17 @@ namespace HttpGet
             foreach (XElement link in doc.Descendants(ns + "a"))
             {
                 string href = (string)link.Attribute("href");
-                if (!string.IsNullOrWhiteSpace(href))
+                if (!string.IsNullOrWhiteSpace(href) && !href.StartsWith("#"))
                 {
                     Uri resolved = new Uri(baseUri, href);
-                    Process(resolved);
+                    if (resolved != baseUri)
+                    {
+                        string localPath = Process(resolved);
+                        if (!string.IsNullOrEmpty(localPath))
+                        {
+                            link.SetAttributeValue("href", MakeRelative(baseUri, resolved, localPath));
+                        }
+                    }
                 }
             }
             depth--;
@@ -193,9 +217,9 @@ namespace HttpGet
                     {
                         Uri resolved = new Uri(baseUri, href);
                         string local = Download(resolved);
-                        if (local != null && local != href)
+                        if (!string.IsNullOrEmpty(local))
                         {
-                            link.SetAttributeValue("href", local);
+                            link.SetAttributeValue("href", MakeRelative(baseUri, resolved, local));
                         }
                     }
                     catch (Exception ex)
@@ -220,7 +244,7 @@ namespace HttpGet
                     string local = Download(resolved);
                     if (local != null && local != href)
                     {
-                        link.SetAttributeValue("src", local);
+                        link.SetAttributeValue("src", MakeRelative(baseUri, resolved, local));
                     }
                 }
             }
@@ -238,7 +262,7 @@ namespace HttpGet
                     string local = Download(resolved);
                     if (local != null && local != href)
                     {
-                        link.SetAttributeValue("src", local);
+                        link.SetAttributeValue("src", MakeRelative(baseUri, resolved, local));
                     }
                 }
             }
@@ -257,7 +281,7 @@ namespace HttpGet
                     string local = Download(resolved);
                     if (local != null && local != href)
                     {
-                        link.SetAttributeValue(xlinkns + "href", local);
+                        link.SetAttributeValue(xlinkns + "href", MakeRelative(baseUri, resolved, local));
                     }
                 }
             }
@@ -275,7 +299,30 @@ namespace HttpGet
                     string local = Download(resolved);
                     if (local != null && local != href)
                     {
-                        link.SetAttributeValue("src", local);
+                        link.SetAttributeValue("src", MakeRelative(baseUri, resolved, local));
+                    }
+                }
+            }
+        }
+
+
+        private void FetchZipFiles(Uri baseUri, XDocument doc)
+        {
+            XNamespace ns = doc.Root.Name.Namespace;
+            foreach (XElement link in doc.Descendants(ns + "a"))
+            {
+                string href = (string)link.Attribute("href");
+                if (!string.IsNullOrWhiteSpace(href))
+                {
+                    Uri resolved = new Uri(baseUri, href);
+                    string ext = System.IO.Path.GetExtension(resolved.ToString());
+                    if (string.Compare(ext, ".zip", StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        string local = Download(resolved);
+                        if (local != null && local != href)
+                        {
+                            link.SetAttributeValue("href", MakeRelative(baseUri, resolved, local));
+                        }
                     }
                 }
             }
@@ -283,63 +330,39 @@ namespace HttpGet
 
         private string Download(Uri uri)
         {
-            string result = null;
+            string result = "";
 
             if (fetched.ContainsKey(uri))
             {
                 // already taken care of
-                return null;
-            }
-
-            if (fetched.ContainsKey(new Uri(uri.ToString() + "/")))
-            {
-                // see if we used optional trailing slash last time...
-                return null;
+                return fetched[uri];
             }
 
             bool external = (uri.Host != this.baseUrl.Host);
+            Uri original = uri;
+
+            Uri baseuri = this.baseUrl;
+
+            if (external)
+            {
+                foreach (var other in this.merge)
+                {
+                    if (uri.Host == other.Host && uri.Segments.Length > 1)
+                    {
+                        external = false;
+                        baseuri = other;
+                        break;
+                    }
+                }
+            }
+
 
             try
             {
-
-                Uri rel = this.baseUrl.MakeRelativeUri(uri);
-                string relative = rel.ToString();                
-                if (relative != "" && !external)
-                {
-                    string subs = "";
-                    string[] dirs = relative.Split('/', '\\');
-                    for (int i = 0; i < dirs.Length; i++)
-                    {
-                        string dir = dirs[i];
-                        if (dir == ".." || string.IsNullOrWhiteSpace(dir))
-                        {
-                            // ignore this
-                        }
-                        else if (i == dirs.Length - 1)
-                        {
-                            // the file
-                            string fname = dir;
-                            result = Path.Combine(subs, fname);
-                            subs = "";
-                        }
-                        else
-                        {
-                            // a directory
-                            subs = Path.Combine(subs, dir);
-                            string newPath = Path.Combine(this.rootDir, subs);
-                            if (!Directory.Exists(newPath))
-                            {
-                                Directory.CreateDirectory(newPath);
-                            }
-                        }
-                    }
-                }
-
-                // mark it as done even if request fails so we don't keep retrying.
-                fetched[uri] = true;
-
                 if (uri.Scheme != "http" && uri.Scheme != "https")
                 {
+                    // mark it as done even if request fails so we don't keep retrying.
+                    fetched[uri] = "";
                     return null;
                 }
 
@@ -353,8 +376,49 @@ namespace HttpGet
 
                 using (WebResponse resp = req.GetResponse())
                 {
+                    uri = resp.ResponseUri;
+
+                    Uri rel = baseuri.MakeRelativeUri(uri);
+                    string relative = rel.ToString();
+
+                    if (!external)
+                    {
+                        if (string.IsNullOrEmpty(relative))
+                        {
+                            result = "index.html";
+                        }
+                        else
+                        {
+                            string[] dirs = relative.Split('/', '\\');
+                            for (int i = 0; i < dirs.Length; i++)
+                            {
+                                string dir = dirs[i];
+                                if (dir == "..")
+                                {
+                                    // skip relative paths...?
+                                }
+                                else if (i == dirs.Length - 1)
+                                {
+                                    // the file
+                                    string fname = string.IsNullOrEmpty(dir) ? "index.html" : dir;
+                                    result = Path.Combine(result, fname);
+                                }
+                                else
+                                {
+                                    // a directory
+                                    result = Path.Combine(result, dir);
+                                    if (!Directory.Exists(result))
+                                    {
+                                        Directory.CreateDirectory(result);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // in case it is an HTTP redirect.
-                    fetched[resp.ResponseUri] = true;
+                    fetched[uri] = result;
+                    fetched[original] = result;
 
                     if (headers)
                     {
@@ -372,24 +436,6 @@ namespace HttpGet
                     }
                     using (var stream = resp.GetResponseStream())
                     {
-                        if (string.IsNullOrEmpty(result))
-                        {
-                            string fname = uri.Segments[uri.Segments.Length - 1];
-                            if (fname == "/")
-                            {
-                                fname = "index.html";
-                            }
-                            result = fname;
-                        }
-                        if (result.EndsWith("/"))
-                        {
-                            result = result.Trim('/');
-                        }
-                        if (string.IsNullOrEmpty(System.IO.Path.GetExtension(result).ToLowerInvariant()))
-                        {
-                            result += ".html";
-                        }
-
                         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
                         long length = CopyToFile(stream, result);
@@ -413,9 +459,25 @@ namespace HttpGet
             catch (Exception ex)
             {
                 WriteError("### Error downloading URL: " + ex.Message);
+                fetched[uri] = "";
                 return null;
             }
             return result;
+        }
+
+        private string MakeRelative(Uri baseUri, Uri resolved, string localFile)
+        {
+            if (string.IsNullOrEmpty(localFile))
+            {
+                return ""; // this file was not downloaded.
+            }
+            if (resolved.Segments[resolved.Segments.Length - 1].EndsWith("/"))
+            {
+                resolved = new Uri(resolved, System.IO.Path.GetFileName(localFile));
+            }
+            Uri relative = baseUri.MakeRelativeUri(resolved);
+            //return new Uri(rootDir).MakeRelativeUri(new Uri(filename, UriKind.RelativeOrAbsolute)).ToString();
+            return relative.ToString();
         }
 
         private static void WriteError(string format, params object[] args)
@@ -476,10 +538,11 @@ namespace HttpGet
             Console.WriteLine("HttpGet [options] <url>");
             Console.WriteLine("Fetches the resource at the given URL and saves it locally");
             Console.WriteLine("Options:");
-            Console.WriteLine("   -all      if url is html it brings down all locally referenced resources with the file including css, scripts and images");
-            Console.WriteLine("   -deep     does -all deeply (traverses <a> links in same domain)");
-            Console.WriteLine("   -filename the name of the file to save http content into (default writes to stdout)");
-            Console.WriteLine("   -headers  just print http headers to stdout");
+            Console.WriteLine("   -all       if url is html it brings down all locally referenced resources with the file including css, scripts and images");
+            Console.WriteLine("   -deep      does -all deeply (traverses <a> links in same domain)");
+            Console.WriteLine("   -filename  the name of the file to save http content into (default writes to stdout)");
+            Console.WriteLine("   -headers   just print http headers to stdout");
+            Console.WriteLine("   -merge uri with -all this merges content from another baseUri.");
         }
     }
 }
