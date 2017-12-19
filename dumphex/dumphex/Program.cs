@@ -11,6 +11,7 @@ namespace dumphex
     {
         List<string> files = new List<string>();
         int count;
+        bool cpp = false;
 
         static void Main(string[] args)
         {
@@ -32,6 +33,7 @@ namespace dumphex
             Console.WriteLine("Outputs the content of the given binary file(s) in hex format");
             Console.WriteLine("Options:");
             Console.WriteLine("   -c count    dumps the first count bytes only");
+            Console.WriteLine("   -cpp        outputs in c++ format");
         }
 
         private void Run()
@@ -48,7 +50,14 @@ namespace dumphex
                             Console.WriteLine(file);
                             Console.WriteLine("-------------------------------------------------------------------------------------");
                         }
-                        DumpHex(fs);
+                        if (cpp)
+                        {
+                            DumpCpp(fs);
+                        }
+                        else
+                        {
+                            DumpHex(fs);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -79,6 +88,9 @@ namespace dumphex
                                 this.count = count;
                                 i++;
                             }
+                            break;
+                        case "cpp":
+                            cpp = true;
                             break;
                     }
                 }
@@ -159,6 +171,39 @@ namespace dumphex
                 }
 
                 Console.WriteLine();
+
+                if (this.count != 0 && total >= this.count)
+                {
+                    break;
+                }
+            }
+        }
+
+        private void DumpCpp(FileStream stream)
+        {
+            int total = 0;
+            byte[] line = new byte[16];
+            while (true)
+            {
+                int lineLength = stream.Read(line, 0, 16);
+                if (lineLength == 0)
+                {
+                    break;
+                }
+                total += lineLength;
+
+                int j = 0;
+                for (j = 0; j < lineLength; j++)
+                {
+                    if (j > 0)
+                    {
+                        Console.Write(", ");
+                    }
+                    byte b = line[j];
+                    Console.Write("0x" + b.ToString("x2") );
+                }
+                
+                Console.WriteLine(",");
 
                 if (this.count != 0 && total >= this.count)
                 {
