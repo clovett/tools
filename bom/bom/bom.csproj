@@ -7,8 +7,8 @@
     <ProjectGuid>{C202324A-122A-45F3-B8F7-DED6BDB92210}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RemoveBOM</RootNamespace>
-    <AssemblyName>RemoveBOM</AssemblyName>
+    <RootNamespace>LovettSoftware.Tools</RootNamespace>
+    <AssemblyName>bom</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

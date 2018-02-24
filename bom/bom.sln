@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoveBOM", "RemoveBOM\RemoveBOM.csproj", "{C202324A-122A-45F3-B8F7-DED6BDB92210}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bom", "bom\bom.csproj", "{C202324A-122A-45F3-B8F7-DED6BDB92210}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,8 +24,8 @@ Global
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = RemoveBOM\\RemoveBOM.csproj
-		SccProjectName1 = RemoveBOM
-		SccLocalPath1 = RemoveBOM
+		SccProjectUniqueName1 = bom\\bom.csproj
+		SccProjectName1 = bom
+		SccLocalPath1 = bom
 	EndGlobalSection
 EndGlobal
