@@ -1,0 +1,24 @@
+﻿{
+    "websites": [
+        {
+            "url": "http://www.lovettsoftware.com/",
+            "success": "Proudly powered by WordPress"
+        },
+        {
+            "url": "http://lovettsoftware.com/wordpress/2018/02/06/having-fun-with-ell/",
+            "success": "Proudly powered by WordPress"
+        },
+        {
+            "url": "http://lovettsoftware.com/wordpress/2017/04/22/visual-studios-lesser-known-xml-schema-features/",
+            "success": "Proudly powered by WordPress"
+        },
+        {
+            "url": "http://lovettsoftware.com/wordpress/2017/04/12/airsim-is-live/",
+            "success": "Proudly powered by WordPress"
+        },
+        {
+            "url": "http://lovettsoftware.com/wordpress/2016/11/20/mymoney-net-is-now-open-source/",
+            "success": "Proudly powered by WordPress"
+        }
+    ]
+}
