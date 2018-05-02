@@ -41,8 +41,8 @@ namespace WebSiteMonitor
     
     class PerformanceData
     {
-        [JsonProperty("timeoftest")]
-        public string TimeOfTest { get; set; }
+        [JsonProperty("time")]
+        public string Time { get; set; }
 
         [JsonProperty("url")]
         public string Url { get; set; }
@@ -127,7 +127,7 @@ namespace WebSiteMonitor
             {
                 PerformanceData pd = new PerformanceData();
                 pd.Url = website.Url;
-                pd.TimeOfTest = time.ToLongDateString() + " " + time.ToLongTimeString();
+                pd.Time = time.ToLongDateString() + " " + time.ToLongTimeString();
 
                 Stopwatch watch = new Stopwatch();
                 watch.Start();
