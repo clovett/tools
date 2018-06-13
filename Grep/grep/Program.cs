@@ -12,7 +12,8 @@ namespace ConsoleApplication1
     {
         Regex regex;
         string inputFile;
-        bool lineNumbers = true;
+        bool echo = false;
+        bool lineNumbers = false;
 
         static int Main(string[] args)
         {
@@ -76,11 +77,24 @@ namespace ConsoleApplication1
                     line = line.Trim();
                     if (regex.IsMatch(line))
                     {
+                        var saved = Console.BackgroundColor;
+                        if (echo)
+                        {
+                            Console.BackgroundColor = ConsoleColor.DarkRed;
+                        }
                         if (lineNumbers)
                         {
                             Console.WriteLine(linePrefix + "{1}", i, line);
                         }
                         else
+                        {
+                            Console.WriteLine(line);
+                        }
+                        Console.BackgroundColor = saved;
+                    }
+                    else
+                    {
+                        if (echo)
                         {
                             Console.WriteLine(line);
                         }
@@ -96,9 +110,10 @@ namespace ConsoleApplication1
             Console.WriteLine("Usage: grep [options] [file]");
             Console.WriteLine("Outputs matching lines from the given file with the expression given in the options");
             Console.WriteLine("Options:");
-            Console.WriteLine("  -e expr     the regular expression to match (in .NET regex syntax)");
-            Console.WriteLine("  -noln       no line numbers");
-            Console.WriteLine("  file        the file to process, or standard input if no file provided");
+            Console.WriteLine("  -f filename file to process (if no file uses stdin)");
+            Console.WriteLine("  -ln         add line numbers");
+            Console.WriteLine("  -e          echo all input, and highlight matching lines");
+            Console.WriteLine("  expression  the regular expression to match (in .NET regex syntax)");
         }
 
         private bool ParseCommandLine(string[] args)
@@ -110,10 +125,20 @@ namespace ConsoleApplication1
                 {
                     switch (arg.Substring(1).ToLowerInvariant())
                     {
-                        case "e":
+                        case "f":
                             if (i + 1 < n)
                             {
-                                regex = new Regex(args[++i]);
+                                if (inputFile != null)
+                                {
+                                    Console.WriteLine("### Error: file name already provided");
+                                    return false;
+                                }
+                                inputFile = args[++i];
+                                if (!File.Exists(inputFile))
+                                {
+                                    Console.WriteLine("### Error: input file '" + inputFile + "' does not exist");
+                                    return false;
+                                }
                             }
                             else
                             {
@@ -124,6 +149,9 @@ namespace ConsoleApplication1
                         case "noln":
                             this.lineNumbers = false;
                             break;
+                        case "e":
+                            this.echo = true;
+                            break;
                         default:
                         case "?":
                         case "h":
@@ -132,14 +160,9 @@ namespace ConsoleApplication1
                             return false;
                     }                    
                 }
-                else if (inputFile == null)
+                else if (regex == null)
                 {
-                    inputFile = arg;
-                    if (!File.Exists(inputFile))
-                    {
-                        Console.WriteLine("### Error: input file '" + inputFile + "' does not exist");
-                        return false;
-                    }
+                    regex = new Regex(arg);
                 }
                 else
                 {
