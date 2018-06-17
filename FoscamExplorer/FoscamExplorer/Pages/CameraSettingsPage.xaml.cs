@@ -138,7 +138,7 @@ namespace FoscamExplorer
 
         private void GoBack(object sender, RoutedEventArgs e)
         {
-            SettingsPane.Show();
+            this.CloseCurrentFlyout();
         }
 
         private void OnFpsChanged(object sender, SelectionChangedEventArgs e)

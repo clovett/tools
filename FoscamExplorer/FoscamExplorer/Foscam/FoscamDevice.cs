@@ -829,7 +829,15 @@ namespace FoscamExplorer.Foscam
             // kick off the scan.
             string requestStr = String.Format("http://{0}/wifi_scan.cgi", CameraInfo.IpAddress);
             var properties = await SendCgiRequest(requestStr);
-            string rc = (string)properties["result"];
+            if (properties.ContainsKey("Error"))
+            {
+                // todo: handle this
+            }
+            else
+            {
+                string rc = (string)properties["result"];
+                // todo: something with the result?
+            }
         }
 
         internal async Task<List<WifiNetworkInfo>> GetWifiScan()
@@ -896,6 +904,13 @@ namespace FoscamExplorer.Foscam
             }
 
             var parameters = await GetParams();
+            if (parameters.ContainsKey("Error"))
+            {
+                // then perhaps we need this user name password to talk to it!
+                this.CameraInfo.UserName = userName;
+                this.CameraInfo.Password = password;
+                parameters = await GetParams();
+            }
             StringBuilder sb = new StringBuilder(String.Format("http://{0}/set_users.cgi?", CameraInfo.IpAddress));
 
             // preserve the other names

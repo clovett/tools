@@ -34,8 +34,11 @@ namespace FoscamExplorer
             {
                 if (log != null)
                 {
-                    WriteLine("Closing log");
-                    log.Flush();
+                    lock (log)
+                    {
+                        WriteLine("Closing log");
+                        log.Flush();
+                    }
                 }
                 log = null;
             }
@@ -45,8 +48,11 @@ namespace FoscamExplorer
         {
             if (log != null)
             {
-                log.WriteLine(message, args);
-                log.Flush();
+                lock (log)
+                {
+                    log.WriteLine(message, args);
+                    log.Flush();
+                }
             }
             Debug.WriteLine(message, args);
         }

@@ -86,7 +86,7 @@ namespace FoscamExplorer
 
         private void GoBack(object sender, RoutedEventArgs e)
         {
-            SettingsPane.Show();
+            this.CloseCurrentFlyout();
         }
 
         private void OnUserNameGotFocus(object sender, RoutedEventArgs e)

@@ -156,7 +156,7 @@ namespace FoscamExplorer
 
             OnRotationChanged();
 
-            SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
+            //SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
 
             if (camera.IpAddress != null)
             {
@@ -214,7 +214,7 @@ namespace FoscamExplorer
         private void Disconnect()
         {
             Log.WriteLine("FoscamDetailsPage disconnecting");
-            SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
+            //SettingsPane.GetForCurrentView().CommandsRequested -= OnCommandsRequested;
             FinishUpdate();
             StopMoving();
             StopUpdate();
@@ -228,11 +228,11 @@ namespace FoscamExplorer
             }
         }
 
-        void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
-        {
-            SettingsCommand accountsCommand = new SettingsCommand("AccountsPageId", "Camera Account", OnChangePasswordCommand);
-            args.Request.ApplicationCommands.Add(accountsCommand);
-        }
+        //void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
+        //{
+        //    SettingsCommand accountsCommand = new SettingsCommand("AccountsPageId", "Camera Account", OnChangePasswordCommand);
+        //    args.Request.ApplicationCommands.Add(accountsCommand);
+        //}
 
         private void OnChangePasswordCommand(IUICommand command)
         {
