@@ -160,15 +160,10 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-
     <Content Include="Assets\fi9821w_0_black.png" />
     <Content Include="Assets\firmware.xml" />
     <Content Include="Assets\Gear.png" />
-    <Content Include="Assets\Wide.png" />
-    <Content Include="Assets\Logo.png" />
     <Content Include="Assets\Padlock.png" />
-    <Content Include="Assets\SmallLogo.png" />
-    <Content Include="Assets\SplashScreen.png" />
     <Content Include="Assets\StoreLogo.png" />
     <None Include="FoscamExplorer_TemporaryKey.pfx" />
     <None Include="Package.StoreAssociation.xml" />
@@ -215,7 +210,6 @@
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
-
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
