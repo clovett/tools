@@ -244,8 +244,13 @@ namespace FoscamExplorer
 
         void ChangeUserPassword()
         {
-            string user = deviceParams.GetValue<string>("user1_name");
-            string pswd = deviceParams.GetValue<string>("user1_pwd");
+            string user = ""; 
+            string pswd = "";
+            if (deviceParams != null)
+            {
+                user = deviceParams.GetValue<string>("user1_name"); 
+                pswd = deviceParams.GetValue<string>("user1_pwd");
+            }
 
             LogonPage login = new LogonPage() {
                 Title = StringResources.LogonPromptCameraAccount,
