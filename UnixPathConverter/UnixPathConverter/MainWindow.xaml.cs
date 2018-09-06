@@ -61,7 +61,7 @@ namespace UnixPathConverter
 
         private void UpdateUnixPath(string windowsPath)
         {
-            string unixpath = windowsPath.Replace('\\', '/');
+            string unixpath = windowsPath.Replace("\\\\","\\").Replace('\\', '/');
             if (unixpath.Length > 1 && unixpath[1] == ':')
             {
                 unixpath = "/mnt/" + unixpath[0] + "/" + unixpath.Substring(3);
