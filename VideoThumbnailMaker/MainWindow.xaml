@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="Video Thumbnail Maker" Height="450" Width="800">
 
-    <Grid Style="{StaticResource AppGridBackground}">
+    <Grid Style="{StaticResource AppGridBackground}" x:Name="MainGrid">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -17,7 +17,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
+            <ColumnDefinition x:Name="ThumbColumn" Width="100"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -40,18 +40,31 @@
             
             <!--<ToggleButton x:Name="ShowMapButton"  Grid.Column="1" Style="{StaticResource AppBarToggleButtonStyle}" ToolTip="Map" Checked="OnShowMap" Unchecked="OnHideMap">&#xE1C4;</ToggleButton>-->
 
-            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Clear" Click="OnClear">&#xE106;</Button>
+            <Button x:Name="ClearButton"  Grid.Column="2" Style="{StaticResource AppBarButtonStyle}" ToolTip="Clear" Click="OnClear">&#xE106;</Button>
 
-            <!--<Button x:Name="RecordButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="8" Click="OnRecord">&#xE102;</Button>-->
+            <Button x:Name="SettingsButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="3" Click="OnSettings">&#xE115;</Button>
 
-            <Button x:Name="SettingsButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="9" Click="OnSettings">&#xE115;</Button>
-            
+            <Button x:Name="PlayButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="4" Click="OnPlay">&#xE102;</Button>
+
+            <Button x:Name="PauseButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="5" Click="OnPause">&#xE103;</Button>
+
+            <Button x:Name="SaveButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="6" Click="OnSave">&#xE12d;</Button>
+
         </Grid>
 
+        <MediaElement x:Name="Player" Grid.Row="2" Grid.Column="1" ScrubbingEnabled="True" MediaOpened="OnMediaOpened"
+                      LoadedBehavior="Stop" HorizontalAlignment="Left" VerticalAlignment="Top">
+            
+        </MediaElement>
 
         <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
         </local:AppSettings>
 
+        <Slider Grid.Row="3" Grid.Column="1" x:Name="VideoSlider" ValueChanged="OnSliderMoved"/>
+
+        <Border Margin="10" VerticalAlignment="Top" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="0">
+            <Image x:Name="Thumbnail" VerticalAlignment="Top" HorizontalAlignment="Left" />
+        </Border>
 
         <Border Grid.ColumnSpan="2" Grid.Row="4" Style="{StaticResource AppStatusBorder}">
             <TextBlock x:Name="StatusText" Text=""  Margin="5" />

@@ -18,8 +18,29 @@ namespace VideoThumbnailMaker.Controls
             items.Add(AppTheme.Light);
             items.Add(AppTheme.Dark);
             ThemeSelection.ItemsSource = items;
-            ThemeSelection.SelectedItem = Settings.Instance.Theme;
             ThemeSelection.SelectionChanged += ThemeSelection_SelectionChanged;
+            var settings = Settings.Instance;
+            if (settings == null)
+            {
+                Settings.Loaded += OnSettingsLoaded;
+            }
+            else
+            {
+                InitializeSettings();
+            }
+        }
+
+        private void OnSettingsLoaded(object sender, System.EventArgs e)
+        {
+            InitializeSettings();
+            Settings.Loaded -= OnSettingsLoaded;
+        }
+
+        void InitializeSettings()
+        {
+            var settings = Settings.Instance;
+            ThemeSelection.SelectedItem = settings.Theme;
+            this.DataContext = settings;
         }
 
         private void OnCloseClicked(object sender, RoutedEventArgs e)

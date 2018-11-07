@@ -28,12 +28,18 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Label >Theme:</Label>
             <ComboBox x:Name="ThemeSelection" Grid.Row="1">
             </ComboBox>
+
+            <Label Grid.Row="2">Width:</Label>
+            <TextBox x:Name="WidthBox" Grid.Row="3" Text="{Binding ThumbnailWidth, Mode=TwoWay}">
+            </TextBox>
 
         </Grid>
     </Grid>

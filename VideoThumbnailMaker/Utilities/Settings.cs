@@ -21,6 +21,7 @@ namespace VideoThumbnailMaker.Utilities
     {
         const string SettingsFileName = "settings.xml";
         string fileName;
+        int width = 100;
         Point windowLocation;
         Size windowSize;
         AppTheme theme = AppTheme.Dark;
@@ -46,30 +47,60 @@ namespace VideoThumbnailMaker.Utilities
         {
             get
             {
-                if (_instance == null)
-                {
-                    return new Settings();
-                }
                 return _instance;
             }
         }
 
+        public static event EventHandler Loaded;
+
         public Point WindowLocation
         {
             get { return this.windowLocation; }
-            set { this.windowLocation = value; }
+            set {
+                if (this.windowLocation != value)
+                {
+                    this.windowLocation = value;
+                    OnPropertyChanged("WindowLocation");
+                }
+            }
+        }
+
+        public int ThumbnailWidth
+        {
+            get { return this.width; }
+            set {
+                if (this.width != value)
+                {
+                    this.width = value;
+                    OnPropertyChanged("ThumbnailWidth");
+                }
+            }
         }
 
         public Size WindowSize
         {
             get { return this.windowSize; }
-            set { this.windowSize = value; }
+            set
+            {
+                if (this.windowSize != value)
+                {
+                    this.windowSize = value;
+                    OnPropertyChanged("WindowSize");
+                }
+            }
         }
 
         public AppTheme Theme
         {
             get { return this.theme; }
-            set { this.theme = value; }
+            set
+            {
+                if (this.theme != value)
+                {
+                    this.theme = value;
+                    OnPropertyChanged("Theme");
+                }
+            }
         }
 
         public string LastFile
@@ -118,7 +149,16 @@ namespace VideoThumbnailMaker.Utilities
                 result = new Settings();
                 await result.SaveAsync();
             }
+            result.OnLoaded();
             return result;
+        }
+
+        private void OnLoaded()
+        {
+            if (Loaded != null)
+            {
+                Loaded(this, EventArgs.Empty);
+            }
         }
 
         bool saving;
