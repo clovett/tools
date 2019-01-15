@@ -1,25 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30129.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2048
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneIconMaker", "PhoneIconMaker\PhoneIconMaker.csproj", "{706D9950-370E-4810-844B-311C9127650F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfIconMaker", "WpfIconMaker\WpfIconMaker.csproj", "{14ABE40D-A465-4E7D-9088-F36297D349A4}"
 EndProject
 Global
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 3
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = PhoneIconMaker\\PhoneIconMaker.csproj
-		SccProjectName1 = PhoneIconMaker
-		SccLocalPath1 = PhoneIconMaker
-		SccProjectUniqueName2 = WpfIconMaker\\WpfIconMaker.csproj
-		SccProjectName2 = WpfIconMaker
-		SccLocalPath2 = WpfIconMaker
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|ARM = Debug|ARM
@@ -31,30 +17,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|ARM.ActiveCfg = Debug|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|ARM.Build.0 = Debug|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|ARM.Deploy.0 = Debug|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x64.ActiveCfg = Debug|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x64.Build.0 = Debug|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x64.Deploy.0 = Debug|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x86.ActiveCfg = Debug|x86
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x86.Build.0 = Debug|x86
-		{706D9950-370E-4810-844B-311C9127650F}.Debug|x86.Deploy.0 = Debug|x86
-		{706D9950-370E-4810-844B-311C9127650F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Release|Any CPU.Deploy.0 = Release|Any CPU
-		{706D9950-370E-4810-844B-311C9127650F}.Release|ARM.ActiveCfg = Release|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Release|ARM.Build.0 = Release|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Release|ARM.Deploy.0 = Release|ARM
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x64.ActiveCfg = Release|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x64.Build.0 = Release|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x64.Deploy.0 = Release|x64
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x86.ActiveCfg = Release|x86
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x86.Build.0 = Release|x86
-		{706D9950-370E-4810-844B-311C9127650F}.Release|x86.Deploy.0 = Release|x86
 		{14ABE40D-A465-4E7D-9088-F36297D349A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{14ABE40D-A465-4E7D-9088-F36297D349A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14ABE40D-A465-4E7D-9088-F36297D349A4}.Debug|ARM.ActiveCfg = Debug|Any CPU
@@ -68,5 +30,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6DF5EEA0-EE34-4A1C-9139-F9874019F3C8}
 	EndGlobalSection
 EndGlobal

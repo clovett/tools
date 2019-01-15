@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wc", "wc\wc.csproj", "{7354B812-97B0-491F-B993-5B599E2BD290}"
 EndProject
@@ -19,13 +19,7 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
-		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = wc\\wc.csproj
-		SccProjectName1 = wc
-		SccLocalPath1 = wc
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B4A3FDD5-2C38-449C-B9C8-0FD343BE3D5F}
 	EndGlobalSection
 EndGlobal
