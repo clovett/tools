@@ -10,7 +10,7 @@ namespace NormalizeNewlines
     class Program
     {
         List<string> files = new List<string>();
-        bool toWin;
+        bool toWin = true;
         Encoding encoding = Encoding.UTF8;
 
         static void Main(string[] args)
@@ -27,10 +27,10 @@ namespace NormalizeNewlines
         private static void PrintUsage()
         {
             Console.WriteLine("Usage: normalizenewlines [options] files...");
-            Console.WriteLine("Normalizes the newlines in the given files from \r\n to \n");
+            Console.WriteLine("Normalizes the newlines in the given files from \r\n to \n and strip any training whitespace");
             Console.WriteLine("Options:");
-            Console.WriteLine("    /win   - normalize everything to windows style \r\n");
-            Console.WriteLine("    /linux - normalize everything to linux style \n (this is the default)");
+            Console.WriteLine("    /win   - normalize everything to windows style \r\n (this is the default)");
+            Console.WriteLine("    /linux - normalize everything to linux style \n");
             Console.WriteLine("    /encoding name - use the specified encoding");
         }
 
@@ -50,7 +50,9 @@ namespace NormalizeNewlines
             {
                 bool hasReturn = false;
                 int normalized = 0;
+                int trimmed = 0;
                 string tempPath = Path.GetTempFileName();
+                StringBuilder sb = new StringBuilder();
                 using (TextWriter w = new StreamWriter(tempPath, false, encoding))
                 {
                     using (TextReader r = new StreamReader(file))
@@ -59,6 +61,22 @@ namespace NormalizeNewlines
                         while (next != -1)
                         {
                             char ch = Convert.ToChar(next);
+                            if (ch == '\r' || ch == '\n')
+                            {
+                                string line = sb.ToString();
+                                if (line.Length > 0 && char.IsWhiteSpace(line[line.Length-1]))
+                                {
+                                    line = line.TrimEnd();
+                                    trimmed++;
+                                }
+                                sb.Length = 0;
+                                w.Write(line);
+                            }
+                            else
+                            {
+                                // keep trailing whitespace in case it is trailing.
+                                sb.Append(ch);
+                            }
                             if (toWin)
                             {
                                 if (ch == '\r')
@@ -73,12 +91,12 @@ namespace NormalizeNewlines
                                         w.Write('\r');
                                     }
                                     hasReturn = false;
+                                    w.Write('\n');
                                 }
                                 else
                                 {
                                     hasReturn = false;
                                 }
-                                w.Write(ch);
                             }
                             else
                             {
@@ -110,7 +128,6 @@ namespace NormalizeNewlines
                                         hasReturn = false;
                                         w.Write('\n');
                                     }
-                                    w.Write(ch);
                                 }
                             }
                             next = r.Read();
@@ -125,7 +142,11 @@ namespace NormalizeNewlines
                 {
                     Console.WriteLine("normalized {0} lines", normalized);
                 }
-                else
+                if (trimmed > 0)
+                {
+                    Console.WriteLine("trimmed {0} lines", trimmed);
+                }
+                if (normalized == 0 && trimmed == 0)
                 {
                     Console.WriteLine("clean");
                 }
