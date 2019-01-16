@@ -11,7 +11,8 @@ namespace NormalizeNewlines
     {
         List<string> files = new List<string>();
         bool toWin = true;
-        Encoding encoding = Encoding.UTF8;
+        Encoding encoding;
+        byte[] utf8bom = new byte[] { 0xef, 0xbb, 0xbf };
 
         static void Main(string[] args)
         {
@@ -24,6 +25,11 @@ namespace NormalizeNewlines
             p.Run();
         }
 
+        bool HasUTF8BOM(byte[] buffer)
+        {
+            return buffer[0] == utf8bom[0] && buffer[1] == utf8bom[1] && buffer[2] == utf8bom[2];
+        }
+
         private static void PrintUsage()
         {
             Console.WriteLine("Usage: normalizenewlines [options] files...");
@@ -31,7 +37,7 @@ namespace NormalizeNewlines
             Console.WriteLine("Options:");
             Console.WriteLine("    /win   - normalize everything to windows style \r\n (this is the default)");
             Console.WriteLine("    /linux - normalize everything to linux style \n");
-            Console.WriteLine("    /encoding name - use the specified encoding");
+            Console.WriteLine("    /encoding name - use the specified encoding (default is whatever the file had)");
         }
 
         private void Run()
@@ -52,19 +58,34 @@ namespace NormalizeNewlines
                 int normalized = 0;
                 int trimmed = 0;
                 string tempPath = Path.GetTempFileName();
-                StringBuilder sb = new StringBuilder();
-                using (TextWriter w = new StreamWriter(tempPath, false, encoding))
+                byte[] preamble = new byte[10];
+                using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                 {
-                    using (TextReader r = new StreamReader(file))
+                    fs.Read(preamble, 0, 10);
+                }
+                StringBuilder sb = new StringBuilder();
+                using (StreamReader r = new StreamReader(file))
+                {
+                    Encoding e = encoding;
+                    int next = r.Read();
+                    if (e == null)
                     {
-                        int next = r.Read();
+                        e = r.CurrentEncoding;
+                        if (e.WebName == "utf-8" && !HasUTF8BOM(preamble))
+                        {
+                            e = new UTF8Encoding(false); // no BOM
+                        }
+                    }
+                    char previous = '\0';
+                    using (TextWriter w = new StreamWriter(tempPath, false, e))
+                    {
                         while (next != -1)
                         {
                             char ch = Convert.ToChar(next);
                             if (ch == '\r' || ch == '\n')
                             {
                                 string line = sb.ToString();
-                                if (line.Length > 0 && char.IsWhiteSpace(line[line.Length-1]))
+                                if (line.Length > 0 && char.IsWhiteSpace(line[line.Length - 1]))
                                 {
                                     line = line.TrimEnd();
                                     trimmed++;
@@ -88,9 +109,9 @@ namespace NormalizeNewlines
                                     if (!hasReturn)
                                     {
                                         normalized++;
-                                        w.Write('\r');
                                     }
                                     hasReturn = false;
+                                    w.Write('\r');
                                     w.Write('\n');
                                 }
                                 else
@@ -131,25 +152,56 @@ namespace NormalizeNewlines
                                 }
                             }
                             next = r.Read();
+                            previous = ch;
+                        }
+                        {
+                            // write the last line!
+                            string line = sb.ToString();
+                            if (line.Length > 0 || hasReturn)
+                            {
+                                if (char.IsWhiteSpace(line[line.Length - 1]))
+                                {
+                                    line = line.TrimEnd();
+                                    trimmed++;
+                                }
+                                sb.Length = 0;
+                                w.Write(line);
+                                if (toWin)
+                                {
+                                    w.Write('\r');
+                                    w.Write('\n');
+                                }
+                                else
+                                {
+                                    w.Write('\n');
+                                }
+                            }
                         }
                     }
                 }
-
-                File.Copy(tempPath, file, true);
+                string msg = "";
+                bool clean = normalized == 0 && trimmed == 0;
+                if (!clean)
+                {
+                    File.Copy(tempPath, file, true);
+                } else { 
+                    msg = "clean";
+                }
                 File.Delete(tempPath);
 
                 if (normalized > 0)
                 {
-                    Console.WriteLine("normalized {0} lines", normalized);
+                    msg = string.Format("normalized {0} lines", normalized);
                 }
                 if (trimmed > 0)
                 {
-                    Console.WriteLine("trimmed {0} lines", trimmed);
+                    if (msg.Length > 0)
+                    {
+                        msg += ", ";
+                    }
+                    msg += string.Format("trimmed {0} lines", trimmed);
                 }
-                if (normalized == 0 && trimmed == 0)
-                {
-                    Console.WriteLine("clean");
-                }
+                Console.WriteLine(msg);
             }
             catch (Exception ex)
             {
