@@ -1,0 +1,1 @@
+Get-AppxPackage -Publisher "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" | ? {$_.IsDevelopmentMode -eq "True"} | Remove-AppxPackage
