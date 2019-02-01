@@ -25,7 +25,7 @@ class PowerData:
         Current:       0 mA
         Power:         0 mW
         """
-        self.columns = [time]
+        self.columns = ["Time"]
         self.units = ['s']
         self.data = [timestamp]
         self.log = log
