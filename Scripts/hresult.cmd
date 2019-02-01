@@ -1,0 +1,1 @@
+cscript /nologo %~dp0hresult.js %*
