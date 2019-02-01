@@ -3,6 +3,7 @@ from threading import Thread, Lock, Condition
 import serial
 import sys
 import signal
+import time
 import logger
 
 SIGINT = False
@@ -17,17 +18,18 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 class PowerData:
-    def __init__(self):
+    def __init__(self, timestamp):
         """ it is expecting this format:
         Bus Voltage:   5.444 V
         Shunt Voltage: -0.04 mV
         Current:       0 mA
         Power:         0 mW
         """
-        self.columns = []
-        self.units = []
-        self.data = []
+        self.columns = [time]
+        self.units = ['s']
+        self.data = [timestamp]
         self.log = log
+        self.timestamp = timestamp
 
     def parse(self, line):
         if len(self.columns) > 0 and line.strip() == '':
@@ -39,7 +41,7 @@ class PowerData:
             values = parts[1].strip().split(' ')
             if len(values) == 2:
                 self.columns += [label]
-                self.data += [values[0]]
+                self.data += [float(values[0])]
                 self.units += [values[1]]
 
         return False
@@ -56,6 +58,7 @@ class PowerMonitor:
         self.closed = False
         self.read_thread = None
         self.error = None
+        self.start = time.time()
 
     def open(self, serial_port=None, baud_rate=115200):
         """ Open the serial port and start reading on background thread:
@@ -70,7 +73,7 @@ class PowerMonitor:
 
     def read_input(self):
         global SIGINT
-        entry = PowerData()
+        entry = PowerData(time.time() - self.start)
         try:
             with serial.Serial(self.serial_port, self.baud_rate) as ser:
                 while not self.closed:
@@ -89,7 +92,7 @@ class PowerMonitor:
                             self.error = e
                             break
                         self.cv.release()
-                        entry = PowerData()
+                        entry = PowerData(time.time() - self.start)
         except Exception as e:
             self.error = e
 
@@ -153,4 +156,4 @@ if __name__ == "__main__":
             first = False
             headers = ["{}({})".format(row.columns[i], row.units[i]) for i in range(len(row.columns))]
             log.info(",".join(headers))
-        log.info(",".join(row.data))
+        log.info(",".join([str(x) for x in row.data]))
