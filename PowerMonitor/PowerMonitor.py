@@ -73,7 +73,8 @@ class PowerMonitor:
 
     def read_input(self):
         global SIGINT
-        entry = PowerData(time.time() - self.start)
+        seconds = int(time.time() - self.start)
+        entry = PowerData(seconds)
         try:
             with serial.Serial(self.serial_port, self.baud_rate) as ser:
                 while not self.closed:
@@ -92,7 +93,8 @@ class PowerMonitor:
                             self.error = e
                             break
                         self.cv.release()
-                        entry = PowerData(time.time() - self.start)
+                        seconds = int(time.time() - self.start)
+                        entry = PowerData(seconds)
         except Exception as e:
             self.error = e
 
@@ -152,8 +154,10 @@ if __name__ == "__main__":
         row = monitor.read()
         if row is None:
             break
-        if first:
-            first = False
-            headers = ["{}({})".format(row.columns[i], row.units[i]) for i in range(len(row.columns))]
-            log.info(",".join(headers))
-        log.info(",".join([str(x) for x in row.data]))
+        # skip any partial rows (can happen on startup)
+        if len(row.columns) == 5 and row.columns[1] == "Bus Voltage":
+            if first:
+                first = False
+                headers = ["{}({})".format(row.columns[i], row.units[i]) for i in range(len(row.columns))]
+                log.info(",".join(headers))
+            log.info(",".join([str(x) for x in row.data]))
