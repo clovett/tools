@@ -60,8 +60,6 @@ namespace Walkabout.Utilities
             /// <param name="delay">The timeout before calling the action</param>
             public void StartDelayTimer(Action action, TimeSpan delay)
             {
-                Debug.WriteLine("### StartDelayTimer " + delay.ToString());
-
                 startTime = Environment.TickCount;
 
                 // stop any previous timer and start over.
@@ -78,8 +76,6 @@ namespace Walkabout.Utilities
                 System.Threading.Interlocked.CompareExchange(ref this.delayTimer, null, timer);
                 if (timer != null)
                 {
-                    Debug.WriteLine("### StopDelayTimer ");
-
                     // give up on this old one and start over.
                     timer.Dispose();
                     timer = null;
@@ -91,8 +87,6 @@ namespace Walkabout.Utilities
             {
                 int endTime = Environment.TickCount;
                 int diff = startTime - endTime;
-                Debug.WriteLine("### OnDelayTimerTick ran " + diff + " ms");
-
                 Action a = this.delayedAction;
 
                 StopDelayTimer();

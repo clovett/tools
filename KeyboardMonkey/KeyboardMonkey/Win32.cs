@@ -410,6 +410,11 @@ namespace Walkabout.Utilities
         static extern bool EnumWindows(WindowEnumProc lpEnumFunc, IntPtr lParam);
 
 
+        [DllImport("kernel32.dll")]
+        public static extern int GetTickCount();
+
+        //==================== GDI ====================================================================
+
         [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
         public static extern IntPtr CreateDC(
         string lpszDriver,
@@ -454,6 +459,7 @@ namespace Walkabout.Utilities
         );
 
         public static readonly int SRCCOPY = 13369376;
+
     }
 
 }

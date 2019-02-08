@@ -9,33 +9,31 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <TextBlock Text="Window:"/>
-        <TextBox x:Name="TextBoxWindow" Grid.Row="1" Background="LemonChiffon" Padding="3" GotFocus="OnTextBoxWindowGotFocus" LostFocus="OnTextBoxWindowLostFocus"/>
+        <TextBlock Text="Recorded Script:"/>
 
-        <TextBlock Text="Key to type:" Grid.Row="2"/>
-        <ComboBox x:Name="ComboBoxKey" Grid.Row="3" KeyDown="OnComboKeyDown"/>
-
-        <TextBlock Text="Number of times to type key:" Grid.Row="4" />
-        <TextBox x:Name="TextBoxRepeat" Grid.Row="5"  Background="LemonChiffon" Padding="3" Text="1"/>
-
-        <TextBlock Text="Delay between keystrokes (milliseconds):" Grid.Row="6"/>
-        <TextBox x:Name="TextBoxDelay" Grid.Row="7"  Background="LemonChiffon" Padding="3" Text="1000"/>
+        <TextBox x:Name="TextBoxScript" Grid.Row="1" Background="LemonChiffon" ScrollViewer.VerticalScrollBarVisibility="Auto" TextWrapping="Wrap"/>
+        
+        <TextBlock Text="Delay between each keystroke in milliseconds:" Grid.Row="6" Margin="0,10,0,0"/>
+        <TextBox x:Name="TextBoxSpeed" Grid.Row="7"  Background="LemonChiffon" Padding="3" Text="30"/>
 
         <TextBlock x:Name="Message" Grid.Row="8" Text="error" Margin="0,10,0,0" Foreground="Red" TextWrapping="Wrap"/>
 
         <StackPanel Orientation="Horizontal" Grid.Row="10" HorizontalAlignment="Right" >
-            <Button x:Name="ButtonStart" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnGoClick" Margin="0,0,10,0">Start</Button>
+            <Button x:Name="ButtonRecord" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnRecordClick" Margin="0,0,10,0">Record</Button>
+            <Button x:Name="ButtonPlay" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnGoClick" Margin="0,0,10,0">Play</Button>
         </StackPanel>
+        <ProgressBar x:Name="Progress" Grid.Row="11" Height="4" Maximum="10" Value="0" Margin="0,10,0,0" Visibility="Collapsed"/>
     </Grid>
 </Window>
