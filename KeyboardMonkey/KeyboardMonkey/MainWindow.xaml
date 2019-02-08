@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:KeyboardMonkey"
         mc:Ignorable="d"
-        Title="Keyboard Monkey" Height="300" Width="500">
+        Title="Keyboard Monkey" Height="400" Width="600" Icon="KeyboardMonkey.ico">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
