@@ -1,5 +1,7 @@
-﻿using System;
+﻿using HookManager;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,41 +13,64 @@ namespace KeyboardMonkey
 {
     class Monkey
     {
-        DelayedActions actions;
-        IntPtr hwnd;
-        Key key;
-        int repeat;
-        int delay;
+        DelayedActions actions = new DelayedActions();
+        List<KeyboardInput> script;
+        int scriptPosition;
+        int startTime;
         bool stopped;
+        IntPtr active;
+        int delay;
 
         public event EventHandler Progress;
 
-        public int Remanining {  get { return repeat; } }
+        public int Position {  get { return scriptPosition; } }
 
-        public Monkey(DelayedActions actions, IntPtr hwnd, Key key, int repeat, int delay)
+        public int Maximum { get { return script.Count; } }
+
+        public Monkey(List<KeyboardInput> script, int delay = 30)
         {
-            this.actions = actions;
-            this.hwnd = hwnd;
-            this.key = key;
-            this.repeat = repeat - 1;
             this.delay = delay;
-            this.actions.StartDelayedAction("KeyMonkey", SendNextKeystroke, TimeSpan.FromMilliseconds(delay));
+            this.script = script;
+        }
+
+        internal void Start()
+        {
+            this.startTime = SafeNativeMethods.GetTickCount();
+            this.scriptPosition = 0;
+            this.stopped = false;
+            SendNextKeystroke();
         }
 
         private void SendNextKeystroke()
         {
-            SafeNativeMethods.SetForegroundWindow(hwnd);
-            Input.TapKey(this.key);
-
-            if (!stopped && repeat > 0)
+            if (scriptPosition <= script.Count)
             {
-                repeat--;
-                this.actions.StartDelayedAction("KeyMonkey", SendNextKeystroke, TimeSpan.FromMilliseconds(delay));
-            }
+                KeyboardInput input = script[scriptPosition++];
+                IntPtr hwnd = SafeNativeMethods.GetForegroundWindow();
+                if (hwnd != input.hwnd && hwnd != active)
+                {
+                    Debug.WriteLine("Current Window {0}, Activating window {1}", hwnd.ToString("x"), input.hwnd.ToString("x"));
+                    SafeNativeMethods.SetForegroundWindow(input.hwnd);
+                    System.Threading.Thread.Sleep(1000);
+                    active = SafeNativeMethods.GetForegroundWindow();
+                }
+                Input.SendKeyboardInput(KeyInterop.KeyFromVirtualKey(input.vkCode), input.pressed);
 
-            if (Progress != null)
-            {
-                Progress(this, EventArgs.Empty);
+                if (scriptPosition < script.Count)
+                {
+                    KeyboardInput next = script[scriptPosition];
+                    int delta = next.time - script[0].time;
+                    int realDelta = SafeNativeMethods.GetTickCount() - this.startTime;
+                    if (!stopped)
+                    {
+                        this.actions.StartDelayedAction("KeyMonkey", SendNextKeystroke, TimeSpan.FromMilliseconds(this.delay));
+                    }
+                }
+
+                if (Progress != null)
+                {
+                    Progress(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -54,5 +79,6 @@ namespace KeyboardMonkey
             stopped = true;
             this.actions.CancelDelayedAction("KeyMonkey");
         }
+
     }
 }

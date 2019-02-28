@@ -14,6 +14,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Walkabout.Utilities;
 using System.Reflection;
+using System.Diagnostics;
+using HookManager;
+using System.ComponentModel;
 
 namespace KeyboardMonkey
 {
@@ -24,9 +27,12 @@ namespace KeyboardMonkey
     {
         DelayedActions actions = new DelayedActions();
         bool findingWindows;
-        IntPtr hwnd;
         Monkey monkey;
-
+        SystemHooks hooks = new SystemHooks();
+        List<KeyboardInput> script = new List<KeyboardInput>();
+        int displayPosition;
+        bool recording;
+        
         public MainWindow()
         {
             UiDispatcher.Initialize(this.Dispatcher);
@@ -34,24 +40,41 @@ namespace KeyboardMonkey
 
             Message.Text = "";
 
-            foreach (System.Reflection.FieldInfo fi in typeof(Key).GetFields(BindingFlags.Static | BindingFlags.Public))
-            {
-                Key value = (Key)fi.GetValue(null);
-                ComboBoxKey.Items.Add(value);
-            }
-            ComboBoxKey.SelectedIndex = 0;
-        }
-
-        private void OnTextBoxWindowGotFocus(object sender, RoutedEventArgs e)
-        {
             findingWindows = true;
             BeginFindWindow();
+
+            hooks.HookKeyboard(KeyboardHandler);
+            //hooks.HookCbt();
+        }
+
+        void KeyboardHandler(object sender, KeyboardInput input)
+        {
+            if (recording)
+            {
+                input.hwnd = this.lastWindow;
+                script.Add(input);
+                actions.StartDelayedAction("ShowScript", new Action(ShowScript), TimeSpan.FromMilliseconds(30));
+            }
+        }
+
+        void ShowScript()
+        {
+            while (displayPosition < script.Count)
+            {
+                KeyboardInput input = script[displayPosition++];
+                if (input.pressed)
+                {
+                    TextBoxScript.Text += Input.GetVirtualKeyString((VirtualKeyCode)input.vkCode);
+                }
+            }
         }
 
         void BeginFindWindow()
         { 
             actions.StartDelayedAction("FindWindow", new Action(FindWindow), TimeSpan.FromMilliseconds(30));
         }
+
+        IntPtr lastWindow;
 
         void FindWindow()
         {
@@ -62,9 +85,12 @@ namespace KeyboardMonkey
             IntPtr hwnd = SafeNativeMethods.WindowFromPoint(p);
             if (hwnd != IntPtr.Zero)
             {
-                string text = SafeNativeMethods.GetWindowText(hwnd);
-                TextBoxWindow.Text = text + " (0x" + hwnd.ToInt64().ToString("x").Trim('0') + ")";
-                this.hwnd = hwnd;
+                if (hwnd != lastWindow)
+                {
+                    string text = SafeNativeMethods.GetWindowText(hwnd);
+                    Debug.WriteLine("Mouse is over window: " + text);
+                    lastWindow = hwnd;
+                }
             }
 
             if (findingWindows)
@@ -73,8 +99,9 @@ namespace KeyboardMonkey
             }
         }
 
-        private void OnTextBoxWindowLostFocus(object sender, RoutedEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
+            base.OnClosing(e);
             actions.CancelDelayedAction("FindWindow");
             findingWindows = false;
         }
@@ -83,83 +110,57 @@ namespace KeyboardMonkey
         {
             ShowError("");
 
+            StopRecording();
             if (monkey != null)
             {
                 monkey.Stop();
             }
 
-            if (ButtonStart.Tag != null)
+            if (ButtonPlay.Tag != null)
             {
-                Stop();
+                StopPlaying();
                 ShowError("Stopped");
                 return;
             }
 
-            int ms = 0;
-            if (!int.TryParse(TextBoxDelay.Text, out ms) || ms <= 0)
-            {
-                ShowError("Please enter valid number of milliseonds (greater than zero)");
-                TextBoxDelay.SelectAll();
-                TextBoxDelay.Focus();
-                return;
-            }
+            // todo: play the script
+            string script = TextBoxScript.Text;
 
+            ButtonPlay.Tag = "started";
+            ButtonPlay.Content = "Stop";
 
-            int repeat = 0;
-            if (!int.TryParse(TextBoxRepeat.Text, out repeat) || repeat <= 0)
-            {
-                ShowError("Please enter valid number of times to type the key  (greater than zero)");
-                TextBoxRepeat.SelectAll();
-                TextBoxRepeat.Focus();
-                return;
-            }
-
-            Key key = (Key)ComboBoxKey.SelectedItem;
-            if (key == Key.None)
-            {
-                ShowError("Please enter valid key to type (not none)");
-                ComboBoxKey.Focus();
-                return;
-            }
-
-            if (hwnd == IntPtr.Zero)
-            {
-                ShowError("Please move mouse over the window you want to type in");
-                TextBoxWindow.Focus();
-                return;
-            }
-
-            ButtonStart.Tag = "started";
-            ButtonStart.Content = "Stop";
-
-            this.monkey = new Monkey(this.actions, this.hwnd, key, repeat, ms);
-            this.monkey.Progress += OnMonkeyProgress; 
+            int delay = 30;
+            int.TryParse(TextBoxSpeed.Text, out delay);
+            this.monkey = new Monkey(this.script, delay);
+            this.monkey.Progress += OnMonkeyProgress;
+            this.monkey.Start();
         }
 
         private void OnMonkeyProgress(object sender, EventArgs e)
         {
             if (this.monkey != null)
             {
-                if (this.monkey.Remanining == 0)
+                if (this.monkey.Position == this.monkey.Maximum)
                 {
-                    Stop();
+                    Progress.Visibility = Visibility.Collapsed;
+                    StopPlaying();
                 }
                 else
                 {
-                    ShowError(this.monkey.Remanining.ToString());
+                    Progress.Visibility = Visibility.Visible;
+                    Progress.Maximum = this.monkey.Maximum;
+                    Progress.Value = this.monkey.Position;
                 }
             }
         }
 
-        void Stop()
+        void StopPlaying()
         { 
-            if (ButtonStart.Tag != null)
-            {
-                ButtonStart.Tag = null;
-                ButtonStart.Content = "Start";
-                ShowError("Finished");
-            }
+            ShowError("Finished");
             this.monkey.Stop();
+            ButtonPlay.Tag = null;
+            ButtonPlay.Content = "Start";
+            Progress.Visibility = Visibility.Collapsed;
         }
 
         private void ShowError(string msg)
@@ -167,11 +168,33 @@ namespace KeyboardMonkey
             Message.Text = msg;
         }
 
-        private void OnComboKeyDown(object sender, KeyEventArgs e)
+        private void OnRecordClick(object sender, RoutedEventArgs e)
         {
-            Key k = e.Key;
-            ComboBoxKey.SelectedItem = k;
+            if (ButtonRecord.Tag != null)
+            {
+                StopRecording();
+            }
+            else
+            {
+                ButtonRecord.Tag = "recording";
+                ButtonRecord.Content = "Stop";
+                StartRecording();
+            }
         }
-        
+
+        private void StopRecording()
+        {
+            ButtonRecord.Tag = null;
+            ButtonRecord.Content = "Record";
+            recording = false;
+        }
+
+        private void StartRecording()
+        {
+            this.script = new List<KeyboardInput>();
+            this.displayPosition = 0;
+            this.TextBoxScript.Text = "";
+            recording = true;
+        }
     }
 }
