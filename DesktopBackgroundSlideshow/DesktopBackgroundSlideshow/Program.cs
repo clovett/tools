@@ -38,20 +38,10 @@ namespace DesktopBackgroundSlideshow
             return Path.Combine(path, "Settings.xml");
         }
 
-        XDocument LoadSettings()
+        Settings LoadSettings()
         {
             string path = GetSettingsPath();
-            if (File.Exists(path))
-            {
-                try
-                {
-                    return XDocument.Load(path);
-                }
-                catch
-                {
-                }
-            }
-            return new XDocument(new XElement("Settings"));
+            return Settings.Load(path);
         }
 
         private void Install()
@@ -66,58 +56,88 @@ namespace DesktopBackgroundSlideshow
             }
         }
 
+        private void Shuffle(List<string> values, Random r)
+        {
+            List<string> result = new List<string>();
+            while(values.Count > 0)
+            {
+                int next = r.Next(values.Count);
+                result.Add(values[next]);
+                values.RemoveAt(next);
+            }
+            values.AddRange(result);
+        }
+
+        private bool IsPicture(string filename)
+        {
+            string ext = System.IO.Path.GetExtension(filename);
+            if (string.Compare(ext, ".png", true) == 0 ||
+                string.Compare(ext, ".jpg", true) == 0 ||
+                string.Compare(ext, ".gif", true) == 0 ||
+                string.Compare(ext, ".bmp", true) == 0)
+            {
+                // todo: see if we have permission to read this file.
+                return true;
+            }
+            return false;
+        }
+
         private int Run()
         {
             Install();
 
-            XDocument settings = LoadSettings();
-
-            XElement e = settings.Root.Element("Path");
+            Settings settings = LoadSettings();
+            
             if (directory == null)
             {
-                if (e == null)
+                if (string.IsNullOrEmpty(settings.Path))
                 {
                     Console.WriteLine("Please provide the location of the folder containing the images you want to display on your desktop background");
                     return 1;
                 }
-                directory = e.Value;
+                directory = settings.Path;
             }
             else
             {
-                if (e == null)
-                {
-                    settings.Root.Add(new XElement("Path", directory));
-                }
-                else
-                {
-                    e.Value = directory;
-                }
+                settings.Path = directory;
             }
 
-            int index = 0;
-            e = settings.Root.Element("Index");
-            if (e != null)
+            int seed = settings.Seed;
+            if (seed == 0)
             {
-                int.TryParse(e.Value, out index);
-                index++; // next image
-                e.Value = index.ToString();
+                seed = new Random(Environment.TickCount).Next();
+                settings.Seed = seed;
             }
-            else
-            {
-                settings.Root.Add(new XElement("Index", index.ToString()));
-            }
+
+            var rand = new Random(seed);
+            int index = settings.Index;
 
             string file = null;
             if (Directory.Exists(directory))
             {
-                string[] files = Directory.GetFiles(directory);
-                if (index >= files.Length)
+                List<string> files = new List<string>(Directory.GetFiles(directory));
+                for (int i = files.Count - 1; i >= 0; i--)
+                {
+                    string item = files[i];
+                    if (!IsPicture(item))
+                    {
+                        files.RemoveAt(i);
+                    }
+                }
+                Shuffle(files, rand);
+
+                if (index >= files.Count)
                 {
                     index = 0; // wrap around!
                 }
                 file = files[index];
+                settings.Index++;
 
-                DesktopBackground.SetFromFile(file);
+                if (!DesktopBackground.SetFromFile(file))
+                {
+                    int hr = DesktopBackground.NativeMethods.GetLastError();
+                    Console.WriteLine("Error {0} with SET_DESKTOP_BACKGROUND", hr);
+                }
             }
             else
             {

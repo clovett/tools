@@ -14,6 +14,7 @@ namespace ConsoleApplication1
         string inputFile;
         bool echo = false;
         bool lineNumbers = false;
+        bool ignoreCase = false;
 
         static int Main(string[] args)
         {
@@ -113,15 +114,17 @@ namespace ConsoleApplication1
             Console.WriteLine("  -f filename file to process (if no file uses stdin)");
             Console.WriteLine("  -ln         add line numbers");
             Console.WriteLine("  -e          echo all input, and highlight matching lines");
+            Console.WriteLine("  -i          case insensitive");
             Console.WriteLine("  expression  the regular expression to match (in .NET regex syntax)");
         }
 
         private bool ParseCommandLine(string[] args)
         {
+            string expression = null;
             for (int i = 0, n = args.Length; i < n; i++)
             {
                 string arg = args[i];
-                if (arg[0] == '-' || arg[0] == '/')
+                if (arg[0] == '-')
                 {
                     switch (arg.Substring(1).ToLowerInvariant())
                     {
@@ -152,6 +155,9 @@ namespace ConsoleApplication1
                         case "e":
                             this.echo = true;
                             break;
+                        case "i":
+                            this.ignoreCase = true;
+                            break;
                         default:
                         case "?":
                         case "h":
@@ -160,9 +166,9 @@ namespace ConsoleApplication1
                             return false;
                     }                    
                 }
-                else if (regex == null)
+                else if (expression == null)
                 {
-                    regex = new Regex(arg);
+                    expression = arg;
                 }
                 else
                 {
@@ -171,11 +177,18 @@ namespace ConsoleApplication1
                 }
             }
 
-            if (regex == null)
+            if (expression == null)
             {
                 PrintUsage();
                 return false;
             }
+
+            RegexOptions options = RegexOptions.None;
+            if (ignoreCase)
+            {
+                options = RegexOptions.IgnoreCase;
+            }
+            regex = new Regex(expression, options);
 
             return true;
         }
