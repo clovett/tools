@@ -23,11 +23,11 @@ namespace dumphex
             }
             else
             {
-                PrintUeage();
+                PrintUsage();
             }
         }
 
-        private static void PrintUeage()
+        private static void PrintUsage()
         {
             Console.WriteLine("Usage: DumpHex [options] <files>");
             Console.WriteLine("Outputs the content of the given binary file(s) in hex format");
