@@ -1,0 +1,73 @@
+﻿<Window x:Class="RssMonitor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RssMonitor"
+        Icon="icon.ico"
+        mc:Ignorable="d"
+        Title="RSS Monitor" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="10" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <!-- smtphost-->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!-- smtpport -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!-- username-->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!-- password -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!-- FromEmailAddress -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!--toEmailAddress -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!-- RSSFeeds -->
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0">SMTP Host:</Label>
+            <TextBox  Grid.Row="1" x:Name="SmtpHost" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=SmtpHost, Mode=TwoWay}"/>
+
+            <Label Grid.Row="2">SMTP Port:</Label>
+            <TextBox  Grid.Row="3" x:Name="SmtpPort" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=SmtpPort, Mode=TwoWay}"/>
+
+            <Label Grid.Row="4">SMTP Account UserName:</Label>
+            <TextBox  Grid.Row="5" x:Name="UserName" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=UserName, Mode=TwoWay}"/>
+
+            <Label Grid.Row="6">SMTP Account Password:</Label>
+            <TextBox  Grid.Row="7" x:Name="Password" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=Password, Mode=TwoWay}"/>
+
+            <Label Grid.Row="8">SMTP from Email Address:</Label>
+            <TextBox  Grid.Row="9" x:Name="FromEmailAddress" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=FromEmailAddress, Mode=TwoWay}"/>
+
+
+            <Label Grid.Row="10">SMTP to Email Address:</Label>
+            <TextBox  Grid.Row="11" x:Name="ToEmailAddress" Background="LemonChiffon" Padding="2" TextChanged="OnFieldChanged"
+                  Text="{Binding Path=ToEmailAddress, Mode=TwoWay}"/>
+
+            <Label Grid.Row="12">Rss Feeds:</Label>
+            <TextBox  Grid.Row="13" x:Name="RSSFeeds" Background="LemonChiffon" Padding="2" AcceptsReturn="True" MaxLines="10000" />
+        </Grid>
+        <StatusBar Grid.Row="1" >
+            <StatusBarItem >
+                <TextBlock x:Name="StatusText" Text=""/>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>
