@@ -56,8 +56,13 @@ namespace xsl
                                 Console.WriteLine("Loading transform: " + filename);
                                 try
                                 {
-                                    transform = new XslCompiledTransform();
-                                    transform.Load(filename);
+                                    transform = new XslCompiledTransform(true);
+
+                                    XsltSettings settings = new XsltSettings();
+                                    settings.EnableDocumentFunction = true;
+                                    settings.EnableScript = true;
+                                    
+                                    transform.Load(filename, settings, new XmlUrlResolver());
                                 }
                                 catch (Exception e)
                                 {
