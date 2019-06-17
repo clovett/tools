@@ -42,6 +42,11 @@ namespace TransformToXmlAttributes
         {
             bool result = false;
             bool transformThisElement = (parent == null || parent == e.Name.LocalName);
+            if (e.HasAttributes)
+            {
+                result = false; // cannot convert this element if it already contains attributes.
+                transformThisElement = false;
+            }
             foreach (var child in e.Elements().ToArray())
             {
                 if (!Transform(child, parent) && transformThisElement)
