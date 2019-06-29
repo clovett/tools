@@ -98,9 +98,9 @@ public:
     }
 
     bool IsNamedPipe(int index) {
-        return buffer->Handles[index].GrantedAccess == 0x0012019f;
+        DWORD access = buffer->Handles[index].GrantedAccess;
+        return access == 0x0012019f || access == 0x00120189;
     }
-
 };
 
 class ObjectTypeInfo
@@ -284,8 +284,9 @@ std::wstring GetProcessName(HANDLE processHandle)
 }
 
 int main(int argc, char* argv[])
-{
+{    
     _NtDuplicateObject NtDuplicateObject = (_NtDuplicateObject)GetLibraryProcAddress("ntdll.dll", "NtDuplicateObject");
+
     ULONG last_pid = 0;
     SystemHandleSnapshot snapshot;
     HANDLE processHandle = 0;
@@ -307,7 +308,6 @@ int main(int argc, char* argv[])
     }
 
     std::wstring cwd = GetCurrentWorkingDirectory();    
-
     DosDeviceNameMap drives;
 
     for (ULONG i = 0; i < snapshot.GetHandleCount(); i++)
