@@ -1,0 +1,33 @@
+﻿<Window x:Class="ColorPicker.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ColorPicker"
+        mc:Ignorable="d"
+        Title="Colors" Height="450" Width="450" FontSize="18">
+    <Grid Background="#333344">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border Grid.Row="0" Grid.Column="1" Background="Black" x:Name="Swatch"/>
+        <Grid Grid.Row="2" Grid.Column="0">
+            <TextBlock Text="rgb:" Margin="5" Foreground="white"/>
+        </Grid>
+        <Grid Grid.Row="2" Grid.Column="1">
+            <TextBox x:Name="TextBoxRgb"  Margin="5" TextChanged="OnRgbChanged"/>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="0">
+            <TextBlock Text="hex:" Margin="5" Foreground="white"/>
+        </Grid>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <TextBox x:Name="TextBoxHex"  Margin="5" TextChanged="OnHexChanged"/>
+        </Grid>
+    </Grid>
+</Window>
