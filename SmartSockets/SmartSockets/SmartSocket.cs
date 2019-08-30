@@ -1,4 +1,9 @@
-﻿using System;
+﻿// ------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,115 +17,27 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Microsoft.Networking.SmartSockets
+namespace LovettSoftware.Networking.SmartSockets
 {
-    [DataContract]
-    public class Message
-    {        
-        public Message(string id, string sender) { this.Id = id; this.Sender = sender; }
-
-        [DataMember]
-        public string Id { get; set; }
-
-        [DataMember]
-        public string Sender { get; set; }
-    }
-
-    public class MessageEventArgs : EventArgs
-    {
-        Message msg;
-
-        public MessageEventArgs(Message msg)
-        {
-            this.msg = msg;
-        }
-
-        public Message Message { get { return this.msg; } }
-    }
-
-    public class SmartSocketTypeResolver : DataContractResolver
-    {
-        Dictionary<string, Type> typeMap = new Dictionary<string, Type>();
-
-        public SmartSocketTypeResolver()
-        {
-            AddBaseTypes();
-        }
-
-        public SmartSocketTypeResolver(params Type[] knownTypes)
-        {
-            AddTypes(knownTypes);
-        }
-
-        public SmartSocketTypeResolver(IEnumerable<Type> knownTypes)
-        {
-            AddTypes(knownTypes);
-        }
-
-        private void AddTypes(IEnumerable<Type> knownTypes)
-        {
-            AddBaseTypes();
-            foreach (var t in knownTypes)
-            {
-                if (!t.IsSubclassOf(typeof(Message)))
-                {
-                    throw new InvalidCastException("The knownTypes have to derrive from Message");
-                }
-                this.typeMap[t.FullName] = t;
-            }
-        }
-
-        private void AddBaseTypes()
-        {
-            foreach(var t in new Type[] {  typeof(Message) })
-            {
-                this.typeMap[t.FullName] = t;
-            }
-        }
-
-        public override Type ResolveName(string typeName, string typeNamespace, Type declaredType, DataContractResolver knownTypeResolver)
-        {
-            Type t = null;
-            string fullName = typeName;
-            if (!string.IsNullOrEmpty(typeNamespace))
-            {
-                Uri uri = new Uri(typeNamespace);
-                string clrNamespace = uri.Segments.Last();
-                fullName = clrNamespace + "." + typeName;
-            }
-            if (!typeMap.TryGetValue(fullName, out t))
-            {
-                t = knownTypeResolver.ResolveName(typeName, typeNamespace, declaredType, knownTypeResolver);
-            }
-            return t;
-        }
-
-        public override bool TryResolveType(Type type, Type declaredType, DataContractResolver knownTypeResolver, out XmlDictionaryString typeName, out XmlDictionaryString typeNamespace)
-        {
-            return knownTypeResolver.TryResolveType(type, declaredType, knownTypeResolver, out typeName, out typeNamespace);
-        }
-    }
-
     /// <summary>
     /// This class wraps the Socket class providing some useful semantics like FindServerAsync which looks
     /// for the UDP message broadcast by the SmartSocketServer.  It also provides a useful SendAsync
-    /// message that synchronously waits for a response from the server so that it is always clear 
+    /// message that synchronously waits for a response from the server so that it is always clear
     /// which direction the traffic is flowing.  It also supports serializing custom message objects via
     /// the DataContractSerializer using known types provided in the SmartSocketTypeResolver.
     /// </summary>
     public class SmartSocket : IDisposable
     {
-        Socket client;
-        NetworkStream socketStream;
-        SmartSocketServer server;
-        bool disconnected;
-        SmartSocketTypeResolver resolver;
-        DataContractSerializer serializer;
+        private readonly Socket client;
+        private readonly NetworkStream socketStream;
+        private readonly SmartSocketServer server;
+        private bool disconnected;
+        private readonly SmartSocketTypeResolver resolver;
+        private readonly DataContractSerializer serializer;
 
         public const string DisconnectMessageId = "DisconnectMessageId.3d9cd318-fcae-4a4f-ae63-34907be2700a";
         public const string ConnectedMessageId = "ConnectedMessageId.822280ed-26f5-4cdd-b45c-412e05d1005a";
         public const string ConnectedMessageAck = "ConnectedMessageAck.822280ed-26f5-4cdd-b45c-412e05d1005a";
-
 
         internal SmartSocket(SmartSocketServer server, Socket client, SmartSocketTypeResolver resolver)
         {
@@ -133,15 +50,10 @@ namespace Microsoft.Networking.SmartSockets
             DataContractSerializerSettings settings = new DataContractSerializerSettings();
             settings.DataContractResolver = this.resolver;
             settings.PreserveObjectReferences = true;
-            serializer = new DataContractSerializer(typeof(MessageWrapper), settings);
+            this.serializer = new DataContractSerializer(typeof(MessageWrapper), settings);
         }
 
-        internal void Dispose(bool disposing)
-        {
-            Close();
-        }
-
-        internal Socket Socket { get { return this.client; } }
+        internal Socket Socket => this.client;
 
         public string Name { get; set; }
 
@@ -182,7 +94,7 @@ namespace Microsoft.Networking.SmartSockets
                             int len = reader.ReadInt32();
                             string addr = reader.ReadString();
                             string[] parts = addr.Split(':');
-                            if (parts.Length == 2) 
+                            if (parts.Length == 2)
                             {
                                 var a = IPAddress.Parse(parts[0]);
                                 SmartSocket client = await ConnectAsync(new IPEndPoint(a, int.Parse(parts[1])), clientName, resolver);
@@ -220,7 +132,7 @@ namespace Microsoft.Networking.SmartSockets
                     {
                         client.Connect(serverEP);
                         connected = true;
-                    } 
+                    }
                     catch (Exception e)
                     {
                         Debug.WriteLine("Connect exception: " + e.Message);
@@ -237,6 +149,7 @@ namespace Microsoft.Networking.SmartSockets
             {
                 // move on...
             }
+
             if (connected)
             {
                 var result = new SmartSocket(null, client, resolver)
@@ -244,14 +157,15 @@ namespace Microsoft.Networking.SmartSockets
                     Name = clientName,
                     ServerName = GetHostName(serverEP.Address)
                 };
-                Message response = await result.SendAsync(new Message(ConnectedMessageId, clientName));
+                SocketMessage response = await result.SendAsync(new SocketMessage(ConnectedMessageId, clientName));
 
                 return result;
             }
+
             return null;
         }
 
-        static string GetHostName(IPAddress addr)
+        private static string GetHostName(IPAddress addr)
         {
             try
             {
@@ -261,10 +175,11 @@ namespace Microsoft.Networking.SmartSockets
                     return entry.HostName;
                 }
             }
-            catch
+            catch (Exception)
             {
                 // this can fail if machines are in different domains.
             }
+
             return addr.ToString();
         }
 
@@ -275,9 +190,11 @@ namespace Microsoft.Networking.SmartSockets
                 IPHostEntry e = Dns.GetHostEntry(IPAddress.Loopback);
                 return e.HostName;
             }
-            catch
+            catch (Exception)
             {
+                // ignore failures to do with DNS lookups
             }
+
             return null;
         }
 
@@ -298,16 +215,18 @@ namespace Microsoft.Networking.SmartSockets
                         {
                             ipAddresses.Add(addr.ToString());
                         }
+
                         return ipAddresses;
                     }
                 }
             }
+
             return null;
         }
 
         public string ServerName { get; set; }
 
-        public bool IsConnected { get { return !disconnected; } }
+        public bool IsConnected => !this.disconnected;
 
         /// <summary>
         /// This event is raised if a socket error is detected.
@@ -323,16 +242,19 @@ namespace Microsoft.Networking.SmartSockets
         {
             try
             {
-                await SendAsync(new Message(DisconnectMessageId, this.Name));
+                await this.SendAsync(new SocketMessage(DisconnectMessageId, this.Name));
 
-                using (client)
+                using (this.client)
                 {
-                    client.Close();
+                    this.client.Close();
                 }
 
-                disconnected = true;
+                this.disconnected = true;
             }
-            catch { }
+            catch (Exception)
+            {
+                // ignore failures on close.
+            }
         }
 
         private void OnError(Exception ex)
@@ -344,34 +266,35 @@ namespace Microsoft.Networking.SmartSockets
                 if (se != null && se.SocketErrorCode == SocketError.ConnectionReset)
                 {
                     // we're toast!
-                    if (server != null) server.RemoveClient(this);
-                    disconnected = true;
+                    if (this.server != null)
+                    {
+                        this.server.RemoveClient(this);
+                    }
+
+                    this.disconnected = true;
                 }
+
                 inner = inner.InnerException;
             }
 
-            if (Error != null)
+            if (this.Error != null)
             {
-                Error(this, ex);
+                this.Error(this, ex);
             }
         }
 
-        ManualResetEvent sent = new ManualResetEvent(false);
-        
         [DataContract]
         internal class MessageWrapper
-        { 
+        {
             [DataMember]
             public object Message { get; set; }
         }
 
-
         /// <summary>
         /// Send a message back to the client.
         /// </summary>
-        /// <param name="msg"></param>
         /// <returns>The response message</returns>
-        public async Task<Message> SendAsync(Message msg)
+        public async Task<SocketMessage> SendAsync(SocketMessage msg)
         {
             // get the buffer containing the serialized message.
             return await Task.Run(async () =>
@@ -379,27 +302,25 @@ namespace Microsoft.Networking.SmartSockets
                 // Begin sending the data to the remote device.
                 try
                 {
-                    await SendResponseAsync(msg);
+                    await this.SendResponseAsync(msg);
 
-                    Message response = await this.ReceiveAsync();
+                    SocketMessage response = await this.ReceiveAsync();
                     return response;
                 }
                 catch (Exception ex)
                 {
                     // is the socket dead?
-                    OnError(ex);
+                    this.OnError(ex);
                 }
                 return null;
             });
         }
 
-
         /// <summary>
         /// Send a message back to the client.
         /// </summary>
-        /// <param name="msg"></param>
         /// <returns>The response message</returns>
-        public async Task SendResponseAsync(Message msg)
+        public async Task SendResponseAsync(SocketMessage msg)
         {
             // get the buffer containing the serialized message.
             await Task.Run(() =>
@@ -408,62 +329,59 @@ namespace Microsoft.Networking.SmartSockets
                 try
                 {
                     MemoryStream ms = new MemoryStream();
-                    serializer.WriteObject(ms, new MessageWrapper() { Message = msg });
+                    this.serializer.WriteObject(ms, new MessageWrapper() { Message = msg });
 
                     byte[] buffer = ms.ToArray();
 
-                    BinaryWriter streamWriter = new BinaryWriter(socketStream, Encoding.UTF8, true);
+                    BinaryWriter streamWriter = new BinaryWriter(this.socketStream, Encoding.UTF8, true);
                     streamWriter.Write(buffer.Length);
                     streamWriter.Write(buffer, 0, buffer.Length);
                 }
                 catch (Exception ex)
                 {
                     // is the socket dead?
-                    OnError(ex);
+                    this.OnError(ex);
                 }
             });
         }
 
-
-
         private void OnClosed()
         {
             this.disconnected = true;
-            if (Disconnected != null)
+            if (this.Disconnected != null)
             {
-                Disconnected(this, EventArgs.Empty);
+                this.Disconnected(this, EventArgs.Empty);
             }
         }
 
         /// <summary>
         /// Receive one message from the socket.  This call blocks until a message has arrived.
         /// </summary>
-        /// <returns></returns>
-        public async Task<Message> ReceiveAsync()
+        public async Task<SocketMessage> ReceiveAsync()
         {
-            Message msg = null;
+            SocketMessage msg = null;
             try
             {
-                using (BinaryReader streamReader = new BinaryReader(socketStream, Encoding.UTF8, true))
+                using (BinaryReader streamReader = new BinaryReader(this.socketStream, Encoding.UTF8, true))
                 {
                     int len = streamReader.ReadInt32();
                     byte[] block = streamReader.ReadBytes(len);
 
-                    object result = serializer.ReadObject(new MemoryStream(block));
+                    object result = this.serializer.ReadObject(new MemoryStream(block));
                     var wrapper = result as MessageWrapper;
-                    if (wrapper != null && wrapper.Message is Message)
+                    if (wrapper != null && wrapper.Message is SocketMessage)
                     {
-                        msg = (Message)wrapper.Message;
-                        if (msg.Id == SmartSocket.DisconnectMessageId)
+                        msg = (SocketMessage)wrapper.Message;
+                        if (msg.Id == DisconnectMessageId)
                         {
                             // client is politely saying good bye...
-                            OnClosed();
+                            this.OnClosed();
                             msg = null;
                         }
-                        else if (msg.Id == SmartSocket.ConnectedMessageId)
+                        else if (msg.Id == ConnectedMessageId)
                         {
                             this.Name = msg.Sender;
-                            await this.SendResponseAsync(new Message(ConnectedMessageAck, this.Name));
+                            await this.SendResponseAsync(new SocketMessage(ConnectedMessageAck, this.Name));
                             msg = null;
                         }
                     }
@@ -471,33 +389,33 @@ namespace Microsoft.Networking.SmartSockets
             }
             catch (EndOfStreamException eos)
             {
-                OnError(eos);
+                this.OnError(eos);
             }
             catch (System.IO.IOException ioe)
             {
                 System.Net.Sockets.SocketException se = ioe.InnerException as System.Net.Sockets.SocketException;
                 if (se.SocketErrorCode == SocketError.ConnectionReset)
                 {
-                    OnClosed();
+                    this.OnClosed();
                 }
             }
             catch (Exception ex)
             {
-                OnError(ex);
+                this.OnError(ex);
             }
+
             return msg;
         }
 
         public void Dispose()
         {
-            this.Dispose(true);
+            this.Close();
+            GC.SuppressFinalize(this);
         }
 
         ~SmartSocket()
         {
-            this.Dispose(false);
+            this.Close();
         }
-
     }
-
 }

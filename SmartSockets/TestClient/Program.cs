@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Networking.SmartSockets;
+using LovettSoftware.Networking.SmartSockets;
 using ConsoleInterface;
 using System.Diagnostics;
 
@@ -27,7 +27,7 @@ namespace ConsoleApp1
                 client.ServerName = "CoyoteTester";
                 for (int i = 0; i < 10; i++)
                 {
-                    Message response = await client.SendAsync(new ClientMessage("Howdy partner " + i, this.name, DateTime.Now));
+                    SocketMessage response = await client.SendAsync(new ClientMessage("Howdy partner " + i, this.name, DateTime.Now));
                     ServerMessage e = (ServerMessage)response;
                     Console.WriteLine("Client Received message '{0}' from '{1}' at '{2}'", e.Id, e.Sender, e.Timestamp);
                 }
@@ -36,7 +36,7 @@ namespace ConsoleApp1
                 watch.Start();
                 for (int i = 0; i < 1000; i++)
                 {
-                    Message response = await client.SendAsync(new ClientMessage("test", this.name, DateTime.Now));
+                    SocketMessage response = await client.SendAsync(new ClientMessage("test", this.name, DateTime.Now));
                     ServerMessage e = (ServerMessage)response;
                 }
                 watch.Stop();

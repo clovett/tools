@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Networking.SmartSockets;
+using LovettSoftware.Networking.SmartSockets;
 using ConsoleInterface;
 using System.Threading.Tasks;
 
@@ -42,10 +42,9 @@ namespace ConsoleServer
         {
             while (client.IsConnected)
             {
-                Message m = await client.ReceiveAsync();
-                if (m is ClientMessage)
+                ClientMessage e = await client.ReceiveAsync() as ClientMessage;
+                if (e != null)
                 {
-                    ClientMessage e = (ClientMessage)m;
                     if (e.Id == "test")
                     {
                         _ = client.SendResponseAsync(new ServerMessage("test", Name, DateTime.Now));

@@ -1,4 +1,9 @@
-﻿using System;
+﻿// ------------------------------------------------------------------------------------------------
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -9,7 +14,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.Networking.SmartSockets
+namespace LovettSoftware.Networking.SmartSockets
 {
     /// <summary>
     /// This class sets up a UDP broadcaster so clients on the same network can find the server by
@@ -24,13 +29,14 @@ namespace Microsoft.Networking.SmartSockets
         private int port;
         private bool stopped;
         private Socket listener;
-        private string serviceName;
-        private IPAddress ipAddress;
-        private List<SmartSocket> clients = new List<SmartSocket>();
-        ManualResetEvent messageReceived = new ManualResetEvent(false);
-        private SmartSocketTypeResolver resolver;
+        private readonly string serviceName;
+        private readonly IPAddress ipAddress;
+        private readonly List<SmartSocket> clients = new List<SmartSocket>();
+        private readonly SmartSocketTypeResolver resolver;
+        private UdpClient udpListener;
 
         public event EventHandler<SmartSocket> ClientConnected;
+
         public event EventHandler<SmartSocket> ClientDisconnected;
 
         public SmartSocketServer(string name, SmartSocketTypeResolver resolver, string ipAddress = "127.0.0.1")
@@ -46,19 +52,19 @@ namespace Microsoft.Networking.SmartSockets
         /// <returns>Returns the port number we are listening on (assigned by the system)</returns>
         public int StartListening()
         {
-            listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint ep = new IPEndPoint(ipAddress, 0);
-            listener.Bind(ep);
+            this.listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPEndPoint ep = new IPEndPoint(this.ipAddress, 0);
+            this.listener.Bind(ep);
 
-            IPEndPoint ip = listener.LocalEndPoint as IPEndPoint;
+            IPEndPoint ip = this.listener.LocalEndPoint as IPEndPoint;
             this.port = ip.Port;
-            listener.Listen(10);
+            this.listener.Listen(10);
 
             // now start a background thread to process incoming requests.
-            Task task = new Task(new Action(Run));
+            Task task = new Task(new Action(this.Run));
             task.Start();
 
-            task = new Task(new Action(UdpListener));
+            task = new Task(new Action(this.UdpListener));
             task.Start();
 
             return this.port;
@@ -74,8 +80,6 @@ namespace Microsoft.Networking.SmartSockets
         /// </summary>
         internal static int GroupPort = 37992;
 
-        UdpClient udpListener;
-
         private void UdpListener()
         {
             var localHost = SmartSocket.FindLocalHostName();
@@ -86,11 +90,11 @@ namespace Microsoft.Networking.SmartSockets
             }
 
             IPEndPoint remoteEP = new IPEndPoint(GroupAddress, GroupPort);
-            udpListener = new UdpClient(GroupPort);
-            udpListener.JoinMulticastGroup(GroupAddress);
+            this.udpListener = new UdpClient(GroupPort);
+            this.udpListener.JoinMulticastGroup(GroupAddress);
             while (true)
             {
-                byte[] data = udpListener.Receive(ref remoteEP);
+                byte[] data = this.udpListener.Receive(ref remoteEP);
                 if (data != null)
                 {
                     BinaryReader reader = new BinaryReader(new MemoryStream(data));
@@ -99,7 +103,7 @@ namespace Microsoft.Networking.SmartSockets
                     if (msg == this.serviceName)
                     {
                         // send response back with info on how to connect to this server.
-                        IPEndPoint localEp = (IPEndPoint)listener.LocalEndPoint;
+                        IPEndPoint localEp = (IPEndPoint)this.listener.LocalEndPoint;
                         string addr = localEp.ToString();
                         MemoryStream ms = new MemoryStream();
                         BinaryWriter writer = new BinaryWriter(ms);
@@ -107,19 +111,20 @@ namespace Microsoft.Networking.SmartSockets
                         writer.Write(addr);
                         writer.Flush();
                         byte[] buffer = ms.ToArray();
-                        udpListener.Send(buffer, buffer.Length, remoteEP);
+                        this.udpListener.Send(buffer, buffer.Length, remoteEP);
                     }
                 }
             }
         }
 
-        public async Task BroadcastAsync(Message message)
+        public async Task BroadcastAsync(SocketMessage message)
         {
             SmartSocket[] snapshot = null;
             lock (this.clients)
             {
                 snapshot = this.clients.ToArray();
             }
+
             foreach (var client in snapshot)
             {
                 await client.SendAsync(message);
@@ -129,19 +134,19 @@ namespace Microsoft.Networking.SmartSockets
         /// <summary>
         /// The port we are listening to.  The clients need to know this port so it defaults to 3921.
         /// </summary>
-        public int Port { get { return this.port; } }
+        public int Port => this.port;
 
         /// <summary>
         /// Call this method on a background thread to listen to our port.
         /// </summary>
         internal void Run()
         {
-            while (!stopped)
+            while (!this.stopped)
             {
                 try
                 {
-                    Socket client = listener.Accept();
-                    OnAccept(client);
+                    Socket client = this.listener.Accept();
+                    this.OnAccept(client);
                 }
                 catch (Exception)
                 {
@@ -160,13 +165,13 @@ namespace Microsoft.Networking.SmartSockets
                 ServerName = SmartSocket.FindLocalHostName()
             };
 
-            proxy.Disconnected += OnClientDisconnected;
+            proxy.Disconnected += this.OnClientDisconnected;
 
             SmartSocket[] snapshot = null;
 
-            lock (clients)
+            lock (this.clients)
             {
-                snapshot = clients.ToArray();
+                snapshot = this.clients.ToArray();
             }
 
             foreach (SmartSocket s in snapshot)
@@ -175,25 +180,25 @@ namespace Microsoft.Networking.SmartSockets
                 if (ep1 == ep2)
                 {
                     // can only have one client using this end point.
-                    RemoveClient(s);
+                    this.RemoveClient(s);
                 }
             }
 
-            lock (clients)
-            { 
+            lock (this.clients)
+            {
                 this.clients.Add(proxy);
             }
 
-            if (ClientConnected != null)
+            if (this.ClientConnected != null)
             {
-                ClientConnected(this, proxy);
+                this.ClientConnected(this, proxy);
             }
         }
 
         private void OnClientDisconnected(object sender, EventArgs e)
         {
             SmartSocket client = (SmartSocket)sender;
-            RemoveClient(client);
+            this.RemoveClient(client);
         }
 
         internal void RemoveClient(SmartSocket client)
@@ -201,12 +206,13 @@ namespace Microsoft.Networking.SmartSockets
             bool found = false;
             lock (this.clients)
             {
-                found = clients.Contains(client);
-                clients.Remove(client);
+                found = this.clients.Contains(client);
+                this.clients.Remove(client);
             }
-            if (found && ClientDisconnected != null)
+
+            if (found && this.ClientDisconnected != null)
             {
-                ClientDisconnected(this, client);
+                this.ClientDisconnected(this, client);
             }
         }
 
@@ -216,21 +222,24 @@ namespace Microsoft.Networking.SmartSockets
         /// </summary>
         public void Stop()
         {
-            stopped = true;
-            using (listener)
+            this.stopped = true;
+            using (this.listener)
             {
                 try
                 {
-                    listener.Close();
+                    this.listener.Close();
                 }
-                catch { }
+                catch (Exception)
+                {
+                }
             }
-            listener = null;
+
+            this.listener = null;
 
             SmartSocket[] snapshot = null;
-            lock (clients)
+            lock (this.clients)
             {
-                snapshot = clients.ToArray();
+                snapshot = this.clients.ToArray();
             }
 
             foreach (SmartSocket client in snapshot)
@@ -238,11 +247,10 @@ namespace Microsoft.Networking.SmartSockets
                 client.Close();
             }
 
-            lock (clients)
+            lock (this.clients)
             {
-                clients.Clear();
+                this.clients.Clear();
             }
         }
-        
     }
 }
