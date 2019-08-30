@@ -1,0 +1,51 @@
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Networking.SmartSockets;
+using ConsoleInterface;
+using System.Diagnostics;
+
+namespace ConsoleApp1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Starting Client!");
+
+            Program p = new Program();
+            p.RunTest().Wait();
+        }
+
+        string name = "client1";
+
+        private async Task RunTest()
+        {
+            CancellationTokenSource source = new CancellationTokenSource();
+            using (SmartSocket client = await SmartSocket.FindServerAsync("CoyoteTester", name, new SmartSocketTypeResolver(typeof(ServerMessage), typeof(ClientMessage)), source.Token))
+            {
+                client.ServerName = "CoyoteTester";
+                for (int i = 0; i < 10; i++)
+                {
+                    Message response = await client.SendAsync(new ClientMessage("Howdy partner " + i, this.name, DateTime.Now));
+                    ServerMessage e = (ServerMessage)response;
+                    Console.WriteLine("Client Received message '{0}' from '{1}' at '{2}'", e.Id, e.Sender, e.Timestamp);
+                }
+
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
+                for (int i = 0; i < 1000; i++)
+                {
+                    Message response = await client.SendAsync(new ClientMessage("test", this.name, DateTime.Now));
+                    ServerMessage e = (ServerMessage)response;
+                }
+                watch.Stop();
+
+                Console.WriteLine("Sent 1000 messages in {0} milliseconds", watch.ElapsedMilliseconds);
+            }
+
+            await Task.Delay(5000);
+        }
+
+    }
+}
