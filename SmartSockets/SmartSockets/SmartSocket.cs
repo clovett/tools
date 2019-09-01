@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,9 +30,9 @@ namespace LovettSoftware.Networking.SmartSockets
     public class SmartSocket : IDisposable
     {
         private readonly Socket client;
-        private readonly NetworkStream socketStream;
+        private readonly NetworkStream stream;
         private readonly SmartSocketServer server;
-        private bool disconnected;
+        private bool closed;
         private readonly SmartSocketTypeResolver resolver;
         private readonly DataContractSerializer serializer;
 
@@ -42,7 +43,7 @@ namespace LovettSoftware.Networking.SmartSockets
         internal SmartSocket(SmartSocketServer server, Socket client, SmartSocketTypeResolver resolver)
         {
             this.client = client;
-            this.socketStream = new NetworkStream(client);
+            this.stream = new NetworkStream(client);
             this.server = server;
             this.resolver = resolver;
             client.NoDelay = true;
@@ -226,7 +227,7 @@ namespace LovettSoftware.Networking.SmartSockets
 
         public string ServerName { get; set; }
 
-        public bool IsConnected => !this.disconnected;
+        public bool IsConnected => !this.closed;
 
         /// <summary>
         /// This event is raised if a socket error is detected.
@@ -240,6 +241,10 @@ namespace LovettSoftware.Networking.SmartSockets
 
         internal async void Close()
         {
+            if (this.closed)
+            {
+                return;
+            }
             try
             {
                 await this.SendAsync(new SocketMessage(DisconnectMessageId, this.Name));
@@ -249,7 +254,7 @@ namespace LovettSoftware.Networking.SmartSockets
                     this.client.Close();
                 }
 
-                this.disconnected = true;
+                this.closed = true;
             }
             catch (Exception)
             {
@@ -271,7 +276,7 @@ namespace LovettSoftware.Networking.SmartSockets
                         this.server.RemoveClient(this);
                     }
 
-                    this.disconnected = true;
+                    this.closed = true;
                 }
 
                 inner = inner.InnerException;
@@ -296,24 +301,34 @@ namespace LovettSoftware.Networking.SmartSockets
         /// <returns>The response message</returns>
         public async Task<SocketMessage> SendAsync(SocketMessage msg)
         {
-            // get the buffer containing the serialized message.
-            return await Task.Run(async () =>
+            if (this.closed)
             {
-                // Begin sending the data to the remote device.
-                try
-                {
-                    await this.SendResponseAsync(msg);
+                throw new SocketException((int)SocketError.NotConnected);
+            }
 
-                    SocketMessage response = await this.ReceiveAsync();
-                    return response;
-                }
-                catch (Exception ex)
+            // must serialize this send/response sequence, cannot interleave them!
+            using (await this.GetSendLock())
+            {
+
+                // get the buffer containing the serialized message.
+                return await Task.Run(async () =>
                 {
-                    // is the socket dead?
-                    this.OnError(ex);
-                }
-                return null;
-            });
+                    // Begin sending the data to the remote device.
+                    try
+                    {
+                        await this.InternalSendResponseAsync(msg);
+
+                        SocketMessage response = await this.InternalReceiveAsync();
+                        return response;
+                    }
+                    catch (Exception ex)
+                    {
+                        // is the socket dead?
+                        this.OnError(ex);
+                    }
+                    return null;
+                });
+            }
         }
 
         /// <summary>
@@ -322,6 +337,20 @@ namespace LovettSoftware.Networking.SmartSockets
         /// <returns>The response message</returns>
         public async Task SendResponseAsync(SocketMessage msg)
         {
+            // must serialize this send/response sequence, cannot interleave them!
+            using (await this.GetSendLock())
+            {
+                await this.InternalSendResponseAsync(msg);
+            }
+        }
+
+        public async Task InternalSendResponseAsync(SocketMessage msg)
+        {
+            if (this.closed)
+            {
+                throw new SocketException((int)SocketError.NotConnected);
+            }
+
             // get the buffer containing the serialized message.
             await Task.Run(() =>
             {
@@ -333,7 +362,7 @@ namespace LovettSoftware.Networking.SmartSockets
 
                     byte[] buffer = ms.ToArray();
 
-                    BinaryWriter streamWriter = new BinaryWriter(this.socketStream, Encoding.UTF8, true);
+                    BinaryWriter streamWriter = new BinaryWriter(this.stream, Encoding.UTF8, true);
                     streamWriter.Write(buffer.Length);
                     streamWriter.Write(buffer, 0, buffer.Length);
                 }
@@ -347,7 +376,7 @@ namespace LovettSoftware.Networking.SmartSockets
 
         private void OnClosed()
         {
-            this.disconnected = true;
+            this.closed = true;
             if (this.Disconnected != null)
             {
                 this.Disconnected(this, EventArgs.Empty);
@@ -359,10 +388,22 @@ namespace LovettSoftware.Networking.SmartSockets
         /// </summary>
         public async Task<SocketMessage> ReceiveAsync()
         {
+            using (await this.GetSendLock())
+            {
+                return await InternalReceiveAsync();
+            }
+        }
+
+        private async Task<SocketMessage> InternalReceiveAsync()
+        {
+            if (this.closed)
+            {
+                throw new SocketException((int)SocketError.NotConnected);
+            }
             SocketMessage msg = null;
             try
             {
-                using (BinaryReader streamReader = new BinaryReader(this.socketStream, Encoding.UTF8, true))
+                using (BinaryReader streamReader = new BinaryReader(this.stream, Encoding.UTF8, true))
                 {
                     int len = streamReader.ReadInt32();
                     byte[] block = streamReader.ReadBytes(len);
@@ -416,6 +457,49 @@ namespace LovettSoftware.Networking.SmartSockets
         ~SmartSocket()
         {
             this.Close();
+        }
+        private readonly SendLock Lock = new SendLock();
+
+        private async Task<IDisposable> GetSendLock()
+        {
+            while (this.Lock.Locked)
+            {
+                await Task.Delay(100);
+                lock (this.Lock)
+                {
+                    if (!this.Lock.Locked)
+                    {
+                        this.Lock.Locked = true;
+                        return new ReleaseLock(this.Lock);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        internal class SendLock
+        {
+            public bool Locked { get; set; }
+        }
+
+        internal class ReleaseLock : IDisposable
+        {
+            private readonly SendLock Lock;
+
+            public ReleaseLock(SendLock sendLock)
+            {
+                this.Lock = sendLock;
+            }
+
+            public void Dispose()
+            {
+                lock (this.Lock)
+                {
+                    this.Lock.Locked = false;
+                }
+            }
+
         }
     }
 }

@@ -36,11 +36,6 @@ namespace LovettSoftware.Networking.SmartSockets
             this.AddBaseTypes();
             foreach (var t in knownTypes)
             {
-                if (!t.IsSubclassOf(typeof(SocketMessage)))
-                {
-                    throw new InvalidCastException("The knownTypes have to derrive from SocketMessage");
-                }
-
                 this.typeMap[t.FullName] = t;
             }
         }

@@ -61,11 +61,10 @@ namespace LovettSoftware.Networking.SmartSockets
             this.listener.Listen(10);
 
             // now start a background thread to process incoming requests.
-            Task task = new Task(new Action(this.Run));
-            task.Start();
+            Task.Run(this.Run);
 
-            task = new Task(new Action(this.UdpListener));
-            task.Start();
+            // Start the UDP listener thread
+            Task.Run(this.UdpListenerThread);
 
             return this.port;
         }
@@ -80,7 +79,7 @@ namespace LovettSoftware.Networking.SmartSockets
         /// </summary>
         internal static int GroupPort = 37992;
 
-        private void UdpListener()
+        private void UdpListenerThread()
         {
             var localHost = SmartSocket.FindLocalHostName();
             List<string> addresses = SmartSocket.FindLocalIpAddresses();
