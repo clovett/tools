@@ -27,7 +27,7 @@ namespace LovettSoftware.Networking.SmartSockets
     /// which direction the traffic is flowing.  It also supports serializing custom message objects via
     /// the DataContractSerializer using known types provided in the SmartSocketTypeResolver.
     /// </summary>
-    public class SmartSocket : IDisposable
+    public class SmartSocketClient : IDisposable
     {
         private readonly Socket client;
         private readonly NetworkStream stream;
@@ -40,7 +40,7 @@ namespace LovettSoftware.Networking.SmartSockets
         public const string ConnectedMessageId = "ConnectedMessageId.822280ed-26f5-4cdd-b45c-412e05d1005a";
         public const string ConnectedMessageAck = "ConnectedMessageAck.822280ed-26f5-4cdd-b45c-412e05d1005a";
 
-        internal SmartSocket(SmartSocketServer server, Socket client, SmartSocketTypeResolver resolver)
+        internal SmartSocketClient(SmartSocketServer server, Socket client, SmartSocketTypeResolver resolver)
         {
             this.client = client;
             this.stream = new NetworkStream(client);
@@ -62,7 +62,7 @@ namespace LovettSoftware.Networking.SmartSockets
         /// Find a SmartSocketListener on the local network using UDP broadcast.
         /// </summary>
         /// <returns>The connected client or null if task is cancelled.</returns>
-        public static async Task<SmartSocket> FindServerAsync(string serviceName, string clientName, SmartSocketTypeResolver resolver, CancellationToken token)
+        public static async Task<SmartSocketClient> FindServerAsync(string serviceName, string clientName, SmartSocketTypeResolver resolver, CancellationToken token)
         {
             return await Task.Run(async () =>
             {
@@ -98,7 +98,7 @@ namespace LovettSoftware.Networking.SmartSockets
                             if (parts.Length == 2)
                             {
                                 var a = IPAddress.Parse(parts[0]);
-                                SmartSocket client = await ConnectAsync(new IPEndPoint(a, int.Parse(parts[1])), clientName, resolver);
+                                SmartSocketClient client = await ConnectAsync(new IPEndPoint(a, int.Parse(parts[1])), clientName, resolver);
                                 if (client != null)
                                 {
                                     client.Name = localHost;
@@ -120,7 +120,7 @@ namespace LovettSoftware.Networking.SmartSockets
             });
         }
 
-        private static async Task<SmartSocket> ConnectAsync(IPEndPoint serverEP, string clientName, SmartSocketTypeResolver resolver)
+        private static async Task<SmartSocketClient> ConnectAsync(IPEndPoint serverEP, string clientName, SmartSocketTypeResolver resolver)
         {
             Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             bool connected = false;
@@ -153,7 +153,7 @@ namespace LovettSoftware.Networking.SmartSockets
 
             if (connected)
             {
-                var result = new SmartSocket(null, client, resolver)
+                var result = new SmartSocketClient(null, client, resolver)
                 {
                     Name = clientName,
                     ServerName = GetHostName(serverEP.Address)
@@ -454,7 +454,7 @@ namespace LovettSoftware.Networking.SmartSockets
             GC.SuppressFinalize(this);
         }
 
-        ~SmartSocket()
+        ~SmartSocketClient()
         {
             this.Close();
         }

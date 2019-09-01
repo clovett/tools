@@ -22,7 +22,7 @@ namespace ConsoleApp1
         private async Task RunTest()
         {
             CancellationTokenSource source = new CancellationTokenSource();
-            using (SmartSocket client = await SmartSocket.FindServerAsync("CoyoteTester", name, new SmartSocketTypeResolver(typeof(ServerMessage), typeof(ClientMessage)), source.Token))
+            using (SmartSocketClient client = await SmartSocketClient.FindServerAsync("CoyoteTester", name, new SmartSocketTypeResolver(typeof(ServerMessage), typeof(ClientMessage)), source.Token))
             {
                 client.Error += OnClientError;
                 client.ServerName = "CoyoteTester";

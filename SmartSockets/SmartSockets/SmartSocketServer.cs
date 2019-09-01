@@ -31,13 +31,13 @@ namespace LovettSoftware.Networking.SmartSockets
         private Socket listener;
         private readonly string serviceName;
         private readonly IPAddress ipAddress;
-        private readonly List<SmartSocket> clients = new List<SmartSocket>();
+        private readonly List<SmartSocketClient> clients = new List<SmartSocketClient>();
         private readonly SmartSocketTypeResolver resolver;
         private UdpClient udpListener;
 
-        public event EventHandler<SmartSocket> ClientConnected;
+        public event EventHandler<SmartSocketClient> ClientConnected;
 
-        public event EventHandler<SmartSocket> ClientDisconnected;
+        public event EventHandler<SmartSocketClient> ClientDisconnected;
 
         public SmartSocketServer(string name, SmartSocketTypeResolver resolver, string ipAddress = "127.0.0.1")
         {
@@ -81,8 +81,8 @@ namespace LovettSoftware.Networking.SmartSockets
 
         private void UdpListenerThread()
         {
-            var localHost = SmartSocket.FindLocalHostName();
-            List<string> addresses = SmartSocket.FindLocalIpAddresses();
+            var localHost = SmartSocketClient.FindLocalHostName();
+            List<string> addresses = SmartSocketClient.FindLocalIpAddresses();
             if (localHost == null || addresses.Count == 0)
             {
                 return; // no network.
@@ -118,7 +118,7 @@ namespace LovettSoftware.Networking.SmartSockets
 
         public async Task BroadcastAsync(SocketMessage message)
         {
-            SmartSocket[] snapshot = null;
+            SmartSocketClient[] snapshot = null;
             lock (this.clients)
             {
                 snapshot = this.clients.ToArray();
@@ -158,22 +158,22 @@ namespace LovettSoftware.Networking.SmartSockets
         private void OnAccept(Socket client)
         {
             IPEndPoint ep1 = client.RemoteEndPoint as IPEndPoint;
-            SmartSocket proxy = new SmartSocket(this, client, this.resolver)
+            SmartSocketClient proxy = new SmartSocketClient(this, client, this.resolver)
             {
                 Name = ep1.ToString(),
-                ServerName = SmartSocket.FindLocalHostName()
+                ServerName = SmartSocketClient.FindLocalHostName()
             };
 
             proxy.Disconnected += this.OnClientDisconnected;
 
-            SmartSocket[] snapshot = null;
+            SmartSocketClient[] snapshot = null;
 
             lock (this.clients)
             {
                 snapshot = this.clients.ToArray();
             }
 
-            foreach (SmartSocket s in snapshot)
+            foreach (SmartSocketClient s in snapshot)
             {
                 IPEndPoint ep2 = s.Socket.RemoteEndPoint as IPEndPoint;
                 if (ep1 == ep2)
@@ -196,11 +196,11 @@ namespace LovettSoftware.Networking.SmartSockets
 
         private void OnClientDisconnected(object sender, EventArgs e)
         {
-            SmartSocket client = (SmartSocket)sender;
+            SmartSocketClient client = (SmartSocketClient)sender;
             this.RemoveClient(client);
         }
 
-        internal void RemoveClient(SmartSocket client)
+        internal void RemoveClient(SmartSocketClient client)
         {
             bool found = false;
             lock (this.clients)
@@ -235,13 +235,13 @@ namespace LovettSoftware.Networking.SmartSockets
 
             this.listener = null;
 
-            SmartSocket[] snapshot = null;
+            SmartSocketClient[] snapshot = null;
             lock (this.clients)
             {
                 snapshot = this.clients.ToArray();
             }
 
-            foreach (SmartSocket client in snapshot)
+            foreach (SmartSocketClient client in snapshot)
             {
                 client.Close();
             }

@@ -4,7 +4,7 @@ using ConsoleInterface;
 using System.Threading.Tasks;
 
 namespace ConsoleServer
-{
+{    
     class Program
     {
         const string Name = "CoyoteTester";
@@ -23,18 +23,16 @@ namespace ConsoleServer
             server.ClientDisconnected += OnClientDisconnected;
             server.StartListening();
 
-            System.Diagnostics.Process client = System.Diagnostics.Process.Start(@"E:\git\lovettsoftware\Tools\SmartSockets\TestClient\bin\Debug\net46\TestClient.exe");
-
             Console.WriteLine("Press any key to terminate...");
             Console.ReadLine();
         }
 
-        private void OnClientDisconnected(object sender, SmartSocket e)
+        private void OnClientDisconnected(object sender, SmartSocketClient e)
         {
             Console.WriteLine("Client '{0}' has gone byebye...", e.Name);
         }
 
-        private void OnClientConnected(object sender, SmartSocket e)
+        private void OnClientConnected(object sender, SmartSocketClient e)
         {
             e.Error += OnClientError;
             Console.WriteLine("Client '{0}' is connected", e.Name);
@@ -49,7 +47,7 @@ namespace ConsoleServer
             Console.ForegroundColor = saved;
         }
 
-        private async void HandleClientAsync(SmartSocket client)
+        private async void HandleClientAsync(SmartSocketClient client)
         {
             while (client.IsConnected)
             {
