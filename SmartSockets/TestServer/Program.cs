@@ -17,11 +17,13 @@ namespace ConsoleServer
         }
 
         void Start()
-        { 
+        {
             SmartSocketServer server = new SmartSocketServer(Name, new SmartSocketTypeResolver(typeof(ServerMessage), typeof(ClientMessage)));
             server.ClientConnected += OnClientConnected;
             server.ClientDisconnected += OnClientDisconnected;
             server.StartListening();
+
+            System.Diagnostics.Process client = System.Diagnostics.Process.Start(@"E:\git\lovettsoftware\Tools\SmartSockets\TestClient\bin\Debug\net46\TestClient.exe");
 
             Console.WriteLine("Press any key to terminate...");
             Console.ReadLine();
@@ -34,8 +36,17 @@ namespace ConsoleServer
 
         private void OnClientConnected(object sender, SmartSocket e)
         {
+            e.Error += OnClientError;
             Console.WriteLine("Client '{0}' is connected", e.Name);
             Task.Run(() => HandleClientAsync(e));
+        }
+
+        private void OnClientError(object sender, Exception e)
+        {
+            var saved = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine(e.Message);
+            Console.ForegroundColor = saved;
         }
 
         private async void HandleClientAsync(SmartSocket client)

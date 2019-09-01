@@ -24,6 +24,7 @@ namespace ConsoleApp1
             CancellationTokenSource source = new CancellationTokenSource();
             using (SmartSocket client = await SmartSocket.FindServerAsync("CoyoteTester", name, new SmartSocketTypeResolver(typeof(ServerMessage), typeof(ClientMessage)), source.Token))
             {
+                client.Error += OnClientError;
                 client.ServerName = "CoyoteTester";
                 for (int i = 0; i < 10; i++)
                 {
@@ -47,5 +48,12 @@ namespace ConsoleApp1
             await Task.Delay(5000);
         }
 
+        private void OnClientError(object sender, Exception e)
+        {
+            var saved = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Error.WriteLine(e.Message);
+            Console.ForegroundColor = saved;
+        }
     }
 }
