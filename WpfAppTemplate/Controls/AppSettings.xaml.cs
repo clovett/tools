@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using LovettSoftware.Utilities;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
-using WpfAppTemplate.Utilities;
 
 namespace WpfAppTemplate.Controls
 {

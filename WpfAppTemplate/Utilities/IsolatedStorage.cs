@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2010 Microsoft Corporation.  All rights reserved.
+﻿// Copyright (c) 2019 Lovett Software.  All rights reserved.
 //
 //
 // Use of this source code is subject to the terms of the Microsoft
@@ -10,23 +10,26 @@
 // THE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES OR INDEMNITIES.
 //
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using System.Collections.Concurrent;
 
-namespace Microsoft.Storage
+namespace LovettSoftware.Utilities
 {
 
     /// <summary>
-    /// Isolated storage file helper class
+    /// IsolatedStorage uses XmlSerializer to load and save objects to a file on disk.
+    /// It also ensures serialized access to that file so you can load/save from any 
+    /// thread without concern for running into "access denied" errors.
     /// </summary>
     /// <typeparam name="T">Data type to serialize/deserialize</typeparam>
     public class IsolatedStorage<T>
     {
-        Dictionary<string, int> locks = new Dictionary<string, int>();
+        static ConcurrentDictionary<string, AutoResetEvent> locks = new ConcurrentDictionary<string, AutoResetEvent>();
+
 
         public IsolatedStorage()
         {
@@ -34,10 +37,10 @@ namespace Microsoft.Storage
 
         class FileLock : IDisposable
         {
-            Dictionary<string, int> locks;
+            ConcurrentDictionary<string, AutoResetEvent> locks;
             string key;
 
-            public FileLock(Dictionary<string, int> locks, string path)
+            public FileLock(ConcurrentDictionary<string, AutoResetEvent> locks, string path)
             {
                 this.locks = locks;
                 this.key = path;
@@ -47,25 +50,37 @@ namespace Microsoft.Storage
             {
                 lock (this.locks)
                 {
-                    this.locks.Remove(this.key);
+                    if (this.locks.TryGetValue(this.key, out AutoResetEvent mutex))
+                    {
+                        mutex.Set(); // release the next thread
+                    }
+                    else
+                    {
+                        throw new Exception("Internal error on FileLock");
+                    }
                 }
             }
         }
 
         private IDisposable EnterLock(string path)
         {
-            lock (locks)
+            while (true)
             {
-                int value = 0;
-                if (locks.TryGetValue(path, out value))
+                AutoResetEvent mutex = null;
+                lock (locks)
                 {
-                    throw new Exception(string.Format("Re-entrant access to file: {0}", path));
+                    if (!locks.TryGetValue(path, out mutex))
+                    {
+                        locks[path] = new AutoResetEvent(false);
+                        return new FileLock(locks, path);
+                    }
                 }
-                else
+
+                if (mutex != null)
                 {
-                    locks[path] = 1;
+                    mutex.WaitOne();
+                    return new FileLock(locks, path);
                 }
-                return new FileLock(locks, path);
             }
         }
 
@@ -80,26 +95,25 @@ namespace Microsoft.Storage
             T loadedFile = default(T);
 
             string fullPath = Path.Combine(folder, fileName);
-            using (var l = EnterLock(fullPath))
+            using (EnterLock(fullPath))
             {
-                try
+                if (fullPath != null)
                 {
-                    if (fullPath != null)
+                    await Task.Run(() =>
                     {
-                        Debug.WriteLine("Loading file: {0}", fullPath);
-                        await Task.Run(() =>
+                        try
                         {
                             using (Stream myFileStream = File.OpenRead(fullPath))
                             {
                                 // Call the Deserialize method and cast to the object type.
                                 loadedFile = LoadFromStream(myFileStream);
                             }
-                        });
-                    }
-                }
-                catch
-                {
-                    // silently rebuild data file if it got corrupted.
+                        }
+                        catch (Exception)
+                        {
+                            // silently rebuild data file if it got corrupted.
+                        }
+                    });
                 }
             }
             return loadedFile;
@@ -120,7 +134,7 @@ namespace Microsoft.Storage
         public async Task SaveToFileAsync(string folder, string fileName, T data)
         {
             string path = System.IO.Path.Combine(folder, fileName);
-            using (var l = EnterLock(path))
+            using (EnterLock(path))
             {
                 try
                 {
@@ -139,6 +153,5 @@ namespace Microsoft.Storage
                 }
             }
         }
-
     }
 }
