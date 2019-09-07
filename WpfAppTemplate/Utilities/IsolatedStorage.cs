@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2019 Lovett Software.  All rights reserved.
+﻿// Copyright (c) 2010 Microsoft Corporation.  All rights reserved.
 //
 //
 // Use of this source code is subject to the terms of the Microsoft
@@ -10,6 +10,7 @@
 // THE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES OR INDEMNITIES.
 //
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
@@ -21,9 +22,7 @@ namespace LovettSoftware.Utilities
 {
 
     /// <summary>
-    /// IsolatedStorage uses XmlSerializer to load and save objects to a file on disk.
-    /// It also ensures serialized access to that file so you can load/save from any 
-    /// thread without concern for running into "access denied" errors.
+    /// Isolated storage file helper class
     /// </summary>
     /// <typeparam name="T">Data type to serialize/deserialize</typeparam>
     public class IsolatedStorage<T>
@@ -99,6 +98,7 @@ namespace LovettSoftware.Utilities
             {
                 if (fullPath != null)
                 {
+                    Debug.WriteLine(string.Format("Loading file: {0}", fullPath));
                     await Task.Run(() =>
                     {
                         try
@@ -114,6 +114,39 @@ namespace LovettSoftware.Utilities
                             // silently rebuild data file if it got corrupted.
                         }
                     });
+                }
+            }
+            return loadedFile;
+        }
+
+        /// <summary>
+        /// Loads data from a file synchronously.
+        /// </summary>
+        /// <param name="folder">The folder to get the file from</param>
+        /// <param name="fileName">Name of the file to read.</param>
+        /// <returns>Deserialized data object</returns>
+        public T LoadFromFile(string folder, string fileName)
+        {
+            T loadedFile = default(T);
+
+            string fullPath = Path.Combine(folder, fileName);
+            using (EnterLock(fullPath))
+            {
+                if (fullPath != null)
+                {
+                    Debug.WriteLine(string.Format("Loading file: {0}", fullPath));
+                    try
+                    {
+                        using (Stream myFileStream = File.OpenRead(fullPath))
+                        {
+                            // Call the Deserialize method and cast to the object type.
+                            loadedFile = LoadFromStream(myFileStream);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // silently rebuild data file if it got corrupted.
+                    }
                 }
             }
             return loadedFile;
@@ -153,5 +186,6 @@ namespace LovettSoftware.Utilities
                 }
             }
         }
+
     }
 }
