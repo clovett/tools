@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FindDuplicates
+namespace MergePhotos
 {
     class HashedFile : IEquatable<HashedFile>
     {
@@ -24,6 +24,8 @@ namespace FindDuplicates
             hashCode = (int)fileLength;
             this.path = path;
         }
+
+        public bool Match { get; set; }
 
         public long FileLength { get { return this.fileLength; } }
 

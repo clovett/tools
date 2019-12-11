@@ -7,8 +7,8 @@
     <ProjectGuid>{DA7E9656-BC02-4D5E-B760-52DE8C247357}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FindDuplicates</RootNamespace>
-    <AssemblyName>FindDuplicates</AssemblyName>
+    <RootNamespace>MergePhotos</RootNamespace>
+    <AssemblyName>MergePhotos</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileHash.cs" />
+    <Compile Include="FolderIndex.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

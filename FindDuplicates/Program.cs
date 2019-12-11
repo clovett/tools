@@ -5,26 +5,27 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace FindDuplicates
+namespace MergePhotos
 {
     class Program
     {
-        int files;
-        int dups;
         bool verbose;
-        bool compare;
-        List<string> fullPaths = new List<string>();
-        Dictionary<HashedFile, List<HashedFile>> fileIndex = new Dictionary<HashedFile, List<HashedFile>>();
+        string source;
+        string target;
+        bool docopy = false;
+        FolderIndex sourceIndex;
+        FolderIndex targetIndex;
 
         private static void PrintUsage()
         {
-            Console.WriteLine("Usage: FindDuplicates [options] <dirs>");
-            Console.WriteLine("Searches given directories for any duplicate files and prints out their full path.");
+            Console.WriteLine("Usage: MergePhotos [options] source_dir target_dir");
+            Console.WriteLine("Merges two photos folders into target_dir, resulting in no duplicates and merged metadata.");
             Console.WriteLine("Options:");
             Console.WriteLine("    -v    verbose output");
-            Console.WriteLine("    -c    compare directories");
+            Console.WriteLine("    -c    do the actual recommended file copies");
         }
 
         static void Main(string[] args)
@@ -36,39 +37,6 @@ namespace FindDuplicates
                 return;
             }
             p.Run();
-        }
-
-        void Run()
-        {
-
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
-
-            foreach (string path in this.fullPaths)
-            {
-                CreateIndex(path);
-            }
-
-            watch.Stop();
-            long total = watch.ElapsedMilliseconds;
-            Console.WriteLine("Hashed {0} files in {1:N3} seconds", files, (double)watch.ElapsedMilliseconds / 1000.0);
-            watch.Reset();
-            watch.Start();
-
-            OptimizeIndex();
-            watch.Stop();
-            total += watch.ElapsedMilliseconds;
-            Console.WriteLine("Optimized the index in {1:N3} seconds", files, (double)watch.ElapsedMilliseconds / 1000.0);
-            watch.Reset();
-            watch.Start();
-
-            ReportDuplicates();
-            watch.Stop();
-            total += watch.ElapsedMilliseconds;
-            Console.WriteLine("Found {0} duplicates in {1:N3} seconds", dups, (double)watch.ElapsedMilliseconds / 1000.0);
-
-            Console.WriteLine();
-            Console.WriteLine("Total time is {1:N3} seconds", dups, (double)total / 1000.0);
         }
 
         bool ParseCommandLine(string[] args)
@@ -90,10 +58,10 @@ namespace FindDuplicates
                             verbose = true;
                             break;
                         case "c":
-                            compare = true;
+                            docopy = true;
                             break;
                         default:
-                            Console.WriteLine("Unexpected argument: " + arg);
+                            WriteError("Unexpected argument: " + arg);
                             return false;
                     }
                 }
@@ -104,23 +72,35 @@ namespace FindDuplicates
                         var path = Path.GetFullPath(arg);
                         if (!Directory.Exists(path))
                         {
-                            Console.WriteLine("Directory not found: " + path);
+                            WriteError("Directory not found: " + path);
                             return false;
                         }
-                        fullPaths.Add(path);
+                        if (source == null)
+                        {
+                            source = path;
+                        }
+                        else if (target == null)
+                        {
+                            target = path;
+                        }
+                        else
+                        {
+                            WriteError("Too many directories provided");
+                            return false;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("### error with directory: {0}\n{1}", arg, ex.Message);
+                        WriteError("Error with directory: {0}\n{1}", arg, ex.Message);
                         return false;
                     }
 
                 }
             }
 
-            if (fullPaths.Count == 0)
+            if (source == null || target == null)
             {
-                Console.WriteLine("Missing directory argument to search");
+                WriteError("Please provide source and target folders");
                 return false;
             }
 
@@ -128,127 +108,106 @@ namespace FindDuplicates
             return true;
         }
 
-
-        private void CreateIndex(string path)
+        private static void WriteError(string format, params string[] args)
         {
-            if (verbose) Console.WriteLine(path);
-            foreach (string file in Directory.GetFiles(path))
+            var saved = Console.ForegroundColor;
+            try
             {
-                files++;
-                HashedFile key = null;
-                key = new HashedFile(file);
-
-                AddFile(key);
-            }
-
-            foreach (string dir in Directory.GetDirectories(path))
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(format, args);
+            } 
+            finally
             {
-                CreateIndex(dir);
+                Console.ForegroundColor = saved;
             }
         }
 
-        private void AddFile(HashedFile key)
+        void Run()
         {
-            List<HashedFile> list = null;
-            if (!fileIndex.TryGetValue(key, out list))
+            Stopwatch watch = new Stopwatch();
+
+            sourceIndex = new FolderIndex(source, verbose);
+            targetIndex = new FolderIndex(target, verbose);
+
+            watch.Start();
+            bool header = false;
+            foreach(var dups in targetIndex.FindDuplicates())
             {
-                list = new List<HashedFile>();
-                list.Add(key);
-                fileIndex[key] = list;
+                if (!header)
+                {
+                    WriteError("Target directory contains its own duplicates!");
+                    header = true;
+                }
+
+                foreach (var item in dups)
+                {
+                    Console.WriteLine("    " + item.Path);
+                }
+                Console.WriteLine();
+            }
+            if (header)
+            {
+                return;
+            }
+
+            foreach(var dups in sourceIndex.FindDuplicates())
+            {
+                PickSourceDuplicate(dups);
+            }
+
+            watch.Stop();
+
+            Console.WriteLine("Checked self-duplicates in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
+
+
+            watch.Reset();
+            watch.Start();
+
+            targetIndex.Merge(sourceIndex, docopy);
+
+            Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
+
+            Console.WriteLine();
+        }
+
+        private void PickSourceDuplicate(List<HashedFile> files)
+        {
+            // heuristic, if file name ends with (1), (2) and so on, then it is probably a copy paste error, so pick the
+            // file name that doesn't contain this suffix.
+            // Otherwise pick the longest file name because it is probably the most descriptive.
+
+            string longest = null;
+            HashedFile longestFile = null;
+            string nonIndexed = null;
+            HashedFile nonIndexedFile = null;
+            bool hasIndexes = false;
+            Regex re = new Regex(".*\\(([0-9]+)\\)$");
+            foreach (var item in files)
+            {
+                string baseName = System.IO.Path.GetFileNameWithoutExtension(item.Path);
+                if (longest == null || longest.Length < baseName.Length)
+                {
+                    longest = baseName;
+                    longestFile = item;
+                }
+                var match = re.Match(baseName);
+                if (match.Success)
+                {
+                    hasIndexes = true;
+                } else {
+                    nonIndexed = baseName;
+                    nonIndexedFile = item;
+                }
+            }
+            if (hasIndexes && nonIndexed != null)
+            {
+                Console.WriteLine("Picking source duplicate: " + nonIndexedFile.Path);
+                sourceIndex.ResolveDuplicate(nonIndexedFile);
             }
             else
             {
-                list.Add(key);
-            }
-        }
-
-        int GetLongestConflict()
-        {
-            return (from i in fileIndex.Values select i.Count).Max(); 
-        }
-
-        private void ReportDuplicates()
-        {
-            dups = 0;
-
-            // ok, now do a deep compare of any files that have identical hashes to see what is really duplicated or not.
-            foreach (var pair in fileIndex)
-            {
-                var list = pair.Value;
-                while (list.Count > 1)
-                {                    
-                    List<HashedFile> nondups = new List<HashedFile>();
-                    HashedFile first = list[0];
-                    bool foundDup = false;
-                    for (int i = 1; i < list.Count; i++)
-                    {
-                        HashedFile other = list[i];
-                        if (!first.Equals(other))
-                        {
-                            nondups.Add(other);
-                        }
-                        else if (first.DeepEquals(other))
-                        {
-                            if (!foundDup)
-                            {
-                                foundDup = true;
-                                Console.WriteLine(first.Path);
-                            }
-                            dups++;
-                            Console.WriteLine(other.Path);
-                        }
-                        else
-                        {
-                            nondups.Add(other);
-                        }
-                    }
-                    if (foundDup)
-                    {
-                        Console.WriteLine();
-                    }
-
-                    // now search the remainder for other matches.
-                    list = nondups;
-                }
-            }
-        }
-
-        private void OptimizeIndex()
-        {
-            int hashPrefixLength = 32000; // amount of the file to read to compute hash.
-
-            while (GetLongestConflict() > 5)
-            {
-                bool fileIsLonger = false;
-
-                // now rehashing anything that shows same file size to get less clashes.
-                foreach (var pair in fileIndex.ToArray())
-                {
-                    var list = pair.Value;
-
-                    if (list.Count > 2)
-                    {
-                        // re-hash these files
-                        fileIndex.Remove(pair.Key);
-                        foreach (var info in list)
-                        {
-                            info.SetSha1PrefixHash(hashPrefixLength);
-                            if (info.FileLength > hashPrefixLength)
-                            {
-                                fileIsLonger = true;
-                            }
-                            AddFile(info);
-                        }
-                    }
-                }
-                if (!fileIsLonger)
-                {
-                    // rehashing won't help
-                    break;
-                }
-
-                // if this is still not good enough, then increase the length.
-                hashPrefixLength *= 2;
+                Console.WriteLine("Picking source duplicate: " + longestFile.Path);
+                sourceIndex.ResolveDuplicate(longestFile);
             }
         }
 
