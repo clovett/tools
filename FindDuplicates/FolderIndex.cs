@@ -205,6 +205,8 @@ namespace MergePhotos
                         string target = System.IO.Path.Combine(dir, System.IO.Path.GetFileName(item.Path));
                         if (File.Exists(target))
                         {
+                            // interesting, same file name, so if the photos are similar we could take the largest one, but
+                            // if the photos are not similar then we have a name clash!
                             Console.WriteLine("### Conflicting target file name: {0}", target);
                             Console.WriteLine("       Skipping source file name: {0}", item.Path);
                         }
