@@ -129,8 +129,8 @@ namespace MergePhotos
             // ok, now do a deep compare of any files that have identical hashes to see what is really duplicated or not.
             foreach (var pair in fileIndex)
             {
-                var list = pair.Value;
-                while (list.Count > 1)
+                var list = new List<HashedFile>(pair.Value);
+                if (list.Count > 1)
                 {
                     List<HashedFile> nondups = new List<HashedFile>();
                     HashedFile first = list[0];
