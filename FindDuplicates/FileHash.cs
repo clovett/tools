@@ -25,8 +25,6 @@ namespace MergePhotos
             this.path = path;
         }
 
-        public bool Match { get; set; }
-
         public long FileLength { get { return this.fileLength; } }
 
         static byte[] hashBuffer = null;

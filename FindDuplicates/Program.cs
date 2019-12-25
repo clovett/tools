@@ -15,7 +15,7 @@ namespace MergePhotos
         bool verbose;
         string source;
         string target;
-        bool docopy = false;
+        MergeOptions options = new MergeOptions() { CopyFiles = false, RemoveFiles = false };
         FolderIndex sourceIndex;
         FolderIndex targetIndex;
 
@@ -26,6 +26,8 @@ namespace MergePhotos
             Console.WriteLine("Options:");
             Console.WriteLine("    -v    verbose output");
             Console.WriteLine("    -c    do the actual recommended file copies");
+            Console.WriteLine("    -r    remove source files that were successfully copied to target folder and whether");
+            Console.WriteLine("          to remove duplicate files from source or target folders");
         }
 
         static void Main(string[] args)
@@ -58,7 +60,10 @@ namespace MergePhotos
                             verbose = true;
                             break;
                         case "c":
-                            docopy = true;
+                            options.CopyFiles = true;
+                            break;
+                        case "r":
+                            options.RemoveFiles = true;
                             break;
                         default:
                             WriteError("Unexpected argument: " + arg);
@@ -133,16 +138,7 @@ namespace MergePhotos
             bool header = false;
             foreach(var dups in targetIndex.FindDuplicates())
             {
-                if (!header)
-                {
-                    WriteError("Target directory contains its own duplicates!");
-                    header = true;
-                }
-
-                foreach (var item in dups)
-                {
-                    Console.WriteLine("    " + item.Path);
-                }
+                targetIndex.PickDuplicate("target", dups, options);
                 Console.WriteLine();
             }
             if (header)
@@ -152,64 +148,24 @@ namespace MergePhotos
 
             foreach(var dups in sourceIndex.FindDuplicates())
             {
-                PickSourceDuplicate(dups);
+                sourceIndex.PickDuplicate("source", dups, options);
+                Console.WriteLine();
             }
 
             watch.Stop();
 
             Console.WriteLine("Checked self-duplicates in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
 
-
             watch.Reset();
             watch.Start();
 
-            targetIndex.Merge(sourceIndex, docopy);
+            targetIndex.Merge(sourceIndex, options);
 
             Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
 
             Console.WriteLine();
         }
 
-        private void PickSourceDuplicate(List<HashedFile> files)
-        {
-            // heuristic, if file name ends with (1), (2) and so on, then it is probably a copy paste error, so pick the
-            // file name that doesn't contain this suffix.
-            // Otherwise pick the longest file name because it is probably the most descriptive.
-
-            string longest = null;
-            HashedFile longestFile = null;
-            string nonIndexed = null;
-            HashedFile nonIndexedFile = null;
-            bool hasIndexes = false;
-            Regex re = new Regex(".*\\(([0-9]+)\\)$");
-            foreach (var item in files)
-            {
-                string baseName = System.IO.Path.GetFileNameWithoutExtension(item.Path);
-                if (longest == null || longest.Length < baseName.Length)
-                {
-                    longest = baseName;
-                    longestFile = item;
-                }
-                var match = re.Match(baseName);
-                if (match.Success)
-                {
-                    hasIndexes = true;
-                } else {
-                    nonIndexed = baseName;
-                    nonIndexedFile = item;
-                }
-            }
-            if (hasIndexes && nonIndexed != null)
-            {
-                Console.WriteLine("Picking source duplicate: " + nonIndexedFile.Path);
-                sourceIndex.ResolveDuplicate(nonIndexedFile);
-            }
-            else
-            {
-                Console.WriteLine("Picking source duplicate: " + longestFile.Path);
-                sourceIndex.ResolveDuplicate(longestFile);
-            }
-        }
 
     }
 }
