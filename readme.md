@@ -4,7 +4,7 @@ This is my collection of little tools mostly built in C#
 
 ### AngleMeasurer
 Trivial WPF app that lets you measure angles on a any bitmap that you paste in:
-![angler](images\angler.png).
+![angler](images/angler.png).
 
 ### AppBarButtonStyles
 
