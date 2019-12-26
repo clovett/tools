@@ -6,8 +6,16 @@
         xmlns:local="clr-namespace:AngleMeasurer"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1280">
+    <Window.CommandBindings>
+        <CommandBinding Command="Paste" Executed="Paste" CanExecute="ClipboardHasData"/>
+        <CommandBinding Command="local:MainWindow.CommandClear" Executed="OnClear" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="Paste" Key="V" Modifiers="Control"/>
+        <KeyBinding Command="local:MainWindow.CommandClear" Key="F5" />
+    </Window.InputBindings>
     <Grid>
-        <Image Source="blacksheep.jpg"/>
+        <Image x:Name="ImageHolder" Source="blacksheep.jpg"/>
         <Canvas x:Name="Scratch" Background="Transparent" MouseDown="OnCanvasMouseDown"
                 MouseMove="OnCanvasMouseMove" MouseUp="OnCanvasMouseUp" LostMouseCapture="OnCanvasLostCapture"
                 KeyDown="OnCanvasKeyDown" Focusable="true">

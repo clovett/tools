@@ -21,6 +21,8 @@ namespace AngleMeasurer
     /// </summary>
     public partial class MainWindow : Window
     {
+        public readonly static RoutedUICommand CommandClear = new RoutedUICommand("F5", "Clear", typeof(MainWindow));
+
         public MainWindow()
         {
             InitializeComponent();
@@ -75,13 +77,19 @@ namespace AngleMeasurer
                 arcSegment.Point = point;
                 arcSegment.SweepDirection = (angle > 0) ? SweepDirection.Clockwise : SweepDirection.Counterclockwise;
 
+                try
+                {
+                    PathGeometry g = (PathGeometry)arc.Data;
+                    Point tangent;
+                    g.GetPointAtFractionLength(0.5, out point, out tangent);
 
-                PathGeometry g = (PathGeometry)arc.Data;
-                Point tangent;
-                g.GetPointAtFractionLength(0.5, out point, out tangent);
+                    Canvas.SetLeft(label, point.X);
+                    Canvas.SetTop(label, point.Y);
+                }
+                catch
+                {
 
-                Canvas.SetLeft(label, point.X);
-                Canvas.SetTop(label, point.Y);
+                }
 
             }
             else if (current != null)
@@ -149,6 +157,31 @@ namespace AngleMeasurer
                 arcSegment = null;
                 label = null;
             }
+        }
+
+        private void Paste(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (Clipboard.ContainsImage())
+            {
+                var image = Clipboard.GetImage();
+                if (image != null)
+                {
+                    ImageHolder.Source = image;
+                }
+            }
+        }
+
+        private void ClipboardHasData(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = Clipboard.ContainsImage() ||
+                Clipboard.ContainsData(DataFormats.Xaml) ||
+                Clipboard.ContainsData(DataFormats.Rtf) ||
+                Clipboard.ContainsData(DataFormats.Text);
+        }
+
+        private void OnClear(object sender, ExecutedRoutedEventArgs e)
+        {
+            Scratch.Children.Clear();
         }
     }
 }
