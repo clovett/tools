@@ -45,7 +45,11 @@ namespace VideoThumbnailMaker
             fo.Multiselect = false;
             if (Settings.Instance.LastFile != null)
             {
-                fo.InitialDirectory = System.IO.Path.GetDirectoryName(Settings.Instance.LastFile);
+                var dir = System.IO.Path.GetDirectoryName(Settings.Instance.LastFile);
+                if (System.IO.Directory.Exists(dir))
+                {
+                    fo.InitialDirectory = dir;
+                }
             }
             if (fo.ShowDialog() == true)
             {

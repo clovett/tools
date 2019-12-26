@@ -181,13 +181,25 @@ namespace BatchPhotoScan
         {
             if (scanner == null)
             {
+                Exception error = null;
                 await Task.Run(new Action(() => {
                     if (cdc == null)
                     {
                         cdc = new WIA.CommonDialog();
                     }
-                    scanner = cdc.ShowSelectDevice(DeviceType: WIA.WiaDeviceType.ScannerDeviceType, AlwaysSelectDevice: true);
+                    try
+                    {
+                        scanner = cdc.ShowSelectDevice(DeviceType: WIA.WiaDeviceType.ScannerDeviceType, AlwaysSelectDevice: true);
+                    } catch (Exception ex)
+                    {
+                        error= ex;
+                    }
                 }));
+
+                if (error != null)
+                {
+                    throw error;
+                }
 
             }
             return scanner;
@@ -251,10 +263,7 @@ namespace BatchPhotoScan
             }
             catch (Exception ex)
             {
-                if (scanner != null)
-                {
-                    MessageBox.Show(string.Format("Error: {0}, please check your scanner and try again", ex.Message), "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+                MessageBox.Show(string.Format("Error: {0}, please check your scanner and try again", ex.Message), "Error Scanning", MessageBoxButton.OK, MessageBoxImage.Error);
                 scanner = null;
             }
             finally

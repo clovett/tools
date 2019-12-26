@@ -67,6 +67,8 @@ namespace FileTreeMap
 
         bool busy;
 
+        static char[] Wildcards = new char[] { '*', '?' };
+
         void Analyze()
         { 
             if (busy)
@@ -85,23 +87,38 @@ namespace FileTreeMap
                 StartProgress();
 
                 IEnumerable<string> files = null;
-                if (File.Exists(path))
+                string pattern = System.IO.Path.GetFileName(path);
+                string dir = path;
+                if (pattern.IndexOfAny(Wildcards) >= 0)
+                {
+                    dir = System.IO.Path.GetDirectoryName(path);
+                }
+                else 
+                {
+                    pattern = "*.*";
+                }
+
+                if (dir == path && File.Exists(path))
                 {
                     // then it is a build log file
                     files = builder.FindFilesInLogFile(path);
                 }
-                else if (Directory.Exists(path))
+                else 
                 {
-                    // analyze directory
-                    files = builder.FindFilesInDirectory(path);
-                }
-                else
-                {
-                    UiDispatcher.RunOnUIThread(() =>
+                    try
                     {
-                        ShowError(string.Format("'{0}' does not exist", path), "Folder not found");
-                    });
+                        // analyze directory
+                        files = builder.FindFilesInDirectory(dir, pattern);
+                    } 
+                    catch (Exception ex)
+                    {
+                        UiDispatcher.RunOnUIThread(() =>
+                        {
+                            ShowError(string.Format("'{0}' does not exist", path), ex.Message);
+                        });
+                    }
                 }
+
                 if (files != null)
                 {
                     var tree = builder.AnalyzeFiles(files, SetProgress);

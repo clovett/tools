@@ -16,28 +16,29 @@ namespace FileTreeMap
     {
         DirectoryCache cache = new DirectoryCache();
 
-        public IEnumerable<string> FindFilesInDirectory(string path)
+        public IEnumerable<string> FindFilesInDirectory(string path, string pattern="*.*")
         {
             List<string> files = new List<string>();
-            AddFilesInDirectory(path, files);
+            AddFilesInDirectory(path, pattern, files);
             return files;
         }
 
-        private void AddFilesInDirectory(string path, List<string> files)
+        private void AddFilesInDirectory(string path, string pattern, List<string> files)
         {
             DirectoryInfo info = new DirectoryInfo(path);
-            foreach (FileInfo file in info.GetFiles("*.*"))
+            foreach (FileInfo file in info.GetFiles(pattern))
             {
                 if ((file.Attributes & FileAttributes.Hidden) == 0)
                 {
                     files.Add(file.FullName);
                 }
             }
-            foreach (DirectoryInfo dir in info.GetDirectories("*.*"))
+
+            foreach (DirectoryInfo dir in info.GetDirectories())
             {
                 if ((dir.Attributes & FileAttributes.Hidden) == 0)
                 {
-                    AddFilesInDirectory(dir.FullName, files);
+                    AddFilesInDirectory(dir.FullName, pattern, files);
                 }
             }
         }

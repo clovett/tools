@@ -148,6 +148,9 @@ namespace Chimpmunk.Model
                     i++;
                 }
             }
+
+            // todo:
+            return false;
         }
 
         private double TotalCost
