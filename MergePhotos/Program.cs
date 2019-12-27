@@ -21,8 +21,9 @@ namespace MergePhotos
 
         private static void PrintUsage()
         {
-            Console.WriteLine("Usage: MergePhotos [options] source_dir target_dir");
-            Console.WriteLine("Merges two photos folders into target_dir, resulting in no duplicates and merged metadata.");
+            Console.WriteLine("Usage: MergePhotos [options] source_dir [target_dir]");
+            Console.WriteLine("Removes duplicates from given source and target dir.  If target dir is also provided then");
+            Console.WriteLine("it merges source into target, merging metadata and removing the source files completely.");
             Console.WriteLine("Options:");
             Console.WriteLine("    -v    verbose output");
             Console.WriteLine("    -c    do the actual recommended file copies");
@@ -103,9 +104,9 @@ namespace MergePhotos
                 }
             }
 
-            if (source == null || target == null)
+            if (source == null )
             {
-                WriteError("Please provide source and target folders");
+                WriteError("Please provide source folder");
                 return false;
             }
 
@@ -132,18 +133,19 @@ namespace MergePhotos
             Stopwatch watch = new Stopwatch();
 
             sourceIndex = new FolderIndex(source, verbose);
-            targetIndex = new FolderIndex(target, verbose);
+            if (target != null)
+            {
+                targetIndex = new FolderIndex(target, verbose);
+            }
 
             watch.Start();
-            bool header = false;
-            foreach(var dups in targetIndex.FindDuplicates())
+            if (targetIndex != null)
             {
-                targetIndex.PickDuplicate("target", dups, options);
-                Console.WriteLine();
-            }
-            if (header)
-            {
-                return;
+                foreach (var dups in targetIndex.FindDuplicates())
+                {
+                    targetIndex.PickDuplicate("target", dups, options);
+                    Console.WriteLine();
+                }
             }
 
             foreach(var dups in sourceIndex.FindDuplicates())
@@ -154,14 +156,17 @@ namespace MergePhotos
 
             watch.Stop();
 
-            Console.WriteLine("Checked self-duplicates in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
+            Console.WriteLine("Checked duplicates in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
 
-            watch.Reset();
-            watch.Start();
+            if (targetIndex != null)
+            {
+                watch.Reset();
+                watch.Start();
 
-            targetIndex.Merge(sourceIndex, options);
+                targetIndex.Merge(sourceIndex, options);
 
-            Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
+                Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
+            }
 
             Console.WriteLine();
         }
