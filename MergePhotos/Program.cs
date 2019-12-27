@@ -15,20 +15,18 @@ namespace MergePhotos
         bool verbose;
         string source;
         string target;
-        MergeOptions options = new MergeOptions() { CopyFiles = false, RemoveFiles = false };
+        MergeOptions options = new MergeOptions() { Preview = true };
         FolderIndex sourceIndex;
         FolderIndex targetIndex;
 
         private static void PrintUsage()
         {
             Console.WriteLine("Usage: MergePhotos [options] source_dir [target_dir]");
-            Console.WriteLine("Removes duplicates from given source and target dir.  If target dir is also provided then");
-            Console.WriteLine("it merges source into target, merging metadata and removing the source files completely.");
+            Console.WriteLine("Find duplicates in given source dir and delete them.  If target dir is also provided then");
+            Console.WriteLine("it merges source into target.  It also correctly merges *.xmp metadata files.");
             Console.WriteLine("Options:");
             Console.WriteLine("    -v    verbose output");
-            Console.WriteLine("    -c    do the actual recommended file copies");
-            Console.WriteLine("    -r    remove source files that were successfully copied to target folder and whether");
-            Console.WriteLine("          to remove duplicate files from source or target folders");
+            Console.WriteLine("    -f    actually do it!");
         }
 
         static void Main(string[] args)
@@ -60,11 +58,8 @@ namespace MergePhotos
                         case "verbose":
                             verbose = true;
                             break;
-                        case "c":
-                            options.CopyFiles = true;
-                            break;
-                        case "r":
-                            options.RemoveFiles = true;
+                        case "f":
+                            options.Preview = false;
                             break;
                         default:
                             WriteError("Unexpected argument: " + arg);

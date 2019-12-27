@@ -13,16 +13,9 @@ namespace MergePhotos
     class MergeOptions
     {
         /// <summary>
-        /// Whether to cleanup source folder by removing anything that was copied to the 
-        /// target folder.  This will leave only conflicting files.  Also removes duplicates
-        /// from either source or target folders.
+        /// Preview what will be copied and deleted, don't actually do it.
         /// </summary>
-        public bool RemoveFiles;
-
-        /// <summary>
-        /// Whether to actually do the copy file operations or just print what will be copied.
-        /// </summary>
-        public bool CopyFiles;
+        public bool Preview;
     }
 
 
@@ -153,13 +146,38 @@ namespace MergePhotos
             }
         }
 
+        class Progress
+        {
+            int amount;
+            int pos;
+            int percent;
+
+            public Progress(int amount)
+            {
+                this.amount = amount;
+            }
+
+            public void Increment()
+            {
+                pos++;
+                int p = (pos * 100 / amount);
+                if (p != percent)
+                {
+                    Console.Write(".");
+                    percent = p;
+                }
+            }
+        }
+
         private void OptimizeIndex()
         {
             // Now if file length alone is not a good enough hash and we have hash
-            // conflicts then hash again using a 64kb block buffer.
-            int conflicts = (from i in index1.Values select i.Count).Max();
-            if (conflicts > 1)
+            // conflicts then hash again using a 64kb block buffer.            
+            int conflicts = (from i in index1.Values where i.Count > 1 select i.Count).Sum();
+            if (conflicts > 0)
             {
+                Console.WriteLine("Rehashing {0} level 2 files", conflicts);
+                Progress progress = new Progress(conflicts);
                 // now rehashing anything that shows same file size to get less clashes.
                 foreach (var pair in index1.ToArray())
                 {
@@ -171,14 +189,18 @@ namespace MergePhotos
                         {
                             AddLevel2(info);
                         }
+                        progress.Increment();
                     }
                 }
+                Console.WriteLine();
             }
 
             // Now if the level 2 index is also degenerated, we go to level 3
-            conflicts = (from i in index2.Values select i.Count).Max();
+            conflicts = (from i in index2.Values where i.Count > 1 select i.Count).Sum();
             if (conflicts > 1)
             {
+                Console.WriteLine("Rehashing {0} level 3 files", conflicts);
+                Progress progress = new Progress(conflicts);
                 // now rehashing anything that shows same file size to get less clashes.
                 foreach (var pair in index2.ToArray())
                 {
@@ -190,6 +212,7 @@ namespace MergePhotos
                         {
                             AddLevel3(info);
                         }
+                        progress.Increment();
                     }
                 }
             }
@@ -248,6 +271,8 @@ namespace MergePhotos
             }
         }
 
+        static Regex re = new Regex("[-_\\(\\)0-9]+$"); // any combination of - ( ) and 0-9.
+
         /// <summary>
         /// Process the results of FindDuplicates, picking the best master file and deleting the others
         /// </summary>
@@ -263,11 +288,17 @@ namespace MergePhotos
             string longest = null;
             EntireFileHash longestFile = null;
             string shortest = null;
+            string shortestActual = null;
             EntireFileHash shortestFile = null;
 
             foreach (var item in duplicates)
             {
-                string baseName = System.IO.Path.GetFileNameWithoutExtension(item.Path);
+                string baseName = Path.GetFileNameWithoutExtension(item.Path);
+                var match = re.Match(baseName);
+                if (match.Success && match.Index > 1)
+                {
+                    baseName = baseName.Substring(0, match.Index);
+                }
                 if (longest == null || longest.Length < baseName.Length)
                 {
                     longest = baseName;
@@ -277,22 +308,27 @@ namespace MergePhotos
                 {
                     shortest = baseName;
                     shortestFile = item;
+                    shortestActual = Path.GetFileNameWithoutExtension(item.Path);
                 }
             }
-
-            Regex re = new Regex("[-\\(\\)0-9]*"); // any combination of - ( ) and 0-9.
-
             bool isIndexed = true;
             // now see if all the names are an indexed (1) or -1 extension on the shortest name.
             foreach (var item in duplicates)
             {
-                string baseName = System.IO.Path.GetFileNameWithoutExtension(item.Path);
-                if (baseName != shortest)
+                string baseName = Path.GetFileNameWithoutExtension(item.Path);
+                if (baseName != shortestActual)
                 {
-                    string suffix = baseName.Substring(shortest.Length);
-
-                    var match = re.Match(baseName);
-                    if (!match.Success)
+                    string head = baseName.Substring(0, shortest.Length);
+                    if (string.Compare(head, shortest, StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        string suffix = baseName.Substring(shortest.Length);
+                        var match = re.Match(baseName);
+                        if (!match.Success)
+                        {
+                            isIndexed = false;
+                        }
+                    } 
+                    else
                     {
                         isIndexed = false;
                     }
@@ -319,15 +355,15 @@ namespace MergePhotos
                 if (item.Path != choice.Path)
                 {
                     dups.Remove(item);
-                    if (options.RemoveFiles)
+                    if (options.Preview || this.verbose)
                     {
-                        Console.WriteLine("    Deleting " + item.Path);
-                        System.IO.File.Delete(item.Path);
+                        Console.WriteLine("    delete " + item.Path);
                     }
-                    else
+                    if (!options.Preview)
                     {
-                        Console.WriteLine("    Will delete " + item.Path);
+                        SafeDelete(item.Path);
                     }
+                    MergeDuplicateMetadata(item.Path, choice.Path, options);
                 }
             }
         }
@@ -386,19 +422,18 @@ namespace MergePhotos
                                 {
                                     if (target.Equals(sourceFileHash) && sourceFileHash.FileEquals(target))
                                     {
-                                        if (verbose)
+                                        if (options.Preview | verbose)
                                         {
-                                            Console.WriteLine("Matching file already exists in target: {0}", target.Path);
-                                            Console.WriteLine("         Matching Source file: {0}", sourceFile);
+                                            Console.WriteLine("    delete {0}", sourceFile);
                                         }
                                         TryMergeMetadata(sourceIndex, lengthHash.Path, target.Path, options);
                                         if (found)
                                         {
                                             throw new Exception("bugbug: still have duplicates in the target index???");
                                         }
-                                        if (options.RemoveFiles)
+                                        if (!options.Preview)
                                         {
-                                            System.IO.File.Delete(sourceFile);
+                                            SafeDelete(sourceFile);
                                         }
                                         found = true;
                                     }
@@ -408,7 +443,7 @@ namespace MergePhotos
                     }
                     if (!found)
                     {
-                        string target = System.IO.Path.Combine(dir, System.IO.Path.GetFileName(lengthHash.Path));
+                        string target = Path.Combine(dir, Path.GetFileName(lengthHash.Path));
                         if (File.Exists(target))
                         {
                             // interesting, same file name but different contents, so some sort of "merge" operation is needed here.
@@ -418,14 +453,14 @@ namespace MergePhotos
                         }
                         else
                         {
-                            Console.WriteLine("copy \"{0}\" \"{1}\"", lengthHash.Path, target);
-                            if (options.CopyFiles)
+                            if (options.Preview | verbose)
+                            {
+                                Console.WriteLine("copy \"{0}\" \"{1}\"", lengthHash.Path, target);
+                            }
+                            if (!options.Preview)
                             {
                                 File.Copy(lengthHash.Path, target);
-                                if (options.RemoveFiles)
-                                {
-                                    File.Delete(lengthHash.Path);
-                                }
+                                SafeDelete(lengthHash.Path);
                             }
                         }
                         TryMergeMetadata(sourceIndex, lengthHash.Path, target, options);
@@ -461,9 +496,14 @@ namespace MergePhotos
                     if (se.Equals(te) && se.FileEquals(te))
                     {
                         // files match!
-                        if (options.RemoveFiles)
+                        if (options.Preview || verbose)
                         {
-                            File.Delete(sourceMetadata);
+                            Console.WriteLine("    delete {0}", sourceMetadata);
+                        }
+
+                        if (!options.Preview)
+                        {
+                            SafeDelete(sourceMetadata);
                         }
                         return;
                     }
@@ -473,14 +513,61 @@ namespace MergePhotos
             }
             else if (sm != null)
             {
-                Console.WriteLine("copy \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
-                if (options.CopyFiles)
+                if (options.Preview || verbose)
+                {
+                    Console.WriteLine("    copy \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
+                    Console.WriteLine("    delete {0}", sourceMetadata);
+                }
+                if (!options.Preview)
                 {
                     File.Copy(sourceMetadata, targetMetadata);
-                    if (options.RemoveFiles)
+                    SafeDelete(sourceMetadata);
+                }
+            }
+        }
+
+        private void MergeDuplicateMetadata(string source, string target, MergeOptions options)
+        {
+            string sourceMetadata = Path.ChangeExtension(source, ".xmp");
+            string targetMetadata = Path.ChangeExtension(target, ".xmp");
+
+            FileLengthHash sm = this.FindFile(sourceMetadata);
+            FileLengthHash tm = this.FindFile(targetMetadata);
+
+            if (sm != null && tm != null)
+            {
+                if (sm.HashEquals(tm))
+                {
+                    EntireFileHash se = this.Promote(sm);
+                    EntireFileHash te = this.Promote(tm);
+                    if (se.Equals(te) && se.FileEquals(te))
                     {
-                        File.Delete(sourceMetadata);
+                        // files match!
+                        if (options.Preview || verbose)
+                        {
+                            Console.WriteLine("    delete {0}", sourceMetadata);
+                        }
+                        if (!options.Preview)
+                        {
+                            SafeDelete(sourceMetadata);
+                        }
+                        return;
                     }
+                }
+
+                MergeMetadata(sourceMetadata, targetMetadata, options);
+            }
+            else if (sm != null)
+            {
+                if (options.Preview || verbose)
+                {
+                    Console.WriteLine("    copy \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
+                    Console.WriteLine("    delete {0}", sourceMetadata);
+                }
+                if (!options.Preview)
+                {
+                    File.Copy(sourceMetadata, targetMetadata);
+                    SafeDelete(sourceMetadata);
                 }
             }
         }
@@ -491,13 +578,13 @@ namespace MergePhotos
             Metadata target = Metadata.Load(targetMetadata);
             if (target.IsSame(source))
             {
-                if (verbose)
+                if (options.Preview || verbose)
                 {
-                    Console.WriteLine("Equivalent metadata \"{0}\" into \"{1}\"", sourceMetadata, targetMetadata);
+                    Console.WriteLine("    delete {0}", sourceMetadata);
                 }
-                if (options.RemoveFiles)
+                if (!options.Preview)
                 {
-                    File.Delete(sourceMetadata);
+                    SafeDelete(sourceMetadata);
                 }
             }
             else
@@ -514,9 +601,23 @@ namespace MergePhotos
                 if (this.reverseIndex.TryGetValue(path, out key))
                 {
                     return key;
-                }                
+                }
+                // perhaps file was added previously by a merge copy.
+                key = new FileLengthHash(path);
+                this.AddLevel1(key);
             }
             return null;
+        }
+
+        private void SafeDelete(string filename)
+        {
+            var attrs = File.GetAttributes(filename);
+            if ((attrs & FileAttributes.ReadOnly) != 0)
+            {
+                attrs &= ~FileAttributes.ReadOnly;
+                File.SetAttributes(filename, attrs);
+            }
+            File.Delete(filename);
         }
     }
 }
