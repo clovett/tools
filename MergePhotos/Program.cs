@@ -127,10 +127,10 @@ namespace MergePhotos
         {
             Stopwatch watch = new Stopwatch();
 
-            sourceIndex = new FolderIndex(source, verbose);
+            sourceIndex = new FolderIndex(source, options, verbose);
             if (target != null)
             {
-                targetIndex = new FolderIndex(target, verbose);
+                targetIndex = new FolderIndex(target, options, verbose);
             }
 
             watch.Start();
@@ -138,14 +138,14 @@ namespace MergePhotos
             {
                 foreach (var dups in targetIndex.FindDuplicates())
                 {
-                    targetIndex.PickDuplicate("target", dups, options);
+                    targetIndex.PickDuplicate("target", dups);
                     Console.WriteLine();
                 }
             }
 
             foreach(var dups in sourceIndex.FindDuplicates())
             {
-                sourceIndex.PickDuplicate("source", dups, options);
+                sourceIndex.PickDuplicate("source", dups);
                 Console.WriteLine();
             }
 
@@ -158,7 +158,7 @@ namespace MergePhotos
                 watch.Reset();
                 watch.Start();
 
-                targetIndex.Merge(sourceIndex, options);
+                targetIndex.Merge(sourceIndex);
 
                 Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
             }

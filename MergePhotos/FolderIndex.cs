@@ -24,6 +24,7 @@ namespace MergePhotos
         bool verbose;
         string dir;
         int files;
+        MergeOptions options;
         // level 1 index is just based on file length.  Clearly this index could degenerate if there's a lot of files
         // that have the same length, so in those cases where there is > 1 cache hit, we create a level 2 index
         Dictionary<FileLengthHash, List<FileLengthHash>> index1 = new Dictionary<FileLengthHash, List<FileLengthHash>>();
@@ -34,9 +35,10 @@ namespace MergePhotos
         // level 3 index is based on sha 256 hash of the entire file.
         Dictionary<EntireFileHash, List<EntireFileHash>> index3 = new Dictionary<EntireFileHash, List<EntireFileHash>>();
 
-        public FolderIndex(string dir, bool verbose=false)
+        public FolderIndex(string dir, MergeOptions options, bool verbose=false)
         {
             this.dir = dir;
+            this.options = options;
             this.verbose = verbose;
 
             Stopwatch watch = new Stopwatch();
@@ -225,8 +227,15 @@ namespace MergePhotos
 
             // Now do a deep compare of any files that have identical hashes to see what is really duplicated or not.
             // Note: if they have identical hashes then they would have made it into index3.
-            foreach (var pair in index3)
+            foreach (var pair in index3.ToArray())
             {
+                bool isMetadata = string.Compare(Path.GetExtension(pair.Key.Path), ".xmp", StringComparison.OrdinalIgnoreCase) == 0;
+                if (isMetadata)
+                {
+                    // skip duplicate metadata files, we only care about duplicate photos, and when we find them then
+                    // we will merge any associated metadata.
+                    continue;
+                }
                 var list = new List<EntireFileHash>(pair.Value);
                 if (list.Count > 1)
                 {
@@ -279,7 +288,7 @@ namespace MergePhotos
         /// <param name="name">The name of this index for log messages</param>
         /// <param name="duplicates">Result of FindDuplicates</param>
         /// <param name="options">The current command line merge options</param>
-        internal void PickDuplicate(string name, List<EntireFileHash> duplicates, MergeOptions options)
+        internal void PickDuplicate(string name, List<EntireFileHash> duplicates)
         {
             // heuristic, if file name ends with (1), (2) or "-1", "-2" and so on, then it is probably a copy paste error, so pick the
             // file name that doesn't contain this suffix.
@@ -295,20 +304,21 @@ namespace MergePhotos
             {
                 string baseName = Path.GetFileNameWithoutExtension(item.Path);
                 var match = re.Match(baseName);
+                string shortBaseName = baseName;
                 if (match.Success && match.Index > 1)
                 {
-                    baseName = baseName.Substring(0, match.Index);
+                    shortBaseName = baseName.Substring(0, match.Index);
                 }
                 if (longest == null || longest.Length < baseName.Length)
                 {
                     longest = baseName;
                     longestFile = item;
                 }
-                if (shortest == null || shortest.Length > baseName.Length)
+                if (shortest == null || shortest.Length > shortBaseName.Length || (shortest.Length == shortBaseName.Length && shortestActual.Length > baseName.Length))
                 {
-                    shortest = baseName;
+                    shortest = shortBaseName;
                     shortestFile = item;
-                    shortestActual = Path.GetFileNameWithoutExtension(item.Path);
+                    shortestActual = baseName;
                 }
             }
             bool isIndexed = true;
@@ -338,16 +348,16 @@ namespace MergePhotos
             if (isIndexed)
             {
                 Console.WriteLine("Picking " + name + " duplicate: " + shortestFile.Path);
-                this.ResolveDuplicate(shortestFile, options);
+                this.ResolveDuplicate(shortestFile);
             }
             else
             {
                 Console.WriteLine("Picking " + name + " duplicate: " + longestFile.Path);
-                this.ResolveDuplicate(longestFile, options);
+                this.ResolveDuplicate(longestFile);
             }
         }
 
-        private void ResolveDuplicate(EntireFileHash choice, MergeOptions options)
+        private void ResolveDuplicate(EntireFileHash choice)
         {
             List<EntireFileHash> dups = index3[choice];
             foreach (var item in dups.ToArray())
@@ -363,12 +373,12 @@ namespace MergePhotos
                     {
                         SafeDelete(item.Path);
                     }
-                    MergeDuplicateMetadata(item.Path, choice.Path, options);
+                    MergeDuplicateMetadata(item.Path, choice.Path);
                 }
             }
         }
 
-        internal void Merge(FolderIndex sourceIndex, MergeOptions options)
+        internal void Merge(FolderIndex sourceIndex)
         {
             // When comparing FolderIndexes, we don't know up front which files in this or the other index
             // have been indexed to level 2 or 3, so we have to look at the "InnerHashes" to figure that out.
@@ -426,7 +436,7 @@ namespace MergePhotos
                                         {
                                             Console.WriteLine("    delete {0}", sourceFile);
                                         }
-                                        TryMergeMetadata(sourceIndex, lengthHash.Path, target.Path, options);
+                                        TryMergeMetadata(sourceIndex, lengthHash.Path, target.Path);
                                         if (found)
                                         {
                                             throw new Exception("bugbug: still have duplicates in the target index???");
@@ -463,7 +473,7 @@ namespace MergePhotos
                                 SafeDelete(lengthHash.Path);
                             }
                         }
-                        TryMergeMetadata(sourceIndex, lengthHash.Path, target, options);
+                        TryMergeMetadata(sourceIndex, lengthHash.Path, target);
                     }
                 }
             }
@@ -479,7 +489,7 @@ namespace MergePhotos
             return hash.InnerHash.InnerHash;
         }
 
-        private void TryMergeMetadata(FolderIndex sourceIndex, string source, string target, MergeOptions options)
+        private void TryMergeMetadata(FolderIndex sourceIndex, string source, string target)
         {
             string sourceMetadata = Path.ChangeExtension(source, ".xmp");
             string targetMetadata = Path.ChangeExtension(target, ".xmp");
@@ -509,7 +519,7 @@ namespace MergePhotos
                     }
                 }
 
-                MergeMetadata(sourceMetadata, targetMetadata, options);                
+                MergeMetadata(sourceMetadata, targetMetadata);                
             }
             else if (sm != null)
             {
@@ -526,7 +536,7 @@ namespace MergePhotos
             }
         }
 
-        private void MergeDuplicateMetadata(string source, string target, MergeOptions options)
+        private void MergeDuplicateMetadata(string source, string target)
         {
             string sourceMetadata = Path.ChangeExtension(source, ".xmp");
             string targetMetadata = Path.ChangeExtension(target, ".xmp");
@@ -555,7 +565,7 @@ namespace MergePhotos
                     }
                 }
 
-                MergeMetadata(sourceMetadata, targetMetadata, options);
+                MergeMetadata(sourceMetadata, targetMetadata);
             }
             else if (sm != null)
             {
@@ -572,7 +582,7 @@ namespace MergePhotos
             }
         }
 
-        private void MergeMetadata(string sourceMetadata, string targetMetadata, MergeOptions options)
+        private void MergeMetadata(string sourceMetadata, string targetMetadata)
         {
             Metadata source = Metadata.Load(sourceMetadata);
             Metadata target = Metadata.Load(targetMetadata);
@@ -589,7 +599,123 @@ namespace MergePhotos
             }
             else
             {
-                Console.WriteLine("windiff \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
+                ResolveConflict(sourceMetadata, targetMetadata);
+            }
+        }
+
+        bool alwaysNewer = false;
+
+        private void ResolveConflict(string sourceMetadata, string targetMetadata)
+        {
+            DateTime sd = new FileInfo(sourceMetadata).LastWriteTime;
+            DateTime td = new FileInfo(targetMetadata).LastWriteTime;
+            Console.WriteLine("    windiff \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
+            if (sd > td) Console.WriteLine("Source is newer: {0}", sourceMetadata);
+            else Console.WriteLine("Target is newer: {0}", targetMetadata);
+            
+            bool done = false;
+            while (!done)
+            {
+                string command = null;
+                if (alwaysNewer)
+                {
+                    command = "n";
+                }
+                else
+                {
+                    Console.WriteLine("enter merge command ");
+                    Console.WriteLine("   n: take newer");
+                    Console.WriteLine("   s: take source");
+                    Console.WriteLine("   t: take target");
+                    Console.WriteLine("   w: windiff");
+                    Console.Write("> ");
+                    command = Console.ReadLine().Trim().ToLowerInvariant();
+                }
+
+                switch (command)
+                {
+                    case "na":
+                        alwaysNewer = true;
+                        goto case "n";
+                    case "n":
+                        if (sd > td)
+                        {
+                            goto case "s";
+                        }
+                        else
+                        {
+                            goto case "t";
+                        }
+
+                    case "s":
+                        if (options.Preview || verbose)
+                        {
+                            Console.WriteLine("    copy \"{0}\" \"{1}\"", sourceMetadata, targetMetadata);
+                            Console.WriteLine("    delete {0}", sourceMetadata);
+                        }
+                        if (!options.Preview)
+                        {
+                            File.Copy(sourceMetadata, targetMetadata, true);
+                            SafeDelete(sourceMetadata);
+                        }
+                        done = true;
+                        break;
+                    case "t":
+                        if (options.Preview || verbose)
+                        {
+                            Console.WriteLine("    delete {0}", sourceMetadata);
+                        }
+                        if (!options.Preview)
+                        {
+                            SafeDelete(sourceMetadata);
+                        }
+                        done = true;
+                        break;
+                    case "w":
+                        this.Windiff(sourceMetadata, targetMetadata);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
+        private string FindProgram(string file)
+        {
+            string result = null;
+            string path = Environment.GetEnvironmentVariable("PATH");
+            string[] parts = path.Split(';');
+            foreach (string p in parts)
+            {
+                if (!string.IsNullOrWhiteSpace(p))
+                {
+                    try
+                    {
+                        string fullPath = Path.Combine(p, file);
+                        if (File.Exists(fullPath))
+                        {
+                            result = fullPath;
+                            break;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Skipping illformed path '{0}'", p);
+                    }
+                }
+            }
+            return result;
+        }
+
+        static string windiff = null;
+
+        private void Windiff(string source, string target)
+        {
+            if (windiff == null) {
+                windiff = FindProgram("windiff.exe");
+            }
+            if (!string.IsNullOrEmpty(windiff)) {
+                Process.Start(windiff, string.Format("\"{0}\" \"{1}\"", source, target));
             }
         }
 
