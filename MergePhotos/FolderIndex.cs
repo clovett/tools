@@ -21,6 +21,7 @@ namespace MergePhotos
 
     class FolderIndex
     {
+        long savings = 0;
         bool verbose;
         string dir;
         int files;
@@ -57,6 +58,11 @@ namespace MergePhotos
 
             watch.Stop();
             Console.WriteLine("Optimized the index in {1:N3} seconds", files, (double)watch.ElapsedMilliseconds / 1000.0);
+        }
+
+        public long GetSavings()
+        {
+            return this.savings;
         }
 
         private void CreateLevel1Index(string path)
@@ -369,10 +375,7 @@ namespace MergePhotos
                     {
                         Console.WriteLine("    delete " + item.Path);
                     }
-                    if (!options.Preview)
-                    {
-                        SafeDelete(item.Path);
-                    }
+                    SafeDelete(item.Path);
                     MergeDuplicateMetadata(item.Path, choice.Path);
                 }
             }
@@ -441,10 +444,7 @@ namespace MergePhotos
                                         {
                                             throw new Exception("bugbug: still have duplicates in the target index???");
                                         }
-                                        if (!options.Preview)
-                                        {
-                                            SafeDelete(sourceFile);
-                                        }
+                                        SafeDelete(sourceFile);                                        
                                         found = true;
                                     }
                                 }
@@ -470,8 +470,8 @@ namespace MergePhotos
                             if (!options.Preview)
                             {
                                 File.Copy(lengthHash.Path, target);
-                                SafeDelete(lengthHash.Path);
                             }
+                            SafeDelete(lengthHash.Path);
                         }
                         TryMergeMetadata(sourceIndex, lengthHash.Path, target);
                     }
@@ -511,10 +511,7 @@ namespace MergePhotos
                             Console.WriteLine("    delete {0}", sourceMetadata);
                         }
 
-                        if (!options.Preview)
-                        {
-                            SafeDelete(sourceMetadata);
-                        }
+                        SafeDelete(sourceMetadata);
                         return;
                     }
                 }
@@ -531,8 +528,8 @@ namespace MergePhotos
                 if (!options.Preview)
                 {
                     File.Copy(sourceMetadata, targetMetadata);
-                    SafeDelete(sourceMetadata);
                 }
+                SafeDelete(sourceMetadata);
             }
         }
 
@@ -557,10 +554,7 @@ namespace MergePhotos
                         {
                             Console.WriteLine("    delete {0}", sourceMetadata);
                         }
-                        if (!options.Preview)
-                        {
-                            SafeDelete(sourceMetadata);
-                        }
+                        SafeDelete(sourceMetadata);
                         return;
                     }
                 }
@@ -577,8 +571,8 @@ namespace MergePhotos
                 if (!options.Preview)
                 {
                     File.Copy(sourceMetadata, targetMetadata);
-                    SafeDelete(sourceMetadata);
                 }
+                SafeDelete(sourceMetadata);
             }
         }
 
@@ -592,10 +586,7 @@ namespace MergePhotos
                 {
                     Console.WriteLine("    delete {0}", sourceMetadata);
                 }
-                if (!options.Preview)
-                {
-                    SafeDelete(sourceMetadata);
-                }
+                SafeDelete(sourceMetadata);
             }
             else
             {
@@ -613,6 +604,19 @@ namespace MergePhotos
             if (sd > td) Console.WriteLine("Source is newer: {0}", sourceMetadata);
             else Console.WriteLine("Target is newer: {0}", targetMetadata);
             
+            if (options.Preview)
+            {
+                if (sd > td)
+                {
+                    Count(targetMetadata);
+                }
+                else
+                {
+                    Count(sourceMetadata);
+                }
+                return;
+            }
+
             bool done = false;
             while (!done)
             {
@@ -656,8 +660,8 @@ namespace MergePhotos
                         if (!options.Preview)
                         {
                             File.Copy(sourceMetadata, targetMetadata, true);
-                            SafeDelete(sourceMetadata);
                         }
+                        SafeDelete(sourceMetadata);
                         done = true;
                         break;
                     case "t":
@@ -665,10 +669,7 @@ namespace MergePhotos
                         {
                             Console.WriteLine("    delete {0}", sourceMetadata);
                         }
-                        if (!options.Preview)
-                        {
-                            SafeDelete(sourceMetadata);
-                        }
+                        SafeDelete(sourceMetadata);
                         done = true;
                         break;
                     case "w":
@@ -677,6 +678,15 @@ namespace MergePhotos
                     default:
                         break;
                 }
+            }
+        }
+
+        private void Count(string sourceMetadata)
+        {
+            if (File.Exists(sourceMetadata))
+            {
+                var info = new FileInfo(sourceMetadata);
+                this.savings += info.Length;
             }
         }
 
@@ -737,13 +747,17 @@ namespace MergePhotos
 
         private void SafeDelete(string filename)
         {
-            var attrs = File.GetAttributes(filename);
-            if ((attrs & FileAttributes.ReadOnly) != 0)
+            Count(filename);
+            if (!options.Preview)
             {
-                attrs &= ~FileAttributes.ReadOnly;
-                File.SetAttributes(filename, attrs);
+                var attrs = File.GetAttributes(filename);
+                if ((attrs & FileAttributes.ReadOnly) != 0)
+                {
+                    attrs &= ~FileAttributes.ReadOnly;
+                    File.SetAttributes(filename, attrs);
+                }
+                File.Delete(filename);
             }
-            File.Delete(filename);
         }
     }
 }

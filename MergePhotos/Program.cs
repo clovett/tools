@@ -125,6 +125,10 @@ namespace MergePhotos
 
         void Run()
         {
+            if (options.Preview)
+            {
+                Console.WriteLine("Running in preview mode only");
+            }
             Stopwatch watch = new Stopwatch();
 
             sourceIndex = new FolderIndex(source, options, verbose);
@@ -162,6 +166,13 @@ namespace MergePhotos
 
                 Console.WriteLine("Merging folders in {0:N3} seconds", (double)watch.ElapsedMilliseconds / 1000.0);
             }
+
+            long savings = sourceIndex.GetSavings();
+            if (targetIndex != null)
+            {
+                savings += targetIndex.GetSavings();
+            }
+            Console.WriteLine("Savings: {0:#,0}", savings);
 
             Console.WriteLine();
         }
