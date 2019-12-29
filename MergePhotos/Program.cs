@@ -168,11 +168,24 @@ namespace MergePhotos
             }
 
             long savings = sourceIndex.GetSavings();
+            long duplicates = sourceIndex.GetDuplicates();
             if (targetIndex != null)
             {
                 savings += targetIndex.GetSavings();
+                duplicates += targetIndex.GetDuplicates();
             }
-            Console.WriteLine("Savings: {0:#,0}", savings);
+
+            if (options.Preview)
+            {
+                Console.WriteLine("Found {0:#,0} duplicates that can be removed", duplicates);
+                Console.WriteLine("Potensial space savings: {0:#,0} bytes", savings);
+                Console.WriteLine("Add the -f option to make the changes permanently");
+            } 
+            else
+            {
+                Console.WriteLine("Removed {0:#,0} duplicate files", duplicates);
+                Console.WriteLine("Savings: {0:#,0}", savings);
+            }
 
             Console.WriteLine();
         }

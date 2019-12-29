@@ -21,7 +21,8 @@ namespace MergePhotos
 
     class FolderIndex
     {
-        long savings = 0;
+        long savings;
+        long duplicates;
         bool verbose;
         string dir;
         int files;
@@ -63,6 +64,11 @@ namespace MergePhotos
         public long GetSavings()
         {
             return this.savings;
+        }
+
+        public long GetDuplicates()
+        {
+            return this.duplicates;
         }
 
         private void CreateLevel1Index(string path)
@@ -687,6 +693,7 @@ namespace MergePhotos
             {
                 var info = new FileInfo(sourceMetadata);
                 this.savings += info.Length;
+                this.duplicates++;
             }
         }
 
