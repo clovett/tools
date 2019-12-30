@@ -18,9 +18,17 @@ namespace MergePhotos
         public FileLengthHash(string path)
         {
             // start with a weak hash code for speed.
-            fileLength = new FileInfo(path).Length;
-            hashCode = (int)fileLength;
-            this.path = path;
+            try
+            {
+                fileLength = new FileInfo(path).Length;
+                hashCode = (int)fileLength;
+                this.path = path;
+            } 
+            catch (Exception)
+            {
+                Console.WriteLine("### Error: {0}", path);
+                throw;
+            }
         }
 
         // get or create the FileBlockHash for the file.

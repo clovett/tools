@@ -76,6 +76,10 @@ namespace MergePhotos
             if (verbose) Console.WriteLine("indexing folder: {0}", path);
             foreach (string file in Directory.GetFiles(path))
             {
+                if (file.Contains("\\.MYLock"))
+                {
+                    continue;
+                }
                 files++;
                 FileLengthHash key = null;
                 key = new FileLengthHash(file);
