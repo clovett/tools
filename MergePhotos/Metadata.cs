@@ -27,7 +27,8 @@ namespace MergePhotos
         static HashSet<XName> whitelist = new HashSet<XName>(new XName[] {
                 exifNS + "DateTimeOriginal", exifNS + "ModifyDate", exifNS + "GPSLatitude", exifNS + "GPSLongitude",
                 xapNS + "CreateDate", xapNS + "MetadataDate", mylioNS + "MetadataDate", xapmmNS + "DocumentID",
-                xapmmNS + "OriginalDocumentID", xapmmNS + "InstanceID",
+                xapmmNS + "OriginalDocumentID", xapmmNS + "InstanceID", xmpNS + "xmptk", mylioNS + "processVersion",
+                mylioNS + "MetadataDate", mylioNS + "DateConfidence"
             });
 
         internal Metadata(string filename)
@@ -50,6 +51,7 @@ namespace MergePhotos
         {
             if (e1.Name != e2.Name)
             {
+                Console.WriteLine("Element mismatch {0} != {1}", e1.Name.LocalName, e2.Name.LocalName);
                 return false;
             }
             List<XAttribute> other = new List<XAttribute>(e2.Attributes());
@@ -70,7 +72,23 @@ namespace MergePhotos
 
             if (other.Count > 0)
             {
-                return false;
+                foreach (var item in other.ToArray())
+                {
+                    if (whitelist.Contains(item.Name) || item.Name.Namespace == XNamespace.Xmlns)
+                    {
+                        other.Remove(item);
+                    }
+                }
+                if (other.Count > 0)
+                {
+                    Console.Write("found additional attributes: ");
+                    foreach (var item in other)
+                    {
+                        Console.Write(item.ToString());
+                    }
+                    Console.WriteLine();
+                    return false;
+                }
             }
 
             IEnumerable<XNode> c1 = e1.Nodes();

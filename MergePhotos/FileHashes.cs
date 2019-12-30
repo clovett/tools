@@ -8,8 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MergePhotos
-{
-    
+{    
     class FileLengthHash : IEquatable<FileLengthHash>
     {
         long fileLength;
