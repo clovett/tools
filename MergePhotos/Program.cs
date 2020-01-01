@@ -175,6 +175,26 @@ namespace MergePhotos
                 duplicates += targetIndex.GetDuplicates();
             }
 
+            // print summary of all errors found at the end.
+            IEnumerable<KeyValuePair<string, Exception>> errors = sourceIndex.errors;
+            if (targetIndex != null)
+            {
+                errors = sourceIndex.errors.Concat(targetIndex.errors);
+            }
+            foreach (var e in errors)
+            {
+                var saved = Console.ForegroundColor;
+                try
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("{0}: {1}", e.Key, e.Value.Message);
+                }
+                finally
+                {
+                    Console.ForegroundColor = saved;
+                }
+            }
+
             if (options.Preview)
             {
                 Console.WriteLine("Found {0:#,0} duplicates that can be removed", duplicates);

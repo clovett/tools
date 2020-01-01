@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergePhotos", "MergePhotos.csproj", "{DA7E9656-BC02-4D5E-B760-52DE8C247357}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergePhotos", "MergePhotos.csproj", "{EB309D93-BCD9-4DBE-9943-BF257E1C4AD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{DA7E9656-BC02-4D5E-B760-52DE8C247357}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DA7E9656-BC02-4D5E-B760-52DE8C247357}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DA7E9656-BC02-4D5E-B760-52DE8C247357}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DA7E9656-BC02-4D5E-B760-52DE8C247357}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB309D93-BCD9-4DBE-9943-BF257E1C4AD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB309D93-BCD9-4DBE-9943-BF257E1C4AD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB309D93-BCD9-4DBE-9943-BF257E1C4AD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB309D93-BCD9-4DBE-9943-BF257E1C4AD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB5A3A67-24F1-4926-826B-90F8088DC64E}
 	EndGlobalSection
 EndGlobal

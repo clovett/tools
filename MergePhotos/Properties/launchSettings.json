@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MergePhotos": {
+      "commandName": "Project",
+      "commandLineArgs": "-v d:\\Mylio\\David"
+    }
+  }
+}

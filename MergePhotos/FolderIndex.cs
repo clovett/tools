@@ -37,6 +37,8 @@ namespace MergePhotos
         // level 3 index is based on sha 256 hash of the entire file.
         Dictionary<EntireFileHash, List<EntireFileHash>> index3 = new Dictionary<EntireFileHash, List<EntireFileHash>>();
 
+        public SortedDictionary<string, Exception> errors = new SortedDictionary<string, Exception>();
+
         public FolderIndex(string dir, MergeOptions options, bool verbose=false)
         {
             this.dir = dir;
@@ -61,6 +63,11 @@ namespace MergePhotos
             Console.WriteLine("Optimized the index in {1:N3} seconds", files, (double)watch.ElapsedMilliseconds / 1000.0);
         }
 
+        public SortedDictionary<string, Exception> GetErrors()
+        {
+            return errors;
+        }
+
         public long GetSavings()
         {
             return this.savings;
@@ -80,15 +87,38 @@ namespace MergePhotos
                 {
                     continue;
                 }
-                files++;
-                FileLengthHash key = null;
-                key = new FileLengthHash(file);
-                AddLevel1(key);
+                try
+                {
+                    FileLengthHash key = null;
+                    key = new FileLengthHash(file);
+                    AddLevel1(key);
+                    files++;
+                } 
+                catch (Exception ex)
+                {
+                    LogError(file, ex);
+                }
             }
 
             foreach (string dir in Directory.GetDirectories(path))
             {
                 CreateLevel1Index(dir);
+            }
+        }
+
+        private void LogError(string file, Exception ex)
+        {
+            this.errors[file] = ex;
+
+            var saved = Console.ForegroundColor;
+            try
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("{0}: {1}", file, ex.Message);
+            }
+            finally
+            {
+                Console.ForegroundColor = saved;
             }
         }
 
@@ -752,7 +782,14 @@ namespace MergePhotos
                     File.SetAttributes(filename, attrs);
                 }
                 Console.WriteLine("delete " + filename);
-                File.Delete(filename);
+                try
+                {
+                    File.Delete(filename);
+                } 
+                catch (Exception ex)
+                {
+                    LogError(filename, ex);
+                }
             } 
             else
             {
@@ -776,9 +813,16 @@ namespace MergePhotos
                     Directory.CreateDirectory(dir);
                 }
                 Console.WriteLine("copy \"{0}\" \"{1}\"", sourceFile, targetFile);
-                File.Copy(sourceFile, targetFile, overwrite);
-                // now make sure this is in our index so we know it's there on future compares.
-                Reindex(new FileLengthHash(targetFile));
+                try
+                {
+                    File.Copy(sourceFile, targetFile, overwrite);
+                    // now make sure this is in our index so we know it's there on future compares.
+                    Reindex(new FileLengthHash(targetFile));
+                } 
+                catch (Exception ex)
+                {
+                    LogError(targetFile, ex);
+                }
             }
             else
             {
