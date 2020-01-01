@@ -2,7 +2,7 @@
   "profiles": {
     "MergePhotos": {
       "commandName": "Project",
-      "commandLineArgs": "-v d:\\Mylio\\David"
+      "commandLineArgs": "-v d:\\Mylio\\Chris"
     }
   }
 }

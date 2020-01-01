@@ -238,20 +238,27 @@ namespace MergePhotos
             int amount;
             int pos;
             int percent;
+            long start;
+            long previous;
 
             public Progress(int amount)
             {
                 this.amount = amount;
+                this.start = this.previous = Environment.TickCount;
             }
 
             public void Increment()
             {
                 pos++;
                 int p = (pos * 100 / amount);
-                if (p != percent)
+                long now = Environment.TickCount;
+                if (p != percent && (now - this.previous > 1))
                 {
-                    Console.Write(".");
+                    double remaining = ((double)amount - (double)pos) / (double)amount;
+                    TimeSpan span = TimeSpan.FromSeconds((double)(now - this.start) * remaining / 1000.0);
+                    Console.WriteLine("{0}%, time remaining: {1}", p, span);
                     percent = p;
+                    this.previous = Environment.TickCount;
                 }
             }
         }
@@ -275,8 +282,8 @@ namespace MergePhotos
                         foreach (var info in list)
                         {
                             AddLevel2(info);
+                            progress.Increment();
                         }
-                        progress.Increment();
                     }
                 }
             }
@@ -297,8 +304,8 @@ namespace MergePhotos
                         foreach (var info in list)
                         {
                             AddLevel3(info);
+                            progress.Increment();
                         }
-                        progress.Increment();
                     }
                 }
             }

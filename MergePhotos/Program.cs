@@ -198,7 +198,7 @@ namespace MergePhotos
             if (options.Preview)
             {
                 Console.WriteLine("Found {0:#,0} duplicates that can be removed", duplicates);
-                Console.WriteLine("Potensial space savings: {0:#,0} bytes", savings);
+                Console.WriteLine("Potential space savings: {0:#,0} bytes", savings);
                 Console.WriteLine("Add the -f option to make the changes permanently");
             } 
             else
