@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -32,6 +34,7 @@ namespace RandomNumbers.Controls
 
         public event EventHandler<DataValue> Selected;
 
+        public CancellationToken Token { get; set; }
 
         public void SetData(IEnumerable<DataValue> values)
         {
@@ -127,6 +130,7 @@ namespace RandomNumbers.Controls
 
         void UpdateChart()
         {
+            var token = this.Token;
             List<Ellipse> dots = new List<Ellipse>();
             List<TextBlock> labels = new List<TextBlock>();
             List<Line> lineShapes = new List<Line>();
@@ -134,22 +138,9 @@ namespace RandomNumbers.Controls
             {
                 return; // not initialized yet
             }
-            foreach (UIElement e in PlotCanvas.Children)
-            {
-                if (e is Ellipse)
-                {
-                    dots.Add((Ellipse)e);
-                }
-                else if (e is Line)
-                {
-                    lineShapes.Add((Line)e);
-                }
-                else if (e is TextBlock)
-                {
-                    labels.Add((TextBlock)e);
-                }
-            }
-            tooltip = null;
+
+            Clear();
+            HideToolTip();
 
             if (values != null && values.Count > 0)
             {
@@ -160,7 +151,6 @@ namespace RandomNumbers.Controls
 
                 double maxX = double.MinValue;
                 double minX = double.MaxValue;
-
 
                 foreach (DataValue d in values)
                 {
@@ -180,6 +170,7 @@ namespace RandomNumbers.Controls
                 {
                     rangeX = 1; // avoid divide by zero
                 }
+                Debug.WriteLine("minX={0}, maxX={1}, minY={2}, maxY={3}", minX, maxX, minY, maxY);
 
                 double height = this.ActualHeight;
                 double availableHeight = height - 50;
@@ -192,6 +183,10 @@ namespace RandomNumbers.Controls
 
                 foreach (DataValue d in values)
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     // add graph segment
                     double y = availableHeight - ((d.Y - minY) * availableHeight / rangeY);
                     double x = ((d.X - minX) * width / rangeX);
@@ -240,6 +235,10 @@ namespace RandomNumbers.Controls
 
                 foreach (LineData line in this.lines)
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     double x1 = ((line.X1 - minX) * width / rangeX);
                     double y1 = availableHeight - ((line.Y1 - minY) * availableHeight / rangeY);
                     double x2 = ((line.X2 - minX) * width / rangeX);
@@ -268,19 +267,6 @@ namespace RandomNumbers.Controls
                 }
             }
 
-            // remove unused elements.
-            foreach (var e in dots)
-            {
-                PlotCanvas.Children.Remove(e);
-            }
-            foreach (var e in lineShapes)
-            {
-                PlotCanvas.Children.Remove(e);
-            }
-            foreach (var e in labels)
-            {
-                PlotCanvas.Children.Remove(e);
-            }
         }
 
         protected override void OnPointerPressed(PointerRoutedEventArgs e)
@@ -396,6 +382,7 @@ namespace RandomNumbers.Controls
 
         internal void Clear()
         {
+            HideToolTip();
             PlotCanvas.Children.Clear();
             lines.Clear();
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
@@ -36,6 +37,8 @@ namespace RandomNumbers.Controls
 
             InitTransform();
         }
+
+        public CancellationToken Token { get; set; }
 
         void SimpleLineChart_SizeChanged(object sender, SizeChangedEventArgs e)
         {
@@ -144,6 +147,8 @@ namespace RandomNumbers.Controls
             </Path>
              */
 
+            var token = this.Token;
+
             if (values == null || values.Count == 0)
             {
                 Graph.Data = null;
@@ -219,6 +224,10 @@ namespace RandomNumbers.Controls
                     f.Segments.Add(new LineSegment() { Point = pt });
                 }
 
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
             }
 
             MinLabel.Text = minY.ToString("N2");

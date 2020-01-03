@@ -310,8 +310,8 @@ A windows build of darknet vision tools.
 
 ### VisualizeRandomNumbers
 
-A fun test app that shows how good (or bad) the random number
-generator is in .NET.
+A little test UWP app that visualizes the difference between the .NET System.Random
+number generator and the with std C++ default_random_engine.
 
 ### wc
 

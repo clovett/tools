@@ -7,7 +7,18 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <local:ScatterPlot x:Name="Plot" DotSize="2"/>
-        <local:SimpleLineChart x:Name="LineChart" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <TextBlock Text="SampleSize:" Margin="10,6,5,0"/>
+            <TextBox Width="200" Background="LemonChiffon" Text="5000" TextChanged="OnSampleSizeChanged" x:Name="TextBoxSampleSize"/>
+            <TextBlock Text="Generator:" Margin="10,6,5,0"/>
+            <ComboBox x:Name="ComboGenerators">
+            </ComboBox>
+        </StackPanel>
+        <local:ScatterPlot x:Name="Plot" DotSize="2" Grid.Row="1"/>
+        <local:SimpleLineChart x:Name="LineChart" Grid.Row="1"/>
     </Grid>
 </Page>

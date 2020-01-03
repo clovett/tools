@@ -13,6 +13,11 @@ namespace RandomNumbers.Controls
         public double Y;
         public string Label;
         public Brush Color;
+
+        public override string ToString()
+        {
+            return string.Format("{0},{1}", X, Y);
+        }
     }
 
     public class LineData
