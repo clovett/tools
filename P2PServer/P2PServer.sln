@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PServer", "P2PServer\P2PServer.csproj", "{875DA7A9-696A-4EDC-87AC-1E2EA1D2C013}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PLibrary", "P2PLibrary\P2PLibrary.csproj", "{1D5A6AF9-68A7-4772-82CC-604DDA58A1F1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{875DA7A9-696A-4EDC-87AC-1E2EA1D2C013}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{875DA7A9-696A-4EDC-87AC-1E2EA1D2C013}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{875DA7A9-696A-4EDC-87AC-1E2EA1D2C013}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{875DA7A9-696A-4EDC-87AC-1E2EA1D2C013}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D5A6AF9-68A7-4772-82CC-604DDA58A1F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D5A6AF9-68A7-4772-82CC-604DDA58A1F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D5A6AF9-68A7-4772-82CC-604DDA58A1F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D5A6AF9-68A7-4772-82CC-604DDA58A1F1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {27CCF310-3087-4B6F-95E2-043B5AB7C8FE}
+	EndGlobalSection
+EndGlobal
