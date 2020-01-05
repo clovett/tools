@@ -23,6 +23,7 @@ namespace P2PServer
                 c.Connect("lovettsoftware.com");
                 c.PublishEndPoint(localName);
                 Client remote = null;
+                Console.WriteLine("Waiting for remote system...");
                 while (remote == null)
                 {
                     try
@@ -35,12 +36,21 @@ namespace P2PServer
                         System.Threading.Thread.Sleep(1000);
                     }
                 }
+                
+                Console.WriteLine("Starting local TCP server...");
                 c.ListenAsync();
+
+                System.Threading.Thread.Sleep(100);
+
+                Console.WriteLine("Connecting to remote TCP server...");
                 c.P2PConnectAsync();
 
                 System.Threading.Thread.Sleep(500);
                 Console.Write("press enter to continue...");
                 Console.ReadLine();
+
+                c.RemoveEndPoint(localName);
+                c.Close();
             }
             else if (args.Length == 1)
             {

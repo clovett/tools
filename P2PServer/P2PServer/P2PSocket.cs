@@ -18,12 +18,13 @@ namespace P2PServer
     /// </summary>
     class P2PSocket
     {
+        Client self; // contains our public address.
         Client remote;
         string hostname;
-        Socket socket;
-        Socket server;
-        Socket client;
+        List<Socket> sockets = new List<Socket>();
+        IPEndPoint localAddress;
         bool closed;
+        bool connected;
 
         public P2PSocket()
         {
@@ -32,65 +33,102 @@ namespace P2PServer
         public void Close()
         {
             closed = true;
-            if (server != null)
+            foreach (var s in this.sockets)
             {
-                server.Close();
-            }
-            if (socket != null)
-            {
-                socket.Close();
+                try
+                {
+                    s.Close();
+                } catch { }
             }
         }
 
-        public Task ListenAsync()
+        public void ListenAsync()
         {
-            return Task.Factory.StartNew(Listen);
+            // Task.Factory.StartNew(new Action(() => Listen(true))); // this is just so that P2P works when both apps are inside the same NAT.
+            Task.Factory.StartNew(new Action(() => Listen(false))); 
         }
 
-        public Task P2PConnectAsync()
+        public void P2PConnectAsync()
         {
             if (this.remote == null)
             {
                 throw new Exception("Please call FindEndPoint first");
             }
-            return Task.Factory.StartNew(P2PConnect);
+            //Task.Factory.StartNew(new Action(() => P2PConnect(true))); // this is just so that P2P works when both apps are inside the same NAT.
+            Task.Factory.StartNew(new Action(() => P2PConnect(false)));
         }
 
-        private void Listen()
+        private void Listen(bool useLocal)
         {
-            IPEndPoint localAddress = (IPEndPoint)this.socket.LocalEndPoint;
-            Console.WriteLine("Listening for connections on port: {0}", localAddress.Port);
-            this.server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
-            server.Bind(localAddress); // use the same address we used to connect to the host so that we listen on the same port.
-            server.Listen(1);
-            while (!closed) {
+            int port;
+            if (useLocal)
+            {
+                port = int.Parse(self.LocalPort);
+            } 
+            else
+            {
+                port = int.Parse(remote.RemotePort);
+            }
+            Console.WriteLine("Listening for connections on port: {0}", port);
+            while (!closed && !connected) {
+                var server = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
+                IPEndPoint listenAny = new IPEndPoint(IPAddress.Any, port);
+                server.Bind(listenAny); // use the same address we used to connect to the host so that we listen on the same port.
+                server.Listen(1);
+
                 var socket = server.Accept();
-                Console.WriteLine("We have an accepted socket!!");
+
+                Close(); // close other sockets
+                this.sockets.Add(server);
+                Console.WriteLine("We have accepted a socket!!");
+                byte[] buffer = new byte[1000];
+                int len = socket.Receive(buffer);
+                string s = System.Text.Encoding.UTF8.GetString(buffer, 0, len);
+                Console.WriteLine("message received: " + s);
                 socket.Close();
             }
         }
 
-        private void P2PConnect()
+        private void P2PConnect(bool useLocal)
         {
-            Console.WriteLine("Connecting to remote server at {0} port: {1}", remote.RemoteAddress, remote.RemotePort);
-            IPEndPoint localAddress = (IPEndPoint)this.socket.LocalEndPoint;
-            var remoteEndPoint = new IPEndPoint(IPAddress.Parse(remote.RemoteAddress), int.Parse(remote.RemotePort));
-            this.client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
-            client.Bind(localAddress); // use the same address we used to connect to the host so that we listen on the same port.
+            IPEndPoint remoteEndPoint;
+            if (useLocal)
+            {
+                Console.WriteLine("Connecting to remote server at {0} port: {1}", remote.LocalAddress, remote.LocalPort);
+                remoteEndPoint = new IPEndPoint(IPAddress.Parse(remote.LocalAddress), int.Parse(remote.LocalPort));
+            } 
+            else
+            {
+                Console.WriteLine("Connecting to remote server at {0} port: {1}", remote.RemoteAddress, remote.RemotePort);
+                remoteEndPoint = new IPEndPoint(IPAddress.Parse(remote.RemoteAddress), int.Parse(remote.RemotePort));
+            }
+
             while (!closed) 
             {
                 try
                 {
-                    server.Connect(remoteEndPoint);
+                    var client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
+                    client.Bind(localAddress); // use the same address we used to connect to the host so that we listen on the same port.
+                    
+                    client.Connect(remoteEndPoint);
+                    connected = true;
+
+                    Close();
+
+                    this.sockets.Add(client);
+
+                    client.Send(System.Text.Encoding.UTF8.GetBytes("Hello World!!"));
                     Console.WriteLine("We have a connected socket!!");
-                    socket.Close();
+                    client.Close();
                 } 
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // try again!
+                    Console.WriteLine(ex.Message);
                 }
+                System.Threading.Thread.Sleep(1000);
             }
         }
         
@@ -99,18 +137,19 @@ namespace P2PServer
             this.hostname = hostname;
             var entry = System.Net.Dns.GetHostEntry(hostname);
             var addr = (from a in entry.AddressList where a.AddressFamily == AddressFamily.InterNetwork select a).FirstOrDefault();
-            this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
-            this.socket.Connect(new IPEndPoint(addr.Address, port));
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            this.sockets.Add(socket);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
+            socket.Connect(new IPEndPoint(addr.Address, port));
+            this.localAddress = (IPEndPoint)socket.LocalEndPoint;
         }
 
         public void PublishEndPoint(string name)
         {
-            if (this.socket == null)
+            if (this.localAddress == null)
             {
-                throw new Exception("Please call Connect first");
+                throw new Exception("Please call Ping first to estabilish your local IP address and port.");
             }
-            IPEndPoint localAddress = (IPEndPoint)this.socket.LocalEndPoint;
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://lovettsoftware.com/p2pserver.aspx?type=add");
             request.Method = "POST";
             request.ContentType = "text/json";
@@ -137,6 +176,7 @@ namespace P2PServer
                     using (StreamReader reader = new StreamReader(rs, Encoding.UTF8))
                     {
                         string result = reader.ReadToEnd();
+                        this.self = (Client)JsonConvert.DeserializeObject(result, typeof(Client));
                         Console.WriteLine(result);
                     }
                 }
@@ -180,6 +220,46 @@ namespace P2PServer
                         }
                         this.remote = (Client)JsonConvert.DeserializeObject(result, typeof(Client));
                         return this.remote;
+                    }
+                }
+            }
+            else
+            {
+                throw new Exception("Request failed: " + response.StatusDescription);
+            }
+        }
+
+        public void RemoveEndPoint(string name)
+        {
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://lovettsoftware.com/p2pserver.aspx?type=delete");
+            request.Method = "POST";
+            request.ContentType = "text/json";
+            using (Stream s = request.GetRequestStream())
+            {
+
+                Client c = new Client()
+                {
+                    Date = DateTime.Now.ToUniversalTime(),
+                    Name = name
+                };
+
+                string json = JsonConvert.SerializeObject(c);
+                byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
+                s.Write(data, 0, data.Length);
+            }
+
+            var response = (HttpWebResponse)request.GetResponse();
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                using (var rs = response.GetResponseStream())
+                {
+                    using (StreamReader reader = new StreamReader(rs, Encoding.UTF8))
+                    {
+                        string result = reader.ReadToEnd();
+                        if (result.Contains("\"error\":"))
+                        {
+                            throw new Exception(result);
+                        }                        
                     }
                 }
             }

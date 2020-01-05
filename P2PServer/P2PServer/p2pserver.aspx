@@ -67,6 +67,23 @@
                         error = "not found";
                     }
                 }
+                else if (type == "delete")
+                {
+                    // then we are looking for matching rendezvous by name
+                    Client f = model.FindClientByName(c.Name);
+                    if (f != null)
+                    {
+                        model.RemoveClient(f);
+
+                        f.Message = "deleted";
+                        Response.Write(JsonConvert.SerializeObject(f));
+                    }
+                    else
+                    {
+                        c = null;
+                        error = "not found";
+                    }
+                }
                 else
                 {
                     error = "Unknown query string type: " + type;

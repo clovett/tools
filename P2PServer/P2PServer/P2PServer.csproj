@@ -69,6 +69,7 @@
     <Content Include="p2pserver.aspx">
       <SubType>ASPXCodeBehind</SubType>
     </Content>
+    <Content Include="tcp_client.py" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\P2PLibrary\P2PLibrary.csproj">

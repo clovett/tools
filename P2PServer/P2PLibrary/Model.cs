@@ -81,6 +81,12 @@ namespace P2PLibrary
             this.SaveChanges();
         }
 
+        public void RemoveClient(Client client)
+        {
+            this.Clients.Remove(client);
+            this.SaveChanges();
+        }
+
         public Client FindClientByName(string name)
         {
             foreach (var client in from i in this.Clients where i.Name == name select i)
