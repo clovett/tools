@@ -21,6 +21,7 @@ namespace P2PServer
 
                 P2PSocket c = new P2PSocket();
                 c.Connect("lovettsoftware.com");
+                System.Threading.Thread.Sleep(1000); // give time for NAT to free up that port.
                 c.PublishEndPoint(localName);
                 Client remote = null;
                 Console.WriteLine("Waiting for remote system...");

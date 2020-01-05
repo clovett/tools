@@ -67,7 +67,7 @@ namespace P2PServer
             } 
             else
             {
-                port = int.Parse(remote.RemotePort);
+                port = int.Parse(self.RemotePort); // remote.RemotePort);
             }
             Console.WriteLine("Listening for connections on port: {0}", port);
             while (!closed && !connected) {
@@ -100,8 +100,9 @@ namespace P2PServer
             } 
             else
             {
-                Console.WriteLine("Connecting to remote server at {0} port: {1}", remote.RemoteAddress, remote.RemotePort);
-                remoteEndPoint = new IPEndPoint(IPAddress.Parse(remote.RemoteAddress), int.Parse(remote.RemotePort));
+                int port = int.Parse(remote.RemotePort);
+                Console.WriteLine("Connecting to remote server at {0} port: {1}", remote.RemoteAddress, port);
+                remoteEndPoint = new IPEndPoint(IPAddress.Parse(remote.RemoteAddress), port);
             }
 
             while (!closed) 
@@ -142,6 +143,7 @@ namespace P2PServer
             socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
             socket.Connect(new IPEndPoint(addr.Address, port));
             this.localAddress = (IPEndPoint)socket.LocalEndPoint;
+            socket.Close();
         }
 
         public void PublishEndPoint(string name)
