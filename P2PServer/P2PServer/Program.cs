@@ -6,105 +6,47 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using System.Net;
+using System.Threading;
 
 namespace P2PServer
 {
     class Program
     {
-        static IPEndPoint GetLocalAddress()
-        {
-            var entry = System.Net.Dns.GetHostEntry("lovettsoftware.com");
-            var addr = (from a in entry.AddressList where a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork select a).FirstOrDefault();
-            using (System.Net.Sockets.Socket s = new System.Net.Sockets.Socket(System.Net.Sockets.AddressFamily.InterNetwork, System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp))
-            {
-                s.Connect(new IPEndPoint(addr.Address, 80));
-                return (IPEndPoint)s.LocalEndPoint;
-            }
-        }
-
-        static void PublishEndPoint(string name)
-        {
-            IPEndPoint localAddress = GetLocalAddress();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://lovettsoftware.com/p2pserver.aspx?type=add");
-            request.Method = "POST";
-            request.ContentType = "text/json";
-            using (Stream s = request.GetRequestStream())
-            {
-
-                Client c = new Client()
-                {
-                    Date = DateTime.Now.ToUniversalTime(),
-                    Name = name,
-                    LocalAddress = localAddress.Address.ToString(),
-                    LocalPort = localAddress.Port.ToString()
-                };
-
-                string json = JsonConvert.SerializeObject(c);
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
-                s.Write(data, 0, data.Length);
-            }
-
-            var response = (HttpWebResponse)request.GetResponse();
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                using (var rs = response.GetResponseStream())
-                {
-                    using (StreamReader reader = new StreamReader(rs, Encoding.UTF8))
-                    {
-                        string result = reader.ReadToEnd();
-                        Console.WriteLine(result);
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine("Request failed: " + response.StatusDescription);
-            }
-
-        }
-
-        static void FindEndPoint(string name)
-        {
-            IPEndPoint localAddress = GetLocalAddress();
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://lovettsoftware.com/p2pserver.aspx?type=find");
-            request.Method = "POST";
-            request.ContentType = "text/json";
-            using (Stream s = request.GetRequestStream())
-            {
-
-                Client c = new Client()
-                {
-                    Date = DateTime.Now.ToUniversalTime(),
-                    Name = name
-                };
-
-                string json = JsonConvert.SerializeObject(c);
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
-                s.Write(data, 0, data.Length);
-            }
-
-            var response = (HttpWebResponse)request.GetResponse();
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                using (var rs = response.GetResponseStream())
-                {
-                    using (StreamReader reader = new StreamReader(rs, Encoding.UTF8))
-                    {
-                        string result = reader.ReadToEnd();
-                        Console.WriteLine(result);
-                    }
-                }
-            }
-            else
-            {
-                Console.WriteLine("Request failed: " + response.StatusDescription);
-            }
-        }
-
         static void Main(string[] args)
         {
-            //PublishEndPoint("Ulysses");
-            FindEndPoint("Ulysses");
+            if (args.Length == 2)
+            {
+                string localName = args[0];
+                string remoteName = args[1];
+
+                P2PSocket c = new P2PSocket();
+                c.Connect("lovettsoftware.com");
+                c.PublishEndPoint(localName);
+                Client remote = null;
+                while (remote == null)
+                {
+                    try
+                    {
+                        remote = c.FindEndPoint(remoteName);
+                    } 
+                    catch (Exception)
+                    {
+                        // not found!
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+                c.ListenAsync();
+                c.P2PConnectAsync();
+
+                System.Threading.Thread.Sleep(500);
+                Console.Write("press enter to continue...");
+                Console.ReadLine();
+            }
+            else if (args.Length == 1)
+            {
+                DatabaseUnitTest(args[0]);
+            }
+
             return;
         }
 
@@ -140,14 +82,14 @@ namespace P2PServer
 
                 model.AddClient(c);
 
-                Console.WriteLine("Client added: {0}", c.Id);
+                Console.WriteLine("Client added: {0}", c.Name);
 
-                c = model.FindClientById(c.Id);
+                c = model.FindClientByName(c.Name);
                 Console.WriteLine("Found client: " + c.Name);
 
                 model.RemoveOldEntries();
 
-                c = model.FindClientById(c.Id);
+                c = model.FindClientByName(c.Name);
                 if (c == null)
                 {
                     Console.WriteLine("Old client removed");

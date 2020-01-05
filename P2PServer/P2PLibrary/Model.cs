@@ -58,19 +58,14 @@ namespace P2PLibrary
         }
         private static string ClientsTableDdl =
 @"CREATE TABLE [dbo].[Clients] (
-    [Id]                UNIQUEIDENTIFIER     NOT NULL,
+    [Name]                nvarchar  (256)    UNIQUE,
     [Date]              datetime             NOT NULL,
-    [Name]              nvarchar  (256)      NOT NULL,
     [LocalAddress]      nvarchar  (50)       NOT NULL,
     [LocalPort]         nvarchar  (50)       NOT NULL,
     [RemoteAddress]     nvarchar  (50)       NOT NULL,
     [RemotePort]        nvarchar  (50)       NOT NULL,
-    PRIMARY KEY CLUSTERED ([Id] ASC)
+    PRIMARY KEY CLUSTERED ([Name] ASC)
 );
-CREATE NONCLUSTERED INDEX [ClientNameIndex] ON [dbo].[Clients] 
-(
-	[Name] ASC
-)
 ";
         public void EnsureDatabase()
         {
@@ -82,22 +77,13 @@ CREATE NONCLUSTERED INDEX [ClientNameIndex] ON [dbo].[Clients]
 
         public void AddClient(Client client)
         {
-            client.Id = Guid.NewGuid();
             this.Clients.Add(client);
             this.SaveChanges();
         }
 
-        public IEnumerable<Client> FindClientsByName(string name)
+        public Client FindClientByName(string name)
         {
             foreach (var client in from i in this.Clients where i.Name == name select i)
-            {
-                yield return client;
-            }
-        }
-
-        public Client FindClientById(Guid id)
-        {
-            foreach (var client in from i in this.Clients where i.Id == id select i)
             {
                 return client;
             }

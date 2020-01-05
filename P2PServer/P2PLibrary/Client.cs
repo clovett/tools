@@ -8,14 +8,12 @@ namespace P2PLibrary
 
     public partial class Client
     {
-        public Guid Id { get; set; }
+        [Key]
+        [StringLength(256)]
+        public string Name { get; set; }
 
         [Required]
         public DateTime Date { get; set; }
-
-        [Required]
-        [StringLength(256)]
-        public string Name { get; set; }
 
         [Required]
         [StringLength(50)]

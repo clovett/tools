@@ -29,30 +29,43 @@
                 string json = System.Text.Encoding.UTF8.GetString(buffer, 0, len);
 
                 Client c = (Client)JsonConvert.DeserializeObject(json, typeof(Client));
+                c.RemoteAddress = Request.ServerVariables["REMOTE_ADDR"];
+                c.RemotePort = Request.ServerVariables["REMOTE_PORT"];
 
                 string type = Request.QueryString["type"];
                 if (type == "add")
                 {
                     // then this is a new record we are adding...
-                    c.RemoteAddress = Request.ServerVariables["REMOTE_ADDR"];
-                    c.RemotePort = Request.ServerVariables["REMOTE_PORT"];
-                    model.AddClient(c);
+                    Client f = model.FindClientByName(c.Name);
+                    if (f != null)
+                    {
+                        // then this is an update!
+                        f.LocalAddress = c.LocalAddress;
+                        f.LocalPort = c.LocalPort;
+                        f.RemoteAddress = c.RemoteAddress;
+                        f.RemotePort = c.RemotePort;
+                        model.SaveChanges();
+                    }
+                    else
+                    {
+                        model.AddClient(c);
+                    }
                     c.Message = "added";
                     Response.Write(JsonConvert.SerializeObject(c));
                 }
                 else if (type == "find")
                 {
                     // then we are looking for matching rendezvous by name
-                    Client f = model.FindClientsByName(c.Name).FirstOrDefault();
+                    Client f = model.FindClientByName(c.Name);
                     if (f != null)
                     {
-                        c = f;
-                    } 
+                        Response.Write(JsonConvert.SerializeObject(f));
+                    }
                     else
                     {
-                        c.Message = "not found";
+                        c = null;
+                        error = "not found";
                     }
-                    Response.Write(JsonConvert.SerializeObject(c));
                 }
                 else
                 {
