@@ -15,10 +15,12 @@ class Schedule:
 
     def turn_off(self):
         for i in self.lights:
+            print("turning off {}".format(i.ip_address), flush=True)
             i.turn_off()
 
     def turn_on(self):
         for i in self.lights:
+            print("turning on {}".format(i.ip_address), flush=True)
             i.turn_on()
 
     def run(self):
@@ -43,11 +45,9 @@ class Schedule:
             print("turning off in {} seconds".format(int(time_to_midnight.total_seconds())), flush=True)
 
             if time_to_sunset.days < 0:
-                print("turning on", flush=True)
                 self.turn_on()
                 seconds = int(time_to_midnight.total_seconds()) + 1
             else:
-                print("turning off", flush=True)
                 self.turn_off()
                 seconds = int(time_to_sunset.total_seconds()) + 1
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     if args.mac:
         ip_list = []
         for m in args.mac:
-            mac = MacAddress("98-da-c4-11-0f-76")
+            mac = MacAddress(m)
             ip = mac.lookup_ip_address()
             if ip is None:
                 print("MAC address {} not found".format(m), flush=True)
