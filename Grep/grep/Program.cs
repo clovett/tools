@@ -15,6 +15,7 @@ namespace ConsoleApplication1
         bool echo = false;
         bool lineNumbers = false;
         bool ignoreCase = false;
+        bool negate = false;
 
         static int Main(string[] args)
         {
@@ -76,7 +77,7 @@ namespace ConsoleApplication1
                 while (line != null)
                 {
                     line = line.Trim();
-                    if (regex.IsMatch(line))
+                    if (regex.IsMatch(line) == !this.negate)
                     {
                         var saved = Console.BackgroundColor;
                         if (echo)
@@ -115,6 +116,7 @@ namespace ConsoleApplication1
             Console.WriteLine("  -ln         add line numbers");
             Console.WriteLine("  -e          echo all input, and highlight matching lines");
             Console.WriteLine("  -i          case insensitive");
+            Console.WriteLine("  -n          negate, print all lines that don't match the expression");
             Console.WriteLine("  expression  the regular expression to match (in .NET regex syntax)");
         }
 
@@ -157,6 +159,9 @@ namespace ConsoleApplication1
                             break;
                         case "i":
                             this.ignoreCase = true;
+                            break;
+                        case "n":
+                            this.negate = true;
                             break;
                         default:
                         case "?":
