@@ -26,8 +26,9 @@
         <StackPanel Orientation="Horizontal" Grid.Row="1">
             <Button x:Name="SnapButton" HorizontalAlignment="Left" Margin="10,10,5,10" MinWidth="100" MinHeight="30" Click="OnSnap">Snap</Button>
             <TextBlock Text="after delay" Margin="5,10" VerticalAlignment="Bottom"/>
-            <TextBox x:Name="TextBoxDelay" Width="50" Text="0" Margin="5,10" VerticalAlignment="Bottom"/>
+            <TextBox x:Name="TextBoxDelay" Width="50" Text="1" Margin="5,10" VerticalAlignment="Bottom" TextChanged="OnDelayChanged"/>
             <TextBlock Text="seconds" Margin="5,10" VerticalAlignment="Bottom"/>
+            <CheckBox x:Name="CheckBoxRepeat" Margin="5,10" VerticalAlignment="Bottom" Checked="OnRepeatChanged" Unchecked="OnRepeatChanged">Repeat</CheckBox>
         </StackPanel>
 
         <ListView Grid.Row="2" x:Name="ThumbnailView" ItemTemplate="{StaticResource ThumbnailTemplate}" SelectionChanged="OnThumbnailSelected"

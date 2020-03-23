@@ -54,31 +54,73 @@ namespace ScreenCopy
             base.OnClosed(e);
         }
 
-        private async void OnSnap(object sender, RoutedEventArgs e)
+        private object originalContent;
+        private bool stopped;
+        private bool repeat;
+        private double delaySeconds = 1;
+
+        private void OnSnap(object sender, RoutedEventArgs e)
+        {
+            if ((string)SnapButton.Content == "Stop")
+            {
+                this.stopped = true;
+                SnapButton.Content = originalContent;
+                return;
+            }
+            else
+            {
+                this.stopped = false;
+                originalContent = SnapButton.Content;
+                if (this.repeat)
+                {
+                    SnapButton.Content = "Stop";
+                }
+            }
+
+            Task.Run(TakeSnapshots);
+        }
+
+        private async Task TakeSnapshots()
         {
             try
             {
-                SnapButton.IsEnabled = false;
-                string delay = TextBoxDelay.Text;
-                double seconds = 0;
-                if (double.TryParse(delay, out seconds) && seconds > 0)
+                while (!this.stopped)
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(seconds));
-                }
+                    if (this.delaySeconds > 0)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(this.delaySeconds));
+                    }
 
-                index++;
-                SoundPlayer.Source = ResolveAsset("assets/shutter.mp3");
-                var nowait = Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    SoundPlayer.Play();
-                }));               
-                GrabScreenToFile(System.IO.Path.Combine(Directory.Text, "image" + index + ".png"), System.Drawing.Imaging.ImageFormat.Png);
+                    if (this.stopped)
+                    {
+                        return;
+                    }
+
+                    index++;
+
+                    // this part has to happen back on UI thread.
+                    this.Dispatcher.Invoke(new Action(() =>
+                    {
+                        SoundPlayer.Source = ResolveAsset("assets/shutter.mp3");
+                        var nowait = Dispatcher.BeginInvoke(new Action(() =>
+                        {
+                            SoundPlayer.Play();
+                        }));
+
+                        GrabScreenToFile(System.IO.Path.Combine(Directory.Text, "image" + index + ".png"), System.Drawing.Imaging.ImageFormat.Png, !this.repeat);
+                    }));
+
+                    if (!this.repeat)
+                    {
+                        break;
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error Creating Screenshot", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            SnapButton.IsEnabled = true;
+            return;
         }
 
         Uri ResolveAsset(string relativePath)
@@ -88,9 +130,12 @@ namespace ScreenCopy
             return resolved;
         }
 
-        private void GrabScreenToFile(string fileName, System.Drawing.Imaging.ImageFormat imgFormat)
+        private void GrabScreenToFile(string fileName, System.Drawing.Imaging.ImageFormat imgFormat, bool showThumbnail)
         {
+            
             string fullPath = System.IO.Path.GetFullPath(fileName);
+            string dirName = System.IO.Path.GetDirectoryName(fullPath);
+            System.IO.Directory.CreateDirectory(dirName);
 
             ForceDelete(fullPath);
 
@@ -132,7 +177,10 @@ namespace ScreenCopy
 
                     img.Save(fullPath, imgFormat);
 
-                    AddThumbnail(fullPath, img);
+                    if (showThumbnail)
+                    {
+                        AddThumbnail(fullPath, img);
+                    }
                 }
             }
         }
@@ -213,6 +261,21 @@ namespace ScreenCopy
                 {
                     thumbnails.Remove(item);
                 }
+            }
+        }
+
+        private void OnRepeatChanged(object sender, RoutedEventArgs e)
+        {
+            this.repeat = (this.CheckBoxRepeat.IsChecked == true);
+        }
+
+        private void OnDelayChanged(object sender, TextChangedEventArgs e)
+        {
+            string delay = TextBoxDelay.Text;
+            double seconds = 0;
+            if (double.TryParse(delay, out seconds))
+            {
+                this.delaySeconds = seconds;
             }
         }
     }
