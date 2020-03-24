@@ -54,6 +54,7 @@ namespace HtmlSnapshotMaker
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            GetNextIndex();
             Task.Run(TakeSnapshots);
         }
 
@@ -61,6 +62,22 @@ namespace HtmlSnapshotMaker
         {
             this.stopped = true;
             base.OnClosing(e);
+        }
+
+        private void GetNextIndex()
+        {
+            foreach (string file in System.IO.Directory.GetFiles(settings.Directory))
+            {
+                string filename = System.IO.Path.GetFileName(file);
+                if (filename.StartsWith("index") && filename.EndsWith(".png"))
+                {
+                    string s = file.Substring(5, filename.Length - 4);
+                    if (long.TryParse(s, out long i) && i > index)
+                    {
+                        index = i + 1;
+                    }
+                }
+            }
         }
 
         private async Task TakeSnapshots()
