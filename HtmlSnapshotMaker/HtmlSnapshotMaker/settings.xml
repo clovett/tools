@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Url>http://lovettsoftware.com</Url>
+  <Directory>d:\git\clovett\tools\HtmlSnapshotMaker\HtmlSnapshotMaker\bin\x64\Debug</Directory>
+  <IntervalSeconds>60</IntervalSeconds>
+</Settings>
