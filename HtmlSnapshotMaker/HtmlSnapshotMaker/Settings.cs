@@ -22,8 +22,7 @@ namespace HtmlSnapshotMaker
             {
                 if (_instance == null)
                 {
-                    _instance = new Settings();
-                    _instance.Load();
+                    _instance = Settings.Load();
                 }
                 return _instance;
             }
@@ -35,7 +34,7 @@ namespace HtmlSnapshotMaker
 
         public double IntervalSeconds { get; set; }
 
-        public Settings Load()
+        public static Settings Load()
         {
             IsolatedStorage<Settings> f = new IsolatedStorage<Settings>();
             Settings data = f.LoadFromFile(DataFile);

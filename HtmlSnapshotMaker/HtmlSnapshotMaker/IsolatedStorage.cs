@@ -51,7 +51,7 @@ namespace HtmlSnapshotMaker
                 string fullPath = resolved.LocalPath;
                 if (File.Exists(fullPath))
                 {
-                    using (Stream myFileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (Stream myFileStream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
                         // Call the Deserialize method and cast to the object type.
                         return LoadFromStream(myFileStream);
@@ -81,7 +81,7 @@ namespace HtmlSnapshotMaker
         {
             Uri resolved = new Uri(baseUri, fileName);
             string fullPath = resolved.LocalPath;
-            using (var stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (var stream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 XmlSerializer mySerializer = new XmlSerializer(typeof(T));
                 mySerializer.Serialize(stream, data);

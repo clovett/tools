@@ -69,12 +69,12 @@ namespace HtmlSnapshotMaker
             foreach (string file in System.IO.Directory.GetFiles(settings.Directory))
             {
                 string filename = System.IO.Path.GetFileName(file);
-                if (filename.StartsWith("index") && filename.EndsWith(".png"))
+                if (filename.StartsWith("image") && filename.EndsWith(".png"))
                 {
-                    string s = file.Substring(5, filename.Length - 4);
+                    string s = filename.Substring(5, filename.Length - 9);
                     if (long.TryParse(s, out long i) && i > index)
                     {
-                        index = i + 1;
+                        index = i;
                     }
                 }
             }
