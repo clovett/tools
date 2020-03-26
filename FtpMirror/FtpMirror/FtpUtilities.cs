@@ -7,58 +7,66 @@ using System.IO;
 
 namespace Walkabout.Utilities
 {
-    public class FtpUtilities
+    /// <summary>
+    /// This class unifies an FTP directory or a local directory so we can handle
+    /// both with one abstraction.
+    /// </summary>
+    public class Folder
     {
+        public List<string> Files { get; }
+        public List<string> Subfolders { get; }
+
+        private string location;
+        private bool isFtp;
+        private string user;
+        private string password;
+
         /// <summary>
-        /// Copies all files and directories from the source directory up to the target FTP directory
-        /// using the given user name and password.
+        /// Load up the listing for a given location
         /// </summary>
-        /// <param name="source">Source directory containing files and directories to be copied</param>
-        /// <param name="target">Target directory relative to FTP server</param>
-        /// <param name="user">The FTP user name</param>
-        /// <param name="password">The FTP password</param>
-        /// <returns>Throws exception on failure</returns>
-        public static void CopySubtree(string source, string target, string user, string password)
+        /// <param name="location"> either local or FTP location</param>
+        /// <param name="user">Required for FTP locations</param>
+        /// <param name="password">Required for FTP locations</param>
+        public Folder(string location, string user, string password)
         {
-            List<string> files = new List<string>();
-            List<string> subdirs = new List<string>();
-            ListDirectory(target, user, password, files, subdirs);
+            this.location = location;
+            this.Files = new List<string>();
+            this.Subfolders = new List<string>();
+            this.user = user;
+            this.password = password;
 
-            foreach (string dir in Directory.GetDirectories(source))
+            Uri uri = new Uri(location);
+            if (uri.Scheme == "ftp")
             {
-                string name = Path.GetFileName(dir); 
-                if (!subdirs.Contains(name, StringComparer.OrdinalIgnoreCase))
-                {
-                    CreateTargetDirectory(target + '/' + name, user, password);
-                }
-
-                CopySubtree(dir, target + '/' + name, user, password);
+                this.isFtp = true;
+                LoadFtpDirectoryInfo(location, user, password);
             }
-
-            Console.WriteLine("Copying directory: " + target);
-
-            CopyFiles(source, target, user, password);
+            else
+            {
+                LoadLocalDirectoryInfo(location);
+            }
         }
 
-        private static void CreateTargetDirectory(string target, string user, string password)
+        public override string ToString()
         {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(target);
-            request.Credentials = new NetworkCredential(user, password);
-            request.Method = WebRequestMethods.Ftp.MakeDirectory;
-            using (var response = (FtpWebResponse)request.GetResponse())
-            {
-                // 257 "MyMoney/download//Application Files/MyMoney_1_0_0_198" directory created.
-                if (response.StatusCode != FtpStatusCode.PathnameCreated)
-                {
-                    throw new IOException("### failed to create target directory: " + target + "\r\n" + response.StatusDescription);
-                }
-            }
-            return;
+            return this.location;
         }
 
-        private static char[] WhitespaceChars = new char[] { ' ', '\t' };
+        private void LoadLocalDirectoryInfo(string location)
+        {
+            foreach (string fileName in Directory.GetFiles(location))
+            {
+                string name = Path.GetFileName(fileName);
+                this.Files.Add(name);
+            }
+            foreach (string dir in Directory.GetDirectories(location))
+            {
+                string name = Path.GetFileName(dir);
+                this.Subfolders.Add(name);
+            }
+        }
 
-        private static void ListDirectory(string target, string user, string password, List<string> files, List<string> subDirectories)
+        private void LoadFtpDirectoryInfo(string target, string user, string password)
         {
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(target);
             request.Credentials = new NetworkCredential(user, password);
@@ -79,17 +87,16 @@ namespace Walkabout.Utilities
                             if (i > 0)
                             {
                                 string name = line.Substring(39);
-                                subDirectories.Add(name);
+                                this.Subfolders.Add(name);
                             }
                             else
                             {
                                 string name = line.Substring(39);
-                                files.Add(name);
+                                this.Files.Add(name);
                             }
                             line = reader.ReadLine();
                         }
                     }
-                    return; // we're good, it exists.
                 }
             }
             catch
@@ -98,121 +105,99 @@ namespace Walkabout.Utilities
             }
         }
 
-        public static void DeleteSubtree(string target, string user, string password)
+        /// <summary>
+        /// Copies all files and directories from the source directory to the FTP directory
+        /// using the given user name and password.
+        /// </summary>
+        /// <param name="source">Source directory containing files and directories to be copied</param>
+        /// <param name="target">Target directory relative to FTP server</param>
+        /// <returns>Throws exception on failure</returns>
+        public void CopySubtree(Folder target)
         {
-            Console.WriteLine("Deleting target directory: " + target);
+            Console.WriteLine("Copying {0} ===> {1}", this.location, target.location);
+            this.CopyFilesTo(target);
 
-            List<string> files = new List<string>();
-            List<string> subdirs = new List<string>();
-            ListDirectory(target, user, password, files, subdirs);
-
-            // bugbug: can't find a way to get FtpWebRequest to show me these...
-            // so we assume they are there...
-            if (!target.Contains("_vti"))
+            // Traverse directory hierarchy...
+            foreach (string dir in this.Subfolders)
             {
-                subdirs.Add("_vti_cnf");
-                subdirs.Add("_vti_pvt");
-                subdirs.Add("_vti_script");
-                subdirs.Add("_vti_txt");
-            }
+                string name = Path.GetFileName(dir);
+                target.EnsureDirectory(name);
 
-            foreach (string file in files)
-            {
-                DeleteFile(target + "/" + file, user, password);
+                Folder subfolder = new Folder(target.GetFullPath(name), this.user, this.password);
+                Folder srcFolder = new Folder(this.GetFullPath(name), this.user, this.password);
+                srcFolder.CopySubtree(subfolder);
             }
-
-            foreach (string dir in subdirs)
-            {
-                DeleteSubtree(target + "/" + dir, user, password);
-            }
-
-            // now it is empty, we should be able to remove it.
-            RemoveDirectory(target, user, password);
         }
 
-        private static void RemoveDirectory(string target, string user, string password)
+        private string GetFullPath(string name)
         {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(target);
-            request.Credentials = new NetworkCredential(user, password);
-            request.Method = WebRequestMethods.Ftp.RemoveDirectory;
-            try
+            if (this.isFtp)
             {
-                using (var response = (FtpWebResponse)request.GetResponse())
+                if (this.location.EndsWith("/"))
                 {
-                    // "250 RMD command successful.\r\n"
-                    var state = response.StatusDescription;
-                    if (response.StatusCode != FtpStatusCode.FileActionOK)
-                    {
-                        throw new IOException("### failed to delete target: " + target + "\r\n" + state);
-                    }
+                    return this.location + name;
                 }
+                return this.location + "/" + name;
             }
-            catch
+            else
             {
+                return Path.Combine(this.location, name);
             }
-            return;
         }
 
-        public static void DeleteFile(string targetFile, string user, string password)
+        private void EnsureDirectory(string name)
         {
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(targetFile);
-            request.Credentials = new NetworkCredential(user, password);
-            request.Method = WebRequestMethods.Ftp.DeleteFile;           
-            using (var response = (FtpWebResponse)request.GetResponse())
+            if (!this.Subfolders.Contains(name, StringComparer.OrdinalIgnoreCase))
             {
-                // "250 DELE command successful.\r\n"
-                var state = response.StatusDescription;
-                if (response.StatusCode != FtpStatusCode.FileActionOK)
-                {
-                    throw new IOException("### failed to delete target: " + targetFile + "\r\n" + state);
-                }
-                Console.WriteLine("Deleted " + targetFile);
+                this.CreateTargetDirectory(this.GetFullPath(name));
             }
-            return;
         }
-
 
         /// <summary>
-        /// Copy the files from the source directory to the target directory.
+        /// Copy the files from this source directory to the target directory.
         /// </summary>
-        /// <param name="source">Source directory</param>
-        /// <param name="target">FTP target directory</param>
-        /// <param name="user">FTP username</param>
-        /// <param name="password">FTP password</param>
+        /// <param name="source">Target directory</param>
         /// <returns>The file names that were found and uploaded</returns>
-        private static IEnumerable<string> CopyFiles(string source, string target, string user, string password)
+        private void CopyFilesTo(Folder target)
         {
-            List<string> files = new List<string>();
-            foreach (string fileName in Directory.GetFiles(source))
+            if (this.isFtp)
+            {
+                // this requires a download
+                if (target.isFtp)
+                {
+                    // this requires a local cache.
+                }
+                else
+                {
+                    this.DownloadFiles(target);
+                }
+            }
+            else
+            {
+                if (target.isFtp)
+                {
+                    this.UploadFiles(target);
+                }
+            }
+        }
+
+        private void UploadFiles(Folder target)
+        {
+            foreach (string fileName in this.Files)
             {
                 string name = Path.GetFileName(fileName);
-                files.Add(fileName);
-
                 Console.Write("Uploading file: " + name + " ...");
 
                 try
                 {
-                    WebRequest request = (FtpWebRequest)WebRequest.Create(target + "/" + name);
-                    request.Method = WebRequestMethods.Ftp.UploadFile;
-                    request.Credentials = new NetworkCredential(user, password);
-                    using (Stream s = request.GetRequestStream())
-                    {
-                        using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-                        {
-                            CopyTo(fs, s);
-                        }
-                    }
+                    string address = target.GetFullPath(name);
+                    string localFile = this.GetFullPath(name);
+
+                    WebClient client = new WebClient();
+                    client.Credentials = new NetworkCredential(user, password);
+                    client.UploadFile(address, localFile);
 
                     Console.WriteLine();
-                    FtpWebResponse response = (FtpWebResponse)request.GetResponse();
-                    using (response)
-                    {
-                        var state = response.StatusDescription;
-                        if (response.StatusCode != FtpStatusCode.ClosingData)
-                        {
-                            throw new IOException("### failed to copy file: " + name + "\r\n" + state);
-                        }
-                    }
                 }
                 catch (Exception e)
                 {
@@ -220,7 +205,107 @@ namespace Walkabout.Utilities
                     Console.WriteLine("### Error : " + e.Message);
                 }
             }
-            return files;
+        }
+
+        private void DownloadFiles(Folder target)
+        {
+            foreach (string name in this.Files)
+            {
+                Console.Write("Downloading file: " + name + " ...");
+
+                try
+                {
+                    var address = this.GetFullPath(name);
+                    string localName = target.GetFullPath(name);
+                    WebClient client = new WebClient();
+                    client.Credentials = new NetworkCredential(user, password);
+                    client.DownloadFile(address, localName);
+                    Console.WriteLine();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("### Error : " + e.Message);
+                }
+            }
+        }
+
+        public void DeleteSubtree()
+        {
+            Console.WriteLine("Deleting target directory: " + this.location);
+
+            foreach (string file in this.Files)
+            {
+                this.DeleteFile(file);
+            }
+
+            foreach (string dir in this.Subfolders)
+            {
+                Folder sub = new Folder(this.GetFullPath(dir), this.user, this.password);
+                sub.DeleteSubtree();
+            }
+
+            // now it is empty, we should be able to remove it.
+            this.RemoveDirectory();
+        }
+
+        private void RemoveDirectory()
+        {
+            try
+            {
+                if (this.isFtp)
+                {
+                    FtpWebRequest request = (FtpWebRequest)WebRequest.Create(this.location);
+                    request.Credentials = new NetworkCredential(user, password);
+                    request.Method = WebRequestMethods.Ftp.RemoveDirectory;
+                    using (var response = (FtpWebResponse)request.GetResponse())
+                    {
+                        // "250 RMD command successful.\r\n"
+                        var state = response.StatusDescription;
+                        if (response.StatusCode != FtpStatusCode.FileActionOK)
+                        {
+                            throw new IOException("### failed to delete target: " + this.location + "\r\n" + state);
+                        }
+                    }
+                }
+                else
+                {
+                    Directory.Delete(this.location);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("### error removing target directory {0}", this.location);
+            }
+        }
+
+        public void DeleteFile(string name)
+        {
+            string fullPath = this.GetFullPath(name);
+            if (this.isFtp)
+            {
+                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(fullPath);
+                request.Credentials = new NetworkCredential(user, password);
+                request.Method = WebRequestMethods.Ftp.DeleteFile;
+                using (var response = (FtpWebResponse)request.GetResponse())
+                {
+                    // "250 DELE command successful.\r\n"
+                    var state = response.StatusDescription;
+                    if (response.StatusCode != FtpStatusCode.FileActionOK)
+                    {
+                        throw new IOException("### failed to delete target: " + fullPath + "\r\n" + state);
+                    }
+                    Console.WriteLine("Deleted " + fullPath);
+                }
+            } 
+            else
+            {
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                    Console.WriteLine("Deleted " + fullPath);
+                }
+            }
         }
 
         /// <summary>
@@ -233,94 +318,70 @@ namespace Walkabout.Utilities
         /// <param name="user">The FTP user name</param>
         /// <param name="password">The FTP password</param>
         /// <returns>The number of files that failed to upload</returns>
-        public static void MirrorDirectory(string source, string target, string user, string password)
-        {          
-            List<string> files = new List<string>();
-            List<string> subdirs = new List<string>();
-            ListDirectory(target, user, password, files, subdirs);
-
-            foreach (string dir in Directory.GetDirectories(source))
+        public void MirrorDirectory(Folder target)
+        {
+            // depth first
+            foreach (string name in this.Subfolders)
             {
-                string name = Path.GetFileName(dir);
-                if (!subdirs.Contains(name))
+                if (!target.Subfolders.Contains(name))
                 {
-                    CreateTargetDirectory(target + '/' + name, user, password);
-                }
-                else
-                {
-                    subdirs.Remove(name);
+                    target.EnsureDirectory(name);
                 }
 
-                MirrorDirectory(dir, target + '/' + name, user, password);
+                Folder subTarget = new Folder(target.GetFullPath(name), this.user, this.password);
+                Folder subSource = new Folder(this.GetFullPath(name), this.user, this.password);
+
+                subSource.MirrorDirectory(subTarget);
             }
 
-            // Delete stale subdirectories that should no longer exist on the server.
-            foreach (string staleDir in subdirs)
+            // Delete stale subdirectories that should no longer exist on the target.
+            foreach (string staleDir in target.Subfolders)
             {
-                DeleteSubtree(target + '/' + staleDir, user, password);
+                if (!this.Subfolders.Contains(staleDir))
+                {
+                    Folder subTarget = new Folder(target.GetFullPath(staleDir), this.user, this.password);
+                    subTarget.DeleteSubtree();
+                }
             }
 
             Console.WriteLine("Mirroring directory: " + target);
-
-            // depth first, so do inner files before we change the outer file, this
-            // way we don't screw up top level ClickOnce setup files if inner files fail to copy.
-            MirrorFiles(source, target, new HashSet<string>(files), user, password);
+            this.MirrorFiles(target);
         }
 
-        private static void MirrorFiles(string source, string target, HashSet<string> targetFiles, string user, string password)
+        private void MirrorFiles(Folder target)
         {
-
-            foreach (string fileName in Directory.GetFiles(source))
-            {
-                string name = Path.GetFileName(fileName);
-                targetFiles.Remove(name);
-
-                Console.Write("Uploading file: " + name + " ...");
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(target + '/' + name);
-                request.Method = WebRequestMethods.Ftp.UploadFile;
-                request.Credentials = new NetworkCredential(user, password);
-                using (Stream s = request.GetRequestStream())
-                {
-                    using (FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-                    {
-                        CopyTo(fs, s);
-                    }
-                }
-
-                using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
-                {
-                    var state = response.StatusDescription;
-                    string[] parts = state.Split(' ');
-                    int code = (int)response.StatusCode;
-                    if (parts.Length > 0)
-                    {
-                        int.TryParse(parts[0], out code);
-                    }
-                    if (code != 226)
-                    {
-                        throw new Exception("Failed to upload file: " + target);
-                    }
-                    Console.WriteLine("ok");
-                }
-            }
+            this.CopyFilesTo(target);
 
             // Delete the stale files that should no longer be on the server.
-            foreach (string old in targetFiles)
+            foreach (string old in target.Files)
             {
-                DeleteFile(target + "/" + old, user, password);
+                if (!this.Files.Contains(old, StringComparer.OrdinalIgnoreCase))
+                {
+                    target.DeleteFile(old);
+                }
             }
-
         }
 
-        private static void CopyTo(Stream inStream, Stream outStream)
+        private void CreateTargetDirectory(string fullPath)
         {
-            int size = 64000;
-            byte[] buffer = new byte[size];
-            int len = inStream.Read(buffer, 0, size);
-            while (len > 0)
+            if (this.isFtp)
             {
-                outStream.Write(buffer, 0, len);
-                len = inStream.Read(buffer, 0, size);
+                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(fullPath);
+                request.Credentials = new NetworkCredential(this.user, this.password);
+                request.Method = WebRequestMethods.Ftp.MakeDirectory;
+                using (var response = (FtpWebResponse)request.GetResponse())
+                {
+                    // 257 "MyMoney/download//Application Files/MyMoney_1_0_0_198" directory created.
+                    if (response.StatusCode != FtpStatusCode.PathnameCreated)
+                    {
+                        throw new IOException("### failed to create target directory: " + fullPath + "\r\n" + response.StatusDescription);
+                    }
+                }
+                return;
+            }
+            else
+            {
+                Directory.CreateDirectory(fullPath);
             }
         }
 

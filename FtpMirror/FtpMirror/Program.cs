@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Walkabout.Utilities;
 
 namespace FtpMirror
 {
@@ -31,7 +32,10 @@ namespace FtpMirror
         {
             try
             {
-                Walkabout.Utilities.FtpUtilities.MirrorDirectory(source, target, userName, password);
+                Folder sourceFolder = new Folder(source, userName, password);
+                Folder targetFolder = new Folder(target, userName, password);
+
+                sourceFolder.MirrorDirectory(targetFolder);
             }
             catch (Exception ex)
             {
@@ -42,6 +46,10 @@ namespace FtpMirror
         static void PrintUsage()
         {
             Console.WriteLine("Usage: FtpMirror SourceDir TargetDir /u userName /p pswd");
+            Console.WriteLine("Copies all files and directories from the source directory to the target directory");
+            Console.WriteLine("using the given user name and password.  It ensures the TargetDir is an exact copy");
+            Console.WriteLine("by deleting any files or directories at the target that do not exist in the source.");
+            Console.WriteLine("Either SourceDir or TargetDir can be FTP locaations.");
         }
 
         private bool ParseCommandLine(string[] args)
@@ -86,11 +94,6 @@ namespace FtpMirror
                 else if (source == null)
                 {
                     source = arg;
-                    if (!Directory.Exists(source))
-                    {
-                        Console.WriteLine("### Error: input directory '" + source + "' does not exist");
-                        return false;
-                    }
                 }
                 else if (target == null)
                 {
