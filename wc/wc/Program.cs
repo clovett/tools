@@ -345,22 +345,43 @@ the following order: newline, word, character, byte, maximum line length.
         {
             List<string> fileNames = new List<string>();
 
-            foreach (string file in files)
+            if (files.Count == 0)
             {
-                if (file.Contains("*") || file.Contains("?"))
+                extensions = false;
+                // Read file names from stdin.
+
+                string line = null;
+                while ((line = Console.In.ReadLine()) != null)
                 {
-                    throw new Exception("the -f option does not support wild cards");                    
+                    fileNames.Add(line);
                 }
-                using (StreamReader reader = new StreamReader(file))
+
+                if (fileNames.Count == 0)
                 {
-                    string line = reader.ReadLine();
-                    while (line != null)
+                    Console.WriteLine("no files found");
+                    Environment.Exit(1);
+                }
+            }
+            else
+            {
+                foreach (string file in files)
+                {
+                    if (file.Contains("*") || file.Contains("?"))
                     {
-                        fileNames.Add(line);
-                        line = reader.ReadLine();
+                        throw new Exception("the -f option does not support wild cards");
+                    }
+                    using (StreamReader reader = new StreamReader(file))
+                    {
+                        string line = reader.ReadLine();
+                        while (line != null)
+                        {
+                            fileNames.Add(line);
+                            line = reader.ReadLine();
+                        }
                     }
                 }
             }
+
             // ok, we've process the -f option now everything continues normally.
             this.files = fileNames;
         }
