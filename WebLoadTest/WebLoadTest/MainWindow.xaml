@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:WebLoadTest"
         mc:Ignorable="d"
         xmlns:c="clr-namespace:WebLoadTest.Controls"
-        Title="MainWindow" Height="450" Width="800">
+        Title="WebLoadTest" Height="400" Width="800">
     <Grid Style="{StaticResource AppGridBackground}">
 
         <Grid.RowDefinitions>

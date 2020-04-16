@@ -117,9 +117,18 @@ namespace WebLoadTest
             if (!string.IsNullOrEmpty(this.TextBoxUrl.Text))
             {
                 var settings = ((App)App.Current).Settings;
-                settings.LastLocation = TextBoxUrl.Text;
-                delayedActions.StartDelayedAction("UpdateSettings", UpdateSettings, TimeSpan.FromMilliseconds(10));
-                test.Start(new Uri(this.TextBoxUrl.Text));
+                try
+                {
+                    test.Start(new Uri(this.TextBoxUrl.Text));
+                    settings.LastLocation = TextBoxUrl.Text;
+                    delayedActions.StartDelayedAction("UpdateSettings", UpdateSettings, TimeSpan.FromMilliseconds(10));
+                } 
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Invalid URL");
+                    this.TextBoxUrl.SelectAll();
+                    this.TextBoxUrl.Focus();
+                }
             }
 
         }
