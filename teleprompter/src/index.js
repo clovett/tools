@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import InputFile from './inputfile';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
@@ -39,32 +40,10 @@ class CCEntry extends React.Component
   }
 
   render() {
-    var custom = {start: this.state.start, end: this.state.end};
-    return <div key={this.state.index} {...custom}>
+    return <div key={this.state.index}>
       <div className="srt-range">{this.state.range}</div>
       <xmp className="srt-prompt" onMouseDown={this.handleMouseDown} >{this.state.prompt}</xmp>
-    </div>
-  }
-}
-
-class SrtFileInput extends React.Component {
-
-  constructor(props, context) {
-    super(props, context);
-
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(e)
-  {
-    if (this.props.onChange)
-    {
-      this.props.onChange(e);
-    }
-  }
-
-  render() {
-    return <input type='file' onChange={ this.handleChange } />;
+    </div>;
   }
 }
 
@@ -88,7 +67,7 @@ class CCTable extends React.Component
       if (isNaN(index) || pos >= count) {
         break;
       }
-      var range = lines[pos++].trim().replace(/,/g, ".");
+      var range = lines[pos++].trim();
       if (pos >= count) {
         break;
       }
@@ -107,11 +86,18 @@ class CCTable extends React.Component
       entries.push(new CCEntry({}, index, range, prompt));
     }
     this.setState({entries: entries});
+
+    if (window.onsrtloaded){
+      // give this to index.html...
+      window.onsrtloaded(entries);
+    }
+
     return entries;
   }
 
   loadFile(e) {
     var file = e.target.files[0];
+    window.file = file;
     var reader = new FileReader();
     var foo = this;
     reader.onload = function(e) {
@@ -132,7 +118,7 @@ class CCTable extends React.Component
     return <div>
       <div>
         SRT location:<br/>
-        <SrtFileInput id="SrtUrl" value="" className="fileprompt" accept=".srt, .txt"
+        <InputFile id="SrtUrl" value="" className="fileprompt" accept=".srt, .txt"
                onChange={ this.loadFile } />
       </div>
       <div id="ccEntries" className="srt-table" >

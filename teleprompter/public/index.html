@@ -38,7 +38,7 @@
         <a class="navbar-brand-menu" href="%PUBLIC_URL%/" title="Homepage">Teleprompter</a>
         <ul class="nav navbar-nav navbar-right">
           <li class="">
-            <a href="#help">help</a>
+            <a href="#help" onclick="save()"><img src="save.png" alt="save" /></a>
           </li>
         </ul>
       </div>
@@ -66,6 +66,7 @@
           </video>
         </div>
 
+        <textarea id="output" style="width:50%; height:600px;" >The save button will put the result here so you can copy it to your .srt text file.</textarea>
 
       </section>
 
@@ -81,7 +82,9 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
+
   </body>
+  <script type="text/javascript" src="FileSaver.js"></script>
   <script type="text/javascript">
 
   function load_video() {
@@ -94,35 +97,52 @@
   }
 
   var previousDiv = null;
-  var map = []
+  var srt_map = null;
+
+  function onpromptedited(e){
+    var text = e.target.innerText;
+    var entry = e.target.parentElement.entry;
+    if (entry != null) {
+      entry.state.prompt = text;
+    }
+  }
+
+  function onsrtloaded(items)
+  {
+    srt_map = items;
+
+    // bind the divs to our list of items.
+    var entries = $("#ccEntries");
+    var divs = entries[0].children;
+    for (var i = 0; i < divs.length && i < srt_map.length; i++)
+    {
+      var div = divs[i];
+      div.entry = srt_map[i];
+      var xmp = div.children[1];
+      xmp.addEventListener("input", onpromptedited);
+    }
+  }
 
   function sync_captions(video)
   {
     var time = video.currentTime;
-    var list = $("#ccEntries");
-    if (list.length > 0) {
-      entries = list[0];
-      var c = entries.children;
-      if (map == null || map.length != c.length)
-      {
-        // build an optimized map of the SRT file
-        for (var i = 0; i < c.length; i++)
-        {
-          var div = c[i];
-          var s = parseFloat(div.getAttribute("start"));
-          var e = parseFloat(div.getAttribute("end"));
-          map.push({start: s, end: e, element: div});
-        }
-      }
+    if (srt_map == null)
+    {
+      // we have not loaded an SRT file yet
+      return;
+    }
 
-      for (var i = 0; i < map.length; i++)
+    var entries = $("#ccEntries");
+    if (entries.length > 0) {
+      var divs = entries[0].children;
+      for (var i = 0; i < divs.length && i < srt_map.length; i++)
       {
-        var item = map[i];
-        var start = item.start;
-        var end = item.end;
+        var item = srt_map[i];
+        var div = divs[i];
+        var start = item.state.start;
+        var end = item.state.end;
         if (start <= time && end >= time)
         {
-          var div = item.element;
           if (previousDiv == div){
             return; // no movement yet
           }
@@ -131,6 +151,7 @@
             previousDiv.style.backgroundColor = null;
           }
           div.style.backgroundColor = "#90C0A0";
+          div.entry = item; // back link to react CCEntry object
           previousDiv = div;
           var top = $(div).offset().top + $(entries).scrollTop();
           var height = $(entries).height();
@@ -156,11 +177,40 @@
     }
   }
 
+  function save() {
+    if (srt_map == null)
+    {
+      // we have not loaded an SRT file yet
+      return;
+    }
+
+    var result = "";
+
+    for (var i = 0; i < srt_map.length; i++)
+    {
+      var item = srt_map[i];
+      result += (i + 1) + "\n";
+      result += item.state.range + "\n";
+      result += item.state.prompt + "\n\n";
+    }
+
+    var name = "example.srt";
+    if (window.file){
+      name = window.file.name;
+    }
+
+    var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
+    saveAs(blob, name);
+
+    $("#output")[0].value = result;
+  }
+
   $(document).ready(function () {
     video  = $("#videoplayer")[0];
     video.ontimeupdate = function() { sync_captions(video); };
     handle_resize();
     window.handle_resize = handle_resize;
+    window.onsrtloaded = onsrtloaded;
   });
 
   $(window).resize(function(){
