@@ -66,3 +66,8 @@
 .srt-range {
   background: #DDDDEE;
 }
+
+button{
+  border-style: none;
+  padding: 5px;
+}

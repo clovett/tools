@@ -4,6 +4,7 @@ import './index.css';
 import InputFile from './inputfile';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+import { saveAs } from 'file-saver';
 
 function getSeconds(s) {
   var p = s.split(':');

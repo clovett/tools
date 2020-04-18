@@ -27,7 +27,7 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-
+    <script src="dist/clipboard.min.js"></script>
     <title>React App</title>
   </head>
   <body>
@@ -37,9 +37,8 @@
       <div id="navbar" class="navbar-collapse collapse">
         <a class="navbar-brand-menu" href="%PUBLIC_URL%/" title="Homepage">Teleprompter</a>
         <ul class="nav navbar-nav navbar-right">
-          <li class="">
-            <a href="#help" onclick="save()"><img src="save.png" alt="save" /></a>
-          </li>
+          <li><button href="#help" onclick="save()"><img src="save.png" alt="save" /></abutton></li>
+          <li><button onclick="copy()"><img src="copy-icon.png" width="36" alt="save" /></button></li>
         </ul>
       </div>
     </nav>
@@ -66,7 +65,7 @@
           </video>
         </div>
 
-        <textarea id="output" style="width:50%; height:600px;" >The save button will put the result here so you can copy it to your .srt text file.</textarea>
+        <div id="placeholder"></div>
 
       </section>
 
@@ -177,11 +176,11 @@
     }
   }
 
-  function save() {
+  function get_srt_text() {
     if (srt_map == null)
     {
       // we have not loaded an SRT file yet
-      return;
+      return "";
     }
 
     var result = "";
@@ -193,7 +192,12 @@
       result += item.state.range + "\n";
       result += item.state.prompt + "\n\n";
     }
+    return result;
+  }
 
+  function save() {
+
+    var result = get_srt_text();
     var name = "example.srt";
     if (window.file){
       name = window.file.name;
@@ -202,7 +206,22 @@
     var blob = new Blob([result], {type: "text/plain;charset=utf-8"});
     saveAs(blob, name);
 
-    $("#output")[0].value = result;
+  }
+
+  function copy(){
+    var result = get_srt_text();
+    var e  = document.createElement("textarea");
+    $(placeholder).append(e);
+
+    e.value = result;
+    e.select();
+
+    var successful = document.execCommand('copy');
+    if (!successful) {
+      alert("copy failed");
+    }
+
+    $(e).remove();
   }
 
   $(document).ready(function () {
