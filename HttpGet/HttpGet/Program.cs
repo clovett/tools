@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -35,11 +36,11 @@ namespace HttpGet
             }
             catch (WebException e)
             {
-                WriteError("### Error: {0}", e.Message);
+                p.WriteError("### Error: {0}", e.Message);
             }
             catch (Exception e)
             {
-                WriteError("### Error: {0} {1}", e.GetType().FullName, e.Message);
+                p.WriteError("### Error: {0} {1}", e.GetType().FullName, e.Message);
             }
         }
 
@@ -113,10 +114,12 @@ namespace HttpGet
 
         private void Run()
         {
-            Process(this.baseUrl);
+            Process(this.baseUrl, new HashSet<Uri>());
         }
 
-        private string Process(Uri uri)
+        Stack<Uri> stack = new Stack<Uri>();
+
+        private string Process(Uri uri, HashSet<Uri> pending)
         {
             if (fetched.ContainsKey(uri))
             {
@@ -159,7 +162,9 @@ namespace HttpGet
 
                     if (deep)
                     {
-                        TraverseLinks(uri, doc);
+                        stack.Push(uri);
+                        TraverseLinks(uri, doc, pending);
+                        stack.Pop();
                     }
 
                     // save valid XML version
@@ -177,26 +182,35 @@ namespace HttpGet
             return path;
         }
         
-        private void TraverseLinks(Uri baseUri, XDocument doc)
+        private void TraverseLinks(Uri baseUri, XDocument doc, HashSet<Uri> pending)
         {
             // ok, now check all <a> links in this page and if they are local download them, if they are remote
             // check that they are valid, but don't traverse them.
             depth++;
             XNamespace ns = doc.Root.Name.Namespace;
+            List<Tuple<XElement, Uri>> local = new List<Tuple<XElement, Uri>>();
             foreach (XElement link in doc.Descendants(ns + "a"))
             {
                 string href = (string)link.Attribute("href");
                 if (!string.IsNullOrWhiteSpace(href) && !href.StartsWith("#"))
                 {
                     Uri resolved = new Uri(baseUri, href);
-                    if (resolved != baseUri)
-                    {
-                        string localPath = Process(resolved);
-                        if (!string.IsNullOrEmpty(localPath))
-                        {
-                            link.SetAttributeValue("href", MakeRelative(baseUri, resolved, localPath));
-                        }
+                    if (resolved != baseUri && !pending.Contains(resolved))
+                    { 
+                        pending.Add(resolved);
+                        local.Add(new Tuple<XElement, Uri>(link, resolved));
                     }
+                }
+            }
+
+            foreach(var pair in local)
+            {
+                var link = pair.Item1;
+                var uri = pair.Item2;
+                string localPath = Process(uri, pending);
+                if (!string.IsNullOrEmpty(localPath))
+                {
+                    link.SetAttributeValue("href", MakeRelative(baseUri, uri, localPath));
                 }
             }
             depth--;
@@ -375,7 +389,14 @@ namespace HttpGet
                 {
                     uri = resp.ResponseUri;
 
-                    Uri rel = baseuri.MakeRelativeUri(uri);
+                    var s = uri.ToString();
+                    Uri simpleUri = uri;
+                    if (!string.IsNullOrEmpty(uri.Query) && s.EndsWith(uri.Query))
+                    {
+                        simpleUri = new Uri(s.Substring(0, s.Length - uri.Query.Length));
+                    }
+
+                    Uri rel = baseuri.MakeRelativeUri(simpleUri);
                     string relative = rel.ToString();
 
                     if (!external)
@@ -477,7 +498,7 @@ namespace HttpGet
             return relative.ToString();
         }
 
-        private static void WriteError(string format, params object[] args)
+        private void WriteError(string format, params object[] args)
         {
             string msg = format;
             if (args != null)
@@ -487,6 +508,13 @@ namespace HttpGet
             var saved = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(msg);
+
+            var s = this.stack.ToArray();
+            foreach (var item in s.Reverse())
+            {
+                Console.WriteLine("Included by: {0}", item.ToString());
+            }
+
             Console.ForegroundColor = saved;
         }
 
