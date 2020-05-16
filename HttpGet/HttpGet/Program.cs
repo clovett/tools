@@ -18,16 +18,17 @@ namespace HttpGet
         string rootDir;
         bool stats;
         int depth;
+        int errors;
         List<Uri> merge = new List<Uri>();
         Dictionary<Uri, string> fetched = new Dictionary<Uri, string>();
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Program p = new Program();
             if (!p.ParseCommandLine(args))
             {
                 PrintUsage();
-                return;
+                return 1;
             }
 
             try
@@ -42,6 +43,18 @@ namespace HttpGet
             {
                 p.WriteError("### Error: {0} {1}", e.GetType().FullName, e.Message);
             }
+
+            if (p.errors > 0)
+            {
+                p.WriteError("### Found {0} errors", p.errors);
+                return 1;
+            }
+            else
+            {
+                Console.WriteLine("### success");
+            }
+
+            return 0;
         }
 
         private bool ParseCommandLine(string[] args)
@@ -516,6 +529,8 @@ namespace HttpGet
             }
 
             Console.ForegroundColor = saved;
+
+            this.errors++;
         }
 
         private static void WriteInfo(string format, params object[] args)
