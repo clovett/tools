@@ -9,7 +9,17 @@ namespace FidelityShowDetails
     {
         public static void ExpandAll()
         {
-            IntPtr window = SafeNativeMethods.FindWindow("Chrome_WidgetWin_1", "Fidelity Netbenefits - Transaction History");
+            IntPtr window = IntPtr.Zero;
+            foreach (var w in SafeNativeMethods.GetDesktopWindows())
+            {
+                var text = SafeNativeMethods.GetWindowText(w);
+                if (text.Contains("Fidelity Netbenefits"))
+                {
+                    window = w;
+                    break;
+                }
+            }
+            // IntPtr window = SafeNativeMethods.FindWindow("Chrome_WidgetWin_1", "Fidelity Netbenefits - Transaction History - Personal - Microsoft​ Edge");
             if (window != IntPtr.Zero)
             {
                 var cuia = new Interop.UIAutomationCore.CUIAutomation();
