@@ -14,6 +14,7 @@ namespace HttpGet
         bool deep;
         bool headers;
         string filename;
+        string root;
         Uri baseUrl;
         string rootDir;
         bool stats;
@@ -80,6 +81,12 @@ namespace HttpGet
                             if (i + 1 < args.Length)
                             {
                                 merge.Add(new Uri(args[++i]));
+                            }
+                            break;
+                        case "root":
+                            if (i + 1 < args.Length)
+                            {
+                                root = args[++i];
                             }
                             break;
                         case "s":
@@ -212,6 +219,19 @@ namespace HttpGet
                     { 
                         pending.Add(resolved);
                         local.Add(new Tuple<XElement, Uri>(link, resolved));
+                    }
+                    else if (fetched.ContainsKey(resolved))
+                    {
+                        var localFile = fetched[resolved];
+                        link.SetAttributeValue("href", MakeRelative(baseUri, resolved, localFile));
+                    }
+                    else
+                    {
+                        var localFile = ComputeLocalPath(resolved);
+                        if (!string.IsNullOrWhiteSpace(localFile))
+                        {
+                            link.SetAttributeValue("href", MakeRelative(baseUri, resolved, localFile));
+                        }
                     }
                 }
             }
@@ -352,6 +372,64 @@ namespace HttpGet
             }
         }
 
+        private string ComputeLocalPath(Uri uri)
+        {
+            bool external = (uri.Host != this.baseUrl.Host);
+            if (external)
+            {
+                return null;
+            }
+
+            var s = uri.ToString();
+            Uri simpleUri = uri;
+            if (!string.IsNullOrEmpty(uri.Query) && s.EndsWith(uri.Query))
+            {
+                simpleUri = new Uri(s.Substring(0, s.Length - uri.Query.Length));
+            }
+
+            Uri rel = this.baseUrl.MakeRelativeUri(simpleUri);
+            string relative = rel.ToString();
+            string result = "";
+
+            if (string.IsNullOrEmpty(relative))
+            {
+                result = "index.html";
+            }
+            else
+            {
+                string[] dirs = relative.Split('/', '\\');
+                for (int i = 0; i < dirs.Length; i++)
+                {
+                    string dir = dirs[i];
+                    if (dir == "..")
+                    {
+                        // skip relative paths...?
+                    }
+                    else if (i == dirs.Length - 1)
+                    {
+                        // the file
+                        string fname = string.IsNullOrEmpty(dir) ? "index.html" : dir;
+                        if (string.IsNullOrEmpty(Path.GetExtension(fname)))
+                        {
+                            // default to html file types.
+                            fname += ".htm";
+                        }
+                        result = Path.Combine(result, fname);
+                    }
+                    else
+                    {
+                        // a directory
+                        result = Path.Combine(result, dir);
+                        if (!Directory.Exists(result))
+                        {
+                            Directory.CreateDirectory(result);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
         private string Download(Uri uri)
         {
             string result = "";
@@ -402,49 +480,9 @@ namespace HttpGet
                 {
                     uri = resp.ResponseUri;
 
-                    var s = uri.ToString();
-                    Uri simpleUri = uri;
-                    if (!string.IsNullOrEmpty(uri.Query) && s.EndsWith(uri.Query))
-                    {
-                        simpleUri = new Uri(s.Substring(0, s.Length - uri.Query.Length));
-                    }
-
-                    Uri rel = baseuri.MakeRelativeUri(simpleUri);
-                    string relative = rel.ToString();
-
                     if (!external)
                     {
-                        if (string.IsNullOrEmpty(relative))
-                        {
-                            result = "index.html";
-                        }
-                        else
-                        {
-                            string[] dirs = relative.Split('/', '\\');
-                            for (int i = 0; i < dirs.Length; i++)
-                            {
-                                string dir = dirs[i];
-                                if (dir == "..")
-                                {
-                                    // skip relative paths...?
-                                }
-                                else if (i == dirs.Length - 1)
-                                {
-                                    // the file
-                                    string fname = string.IsNullOrEmpty(dir) ? "index.html" : dir;
-                                    result = Path.Combine(result, fname);
-                                }
-                                else
-                                {
-                                    // a directory
-                                    result = Path.Combine(result, dir);
-                                    if (!Directory.Exists(result))
-                                    {
-                                        Directory.CreateDirectory(result);
-                                    }
-                                }
-                            }
-                        }
+                        result = ComputeLocalPath(uri);
                     }
 
                     // in case it is an HTTP redirect.
@@ -502,12 +540,17 @@ namespace HttpGet
             {
                 return ""; // this file was not downloaded.
             }
+
+            string filename = System.IO.Path.GetFileName(localFile);
             if (resolved.Segments[resolved.Segments.Length - 1].EndsWith("/"))
             {
-                resolved = new Uri(resolved, System.IO.Path.GetFileName(localFile));
+                resolved = new Uri(resolved, filename);
+            }
+            else if (resolved.Segments[resolved.Segments.Length - 1] != filename)
+            {
+                resolved = new Uri(resolved, filename);
             }
             Uri relative = baseUri.MakeRelativeUri(resolved);
-            //return new Uri(rootDir).MakeRelativeUri(new Uri(filename, UriKind.RelativeOrAbsolute)).ToString();
             return relative.ToString();
         }
 
@@ -583,6 +626,7 @@ namespace HttpGet
             Console.WriteLine("   -filename  the name of the file to save http content into (default writes to stdout)");
             Console.WriteLine("   -headers   just print http headers to stdout");
             Console.WriteLine("   -merge uri with -all this merges content from another baseUri.");
+            Console.WriteLine("   -root      a root path to remove from all relative links.");
         }
     }
 }
