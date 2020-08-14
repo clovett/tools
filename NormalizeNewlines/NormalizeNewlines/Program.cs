@@ -11,6 +11,7 @@ namespace NormalizeNewlines
     {
         List<string> files = new List<string>();
         bool toWin = true;
+        bool recurse;
         Encoding encoding;
         byte[] utf8bom = new byte[] { 0xef, 0xbb, 0xbf };
 
@@ -38,13 +39,45 @@ namespace NormalizeNewlines
             Console.WriteLine("    /win   - normalize everything to windows style \r\n (this is the default)");
             Console.WriteLine("    /linux - normalize everything to linux style \n");
             Console.WriteLine("    /encoding name - use the specified encoding (default is whatever the file had)");
+            Console.WriteLine("    /r     - recurse down the folder hierarchy");
         }
 
         private void Run()
         {
-            foreach (string file in files)
+            foreach (string file in FindFiles())
             {
                 NormalizeFile(file);
+            }
+        }
+
+        private IEnumerable<string> FindFiles()
+        {
+            foreach (var path in this.files)
+            {
+                foreach (var file in FindFiles(Path.GetDirectoryName(path), Path.GetFileName(path)))
+                {
+                    yield return file;
+                }
+            }
+        }
+
+        private IEnumerable<string> FindFiles(string dir, string name)
+        {
+            // expand wild cards.
+            foreach (string file in Directory.GetFiles(dir, name))
+            {
+                yield return file;
+            }
+
+            if (recurse)
+            {
+                foreach (string child in Directory.GetDirectories(dir))
+                {
+                    foreach(var file in FindFiles(child, name))
+                    {
+                        yield return file;
+                    }
+                }
             }
         }
 
@@ -229,6 +262,10 @@ namespace NormalizeNewlines
                         case "linux":
                             toWin = false;
                             break;
+                        case "r":
+                        case "recurse":
+                            recurse = true;
+                            break;
                         case "encoding":
                             if (i + 1 < n)
                             {
@@ -251,11 +288,7 @@ namespace NormalizeNewlines
                     {
                         Uri resolved = new Uri(baseUri, arg);
                         string path = resolved.LocalPath;
-                        // expand wild cards.
-                        foreach (string file in Directory.GetFiles(Path.GetDirectoryName(path), Path.GetFileName(path)))
-                        {
-                            files.Add(file);
-                        }
+                        files.Add(path);
                     }
                     catch (Exception ex)
                     {

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30204.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SvgEditor", "SvgEditor\SvgEditor.csproj", "{BDB2A592-B352-4625-8206-25D07F7F56B0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BDB2A592-B352-4625-8206-25D07F7F56B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB2A592-B352-4625-8206-25D07F7F56B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB2A592-B352-4625-8206-25D07F7F56B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB2A592-B352-4625-8206-25D07F7F56B0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A165E02-D571-407C-A2BB-AC0EA7949CEE}
+	EndGlobalSection
+EndGlobal
