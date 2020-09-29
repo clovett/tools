@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Schema;
 
 namespace HttpGet
 {
@@ -155,7 +156,7 @@ namespace HttpGet
             if (all || deep)
             {
                 string fullPath = Path.GetFullPath(path);
-                string ext = Path.GetExtension(uri.ToString()).ToLowerInvariant();
+                string ext = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
                 if (ext == "htm" || ext == "html" || ext == "")
                 {
                     XDocument doc = null;
@@ -170,13 +171,21 @@ namespace HttpGet
                             sgmlReader.CaseFolding = Sgml.CaseFolding.ToLower;
                             sgmlReader.InputStream = reader;
 
-                            doc = XDocument.Load(sgmlReader);
-                            FetchCss(uri, doc);
-                            FetchAudio(uri, doc);
-                            FetchImages(uri, doc);
-                            FetchSvgImages(uri, doc);
-                            FetchScripts(uri, doc);
-                            FetchZipFiles(uri, doc);
+                            try
+                            {
+                                doc = XDocument.Load(sgmlReader);
+                                FetchCss(uri, doc);
+                                FetchAudio(uri, doc);
+                                FetchImages(uri, doc);
+                                FetchSvgImages(uri, doc);
+                                FetchScripts(uri, doc);
+                                FetchZipFiles(uri, doc);
+                            }
+                            catch (Exception)
+                            {
+                                WriteError("### Error processing HTML file: " + fullPath);
+                                return path;
+                            }
                         }
                     }
 
@@ -201,7 +210,7 @@ namespace HttpGet
             }
             return path;
         }
-        
+
         private void TraverseLinks(Uri baseUri, XDocument doc, HashSet<Uri> pending)
         {
             // ok, now check all <a> links in this page and if they are local download them, if they are remote
@@ -216,7 +225,7 @@ namespace HttpGet
                 {
                     Uri resolved = new Uri(baseUri, href);
                     if (resolved != baseUri && !pending.Contains(resolved))
-                    { 
+                    {
                         pending.Add(resolved);
                         local.Add(new Tuple<XElement, Uri>(link, resolved));
                     }
@@ -236,7 +245,7 @@ namespace HttpGet
                 }
             }
 
-            foreach(var pair in local)
+            foreach (var pair in local)
             {
                 var link = pair.Item1;
                 var uri = pair.Item2;
@@ -359,7 +368,7 @@ namespace HttpGet
                 if (!string.IsNullOrWhiteSpace(href))
                 {
                     Uri resolved = new Uri(baseUri, href);
-                    string ext = System.IO.Path.GetExtension(resolved.ToString());
+                    string ext = System.IO.Path.GetExtension(resolved.LocalPath);
                     if (string.Compare(ext, ".zip", StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         string local = Download(resolved);
@@ -374,19 +383,13 @@ namespace HttpGet
 
         private string ComputeLocalPath(Uri uri)
         {
-            bool external = (uri.Host != this.baseUrl.Host);
+            bool external = IsExternal(uri);
             if (external)
             {
                 return null;
             }
 
-            var s = uri.ToString();
-            Uri simpleUri = uri;
-            if (!string.IsNullOrEmpty(uri.Query) && s.EndsWith(uri.Query))
-            {
-                simpleUri = new Uri(s.Substring(0, s.Length - uri.Query.Length));
-            }
-
+            Uri simpleUri = new Uri(uri.Scheme + "://" + uri.Host + uri.AbsolutePath);
             Uri rel = this.baseUrl.MakeRelativeUri(simpleUri);
             string relative = rel.ToString();
             string result = "";
@@ -403,9 +406,10 @@ namespace HttpGet
                     string dir = dirs[i];
                     if (dir == "..")
                     {
-                        // skip relative paths...?
+                        dir = "parent";
                     }
-                    else if (i == dirs.Length - 1)
+
+                    if (i == dirs.Length - 1)
                     {
                         // the file
                         string fname = string.IsNullOrEmpty(dir) ? "index.html" : dir;
@@ -430,6 +434,22 @@ namespace HttpGet
             return result;
         }
 
+        private bool IsExternal(Uri uri)
+        {
+            if (uri.Host != this.baseUrl.Host)
+            {
+                return true;
+            }
+
+            bool result = uri.AbsolutePath.StartsWith(this.baseUrl.AbsolutePath);
+            if (!result)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private string Download(Uri uri)
         {
             string result = "";
@@ -440,7 +460,7 @@ namespace HttpGet
                 return fetched[uri];
             }
 
-            bool external = (uri.Host != this.baseUrl.Host);
+            bool external = IsExternal(uri);
             Uri original = uri;
 
             Uri baseuri = this.baseUrl;
@@ -479,7 +499,7 @@ namespace HttpGet
                 using (WebResponse resp = req.GetResponse())
                 {
                     uri = resp.ResponseUri;
-
+                    external = IsExternal(uri); // may have been redirected somewhere else!
                     if (!external)
                     {
                         result = ComputeLocalPath(uri);
@@ -507,16 +527,27 @@ namespace HttpGet
                     {
                         System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
                         watch.Start();
-                        long length = CopyToFile(stream, result);
-                        watch.Stop();
-                        if (stats)
+                        long length = 0;
+                        try
                         {
-                            double bps = (double)length / watch.Elapsed.TotalSeconds;
-                            WriteInfo("Download speed: {0} bytes per second", Math.Round(bps, 3));
+                            length = CopyToFile(stream, result);
                         }
-                        if (stats)
+                        catch (Exception ex)
                         {
-                            WriteInfo("Saved local file: " + Path.GetFullPath(result));
+                            WriteError("### error writing new file {0}: {1}", result, ex.Message);
+                        }
+                        watch.Stop();
+                        if (length > 0)
+                        {
+                            if (stats)
+                            {
+                                double bps = (double)length / watch.Elapsed.TotalSeconds;
+                                WriteInfo("Download speed: {0} bytes per second", Math.Round(bps, 3));
+                            }
+                            if (stats)
+                            {
+                                WriteInfo("Saved local file: " + Path.GetFullPath(result));
+                            }
                         }
                     }
                 }
