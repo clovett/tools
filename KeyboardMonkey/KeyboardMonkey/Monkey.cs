@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media.Converters;
 using System.Windows.Threading;
 using Walkabout.Utilities;
 
@@ -20,6 +21,7 @@ namespace KeyboardMonkey
         bool stopped;
         IntPtr active;
         int delay;
+        bool useSendMessage;
 
         public event EventHandler Progress;
 
@@ -27,10 +29,11 @@ namespace KeyboardMonkey
 
         public int Maximum { get { return script.Count; } }
 
-        public Monkey(List<KeyboardInput> script, int delay = 30)
+        public Monkey(List<KeyboardInput> script, int delay = 30, bool useSendMessage = false)
         {
             this.delay = delay;
             this.script = script;
+            this.useSendMessage = useSendMessage;
         }
 
         internal void Start()
@@ -46,15 +49,22 @@ namespace KeyboardMonkey
             if (scriptPosition <= script.Count)
             {
                 KeyboardInput input = script[scriptPosition++];
-                IntPtr hwnd = SafeNativeMethods.GetForegroundWindow();
-                if (hwnd != input.hwnd && hwnd != active)
+                if (this.useSendMessage)
                 {
-                    Debug.WriteLine("Current Window {0}, Activating window {1}", hwnd.ToString("x"), input.hwnd.ToString("x"));
-                    SafeNativeMethods.SetForegroundWindow(input.hwnd);
-                    System.Threading.Thread.Sleep(1000);
-                    active = SafeNativeMethods.GetForegroundWindow();
+                    Input.SendKeyboardMessage(input.hwnd, KeyInterop.KeyFromVirtualKey(input.vkCode), input.pressed);
                 }
-                Input.SendKeyboardInput(KeyInterop.KeyFromVirtualKey(input.vkCode), input.pressed);
+                else
+                {
+                    IntPtr hwnd = SafeNativeMethods.GetForegroundWindow();
+                    if (hwnd != input.hwnd && hwnd != active)
+                    {
+                        Debug.WriteLine("Current Window {0}, Activating window {1}", hwnd.ToString("x"), input.hwnd.ToString("x"));
+                        SafeNativeMethods.SetForegroundWindow(input.hwnd);
+                        System.Threading.Thread.Sleep(1000);
+                        active = SafeNativeMethods.GetForegroundWindow();
+                    }
+                    Input.SendKeyboardInput(KeyInterop.KeyFromVirtualKey(input.vkCode), input.pressed);
+                }
 
                 if (scriptPosition < script.Count)
                 {

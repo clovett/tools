@@ -123,15 +123,15 @@ namespace KeyboardMonkey
                 return;
             }
 
-            // todo: play the script
             string script = TextBoxScript.Text;
 
             ButtonPlay.Tag = "started";
             ButtonPlay.Content = "Stop";
 
+            bool useSendMessage = this.ComboSendType.SelectedIndex == 1;
             int delay = 30;
             int.TryParse(TextBoxSpeed.Text, out delay);
-            this.monkey = new Monkey(this.script, delay);
+            this.monkey = new Monkey(this.script, delay, useSendMessage);
             this.monkey.Progress += OnMonkeyProgress;
             this.monkey.Start();
         }

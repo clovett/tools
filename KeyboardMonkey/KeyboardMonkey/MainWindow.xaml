@@ -32,7 +32,11 @@
 
         <StackPanel Orientation="Horizontal" Grid.Row="10" HorizontalAlignment="Right" >
             <Button x:Name="ButtonRecord" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnRecordClick" Margin="0,0,10,0">Record</Button>
-            <Button x:Name="ButtonPlay" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnGoClick" Margin="0,0,10,0">Play</Button>
+            <Button x:Name="ButtonPlay" Grid.Row="10" MinWidth="80" MinHeight="30" Click="OnGoClick" Margin="0,0,0,0">Play</Button>
+            <ComboBox x:Name="ComboSendType" Width="20">
+                <ComboBoxItem>SendInput</ComboBoxItem>
+                <ComboBoxItem>SendMessage</ComboBoxItem>
+            </ComboBox>
         </StackPanel>
         <ProgressBar x:Name="Progress" Grid.Row="11" Height="4" Maximum="10" Value="0" Margin="0,10,0,0" Visibility="Collapsed"/>
     </Grid>
