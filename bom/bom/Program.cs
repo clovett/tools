@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace LovettSoftware.Tools
 {
@@ -74,19 +73,30 @@ namespace LovettSoftware.Tools
             Program p = new Program();
             if (!p.ParseCommandLine(args))
             {
-                PrintUsage();
+                p.PrintUsage();
                 return;
             }
             p.Run();
         }
 
-        private static void PrintUsage()
+        private void PrintUsage()
         {
             Console.WriteLine("Usage: bom [options] files...");
             Console.WriteLine("Edit byte order mark at beginning of the file (without re-encoding the file)");
-            Console.WriteLine("-a encoding   -- add byte order mark for given encoding (utf8, utf16, utf32)");
+            Console.WriteLine("-a encoding   -- add byte order mark for given encoding ({0})", string.Join(", ", GetEncodings()));
             Console.WriteLine("-e big|little -- for utf16 and utf32 bom");
             Console.WriteLine("-r            -- remove byte order mark");
+        }
+
+        private HashSet<string> GetEncodings()
+        {
+            HashSet<string> expected = new HashSet<string>();
+            for (int j = 0; j < boms.Count; j++)
+            {
+                var b = boms[j];
+                expected.Add(b.name);
+            }
+            return expected;
         }
 
         private void Run()
@@ -139,7 +149,8 @@ namespace LovettSoftware.Tools
                                     for (int j = 0; j < boms.Count; j++)
                                     {
                                         var b = boms[j];
-                                        if (string.Compare(bom, b.name) == 0 && requested == b.type)
+                                        // default to little endian if nothing requested.
+                                        if (string.Compare(bom, b.name) == 0 && (requested == b.type || (b.type == BomType.LittleEndian && requested == BomType.None)))
                                         {
                                             output.Write(b.bom, 0, b.bom.Length);
                                             string addMessage = "Adding " + b.ToString();
@@ -213,16 +224,8 @@ namespace LovettSoftware.Tools
                             {
                                 bool found = false;
                                 bom = args[++i].ToLowerInvariant();
-                                HashSet<string> expected = new HashSet<string>();
-                                for (int j = 0; j < boms.Count; j++)
-                                {
-                                    var b = boms[j];
-                                    expected.Add(b.name);
-                                    if (string.Compare(bom, b.name) == 0)
-                                    {
-                                        found = true;
-                                    }
-                                }
+                                HashSet<string> expected = GetEncodings();
+                                found = expected.Where(e => string.Compare(bom, e) == 0).Any();
                                 if (!found)
                                 { 
                                     Console.WriteLine("Error: expected " + string.Join(", ", expected) + " after -a");
