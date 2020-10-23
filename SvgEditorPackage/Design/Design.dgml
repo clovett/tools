@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DirectedGraph xmlns="http://schemas.microsoft.com/vs/2009/dgml">
+  <Nodes>
+    <Node Id="(@1 @11 @12 Member=(Name=.ctor OverloadingParameters=[(@6 @13 Type=IServiceProvider),(@31 Namespace=Microsoft.VisualStudio.TextManager.Interop Type=IVsTextLines),(@7 Namespace=Microsoft.VisualStudio.XmlEditor Type=XmlStore),(@6 @13 Type=String)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsConstructor="True" CodeSchemaProperty_IsPublic="True" CodeSchemaProperty_IsSpecialName="True" IsDragSource="True" Label="SvgDocument" />
+    <Node Id="(@1 @11 Type=SvgWindowPane Member=(Name=.ctor OverloadingParameters=[(@1 @11 Type=SvgEditorPackage),(@1 @11 @12)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsConstructor="True" CodeSchemaProperty_IsPublic="True" CodeSchemaProperty_IsSpecialName="True" IsDragSource="True" Label="SvgWindowPane" />
+    <Node Id="(@1 @2 @5 Member=(Name=OnChange @24))" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnChange" />
+    <Node Id="(@1 @2 @5 Member=(Name=OnDataContextChanged OverloadingParameters=[(@6 @13 Type=Object),(@10 Namespace=System.Windows Type=DependencyPropertyChangedEventArgs)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnDataContextChanged" />
+    <Node Id="(@1 @2 @5 Member=(Name=RemoveElement OverloadingParameters=[(@1 @2 @9)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="RemoveElement" />
+    <Node Id="(@1 @2 @9 Member=(Name=GetSvgDocument OverloadingParameters=[(@10 Namespace=System.Windows Type=DependencyObject)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="GetSvgDocument" />
+    <Node Id="(@1 @2 @9 Member=(Name=Resize OverloadingParameters=[(@10 Namespace=System.Windows Type=Rect)]))" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="Resize" />
+    <Node Id="9819412f-d36f-4d27-9b62-d326521825a5" IsDragSource="True" Label="XmlEditor" />
+    <Node Id="@14" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="OnLoadCompleted" />
+    <Node Id="@16" Category="CodeSchema_Method" CodeSchemaProperty_IsProtected="True" IsDragSource="True" Label="OnLostMouseCapture" />
+    <Node Id="@17" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="CommitEdits" />
+    <Node Id="@18" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="Insert" />
+    <Node Id="@20" Category="CodeSchema_Method" CodeSchemaProperty_IsInternal="True" IsDragSource="True" Label="BuildTree" />
+    <Node Id="@21" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="CreateVisual" />
+    <Node Id="@22" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="FindElement" />
+    <Node Id="@23" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="DispatchUpdates" />
+    <Node Id="@25" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="OnAdd" />
+    <Node Id="@26" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnNameChange" />
+    <Node Id="@27" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnRemove" />
+    <Node Id="@28" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnBufferReloaded" />
+    <Node Id="@29" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnDocReloaded" />
+    <Node Id="@30" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnEditingScopeCompleted" />
+    <Node Id="@32" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="&lt;DispatchUpdates&gt;b__0" />
+    <Node Id="@33" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="Bind" />
+    <Node Id="@34" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnReloaded" />
+    <Node Id="@35" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="OnResize" />
+    <Node Id="@36" Category="CodeSchema_Method" CodeSchemaProperty_IsPrivate="True" IsDragSource="True" Label="SizeToBounds" />
+    <Node Id="@37" Category="CodeSchema_Method" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="Update" />
+    <Node Id="@4" Category="CodeSchema_Class" CodeSchemaProperty_IsPublic="True" IsDragSource="True" Label="SvgResizer" />
+    <Node Id="@8" Category="CodeSchema_Method" CodeSchemaProperty_IsInternal="True" IsDragSource="True" Label="MergeChanges" />
+    <Node Id="XDocument" IsDragSource="True" Label="XDocument" />
+    <Node Id="XmlEditor" IsDragSource="True" Label="XmlEditor" />
+  </Nodes>
+  <Links>
+    <Link Source="(@1 @11 @12 Member=(Name=.ctor OverloadingParameters=[(@6 @13 Type=IServiceProvider),(@31 Namespace=Microsoft.VisualStudio.TextManager.Interop Type=IVsTextLines),(@7 Namespace=Microsoft.VisualStudio.XmlEditor Type=XmlStore),(@6 @13 Type=String)]))" Target="@14" Category="CodeSchema_Calls" />
+    <Link Source="(@1 @11 Type=SvgWindowPane Member=(Name=.ctor OverloadingParameters=[(@1 @11 Type=SvgEditorPackage),(@1 @11 @12)]))" Target="@30" Category="CodeSchema_FunctionPointer" />
+    <Link Source="(@1 @2 @5 Member=(Name=OnDataContextChanged OverloadingParameters=[(@6 @13 Type=Object),(@10 Namespace=System.Windows Type=DependencyPropertyChangedEventArgs)]))" Target="@33" Category="CodeSchema_Calls" />
+    <Link Source="9819412f-d36f-4d27-9b62-d326521825a5" Target="@30" />
+    <Link Source="@14" Target="@28" Category="CodeSchema_FunctionPointer" />
+    <Link Source="@14" Target="@34" Category="CodeSchema_Calls" />
+    <Link Source="@16" Target="@17" Category="CodeSchema_Calls" />
+    <Link Source="@17" Target="(@1 @2 @9 Member=(Name=GetSvgDocument OverloadingParameters=[(@10 Namespace=System.Windows Type=DependencyObject)]))" Category="CodeSchema_Calls" />
+    <Link Source="@17" Target="@37" Category="CodeSchema_Calls" />
+    <Link Source="@18" Target="@22" Category="CodeSchema_Calls" />
+    <Link Source="@20" Target="@21" Category="CodeSchema_Calls" />
+    <Link Source="@23" Target="@32" Category="CodeSchema_FunctionPointer" />
+    <Link Source="@25" Target="@18" Category="CodeSchema_Calls" />
+    <Link Source="@25" Target="@21" Category="CodeSchema_Calls" />
+    <Link Source="@25" Target="@22" Category="CodeSchema_Calls" />
+    <Link Source="@26" Target="@25" Category="CodeSchema_Calls" />
+    <Link Source="@26" Target="@27" Category="CodeSchema_Calls" />
+    <Link Source="@27" Target="(@1 @2 @5 Member=(Name=RemoveElement OverloadingParameters=[(@1 @2 @9)]))" Category="CodeSchema_Calls" />
+    <Link Source="@27" Target="@22" Category="CodeSchema_Calls" />
+    <Link Source="@28" Target="@34" Category="CodeSchema_Calls" />
+    <Link Source="@29" Target="@33" Category="CodeSchema_Calls" />
+    <Link Source="@30" Target="@23" Category="CodeSchema_Calls" />
+    <Link Source="@32" Target="@8" Category="CodeSchema_Calls" />
+    <Link Source="@33" Target="@20" Category="CodeSchema_Calls" />
+    <Link Source="@34" Target="@29" />
+    <Link Source="@35" Target="(@1 @2 @9 Member=(Name=Resize OverloadingParameters=[(@10 Namespace=System.Windows Type=Rect)]))" Category="CodeSchema_Calls" />
+    <Link Source="@35" Target="@36" Category="CodeSchema_Calls" />
+    <Link Source="@37" Target="XDocument" />
+    <Link Source="@4" Target="@16" Category="Contains" />
+    <Link Source="@4" Target="@35" Category="Contains" />
+    <Link Source="@4" Target="@36" Category="Contains" />
+    <Link Source="@8" Target="(@1 @2 @5 Member=(Name=OnChange @24))" Category="CodeSchema_Calls" />
+    <Link Source="@8" Target="@25" Category="CodeSchema_Calls" />
+    <Link Source="@8" Target="@26" Category="CodeSchema_Calls" />
+    <Link Source="@8" Target="@27" Category="CodeSchema_Calls" />
+    <Link Source="XDocument" Target="XmlEditor" />
+  </Links>
+  <Categories>
+    <Category Id="CodeSchema_Block" Label="Block" BasedOn="CodeSchema_Statement" CanBeDataDriven="True" DefaultAction="Microsoft.Contains" IsProviderRoot="False" NavigationActionLabel="Blocks" />
+    <Category Id="CodeSchema_Calls" Label="Calls" CanBeDataDriven="True" CanLinkedNodesBeDataDriven="True" IncomingActionLabel="Called By" OutgoingActionLabel="Calls" />
+    <Category Id="CodeSchema_Class" Label="Class" BasedOn="CodeSchema_Type" CanBeDataDriven="True" DefaultAction="Node:Both:CodeSchema_Member" Icon="CodeSchema_Class" IsProviderRoot="False" NavigationActionLabel="Classes" />
+    <Category Id="CodeSchema_FunctionPointer" Label="Function Pointer" CanBeDataDriven="True" CanLinkedNodesBeDataDriven="True" IncomingActionLabel="Function Pointers" OutgoingActionLabel="Function Pointers" />
+    <Category Id="CodeSchema_Member" Label="Member" BasedOn="CodeSchema_Block" CanBeDataDriven="True" DefaultAction="Microsoft.Contains" Icon="CodeSchema_Field" IsProviderRoot="False" NavigationActionLabel="Members" />
+    <Category Id="CodeSchema_Method" Label="Method" BasedOn="CodeSchema_Member" CanBeDataDriven="True" DefaultAction="Link:Forward:CodeSchema_Calls" Icon="CodeSchema_Method" IsProviderRoot="False" NavigationActionLabel="Methods" />
+    <Category Id="CodeSchema_Statement" Label="Statement" CanBeDataDriven="True" DefaultAction="Microsoft.Contains" IsProviderRoot="False" NavigationActionLabel="Statement" />
+    <Category Id="CodeSchema_Type" Label="Type" BasedOn="CodeSchema_Block" CanBeDataDriven="True" DefaultAction="Node:Both:CodeSchema_Member" Icon="CodeSchema_Class" IsProviderRoot="False" NavigationActionLabel="Types" />
+    <Category Id="Contains" Label="Contains" CanBeDataDriven="False" CanLinkedNodesBeDataDriven="True" IncomingActionLabel="Contained By" IsContainment="True" OutgoingActionLabel="Contains" />
+  </Categories>
+  <Properties>
+    <Property Id="CanBeDataDriven" Label="CanBeDataDriven" Description="CanBeDataDriven" DataType="System.Boolean" />
+    <Property Id="CanLinkedNodesBeDataDriven" Label="CanLinkedNodesBeDataDriven" Description="CanLinkedNodesBeDataDriven" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsConstructor" Label="IsConstructor" Description="IsConstructor" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsInternal" Label="IsInternal" Description="IsInternal" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsPrivate" Label="IsPrivate" Description="IsPrivate" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsProtected" Label="IsProtected" Description="IsProtected" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsPublic" Label="IsPublic" Description="IsPublic" DataType="System.Boolean" />
+    <Property Id="CodeSchemaProperty_IsSpecialName" Label="IsSpecialName" Description="IsSpecialName" DataType="System.Boolean" />
+    <Property Id="DefaultAction" Label="DefaultAction" Description="DefaultAction" DataType="System.String" />
+    <Property Id="Icon" Label="Icon" Description="Icon" DataType="System.String" />
+    <Property Id="IncomingActionLabel" Label="IncomingActionLabel" Description="IncomingActionLabel" DataType="System.String" />
+    <Property Id="IsContainment" DataType="System.Boolean" />
+    <Property Id="IsDragSource" Label="IsDragSource" Description="IsDragSource" DataType="System.Boolean" />
+    <Property Id="IsProviderRoot" Label="IsProviderRoot" Description="IsProviderRoot" DataType="System.Boolean" />
+    <Property Id="Label" Label="Label" Description="Displayable label of an Annotatable object" DataType="System.String" />
+    <Property Id="NavigationActionLabel" Label="NavigationActionLabel" Description="NavigationActionLabel" DataType="System.String" />
+    <Property Id="OutgoingActionLabel" Label="OutgoingActionLabel" Description="OutgoingActionLabel" DataType="System.String" />
+  </Properties>
+  <QualifiedNames>
+    <Name Id="Assembly" Label="Assembly" ValueType="Uri" />
+    <Name Id="GenericArguments" Label="Generic Arguments" ValueType="Microsoft.VisualStudio.Progression.GraphModel.QualifiedIdentifierArrayCollection" />
+    <Name Id="GenericParameterCount" Label="Generic Parameter Count" ValueType="System.String" />
+    <Name Id="Member" Label="Member" ValueType="System.Object" />
+    <Name Id="Name" Label="Name" ValueType="System.String" />
+    <Name Id="Namespace" Label="Namespace" ValueType="System.String" />
+    <Name Id="OverloadingParameters" Label="Parameter" ValueType="Microsoft.VisualStudio.Progression.GraphModel.QualifiedIdentifierArrayCollection" Formatter="NameValueNoEscape" />
+    <Name Id="ParentType" Label="Parent Type" ValueType="System.Object" />
+    <Name Id="Type" Label="Type" ValueType="System.Object" />
+  </QualifiedNames>
+  <IdentifierAliases>
+    <Alias n="1" Uri="Assembly=$(ea5d500f-7c8d-427d-af9f-494856790697.OutputPathUri)" />
+    <Alias n="2" Id="Namespace=Microsoft.SvgEditorPackage.View" />
+    <Alias n="3" Id="Type=SvgResizer" />
+    <Alias n="4" Id="(@1 @2 @3)" />
+    <Alias n="5" Id="Type=SvgPanel" />
+    <Alias n="6" Uri="Assembly=$(FxReferenceAssembliesUri)/.NETFramework/v4.0/mscorlib.dll" />
+    <Alias n="7" Uri="Assembly=$(SystemRootUri)/Microsoft.NET/assembly/GAC_MSIL/Microsoft.VisualStudio.XmlEditor/v4.0_10.0.0.0__b03f5f7f11d50a3a/Microsoft.VisualStudio.XmlEditor.dll" />
+    <Alias n="8" Id="(@1 @2 @5 Member=(Name=MergeChanges OverloadingParameters=[(@6 Namespace=System.Collections.Generic Type=(Name=IEnumerable GenericParameterCount=1 GenericArguments=[(@7 Namespace=Microsoft.VisualStudio.XmlEditor Type=XmlModelChange)]))]))" />
+    <Alias n="9" Id="Type=SvgElement" />
+    <Alias n="10" Uri="Assembly=$(FxReferenceAssembliesUri)/.NETFramework/v4.0/WindowsBase.dll" />
+    <Alias n="11" Id="Namespace=Microsoft.SvgEditorPackage" />
+    <Alias n="12" Id="Type=SvgDocument" />
+    <Alias n="13" Id="Namespace=System" />
+    <Alias n="14" Id="(@1 @11 @12 Member=(Name=OnLoadCompleted OverloadingParameters=[(@6 @13 Type=Int32)]))" />
+    <Alias n="15" Uri="Assembly=$(FxReferenceAssembliesUri)/.NETFramework/v4.0/PresentationCore.dll" />
+    <Alias n="16" Id="(@1 @2 @3 Member=(Name=OnLostMouseCapture OverloadingParameters=[(@15 Namespace=System.Windows.Input Type=MouseEventArgs)]))" />
+    <Alias n="17" Id="(@1 @2 @9 Member=(Name=CommitEdits OverloadingParameters=[(@6 @13 Type=String)]))" />
+    <Alias n="18" Id="(@1 @2 @5 Member=(Name=Insert OverloadingParameters=[(@1 @2 @9)]))" />
+    <Alias n="19" Uri="Assembly=$(FxReferenceAssembliesUri)/.NETFramework/v4.0/System.Xml.Linq.dll" />
+    <Alias n="20" Id="(@1 @2 @5 Member=(Name=BuildTree OverloadingParameters=[(@19 Namespace=System.Xml.Linq Type=XDocument)]))" />
+    <Alias n="21" Id="(@1 @2 @5 Member=(Name=CreateVisual OverloadingParameters=[(@19 Namespace=System.Xml.Linq Type=XElement)]))" />
+    <Alias n="22" Id="(@1 @2 @5 Member=(Name=FindElement OverloadingParameters=[(@19 Namespace=System.Xml.Linq Type=XElement)]))" />
+    <Alias n="23" Id="(@1 @11 Type=SvgWindowPane Member=(Name=DispatchUpdates OverloadingParameters=[(@7 Namespace=Microsoft.VisualStudio.XmlEditor Type=XmlEditingScopeEventArgs)]))" />
+    <Alias n="24" Id="OverloadingParameters=[(@19 Namespace=System.Xml.Linq Type=XObject)]" />
+    <Alias n="25" Id="(@1 @2 @5 Member=(Name=OnAdd @24))" />
+    <Alias n="26" Id="(@1 @2 @5 Member=(Name=OnNameChange @24))" />
+    <Alias n="27" Id="(@1 @2 @5 Member=(Name=OnRemove @24))" />
+    <Alias n="28" Id="(@1 @11 @12 Member=(Name=OnBufferReloaded OverloadingParameters=[(@6 @13 Type=Object),(@6 @13 Type=EventArgs)]))" />
+    <Alias n="29" Id="(@1 @2 @5 Member=(Name=OnDocReloaded OverloadingParameters=[(@6 @13 Type=Object),(@6 @13 Type=EventArgs)]))" />
+    <Alias n="30" Id="(@1 @11 Type=SvgWindowPane Member=(Name=OnEditingScopeCompleted OverloadingParameters=[(@6 @13 Type=Object),(@7 Namespace=Microsoft.VisualStudio.XmlEditor Type=XmlEditingScopeEventArgs)]))" />
+    <Alias n="31" Uri="Assembly=$(ProgramFilesUri)/Microsoft Visual Studio 2010 SDK/VisualStudioIntegration/Common/Assemblies/v2.0/Microsoft.VisualStudio.TextManager.Interop.dll" />
+    <Alias n="32" Id="(@1 @11 Type=(Name=&lt;&gt;c__DisplayClass1 ParentType=SvgWindowPane) Member=&lt;DispatchUpdates&gt;b__0)" />
+    <Alias n="33" Id="(@1 @2 @5 Member=Bind)" />
+    <Alias n="34" Id="(@1 @11 @12 Member=OnReloaded)" />
+    <Alias n="35" Id="(@1 @2 @3 Member=OnResize)" />
+    <Alias n="36" Id="(@1 @2 @3 Member=SizeToBounds)" />
+    <Alias n="37" Id="(@1 @2 @9 Member=Update)" />
+  </IdentifierAliases>
+  <Paths>
+    <Path Id="ea5d500f-7c8d-427d-af9f-494856790697.OutputPath" Value="C:\Users\Chris\Documents\Visual Studio 2010\Projects\SvgEditorPackage\bin\Release\SvgEditorPackage.dll" />
+    <Path Id="ea5d500f-7c8d-427d-af9f-494856790697.OutputPathUri" Value="file:///C:/Users/Chris/Documents/Visual Studio 2010/Projects/SvgEditorPackage/bin/Release/SvgEditorPackage.dll" />
+    <Path Id="FxReferenceAssemblies" Value="C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework" />
+    <Path Id="FxReferenceAssembliesUri" Value="file:///C:/Program Files (x86)/Reference Assemblies/Microsoft/Framework" />
+    <Path Id="ProgramFilesUri" Value="file:///C:/Program Files (x86)" />
+    <Path Id="SystemRoot" Value="C:\Windows" />
+    <Path Id="SystemRootUri" Value="file:///C:/Windows" />
+  </Paths>
+</DirectedGraph>
