@@ -9,6 +9,7 @@ namespace Walkabout.Utilities
     
     using System;
     using HookManager;
+    using System.Diagnostics;
 
     /// <summary>
     /// Flags for Input.SendMouseInput, indicate whether movement took place,
@@ -256,6 +257,56 @@ namespace Walkabout.Utilities
             Input.SendKeyboardInput(Key.LeftShift, false);
         }
 
+        private static long MakeLong(ushort lo, ushort hi)
+        {
+            return (long)lo | (long)hi << 16;
+        }
+
+
+        /// <summary>
+        /// Send WM_KEYDOWN or WM_KEYUP messages to the given window.
+        /// </summary>
+        /// <param name="hwnd">The window to send to</param>
+        /// <param name="key">indicates the key pressed or released. Can be one of the constants defined in the Key enum</param>
+        /// <param name="press">true to inject a key press, false to inject a key release</param>
+        internal static void SendKeyboardMessage(IntPtr hwnd, Key key, bool pressed)
+        {
+            Debug.WriteLine("Sending key {0} with pressed={1}", key, pressed);
+            int virtualKey = KeyInterop.VirtualKeyFromKey(key);
+            int scanCode = Win32.MapVirtualKey(virtualKey, 0);
+            ushort flags = pressed ? (ushort)0 : (ushort)(Win32.KF_UP | Win32.KF_REPEAT);
+            if (IsExtendedKey(key))
+            {
+                flags |= Win32.KF_EXTENDED;
+            }
+            ushort repeat = (ushort)1;
+            long l = MakeLong(repeat, (ushort)(scanCode | flags));
+            UIntPtr lparam = (UIntPtr)l;
+            // todo: bit 30: The previous key state. The value is always 1 for a WM_KEYUP message.
+            UIntPtr wparam = (UIntPtr)virtualKey;
+            if (pressed)
+            {
+                Win32.SendMessage(Win32.HWND.Cast(hwnd), Win32.WM_KEYDOWN, wparam, lparam);
+                // since the window likely doesn't have the focus, we also need to send WM_CHAR.
+                Win32.MSG msg = new Win32.MSG()
+                {
+                    hwnd = hwnd,
+                    lParam = (ulong)lparam,
+                    wParam = (ulong)wparam,
+                    time = (uint)Environment.TickCount,
+                    message = Win32.WM_KEYDOWN
+                };
+
+                if (!Win32.TranslateMessage(ref msg))
+                {
+                    Debug.WriteLine("no translate");
+                }
+            }
+            else
+            {
+                Win32.SendMessage(Win32.HWND.Cast(hwnd), Win32.WM_KEYUP, wparam, lparam);
+            }
+        }
 
         /// <summary>
         /// Inject keyboard input into the system
@@ -1088,6 +1139,5 @@ namespace Walkabout.Utilities
             }
             return "";
         }
-
     }
 }

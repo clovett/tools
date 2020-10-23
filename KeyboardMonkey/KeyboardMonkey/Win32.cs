@@ -30,24 +30,22 @@ namespace Walkabout.Utilities
 
         public const int MOUSEEVENTF_VIRTUALDESK = 0x4000;
 
-        public const int EM_SETSEL               = 0x00B1;
-        public const int EM_GETLINECOUNT         = 0x00BA;
-        public const int EM_LINEFROMCHAR         = 0x00C9;
+        public const int EM_SETSEL          = 0x00B1;
+        public const int EM_GETLINECOUNT    = 0x00BA;
+        public const int EM_LINEFROMCHAR    = 0x00C9;
             
         // GetSystemMetrics
-        public const int SM_CXMAXTRACK = 59;
-        public const int SM_CYMAXTRACK = 60;
-        public const int SM_XVIRTUALSCREEN = 76;
-        public const int SM_YVIRTUALSCREEN = 77;
+        public const int SM_CXMAXTRACK      = 59;
+        public const int SM_CYMAXTRACK      = 60;
+        public const int SM_XVIRTUALSCREEN  = 76;
+        public const int SM_YVIRTUALSCREEN  = 77;
         public const int SM_CXVIRTUALSCREEN = 78;
         public const int SM_CYVIRTUALSCREEN = 79;
-        public const int SM_SWAPBUTTON = 23;
+        public const int SM_SWAPBUTTON      = 23;
 
         // Window style information
-        //public const int GWL_HINSTANCE  = -6;
-        //public const int GWL_ID         = -12;
-        public const int GWL_STYLE      = -16;
-        public const int GWL_EXSTYLE    = -20;
+        public const int GWL_STYLE          = -16;
+        public const int GWL_EXSTYLE        = -20;
 
         public const int WS_VSCROLL         =  0x00200000;
         public const int WS_HSCROLL         =  0x00100000;
@@ -55,9 +53,17 @@ namespace Walkabout.Utilities
         public const int ES_AUTOVSCROLL     =  0x0040;
         public const int ES_AUTOHSCROLL     =  0x0080;
 
-        public const int INPUT_MOUSE             = 0;
-        public const int INPUT_KEYBOARD          = 1;
-            
+        public const int INPUT_MOUSE        = 0;
+        public const int INPUT_KEYBOARD     = 1;
+
+        public const int WM_KEYDOWN         = 0x0100;
+        public const int WM_KEYUP           = 0x0101;
+        public const int WM_CHAR            = 0x0102;
+
+        public const ushort KF_REPEAT          = 0x4000;
+        public const ushort KF_UP              = 0x8000;
+        public const ushort KF_EXTENDED        = 0x0100;
+
         [StructLayout(LayoutKind.Sequential)]
         public struct INPUT {
             public int          type;
@@ -95,6 +101,16 @@ namespace Walkabout.Utilities
             public int    time;
             public IntPtr dwExtraInfo;
         };
+
+        public struct MSG
+        {
+            public IntPtr hwnd;
+            public uint message;
+            public ulong wParam;
+            public ulong lParam;
+            public uint time;
+            public POINT pt;
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         public struct HWND {
@@ -161,11 +177,14 @@ namespace Walkabout.Utilities
         internal static extern int SetKeyboardState(byte[] keystate);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(Win32.HWND hWnd, int nMsg, IntPtr wParam, IntPtr lParam);
+        public static extern IntPtr SendMessage(Win32.HWND hWnd, int nMsg, UIntPtr wParam, UIntPtr lParam);
 
         // Overload for WM_GETTEXT
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(Win32.HWND hWnd, int nMsg, IntPtr wParam, System.Text.StringBuilder lParam);
+        public static extern IntPtr SendMessage(Win32.HWND hWnd, int nMsg, UIntPtr wParam, System.Text.StringBuilder lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool TranslateMessage(ref MSG msg);
 
         [DllImport("user32.dll")]
         public static extern int GetSystemMetrics(int metric);

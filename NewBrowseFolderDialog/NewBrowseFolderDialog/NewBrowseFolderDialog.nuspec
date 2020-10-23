@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>LovettSoftware.NewBrowseFolderDialog</id>
+    <version>1.0.0</version>
+    <authors>Chris Lovett</authors>
+    <description>This library provides a nicer folder selection dialog for .NET code.</description>
+    <projectUrl>https://github.com/aybe/Windows-API-Code-Pack-1.1</projectUrl>
+    <repository type="git" url="https://github.com/aybe/Windows-API-Code-Pack-1.1"/>
+    <license type="expression">MIT</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <copyright>© Microsoft Corporation. All rights reserved.</copyright>
+    <tags>.NET Windows Shell BrowseFolderDialog</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.7.2" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src=".\bin\release\*" target="lib\net472" />
+  </files>
+</package>
