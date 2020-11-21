@@ -16,6 +16,7 @@ namespace LovettSoftware.Utilities
     public class Settings : INotifyPropertyChanged
     {
         const string SettingsFileName = "settings.xml";
+        const string SettingsPath = @"Microsoft\WpfAppTemplate";
         string fileName;
         Point windowLocation;
         Size windowSize;
@@ -32,7 +33,7 @@ namespace LovettSoftware.Utilities
         {
             get
             {
-                string appSetttingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"Microsoft\WpfAppTemplate");
+                string appSetttingsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), SettingsPath);
                 Directory.CreateDirectory(appSetttingsPath);
                 return appSetttingsPath;
             }

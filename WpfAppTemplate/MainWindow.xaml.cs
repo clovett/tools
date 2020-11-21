@@ -13,11 +13,11 @@ namespace WpfAppTemplate
 
         public MainWindow()
         {
+            RestoreSettings();
+
             InitializeComponent();
 
             UiDispatcher.Initialize();
-
-            RestoreSettings();
 
             this.SizeChanged += OnWindowSizeChanged;
             this.LocationChanged += OnWindowLocationChanged;

@@ -48,21 +48,33 @@ namespace BluetoothConsole
         {
             try
             {
-                this.service = bleDevice.GetGattService(LightIntensityServiceUuid);
-                this.service.Device.ConnectionStatusChanged += OnConnectionStatusChanged;
+                var result = await bleDevice.GetGattServicesForUuidAsync(LightIntensityServiceUuid);
+                if (result.Status == GattCommunicationStatus.Success)
+                {
+                    this.service = result.Services.First();
+                    this.service.Session.SessionStatusChanged += OnSessionStatusChanged;
 
-                // start listening
-                GattCharacteristic characteristic = service.GetCharacteristics(LightIntensityCharacteristicUuid).FirstOrDefault();
-                characteristic.ValueChanged -= OnCharacteristicValueChanged;
-                var status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                log.WriteLine(string.Format("Register for notification returned status {0}", status));
-                characteristic.ValueChanged += OnCharacteristicValueChanged;
+                    // start listening
+                    var charres = await service.GetCharacteristicsForUuidAsync(LightIntensityCharacteristicUuid);
+                    if (charres.Status == GattCommunicationStatus.Success)
+                    {
+                        var characteristic = charres.Characteristics.FirstOrDefault();
+                        characteristic.ValueChanged -= OnCharacteristicValueChanged;
+                        var status = await characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                        log.WriteLine(string.Format("Register for notification returned status {0}", status));
+                        characteristic.ValueChanged += OnCharacteristicValueChanged;
 
-                // turn on light sensing
-                status = await WriteCharacteristic(LightIntensityCharacteristicConfigUuid, new byte[] { 1 });
-                log.WriteLine(string.Format("Start listening to light sensor returned status {0}", status));
-                status = await WriteCharacteristic(LightIntensityCharacteristicPeriodUuid, new byte[] { 10 });
-                log.WriteLine(string.Format("Set light sensor period returned status {0}", status));
+                        // turn on light sensing
+                        status = await WriteCharacteristic(LightIntensityCharacteristicConfigUuid, new byte[] { 1 });
+                        log.WriteLine(string.Format("Start listening to light sensor returned status {0}", status));
+                        status = await WriteCharacteristic(LightIntensityCharacteristicPeriodUuid, new byte[] { 10 });
+                        log.WriteLine(string.Format("Set light sensor period returned status {0}", status));
+                    }
+                }
+                else
+                {
+                    throw new Exception("LightIntensityServiceUuid service not found: " + result.Status);
+                }
             }
             catch (Exception ex)
             {
@@ -70,26 +82,30 @@ namespace BluetoothConsole
             }
         }
 
-        private void OnConnectionStatusChanged(BluetoothLEDevice sender, object args)
+        private void OnSessionStatusChanged(GattSession sender, GattSessionStatusChangedEventArgs args)
         {
-            var device = this.service.Device;
-            log.WriteLine(string.Format("OnConnectionStatusChanged: {0}", device.ConnectionStatus));
+            // Device.ConnectionStatusChanged += OnConnectionStatusChanged;
+            log.WriteLine(string.Format("OnSessionStatusChanged: {0}", args.Status));
         }
 
         private async Task<GattCommunicationStatus> WriteCharacteristic(Guid guid, byte[] bytes)
         {
-            GattCharacteristic config = service.GetCharacteristics(guid).FirstOrDefault();
-            DataWriter writer = new DataWriter();
-            writer.WriteBytes(bytes);
-            var buffer = writer.DetachBuffer();
-            var properties = config.CharacteristicProperties;
-            if ((properties & GattCharacteristicProperties.Write) != 0)
+            var charres = await service.GetCharacteristicsForUuidAsync(LightIntensityCharacteristicUuid);
+            if (charres.Status == GattCommunicationStatus.Success)
             {
-                return await config.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
-            }
-            else if ((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
-            {
-                return await config.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
+                GattCharacteristic config = charres.Characteristics.FirstOrDefault();
+                DataWriter writer = new DataWriter();
+                writer.WriteBytes(bytes);
+                var buffer = writer.DetachBuffer();
+                var properties = config.CharacteristicProperties;
+                if ((properties & GattCharacteristicProperties.Write) != 0)
+                {
+                    return await config.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
+                }
+                else if ((properties & GattCharacteristicProperties.WriteWithoutResponse) != 0)
+                {
+                    return await config.WriteValueAsync(buffer, GattWriteOption.WriteWithResponse);
+                }
             }
             throw new Exception("Characteristic is not writable");
         }

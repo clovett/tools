@@ -10,13 +10,12 @@
 // THE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES OR INDEMNITIES.
 //
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using System.Collections.Concurrent;
 
 namespace LovettSoftware.Utilities
 {
@@ -27,7 +26,7 @@ namespace LovettSoftware.Utilities
     /// <typeparam name="T">Data type to serialize/deserialize</typeparam>
     public class IsolatedStorage<T>
     {
-        static ConcurrentDictionary<string, AutoResetEvent> locks = new ConcurrentDictionary<string, AutoResetEvent>();
+        static ConcurrentDictionary<string, object> locks = new ConcurrentDictionary<string, object>();
 
 
         public IsolatedStorage()
@@ -36,28 +35,18 @@ namespace LovettSoftware.Utilities
 
         class FileLock : IDisposable
         {
-            ConcurrentDictionary<string, AutoResetEvent> locks;
+            object lockObject;
             string key;
 
-            public FileLock(ConcurrentDictionary<string, AutoResetEvent> locks, string path)
+            public FileLock(object lockObject, string path)
             {
-                this.locks = locks;
+                this.lockObject = lockObject;
                 this.key = path;
             }
 
             public void Dispose()
             {
-                lock (this.locks)
-                {
-                    if (this.locks.TryGetValue(this.key, out AutoResetEvent mutex))
-                    {
-                        mutex.Set(); // release the next thread
-                    }
-                    else
-                    {
-                        throw new Exception("Internal error on FileLock");
-                    }
-                }
+                Monitor.Exit(lockObject);
             }
         }
 
@@ -65,20 +54,20 @@ namespace LovettSoftware.Utilities
         {
             while (true)
             {
-                AutoResetEvent mutex = null;
+                object lockObject = null;
                 lock (locks)
                 {
-                    if (!locks.TryGetValue(path, out mutex))
+                    if (!locks.TryGetValue(path, out lockObject))
                     {
-                        locks[path] = new AutoResetEvent(false);
-                        return new FileLock(locks, path);
+                        lockObject = new object();
+                        locks[path] = lockObject;
                     }
                 }
 
-                if (mutex != null)
+                if (lockObject != null)
                 {
-                    mutex.WaitOne();
-                    return new FileLock(locks, path);
+                    Monitor.Enter(lockObject);
+                    return new FileLock(lockObject, path);
                 }
             }
         }
