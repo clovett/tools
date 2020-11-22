@@ -13,9 +13,8 @@ namespace WpfAppTemplate
 
         public MainWindow()
         {
-            RestoreSettings();
-
             InitializeComponent();
+            RestoreSettings();
 
             UiDispatcher.Initialize();
 
