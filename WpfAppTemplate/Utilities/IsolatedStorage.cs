@@ -80,9 +80,18 @@ namespace LovettSoftware.Utilities
         /// <returns>Deserialized data object</returns>
         public async Task<T> LoadFromFileAsync(string folder, string fileName)
         {
+            return await LoadFromFileAsync(Path.Combine(folder, fileName));
+        }
+
+        /// <summary>
+        /// Loads data from a file asynchronously.
+        /// </summary>
+        /// <param name="fullPath">The full path to the file to read.</param>
+        /// <returns>Deserialized data object</returns>
+        public async Task<T> LoadFromFileAsync(string fullPath)
+        {
             T loadedFile = default(T);
 
-            string fullPath = Path.Combine(folder, fileName);
             using (EnterLock(fullPath))
             {
                 if (fullPath != null)
@@ -116,9 +125,18 @@ namespace LovettSoftware.Utilities
         /// <returns>Deserialized data object</returns>
         public T LoadFromFile(string folder, string fileName)
         {
+            return LoadFromFile(Path.Combine(folder, fileName));
+        }
+
+        /// <summary>
+        /// Loads data from a file synchronously.
+        /// </summary>
+        /// <param name="fullPath">The full path to the file</param>
+        /// <returns>Deserialized data object</returns>
+        public T LoadFromFile(string fullPath)
+        {
             T loadedFile = default(T);
 
-            string fullPath = Path.Combine(folder, fileName);
             using (EnterLock(fullPath))
             {
                 if (fullPath != null)
@@ -155,7 +173,15 @@ namespace LovettSoftware.Utilities
         /// <param name="data">The data to save</param>
         public async Task SaveToFileAsync(string folder, string fileName, T data)
         {
-            string path = System.IO.Path.Combine(folder, fileName);
+            await SaveToFileAsync(System.IO.Path.Combine(folder, fileName), data);
+        }
+
+        /// <summary>
+        /// Saves data to a file.
+        /// </summary>
+        /// <param name="path">Full path to the file to write to</param>
+        public async Task SaveToFileAsync(string path, T data)
+        {
             using (EnterLock(path))
             {
                 try
