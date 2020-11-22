@@ -50,7 +50,7 @@ namespace WpfAppTemplate
 
         private async void RestoreSettings()
         {
-            Settings settings = await ((App)App.Current).LoadSettings();
+            Settings settings = Settings.Instance;
             if (settings.WindowLocation.X != 0 && settings.WindowSize.Width != 0 && settings.WindowSize.Height != 0)
             {
                 // make sure it is visible on the user's current screen configuration.
@@ -74,7 +74,7 @@ namespace WpfAppTemplate
         {
             var bounds = this.RestoreBounds;
 
-            Settings settings = await ((App)App.Current).LoadSettings();
+            Settings settings = Settings.Instance;
             settings.WindowLocation = bounds.TopLeft;
             settings.WindowSize = bounds.Size;
             await settings.SaveAsync();

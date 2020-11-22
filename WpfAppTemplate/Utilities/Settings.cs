@@ -17,6 +17,7 @@ namespace LovettSoftware.Utilities
     {
         const string SettingsFileName = "settings.xml";
         const string SettingsPath = @"Microsoft\WpfAppTemplate";
+
         string fileName;
         Point windowLocation;
         Size windowSize;
@@ -96,6 +97,25 @@ namespace LovettSoftware.Utilities
                     PropertyChanged(this, new PropertyChangedEventArgs(name));
                 });
             }
+        }
+
+        internal static Settings Load()
+        {
+            var store = new IsolatedStorage<Settings>();
+            Settings result = null;
+            try
+            {
+                Debug.WriteLine("Loading settings from : " + SettingsFolder);
+                result = store.LoadFromFile(SettingsFolder, SettingsFileName);
+            }
+            catch
+            {
+            }
+            if (result == null)
+            {
+                result = new Settings();
+            }
+            return result;
         }
 
         public static async Task<Settings> LoadAsync()
