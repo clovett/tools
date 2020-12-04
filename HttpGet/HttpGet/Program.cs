@@ -389,7 +389,7 @@ namespace HttpGet
                 return null;
             }
 
-            Uri simpleUri = new Uri(uri.Scheme + "://" + uri.Host + uri.AbsolutePath);
+            Uri simpleUri  = new Uri(uri.Scheme + "://" + uri.Host + ":" + uri.Port + uri.AbsolutePath);
             Uri rel = this.baseUrl.MakeRelativeUri(simpleUri);
             string relative = rel.ToString();
             string result = "";
