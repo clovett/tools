@@ -13,7 +13,7 @@ namespace LovettSoftware.Utilities
         Dark
     }
 
-    public class Settings : INotifyPropertyChanged
+    public class Settings : NotifyingObject
     {
         const string SettingsFileName = "settings.xml";
         const string SettingsPath = @"Microsoft\WpfAppTemplate";
@@ -55,19 +55,40 @@ namespace LovettSoftware.Utilities
         public Point WindowLocation
         {
             get { return this.windowLocation; }
-            set { this.windowLocation = value; }
+            set
+            {
+                if (this.windowLocation != value)
+                {
+                    this.windowLocation = value;
+                    NotifyPropertyChanged("WindowLocation");
+                }
+            }
         }
 
         public Size WindowSize
         {
             get { return this.windowSize; }
-            set { this.windowSize = value; }
+            set
+            {
+                if (this.windowSize != value)
+                {
+                    this.windowSize = value;
+                    NotifyPropertyChanged("WindowSize");
+                }
+            }
         }
 
         public AppTheme Theme
         {
             get { return this.theme; }
-            set { this.theme = value; }
+            set
+            {
+                if (this.theme != value)
+                {
+                    this.theme = value;
+                    NotifyPropertyChanged("Theme");
+                }
+            }
         }
 
         public string LastFile
@@ -81,21 +102,8 @@ namespace LovettSoftware.Utilities
                 if (this.fileName != value)
                 {
                     this.fileName = value;
-                    OnPropertyChanged("LastFile");
+                    NotifyPropertyChanged("LastFile");
                 }
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string name)
-        {
-            if (PropertyChanged != null)
-            {
-                UiDispatcher.RunOnUIThread(() =>
-                {
-                    PropertyChanged(this, new PropertyChangedEventArgs(name));
-                });
             }
         }
 
@@ -158,7 +166,22 @@ namespace LovettSoftware.Utilities
             }
         }
 
+        public void Save()
+        {
+            var store = new IsolatedStorage<Settings>();
+            if (!saving)
+            {
+                saving = true;
+                try
+                {
+                    Debug.WriteLine("Saving settings to : " + SettingsFolder);
+                    store.SaveToFile(System.IO.Path.Combine(SettingsFolder, SettingsFileName), this);
+                }
+                finally
+                {
+                    saving = false;
+                }
+            }
+        }
     }
-
-
 }

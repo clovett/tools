@@ -1,5 +1,6 @@
 ﻿using LovettSoftware.Utilities;
 using System;
+using System.ComponentModel;
 using System.Windows;
 
 namespace WpfAppTemplate
@@ -20,6 +21,8 @@ namespace WpfAppTemplate
 
             this.SizeChanged += OnWindowSizeChanged;
             this.LocationChanged += OnWindowLocationChanged;
+
+            Settings.Instance.PropertyChanged += OnSettingsChanged;
         }
 
         private void OnOpenFile(object sender, RoutedEventArgs e)
@@ -39,15 +42,17 @@ namespace WpfAppTemplate
 
         private void OnWindowLocationChanged(object sender, EventArgs e)
         {
-            delayedActions.StartDelayedAction("SaveWindowLocation", SavePosition, TimeSpan.FromMilliseconds(1000));
+            var bounds = this.RestoreBounds;
+            Settings.Instance.WindowLocation = bounds.TopLeft;
         }
 
         private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            delayedActions.StartDelayedAction("SaveWindowLocation", SavePosition, TimeSpan.FromMilliseconds(1000));
+            var bounds = this.RestoreBounds;
+            Settings.Instance.WindowSize = bounds.Size;
         }
 
-        private async void RestoreSettings()
+        private void RestoreSettings()
         {
             Settings settings = Settings.Instance;
             if (settings.WindowLocation.X != 0 && settings.WindowSize.Width != 0 && settings.WindowSize.Height != 0)
@@ -69,14 +74,42 @@ namespace WpfAppTemplate
             this.Visibility = Visibility.Visible;
         }
 
-        async void SavePosition()
+        private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
-            var bounds = this.RestoreBounds;
-
-            Settings settings = Settings.Instance;
-            settings.WindowLocation = bounds.TopLeft;
-            settings.WindowSize = bounds.Size;
-            await settings.SaveAsync();
+            saveSettingsPending = true;
+            delayedActions.StartDelayedAction("SaveSettings", OnSaveSettings, TimeSpan.FromSeconds(2));
         }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (saveSettingsPending)
+            {
+                // then we need to do synchronous save and cancel any delayed action.
+                OnSaveSettings();
+            }
+
+            base.OnClosing(e);
+        }
+
+        void OnSaveSettings()
+        {
+            if (saveSettingsPending)
+            {
+                saveSettingsPending = false;
+                delayedActions.CancelDelayedAction("SaveSettings");
+                if (Settings.Instance != null)
+                {
+                    try
+                    {
+                        Settings.Instance.Save();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
+            }
+        }
+
+        private bool saveSettingsPending;
     }
 }

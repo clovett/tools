@@ -202,5 +202,27 @@ namespace LovettSoftware.Utilities
             }
         }
 
+        /// <summary>
+        /// Saves data to a file synchronously.
+        /// </summary>
+        /// <param name="path">Full path to the file to write to</param>
+        public void SaveToFile(string path, T data)
+        {
+            using (EnterLock(path))
+            {
+                try
+                {
+                    using (var stream = File.Create(path))
+                    {
+                        XmlSerializer mySerializer = new XmlSerializer(typeof(T));
+                        mySerializer.Serialize(stream, data);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("### SaveToFileAsync failed: {0}", ex.Message);
+                }
+            }
+        }
     }
 }
