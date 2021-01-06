@@ -1,0 +1,69 @@
+﻿<UserControl x:Class="MyFitness.Controls.MonthViewDayTile"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MyFitness.Controls"             
+             mc:Ignorable="d" 
+             BorderBrush="Gray" BorderThickness="0,1,0,0"
+             d:DesignHeight="200" d:DesignWidth="200">
+    <UserControl.Resources>
+        <local:BooleanVisibilityConverter x:Key="BooleanVisibilityConverter"/>
+        <local:BooleanBrushConverter x:Key="BooleanBrushConverter"/>
+        <local:MonthDayLabelConverter x:Key="MonthDayLabelConverter"/>
+        <local:MonthDayIconConverter x:Key="MonthDayIconConverter"/>
+
+        <Style x:Key="CompactListStyle" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <DataTemplate x:Key="EditableLabelTemplate">
+            <Grid >
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <local:EditableTextBlock Label="{Binding Label, Mode=TwoWay}" 
+                    TextBoxFocussed="OnLabelTextBoxFocussed" Margin="0,0,0,4" IsActive="{Binding IsSelected}" 
+                    LabelForeground="{Binding IsNew, Converter={StaticResource BooleanBrushConverter}, ConverterParameter={StaticResource DisabledLabelBrush}, 
+                    FallbackValue={StaticResource EnabledLabelBrush}}"/>
+
+                <local:CloseBox Grid.Column="1" Margin="4" Click="OnCloseClick"                                    
+                                Visibility="{Binding IsSelected, Converter={StaticResource BooleanVisibilityConverter}}"/>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="{Binding Date, Converter={StaticResource MonthDayLabelConverter}}" FontSize="18" Margin="4"/>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <local:EditableTextBlock Grid.Column="1" x:Name="Summary" Label="{Binding Summary, Mode=TwoWay}" Margin="4" VerticalAlignment="Center"
+                                     LabelStyle="{StaticResource SummaryTextStyle}"/>
+
+            <TextBlock x:Name="Stamp" Grid.Column="0" Text="{Binding Summary, Converter={StaticResource MonthDayIconConverter}}" FontSize="18" Margin="4" FontFamily="Segoe UI Symbol" Foreground="gold"
+                       VerticalAlignment="Center"/>
+        </Grid>
+        <ListView Grid.Row="2" x:Name="NotesList" BorderThickness="0"
+                SelectionMode="Single" Background="Transparent" 
+                ItemContainerStyle="{StaticResource CompactListStyle}"
+                ItemTemplate="{StaticResource EditableLabelTemplate}" >
+            <ListViewItem>Oatmeal</ListViewItem>
+            <ListViewItem>Bar</ListViewItem>
+            <ListViewItem>Chicken Salad</ListViewItem>
+            <ListViewItem>Bar</ListViewItem>
+            <ListViewItem>Thai Salad</ListViewItem>
+            <ListViewItem>1 glass wine</ListViewItem>
+        </ListView>
+    </Grid>
+</UserControl>
+
+    

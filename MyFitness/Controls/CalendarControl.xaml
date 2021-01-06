@@ -1,0 +1,42 @@
+﻿<UserControl x:Class="MyFitness.Controls.CalendarControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MyFitness.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="7,4"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
+    <Grid x:Name="CalendarGrid">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" FontSize="18">Sunday</TextBlock>
+        <TextBlock Grid.Column="1" FontSize="18">Monday</TextBlock>
+        <TextBlock Grid.Column="2" FontSize="18">Tuesday</TextBlock>
+        <TextBlock Grid.Column="3" FontSize="18">Wednesday</TextBlock>
+        <TextBlock Grid.Column="4" FontSize="18">Thursday</TextBlock>
+        <TextBlock Grid.Column="5" FontSize="18">Friday</TextBlock>
+        <TextBlock Grid.Column="6" FontSize="18">Saturday</TextBlock>
+    </Grid>
+</UserControl>
