@@ -9,10 +9,19 @@
     <AssemblyOriginatorKeyFile>$(MyKeyFile)</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
+    <AssemblyVersion>1.0.0.6</AssemblyVersion>
+    <FileVersion>1.0.0.6</FileVersion>
+    <PackageIcon>App.ico</PackageIcon>
+    <Copyright>Lovett Software</Copyright>
+    <Description>Simple app for tracking stuff over a month calendar</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="App.ico" />
+    <None Include="App.ico">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

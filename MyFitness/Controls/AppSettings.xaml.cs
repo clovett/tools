@@ -14,6 +14,10 @@ namespace MyFitness.Controls
         {
             InitializeComponent();
 
+            string version = this.GetType().Assembly.GetName().Version.ToString();
+            var pattern = VersionPrompt.Text;
+            VersionPrompt.Text = string.Format(pattern, version);
+
             List<AppTheme> items = new List<AppTheme>();
             items.Add(AppTheme.Light);
             items.Add(AppTheme.Dark);
