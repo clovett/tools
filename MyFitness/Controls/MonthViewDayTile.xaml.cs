@@ -15,6 +15,11 @@ namespace MyFitness.Controls
     public partial class MonthViewDayTile : UserControl
     {
         CalendarNote selectedNote;
+        private const string BreakfastLabel = "breakfast";
+        private const string LunchLabel = "lunch";
+        private const string DinnerLabel = "dinner";
+        private const string WaterLabel = "water";
+
         private const string NewNoteLabel = "Add new note...";
         static CalendarDay selected;
 
@@ -66,12 +71,17 @@ namespace MyFitness.Controls
             {
                 if (d.IsSelected)
                 {
-                    EnsureNewItem();
+                    EnsureNewItems();
                     this.Background = (Brush)FindResource("SelectedCalendarDayBackgroundBrush");
+                    ScrollViewer.SetHorizontalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Auto);
+                    ScrollViewer.SetVerticalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Auto);
                 }
                 else
                 {
-                    RemoveNewItem();
+                    this.NotesList.SelectedItem = null;
+                    ScrollViewer.SetHorizontalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Hidden);
+                    ScrollViewer.SetVerticalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Hidden);
+                    RemoveNewItems();
                     if (d.IsToday)
                     {
                         this.Background = (Brush)FindResource("TodayCalendarDayBackgroundBrush");
@@ -84,23 +94,29 @@ namespace MyFitness.Controls
             }
         }
 
-        private void RemoveNewItem()
+        private void RemoveNewItems()
         {
             if (this.NotesList.ItemsSource is ObservableCollection<CalendarNote> list)
             {
-                foreach(var newItem in list.Where(it => it.IsNew))
+                foreach(var newItem in list.Where(it => it.IsNew).ToArray())
                 {
                     list.Remove(newItem);
-                    break;
                 }
             }
         }
 
-        private void EnsureNewItem()
+        private void EnsureNewItems()
         {
             if (this.NotesList.ItemsSource is ObservableCollection<CalendarNote> list)
             {
-                if (!list.Any(it => it.IsNew))
+                if (list.Count == 0)
+                {
+                    list.Add(new CalendarNote() { Label = BreakfastLabel, IsNew = true });
+                    list.Add(new CalendarNote() { Label = LunchLabel, IsNew = true });
+                    list.Add(new CalendarNote() { Label = DinnerLabel, IsNew = true });
+                    list.Add(new CalendarNote() { Label = WaterLabel, IsNew = true });
+                }
+                else if (!list.Any(it => it.IsNew))
                 {
                     list.Add(new CalendarNote() { Label = NewNoteLabel, IsNew = true });
                 }
@@ -146,9 +162,9 @@ namespace MyFitness.Controls
                 {
                     if (m.IsNew)
                     {
+                        m.IsNew = false;
                         if (m.Label != NewNoteLabel)
                         {
-                            m.IsNew = false;
                             OnNewNote(m);
                         }
                     }
@@ -164,7 +180,7 @@ namespace MyFitness.Controls
         {
             if (this.DataContext is CalendarDay d && d.IsSelected)
             {
-                EnsureNewItem();
+                EnsureNewItems();
             }
         }
 
@@ -182,7 +198,7 @@ namespace MyFitness.Controls
             if (this.NotesList.ItemsSource is ObservableCollection<CalendarNote> list)
             {
                 list.Remove(m);
-                EnsureNewItem();
+                EnsureNewItems();
             }
         }
     }

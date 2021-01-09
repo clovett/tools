@@ -266,7 +266,14 @@ namespace MyFitness.Model
 
         public string Summary
         {
-            get { return summary; }
+            get { 
+                if (string.IsNullOrEmpty(summary) && IsSelected)
+                {
+                    return "summary";
+                }
+
+                return summary; 
+            }
             set
             {
                 if (summary != value)
@@ -300,6 +307,7 @@ namespace MyFitness.Model
                 {
                     isSelected = value;
                     NotifyPropertyChanged("IsSelected");
+                    NotifyPropertyChanged("Summary");
                 }
             }
         }
@@ -309,6 +317,7 @@ namespace MyFitness.Model
             get => notes;
             set => notes = value;
         }
+
         public bool IsToday
         {
             get
