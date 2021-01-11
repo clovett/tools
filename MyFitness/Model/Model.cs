@@ -307,7 +307,6 @@ namespace MyFitness.Model
                 {
                     isSelected = value;
                     NotifyPropertyChanged("IsSelected");
-                    NotifyPropertyChanged("Summary");
                 }
             }
         }

@@ -4,6 +4,8 @@ using MyFitness.Model;
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 
 namespace MyFitness
 {
@@ -24,9 +26,8 @@ namespace MyFitness
 
             this.SizeChanged += OnWindowSizeChanged;
             this.LocationChanged += OnWindowLocationChanged;
-
+            
             Settings.Instance.PropertyChanged += OnSettingsChanged;
-
             this.Loaded += OnWindowLoaded;
             this.model.PropertyChanged += OnModelPropertyChanged;
         }
@@ -50,7 +51,12 @@ namespace MyFitness
             }
         }
 
-        private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            OnLoadModel();
+        }
+
+        private async void OnLoadModel() 
         {
             if (!string.IsNullOrEmpty(Settings.Instance.FileName) && System.IO.File.Exists(Settings.Instance.FileName))
             {
@@ -96,7 +102,15 @@ namespace MyFitness
 
         private void OnClear(object sender, RoutedEventArgs e)
         {
-
+            if (MessageBox.Show("Do you want to start from scratch and reset all data?", "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                FlushModel();
+                Settings.Instance.FileName = null;
+                this.model.PropertyChanged -= OnModelPropertyChanged;
+                this.model = new CalendarModel();
+                this.model.PropertyChanged += OnModelPropertyChanged;
+                MyCalendar.DataContext = this.model.GetOrCreateCurrentMonth();
+            }
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -140,11 +154,16 @@ namespace MyFitness
 
         private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == "FileName")
+            {
+                OnLoadModel();
+            }
+
             saveSettingsPending = true;
             delayedActions.StartDelayedAction("SaveSettings", OnSaveSettings, TimeSpan.FromSeconds(2));
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        private void FlushModel()
         {
             if (saveSettingsPending)
             {
@@ -155,7 +174,11 @@ namespace MyFitness
             {
                 OnSaveModel();
             }
+        }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            FlushModel();
             base.OnClosing(e);
         }
 

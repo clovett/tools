@@ -48,7 +48,7 @@
     <Style TargetType="TextBlock">
         <Setter Property="Foreground" Value="White"/>
     </Style>
-
+    
     <Style x:Key="SummaryTextStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="#007ACC"/>
         <Setter Property="FontWeight" Value="Bold"/>

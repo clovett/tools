@@ -53,6 +53,7 @@ namespace MyFitness.Controls
                     Grid.SetRow(tile, row);
                     column = c;
                     CalendarGrid.Children.Add(tile);
+                    tiles.Add(tile);
                 }
             }
 

@@ -40,7 +40,7 @@
 
             <!--<ToggleButton x:Name="ShowMapButton"  Grid.Column="1" Style="{StaticResource AppBarToggleButtonStyle}" ToolTip="Map" Checked="OnShowMap" Unchecked="OnHideMap">&#xE1C4;</ToggleButton>-->
 
-            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Clear" Click="OnClear">&#xE106;</Button>
+            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Reset all data" Click="OnClear">&#xE106;</Button>
 
             <!--<Button x:Name="RecordButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="8" Click="OnRecord">&#xE102;</Button>-->
 
