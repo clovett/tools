@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using MyFitness.Model;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -29,7 +30,7 @@ namespace MyFitness
             
             Settings.Instance.PropertyChanged += OnSettingsChanged;
             this.Loaded += OnWindowLoaded;
-            this.model.PropertyChanged += OnModelPropertyChanged;
+            this.model.PropertyChanged += OnModelPropertyChanged;            
         }
 
         private void OnModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -102,7 +103,7 @@ namespace MyFitness
 
         private void OnClear(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("Do you want to start from scratch and reset all data?", "Confirm Reset", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (MessageBox.Show("Do you want to start a new file from scratch?", "Confirm New File", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 FlushModel();
                 Settings.Instance.FileName = null;

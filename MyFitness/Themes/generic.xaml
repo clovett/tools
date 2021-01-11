@@ -55,6 +55,11 @@
         <Setter Property="FontSize" Value="16"/>
     </Style>
 
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="{StaticResource ControlBackgroundBrush}"/>
+        <Setter Property="Padding" Value="10"/>
+    </Style>
+
     <!--
         BackButtonStyle is used to style a Button for use in the title area of a page.  Margins appropriate for
         the conventional page layout are included as part of the style.
