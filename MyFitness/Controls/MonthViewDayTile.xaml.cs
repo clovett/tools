@@ -1,11 +1,13 @@
 ﻿using MyFitness.Model;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using LovettSoftware.Utilities;
 
 namespace MyFitness.Controls
 {
@@ -30,6 +32,7 @@ namespace MyFitness.Controls
             this.NotesList.Items.Clear();
             this.NotesList.SelectionChanged += OnNoteSelected;
             this.DataContextChanged += OnDataContextChanged;
+            this.NotesList.KeyDown += NotesList_KeyDown;
         }
 
         protected override void OnMouseEnter(MouseEventArgs e)
@@ -44,6 +47,22 @@ namespace MyFitness.Controls
 
                 d.IsSelected = true;
                 selected = d;
+            }
+        }
+
+        private void NotesList_KeyDown(object sender, KeyEventArgs e)
+        {
+            // make sure key is not going to an editable text box right now.
+            if (!e.Handled && e.OriginalSource is ListViewItem i)
+            {
+                if (e.Key == Key.Enter || e.Key == Key.Return)
+                {
+                    var block = i.FindDescendantsOfType<EditableTextBlock>().FirstOrDefault();
+                    if (block != null)
+                    {
+                        block.BeginEdit();
+                    }
+                }
             }
         }
 

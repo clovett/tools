@@ -9,8 +9,8 @@
     <AssemblyOriginatorKeyFile>$(MyKeyFile)</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <DelaySign>false</DelaySign>
-    <AssemblyVersion>1.0.0.6</AssemblyVersion>
-    <FileVersion>1.0.0.6</FileVersion>
+    <AssemblyVersion>1.0.0.7</AssemblyVersion>
+    <FileVersion>1.0.0.7</FileVersion>
     <PackageIcon>App.ico</PackageIcon>
     <Copyright>Lovett Software</Copyright>
     <Description>Simple app for tracking stuff over a month calendar</Description>
