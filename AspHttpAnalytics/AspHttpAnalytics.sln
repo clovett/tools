@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30523.141
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AspHttpAnalytics", "AspHttpAnalytics\AspHttpAnalytics.csproj", "{2AA3B110-9F91-498B-AE4D-B3A2DBE4A71D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2AA3B110-9F91-498B-AE4D-B3A2DBE4A71D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AA3B110-9F91-498B-AE4D-B3A2DBE4A71D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AA3B110-9F91-498B-AE4D-B3A2DBE4A71D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AA3B110-9F91-498B-AE4D-B3A2DBE4A71D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DBFE9DA3-361F-4CA1-88CC-2399D020E4A2}
+	EndGlobalSection
+EndGlobal
