@@ -99,7 +99,8 @@ namespace MyFitness.Controls
                 {
                     this.NotesList.SelectedItem = null;
                     ScrollViewer.SetHorizontalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Hidden);
-                    ScrollViewer.SetVerticalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Hidden);                    
+                    ScrollViewer.SetVerticalScrollBarVisibility(this.NotesList, ScrollBarVisibility.Hidden);
+                    RemoveNewItems();
                     if (d.IsToday)
                     {
                         this.Background = (Brush)FindResource("TodayCalendarDayBackgroundBrush");
@@ -108,6 +109,17 @@ namespace MyFitness.Controls
                     {
                         this.SetValue(BackgroundProperty, DependencyProperty.UnsetValue);
                     }
+                }
+            }
+        }
+
+        private void RemoveNewItems()
+        {
+            if (this.NotesList.ItemsSource is ObservableCollection<CalendarNote> list && !list.Any(it => !it.IsNew))
+            {
+                foreach (var newItem in list.Where(it => it.IsNew).ToArray())
+                {
+                    list.Remove(newItem);
                 }
             }
         }
