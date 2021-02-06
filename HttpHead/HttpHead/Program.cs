@@ -9,10 +9,15 @@ namespace HttpHead
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             try
             {
+                if (args.Length == 0)
+                {
+                    Console.WriteLine("httphead url");
+                    return 1;
+                }
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(args[0]);
                 req.Method = "HEAD";
 
@@ -25,8 +30,12 @@ namespace HttpHead
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("### Error: " + ex.Message);
+                Console.ResetColor();
+                return 1;
             }
+            return 0;
         }
     }
 }
