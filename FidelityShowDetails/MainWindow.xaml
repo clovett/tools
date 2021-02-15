@@ -7,6 +7,11 @@
         mc:Ignorable="d"
         Title="Fidelity Statement Expander" Height="250" Width="350" Icon="HtmlScripting.ico">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <Button HorizontalAlignment="Left" VerticalAlignment="Top" Margin="20" Padding="4" Click="OnExpandAll">Expand All</Button>
+        <RichTextBox x:Name="RichTextOutput" Grid.Row="1"/>
     </Grid>
 </Window>

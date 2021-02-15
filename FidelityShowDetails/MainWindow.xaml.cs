@@ -14,7 +14,7 @@ namespace FidelityShowDetails
 
         private void OnExpandAll(object sender, RoutedEventArgs args)
         {
-            AutomationExpander.ExpandAll();
+            AutomationExpander.ExpandAll(RichTextOutput.Document);
         }
 
     }
