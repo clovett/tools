@@ -51,9 +51,19 @@ namespace MyFitness.Controls
                         row++;
                     }
                     Grid.SetRow(tile, row);
+                    CalendarGrid.RowDefinitions[row].Height = new GridLength(1, GridUnitType.Star);
                     column = c;
                     CalendarGrid.Children.Add(tile);
                     tiles.Add(tile);
+                }
+                row++;
+                if (row < CalendarGrid.RowDefinitions.Count)
+                {
+                    // make remaining rows shrink away
+                    for (int i = row; i < CalendarGrid.RowDefinitions.Count; i++)
+                    {
+                        CalendarGrid.RowDefinitions[i].Height = GridLength.Auto;
+                    }
                 }
             }
 
