@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 
 namespace MyFitness
 {
@@ -17,6 +18,11 @@ namespace MyFitness
     {
         DelayedActions delayedActions = new DelayedActions();
         CalendarModel model = new CalendarModel();
+
+        public static RoutedUICommand ClearCommand = new RoutedUICommand("Clear", "ClearCommand", typeof(MainWindow));
+        public static RoutedUICommand SettingsCommand = new RoutedUICommand("Settings", "SettingsCommand", typeof(MainWindow));
+        public static RoutedUICommand NextCommand = new RoutedUICommand("Next", "NextCommand", typeof(MainWindow));
+        public static RoutedUICommand PreviousCommand = new RoutedUICommand("Previous", "PreviousCommand", typeof(MainWindow));
 
         public MainWindow()
         {
@@ -65,6 +71,7 @@ namespace MyFitness
             }
 
             MyCalendar.DataContext = model.GetOrCreateCurrentMonth();
+            InvalidateCommandState();
         }
 
         private void OnOpenFile(object sender, RoutedEventArgs e)
@@ -111,7 +118,15 @@ namespace MyFitness
                 this.model = new CalendarModel();
                 this.model.PropertyChanged += OnModelPropertyChanged;
                 MyCalendar.DataContext = this.model.GetOrCreateCurrentMonth();
+                InvalidateCommandState();
             }
+        }
+
+        void InvalidateCommandState()
+        {
+            CalendarMonth current = MyCalendar.DataContext as CalendarMonth;
+            this.Title = "My Fitness - " + current.Start.ToString("MMMM");
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -204,6 +219,47 @@ namespace MyFitness
 
         private bool saveModelPending;
         private bool saveSettingsPending;
-        
+
+        private void OnNextMonth(object sender, ExecutedRoutedEventArgs e)
+        {
+            CalendarMonth current = MyCalendar.DataContext as CalendarMonth;
+            int index = this.model.Months.IndexOf(current);
+            if (index < this.model.Months.Count - 1)
+            {
+                MyCalendar.DataContext = this.model.Months[index + 1];
+                InvalidateCommandState();
+            }
+        }
+
+        private void OnPreviousMonth(object sender, ExecutedRoutedEventArgs e)
+        {
+            CalendarMonth current = MyCalendar.DataContext as CalendarMonth;
+            int index = this.model.Months.IndexOf(current);
+            if (index > 0)
+            {
+                MyCalendar.DataContext = this.model.Months[index - 1];
+                InvalidateCommandState();
+            }
+        }
+
+        private void HasNextMonth(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (MyCalendar != null)
+            {
+                CalendarMonth current = MyCalendar.DataContext as CalendarMonth;
+                int index = this.model.Months.IndexOf(current);
+                e.CanExecute = index < this.model.Months.Count - 1;
+            }
+        }
+
+        private void HasPreviousMonth(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (MyCalendar != null)
+            {
+                CalendarMonth current = MyCalendar.DataContext as CalendarMonth;
+                int index = this.model.Months.IndexOf(current);
+                e.CanExecute = index > 0;
+            }
+        }
     }
 }

@@ -3,10 +3,18 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MyFitness.Controls"
+        xmlns:local="clr-namespace:MyFitness"
+        xmlns:control="clr-namespace:MyFitness.Controls"
         mc:Ignorable="d"
         Title="My Fitness" Height="450" Width="800" Icon="/App.ico">
-
+    <Window.CommandBindings>
+        <CommandBinding Command="Open" Executed="OnOpenFile"/>
+        <CommandBinding Command="Save" Executed="OnSaveFile"/>
+        <CommandBinding Command="local:MainWindow.ClearCommand" Executed="OnClear"/>
+        <CommandBinding Command="local:MainWindow.SettingsCommand" Executed="OnSettings"/>
+        <CommandBinding Command="local:MainWindow.NextCommand" Executed="OnNextMonth" CanExecute="HasNextMonth"/>
+        <CommandBinding Command="local:MainWindow.PreviousCommand" Executed="OnPreviousMonth" CanExecute="HasPreviousMonth"/>
+    </Window.CommandBindings>
     <Grid Style="{StaticResource AppGridBackground}">
 
         <Grid.RowDefinitions>
@@ -29,29 +37,24 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="OpenButton" Style="{StaticResource AppBarButtonStyle}" ToolTip="Open an existing model file" Click="OnOpenFile">&#xE197;</Button>
-            <Button x:Name="SaveButton" Grid.Column="1" Style="{StaticResource AppBarButtonStyle}" ToolTip="Save the model" Click="OnSaveFile">&#xE105;</Button>
-
-            <!--<ToggleButton x:Name="ShowMapButton"  Grid.Column="1" Style="{StaticResource AppBarToggleButtonStyle}" ToolTip="Map" Checked="OnShowMap" Unchecked="OnHideMap">&#xE1C4;</ToggleButton>-->
-
-            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Start a new model file" Click="OnClear">&#xE106;</Button>
-
-            <!--<Button x:Name="RecordButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="8" Click="OnRecord">&#xE102;</Button>-->
-
-            <Button x:Name="SettingsButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="9" ToolTip="Open app settings" Click="OnSettings">&#xE115;</Button>
-
+            <Button x:Name="OpenButton" Style="{StaticResource AppBarButtonStyle}" ToolTip="Open an existing model file" Command="Open">&#xE197;</Button>
+            <Button x:Name="SaveButton" Grid.Column="1" Style="{StaticResource AppBarButtonStyle}" ToolTip="Save the model" Command="Save">&#xE105;</Button>
+            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Start a new model file" Command="local:MainWindow.ClearCommand">&#xE106;</Button>
+            <Button x:Name="SettingsButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="3" ToolTip="Open app settings" Command="local:MainWindow.SettingsCommand">&#xE115;</Button>
+            <Button x:Name="PreviousButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="8" Command="local:MainWindow.PreviousCommand" ToolTip="Previous">&#xE112;</Button>
+            <Button x:Name="NextButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="9" Command="local:MainWindow.NextCommand" ToolTip="Next file">&#xE111;</Button>
         </Grid>
 
-        <local:CalendarControl x:Name="MyCalendar" Grid.Row="2"></local:CalendarControl>
+        <control:CalendarControl x:Name="MyCalendar" Grid.Row="2"></control:CalendarControl>
 
-        <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
-        </local:AppSettings>
+        <control:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
+        </control:AppSettings>
 
 
         <Border Grid.ColumnSpan="2" Grid.Row="4" Style="{StaticResource AppStatusBorder}">
