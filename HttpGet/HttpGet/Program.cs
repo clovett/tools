@@ -21,6 +21,7 @@ namespace HttpGet
         bool stats;
         int depth;
         int errors;
+        List<string> skip = new List<string>();
         List<Uri> merge = new List<Uri>();
         Dictionary<Uri, string> fetched = new Dictionary<Uri, string>();
 
@@ -64,9 +65,9 @@ namespace HttpGet
             for (int i = 0; i < args.Length; i++)
             {
                 string arg = args[i];
-                if (arg[0] == '-' || arg[0] == '/')
+                if (arg[0] == '-')
                 {
-                    string option = arg.Substring(1);
+                    string option = arg.Trim('-').ToLower();
                     switch (option)
                     {
                         case "a":
@@ -88,6 +89,16 @@ namespace HttpGet
                             if (i + 1 < args.Length)
                             {
                                 root = args[++i];
+                            }
+                            break;
+                        case "skip":
+                            if (i + 1 < args.Length)
+                            {
+                                var toSkip = args[++i];
+                                foreach(var s in toSkip.Split(','))
+                                {
+                                    this.skip.Add(s.Trim());
+                                }
                             }
                             break;
                         case "s":
@@ -156,8 +167,8 @@ namespace HttpGet
             if (all || deep)
             {
                 string fullPath = Path.GetFullPath(path);
-                string ext = Path.GetExtension(uri.AbsolutePath).ToLowerInvariant();
-                if (ext == "htm" || ext == "html" || ext == "")
+                string ext = Path.GetExtension(fullPath).ToLowerInvariant();
+                if (ext == ".htm" || ext == ".html" || ext == "")
                 {
                     XDocument doc = null;
                     using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
@@ -226,8 +237,28 @@ namespace HttpGet
                     Uri resolved = new Uri(baseUri, href);
                     if (resolved != baseUri && !pending.Contains(resolved))
                     {
-                        pending.Add(resolved);
-                        local.Add(new Tuple<XElement, Uri>(link, resolved));
+                        bool doSkip = false;
+                        if (skip.Count > 0)
+                        {
+                            var path = resolved.PathAndQuery;
+                            foreach (var sroot in skip)
+                            {
+                                if (path.StartsWith(sroot))
+                                {
+                                    doSkip = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!doSkip)
+                        {
+                            pending.Add(resolved);
+                            local.Add(new Tuple<XElement, Uri>(link, resolved));
+                        }
+                        else
+                        {
+                            Console.WriteLine("### skipping " + resolved.ToString());
+                        }
                     }
                     else if (fetched.ContainsKey(resolved))
                     {
@@ -494,7 +525,7 @@ namespace HttpGet
                 HttpWebRequest req = (HttpWebRequest)WebRequest.Create(uri);
                 req.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36 Edge/15.15063";
                 req.Credentials = CredentialCache.DefaultNetworkCredentials;
-                req.Method = external ? "HEAD" : "GET";
+                req.Method = "GET";
 
                 using (WebResponse resp = req.GetResponse())
                 {
@@ -652,12 +683,13 @@ namespace HttpGet
             Console.WriteLine("HttpGet [options] <url>");
             Console.WriteLine("Fetches the resource at the given URL and saves it locally");
             Console.WriteLine("Options:");
-            Console.WriteLine("   -all       if url is html it brings down all locally referenced resources with the file including css, scripts and images");
-            Console.WriteLine("   -deep      does -all deeply (traverses <a> links in same domain)");
-            Console.WriteLine("   -filename  the name of the file to save http content into (default writes to stdout)");
-            Console.WriteLine("   -headers   just print http headers to stdout");
-            Console.WriteLine("   -merge uri with -all this merges content from another baseUri.");
-            Console.WriteLine("   -root      a root path to remove from all relative links.");
+            Console.WriteLine("   -all          if url is html it brings down all locally referenced resources with the file including css, scripts and images");
+            Console.WriteLine("   -deep         does -all deeply (traverses <a> links in same domain)");
+            Console.WriteLine("   -filename     the name of the file to save http content into (default writes to stdout)");
+            Console.WriteLine("   -headers      just print http headers to stdout");
+            Console.WriteLine("   -merge uri    with -all this merges content from another baseUri.");
+            Console.WriteLine("   -root         a root path to remove from all relative links.");
+            Console.WriteLine("   -skip roots   a comma separated list of root paths to skip drilling into on the site.");
         }
     }
 }
