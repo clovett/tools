@@ -12,6 +12,9 @@ namespace dumphex
         List<string> files = new List<string>();
         int count;
         bool cpp = false;
+        bool decimalHeader = false;
+        bool hexHeader = false;
+        string headerFormat = null;
 
         static void Main(string[] args)
         {
@@ -34,6 +37,8 @@ namespace dumphex
             Console.WriteLine("Options:");
             Console.WriteLine("   -c count    dumps the first count bytes only");
             Console.WriteLine("   -cpp        outputs in c++ format");
+            Console.WriteLine("   -hex        add hex address to each line");
+            Console.WriteLine("   -dec        add decimal address");
         }
 
         private void Run()
@@ -44,6 +49,15 @@ namespace dumphex
                 {
                     using (FileStream fs = new FileStream(file, FileMode.Open, FileAccess.Read))
                     {
+                        if (decimalHeader)
+                        {
+                            var digits = fs.Length.ToString().Length;
+                            this.headerFormat = "{0:D" + digits.ToString() + "}: ";
+                        } else { 
+                            var digits = fs.Length.ToString("x").Length;
+                            this.headerFormat = "{0:X" + digits.ToString() + "}: ";
+                        }
+
                         if (this.files.Count > 1)
                         {
                             Console.WriteLine();
@@ -81,6 +95,12 @@ namespace dumphex
                         case "?":
                         case "help":
                             return false;
+                        case "hex":
+                            hexHeader = true;
+                            break;
+                        case "dec":
+                            decimalHeader = true;
+                            break;
                         case "c":
                             int count = 0;
                             if (i + 1 < n && int.TryParse(args[i+1], out count))
@@ -131,6 +151,7 @@ namespace dumphex
             byte[] line = new byte[16];
             while (true)
             {
+                PrintHeader(stream.Position);
                 int lineLength = stream.Read(line, 0, 16);
                 if (lineLength == 0)
                 {
@@ -179,12 +200,22 @@ namespace dumphex
             }
         }
 
+        private void PrintHeader(long position)
+        {
+            if (this.headerFormat != null)
+            {
+                Console.Write(this.headerFormat, position);
+            }
+        }
+
         private void DumpCpp(FileStream stream)
         {
             int total = 0;
             byte[] line = new byte[16];
             while (true)
             {
+                PrintHeader(stream.Position);
+
                 int lineLength = stream.Read(line, 0, 16);
                 if (lineLength == 0)
                 {
