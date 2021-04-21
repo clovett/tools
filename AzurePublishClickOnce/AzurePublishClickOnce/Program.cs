@@ -35,17 +35,20 @@ namespace FtpPublishClickOnce
                 Folder sourceFolder = new Folder(source);
                 Folder targetFolder = new Folder(target, connectionString);
 
-                // trim all but the latest local version.
-                Folder appFiles = sourceFolder.GetSubfolder("Application Files");
-                if (appFiles != null)
+                if (sourceFolder.HasSubfolder("Application Files"))
                 {
-                    List<FileVersion> versions = new List<FileVersion>(appFiles.ChildFolders.Select(it => new FileVersion(it)));
-                    versions.Sort();
-                    while (versions.Count > 1)
+                    // trim all but the latest local version.
+                    Folder appFiles = sourceFolder.GetSubfolder("Application Files");
+                    if (appFiles != null)
                     {
-                        var f = versions[0];
-                        versions.RemoveAt(0);
-                        appFiles.GetSubfolder(f.name).DeleteSubtree();
+                        List<FileVersion> versions = new List<FileVersion>(appFiles.ChildFolders.Select(it => new FileVersion(it)));
+                        versions.Sort();
+                        while (versions.Count > 1)
+                        {
+                            var f = versions[0];
+                            versions.RemoveAt(0);
+                            appFiles.GetSubfolder(f.name).DeleteSubtree();
+                        }
                     }
                 }
 
@@ -66,7 +69,7 @@ namespace FtpPublishClickOnce
                 List<string> toRemove = new List<string>();
                 Version latest = null;
                 string path = null;
-                foreach(var folder in Directory.GetDirectories(appFiles))
+                foreach (var folder in Directory.GetDirectories(appFiles))
                 {
                     toRemove.Add(folder);
                     Version v = GetVersion(Path.GetFileName(folder));
@@ -77,7 +80,7 @@ namespace FtpPublishClickOnce
                     }
                 }
                 toRemove.Remove(path);
-                foreach(var folder in toRemove)
+                foreach (var folder in toRemove)
                 {
                     Directory.Delete(folder, true);
                 }
@@ -95,7 +98,8 @@ namespace FtpPublishClickOnce
         {
             Console.WriteLine("Usage: AzurePublishClickOnce SourceFolder TargetFolder connectionString");
             Console.WriteLine("Copies all files and directories from the source directory to the target directory");
-            Console.WriteLine("using Azure blob credentials found in the BlobContainerUri.  It also cleans up 'Application Files'");
+            Console.WriteLine("using Azure blob credentials found in the BlobContainerUri.");
+            Console.WriteLine("It also cleans up old versions in 'Application Files'");
             Console.WriteLine("versions after the copy to ensure local and remote folders only contain the latest verion.");
             Console.WriteLine();
             Console.WriteLine("The BlobContainerUri should look something like this:");
@@ -180,7 +184,7 @@ namespace FtpPublishClickOnce
                 string[] parts = name.Split('_');
                 if (parts.Length < 2)
                 {
-                    throw new Exception("Unknown Application Files versions");
+                    throw new Exception("Unknown version: " + name);
                 }
                 this.name = name;
                 this.version = new Version(string.Join(".", parts.Skip(1)));

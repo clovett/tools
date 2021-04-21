@@ -147,6 +147,18 @@ namespace Walkabout.Utilities
             }
         }
 
+        public bool HasSubfolder(string name)
+        {
+            if (this.client != null) {
+                Folder folder = null;
+                return this.Subfolders.TryGetValue(name, out folder);
+            }
+            else
+            {
+                return Directory.Exists(this.GetFullPath(name));
+            }
+        }
+
         public Folder GetSubfolder(string name)
         {
             if (this.client != null)
