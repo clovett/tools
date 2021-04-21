@@ -37,23 +37,16 @@ namespace FtpPublishClickOnce
 
                 // trim all but the latest local version.
                 Folder appFiles = sourceFolder.GetSubfolder("Application Files");
-                if (appFiles == null)
+                if (appFiles != null)
                 {
-                    throw new Exception("The local folder doesn't contain 'Application Files' ???");
-                }
-
-                List<FileVersion> versions = new List<FileVersion>(appFiles.ChildFolders.Select(it => new FileVersion(it)));
-                versions.Sort();
-                while (versions.Count > 1)
-                {
-                    var f = versions[0];
-                    versions.RemoveAt(0);
-                    appFiles.GetSubfolder(f.name).DeleteSubtree();
-                }
-
-                if (!targetFolder.ChildFolders.Contains("Application Files") && (targetFolder.ChildFolders.Count != 0 || targetFolder.Files.Count != 0))
-                {
-                    throw new Exception("The blob folder contains something else other than 'Application Files' are you sure you have the right folder?");
+                    List<FileVersion> versions = new List<FileVersion>(appFiles.ChildFolders.Select(it => new FileVersion(it)));
+                    versions.Sort();
+                    while (versions.Count > 1)
+                    {
+                        var f = versions[0];
+                        versions.RemoveAt(0);
+                        appFiles.GetSubfolder(f.name).DeleteSubtree();
+                    }
                 }
 
                 sourceFolder.MirrorDirectory(targetFolder, true);
