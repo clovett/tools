@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <Authors>Chris Lovett</Authors>
+    <Company>Lovett Software</Company>
+    <Product>xsl</Product>
+    <Description>Simple command line XSLT executor</Description>
+    <Copyright>Copyright © Lovett Software</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
