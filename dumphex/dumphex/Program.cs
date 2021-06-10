@@ -121,18 +121,24 @@ namespace dumphex
                     string fullPath = resolved.LocalPath;
                     string dir = Path.GetDirectoryName(fullPath);
                     string pattern = Path.GetFileName(fullPath);
-
+                    int count = 0;
                     try
                     {
                         foreach (string file in Directory.GetFiles(dir, pattern))
                         {
+                            count++;
                             this.files.Add(file);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("### Error finding files in " + dir + " matching pattern " + pattern);
                         Console.WriteLine("### " + ex.Message);
+                        return false;
+                    }
+
+                    if (count == 0)
+                    {
+                        Console.WriteLine("### Error finding files in " + dir + " matching pattern " + pattern);
                         return false;
                     }
                 }
