@@ -68,7 +68,7 @@ namespace registrycheck
                 }
                 else if (path == null)
                 {
-                    path = arg;
+                    path = arg.Trim('\\');
                 }
                 else
                 {
@@ -97,6 +97,11 @@ namespace registrycheck
                     {
                         using (var key = hive.OpenSubKey(relpath))
                         {
+                            if (key == null)
+                            {
+                                Console.WriteLine("Error: key not found");
+                                return;
+                            }
                             Check(key);
                         }
                     }
@@ -126,22 +131,22 @@ namespace registrycheck
             // Check values of this key
             foreach (var name in key.GetValueNames())
             {
-                CheckString(key.Name, "value name", name);
+                CheckString(key.Name, "key", "name", name);
                 switch (key.GetValueKind(name))
                 {
                     case RegistryValueKind.String:
                         var s = (string)key.GetValue(name);
-                        CheckString(key.Name, "value", s);
+                        CheckString(key.Name, name, "value", s);
                         break;
                     case RegistryValueKind.ExpandString:
                         string es = (string)key.GetValue(name);
-                        CheckString(key.Name, "value", es);
+                        CheckString(key.Name, name, "value", es);
                         break;
                     case RegistryValueKind.MultiString:
                         var ms = (string[])key.GetValue(name);
                         foreach (var item in ms)
                         {
-                            CheckString(key.Name, "value", item);
+                            CheckString(key.Name, name, "value", item);
                         }
                         break;
                     default:
@@ -152,7 +157,7 @@ namespace registrycheck
             // recurse
             foreach (var name in key.GetSubKeyNames())
             {
-                CheckString(key.Name, "key name", name);
+                CheckString(key.Name, "key", "name", name);
                 try
                 {
                     using (var subkey = key.OpenSubKey(name))
@@ -167,17 +172,21 @@ namespace registrycheck
             }
         }
 
-        private void CheckString(string path, string type, string value)
+        private void CheckString(string path, string type, string name, string value)
         {
             if (this.ascii && !string.IsNullOrEmpty(value))
             {
                 foreach(var ch in value)
                 {
                     int x = Convert.ToInt32(ch);
-                    if (x < 0x20 || x > 0x128)
+                    if (x > 0x128)
                     {
-                        Console.WriteLine("Error: invalid ascii char found in {0} {1}", type, value);
-                        Console.WriteLine("Error: found at registry path {0}", path);
+                        if (value.Length > 80)
+                        {
+                            value = value.Substring(0, 80); // truncate
+                        }
+                        Console.WriteLine("Error: invalid ascii char 0x{1:x} found in string \"{0}\"", value, x);
+                        Console.WriteLine("Error: found in {0} {1} under registry path {2}", type, name, path);
                     }
                 }
             }
