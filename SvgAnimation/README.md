@@ -26,18 +26,17 @@ production. In the words of an Azure service architect:
 > Coyote found several issues early in the dev process, this sort of issues that would usually bleed
 > through into production and become very expensive to fix later.
 
-<div align="center" markdown="1">
-  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-  <script src="./docs/assets/js/animation.js"></script>
-  <script>
-      $(document).ready(function () {
-          svg = $("#animation")[0];
-          hero_animation.start(svg);
-      });
-  </script>
+<div>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
+    <script src="./docs/assets/js/animation.js"></script>
+    <img src="./docs/assets/images/microservices.svg" width="100%"/>
+    <script>
+        $(document).ready(function () {
+            svg = $("#animation")[0];
+            hero_animation.start(svg);
+        });
+    </script>
 </div>
-
-![graphic](./docs/assets/images/microservices.svg)
 
 See our [documentation](https://microsoft.github.io/coyote/) for more information about the project,
 case studies, tutorials and reference documentation.
