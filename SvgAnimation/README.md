@@ -1,8 +1,5 @@
-<head>
-    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-    <script src="docs/assets/js/animation.js"></script>
-</head>
-<div align="center">
+
+<div align="center" markdown="1">
   <img src="docs/assets/images/logo_coyote.svg" width="70%">
   <h2>Fearless coding for reliable asynchronous software</h2>
 </div>
@@ -12,6 +9,7 @@
 ![Linux CI](https://github.com/microsoft/coyote/workflows/Linux%20CI/badge.svg)
 ![macOS CI](https://github.com/microsoft/coyote/workflows/macOS%20CI/badge.svg)
 [![Join the chat at https://gitter.im/Microsoft/coyote](https://badges.gitter.im/Microsoft/coyote.svg)](https://gitter.im/Microsoft/coyote?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 Coyote is a .NET library and tool designed to help ensure that your code is free of concurrency bugs.
 
@@ -28,38 +26,21 @@ production. In the words of an Azure service architect:
 > Coyote found several issues early in the dev process, this sort of issues that would usually bleed
 > through into production and become very expensive to fix later.
 
-<div>
-<svg id="animation" viewbox="0,0,1920,1080" width="100%">
-    <style>
-      .title { font: bold 50px sans-serif; fill:white; }
-    </style>
-    <defs>
-        <filter id="glow-filter" x="0" y="0" width="125%">
-            <feGaussianBlur stdDeviation="5" />
-            <feOffset dx="0" dy="0"/>
-            <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-        </filter>
-        <filter id="glow-filter-2" x="-25%" y="-25%" width="150%" height="150%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="10"/>
-            <feOffset dx="0" dy="0"/>
-            <feMerge>
-                <feMergeNode/>
-                <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-        </filter>
-    </defs>
-    <rect fill="#151520" width="100%" height="100%"/>
-</svg>
-<script>
-    $(document).ready(function () {
-        svg = $("#animation")[0];
-        hero_animation.start(svg);
-    });
-</script>
+<div align="center" markdown="1">
+  <img src="docs/assets/images/logo_coyote.svg" width="70%">
+  <h2>Fearless coding for reliable asynchronous software</h2>
+  <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
+  <script src="docs/assets/js/animation.js"></script>
+  <script>
+      $(document).ready(function () {
+          svg = $("#animation")[0];
+          hero_animation.start(svg);
+      });
+  </script>
 </div>
+
+![graphic](docs/assets/images/microservices.svg)
+
 See our [documentation](https://microsoft.github.io/coyote/) for more information about the project,
 case studies, tutorials and reference documentation.
 
