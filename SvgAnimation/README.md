@@ -27,10 +27,8 @@ production. In the words of an Azure service architect:
 > through into production and become very expensive to fix later.
 
 <div align="center" markdown="1">
-  <img src="docs/assets/images/logo_coyote.svg" width="70%">
-  <h2>Fearless coding for reliable asynchronous software</h2>
   <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.2.min.js"></script>
-  <script src="docs/assets/js/animation.js"></script>
+  <script src="./docs/assets/js/animation.js"></script>
   <script>
       $(document).ready(function () {
           svg = $("#animation")[0];
@@ -39,7 +37,7 @@ production. In the words of an Azure service architect:
   </script>
 </div>
 
-![graphic](docs/assets/images/microservices.svg)
+![graphic](./docs/assets/images/microservices.svg)
 
 See our [documentation](https://microsoft.github.io/coyote/) for more information about the project,
 case studies, tutorials and reference documentation.
