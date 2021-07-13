@@ -364,6 +364,11 @@ public:
                 return false;
             }
         }
+
+        if (keyname.get() == nullptr) {
+            std::cout << "missing key argument" << std::endl;
+            return false;
+        }
         return true;
     }
 
