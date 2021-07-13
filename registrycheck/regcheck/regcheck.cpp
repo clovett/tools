@@ -511,9 +511,15 @@ public:
                     BYTE* blob = key.GetBinaryValue(name);
                     if (blob != nullptr) {
                         UINT64 length = *((UINT64*)blob);
-                        UnicodeString value((char*)&blob[8], (int)length);
-                        CheckAsciiString(key, name, value);
-                        delete[] blob;
+                        int blobLength = key.GetBinaryValueLength(name);
+                        if (length > blobLength) {
+                            std::cout << "*** invalid length prefix on '" << name.ascii() << "' value under registry key '" << key.name.ascii() << "'" << std::endl;
+                        }
+                        else {
+                            UnicodeString value((char*)&blob[8], (int)length);
+                            CheckAsciiString(key, name, value);
+                            delete[] blob;
+                        }
                     }
                 }
             }
@@ -531,7 +537,7 @@ public:
             char* check = value.ascii();
         }
         catch (const std::exception&) {
-            std::cout << "Ascii error in value '" << name.ascii() << "' of registry key '" << key.name.ascii() << "'" << std::endl;
+            std::cout << "*** invalid ascii character in '" << name.ascii() << "' value under registry key '" << key.name.ascii() << "'" << std::endl;
             errors++;
         }
     }
