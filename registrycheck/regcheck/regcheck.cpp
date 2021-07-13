@@ -54,8 +54,10 @@ public:
         this->buffer = new wchar_t[(size_t)size + 1];
         wcsncpy_s(this->buffer, (size_t)len + 1, unicode, (size_t)len);
     }
-    UnicodeString(char* ascii) {
-        int len = (int)strlen(ascii);
+    UnicodeString(char* ascii, int len = 0) {
+        if (len == 0) {
+            len = (int)strlen(ascii);
+        }
         size = len;
         buffer = new wchar_t[size + 1];
         len = MultiByteToWideChar(1252, 0, ascii, len, buffer, size);
@@ -134,6 +136,14 @@ public:
         }
         return UnicodeString();
     }
+    
+    bool Equals(const wchar_t* other) const {
+        return wcscmp(this->buffer, other) == 0;
+    }
+
+    bool StartsWith(const wchar_t* other) const {
+        return wcsncmp(this->buffer, other, wcslen(other)) == 0;
+    }
 
 
     int length() {
@@ -182,8 +192,16 @@ private:
 class RegistryKey
 {
     HKEY key = 0;
+    bool components = false;
 
-    RegistryKey(HKEY key, const UnicodeString name) : name(name), key(key)
+    RegistryKey(HKEY key, const UnicodeString& name) : name(name), key(key)
+    {
+        if (name.Equals(L"COMPONENTS") || name.StartsWith(L"COMPONENTS\\")) {
+            components = true;
+        }
+    }
+
+    RegistryKey(HKEY key, const UnicodeString& name, bool component) : name(name), key(key), components(component)
     {
     }
 
@@ -194,6 +212,7 @@ public:
     {
         this->key = move.key;
         move.key = 0;
+        this->components = move.components;
     }
 
     ~RegistryKey() {
@@ -208,9 +227,13 @@ public:
         DWORD dwRet = RegOpenKey(root, name, &subKey);
         if (dwRet != ERROR_SUCCESS)
         {
-            throw new std::runtime_error("key not found");
+            throw std::runtime_error("key not found");
         }
         return RegistryKey(subKey, UnicodeString(name));
+    }
+
+    bool IsComponent() const {
+        return this->components;
     }
 
     RegistryValueType GetValueType(const UnicodeString& name)
@@ -224,7 +247,7 @@ public:
             NULL);
 
         if (dwRet != 0) {
-            throw new std::runtime_error("value not found");
+            throw std::runtime_error("value not found");
         }
 
         return static_cast<RegistryValueType>(valueType);
@@ -236,31 +259,86 @@ public:
         DWORD valueType = 0;
         DWORD dwRet = RegQueryValueEx(this->key,
             name.get(),
-NULL,
-& valueType,
-NULL,
-& cbData);
+            NULL,
+            &valueType,
+            NULL,
+            &cbData);
 
-if (dwRet != 0) {
-    throw new std::runtime_error("value not found");
-}
 
-int count = (cbData / sizeof(wchar_t)) + 1;
-UnicodeString buf(count, '\0');
-dwRet = RegQueryValueEx(this->key,
-    name.get(),
-    NULL,
-    &valueType,
-    (LPBYTE)(buf.get()),
-    &cbData);
+        if (cbData == 0) {
+            return UnicodeString();
+        }
 
-if (dwRet != ERROR_SUCCESS) {
-    throw new std::runtime_error("unexpected error getting value");
+        if (dwRet != 0) {
+            throw  std::runtime_error("value not found");
+        }
 
-}
-else {
-    return buf;
-}
+        int count = (cbData / sizeof(wchar_t)) + 1;
+        UnicodeString buf(count, '\0');
+        dwRet = RegQueryValueEx(this->key,
+            name.get(),
+            NULL,
+            &valueType,
+            (LPBYTE)(buf.get()),
+            &cbData);
+
+        if (dwRet != ERROR_SUCCESS) {
+            throw std::runtime_error("unexpected error getting value");
+
+        }
+        else {
+            return buf;
+        }
+    }
+
+    int GetBinaryValueLength(const UnicodeString& name) {
+
+        DWORD cbData;
+        DWORD valueType = 0;
+        DWORD dwRet = RegQueryValueEx(this->key,
+            name.get(),
+            NULL,
+            &valueType,
+            NULL,
+            &cbData);
+
+        return cbData;
+    }
+
+
+    BYTE* GetBinaryValue(const UnicodeString& name) {
+
+        DWORD cbData;
+        DWORD valueType = 0;
+        DWORD dwRet = RegQueryValueEx(this->key,
+            name.get(),
+            NULL,
+            &valueType,
+            NULL,
+            &cbData);
+
+        if (cbData == 0) {
+            return nullptr;
+        }
+
+        if (dwRet != 0) {
+            throw std::runtime_error("value not found");
+        }
+
+        BYTE* data = new BYTE[cbData];
+        dwRet = RegQueryValueEx(this->key,
+            name.get(),
+            NULL,
+            &valueType,
+            data,
+            &cbData);
+
+        if (dwRet != ERROR_SUCCESS) {
+            throw std::runtime_error("unexpected error getting value");
+        }
+        else {
+            return data;
+        }
     }
 
     std::vector<UnicodeString> GetValueNames() const {
@@ -316,10 +394,10 @@ else {
         HKEY subKey = 0;
         int rc = RegOpenKey(this->key, name.get(), &subKey);
         if (rc != 0) {
-            throw new std::runtime_error("key not found");
+            throw std::runtime_error("key not found");
         }
         UnicodeString combined = this->name + L"\\" + name;
-        return RegistryKey(subKey, combined);
+        return RegistryKey(subKey, combined, this->components);
     }
 };
 
@@ -390,7 +468,7 @@ public:
         HKEY test = HKEY_LOCAL_MACHINE;
         keyname = keyname.Substring(head.length() + 1);
         RegistryKey key = RegistryKey::Open(ptr->second, keyname.get());
-        check_registry(key, verbose);
+        CheckRegistry(key, verbose);
 
         std::cout << "Found " << strings << " strings" << std::endl;
         if (errors > 0) {
@@ -402,7 +480,7 @@ public:
         return errors;
     }
 
-    void check_registry(RegistryKey& key, bool verbose)
+    void CheckRegistry(RegistryKey& key, bool verbose)
     {
         for (auto name : key.GetValueNames())
         {
@@ -410,6 +488,7 @@ public:
             if (type == RegistryValueType::String || type == RegistryValueType::ExpandString || type == RegistryValueType::MultiString) {
                 if (verbose) std::cout << key.name.ascii() << '\\' << name.ascii() << std::endl;
                 UnicodeString value = key.GetStringValue(name);
+                CheckAsciiString(key, name, value);
                 try {
                     strings++;
                     char* check = value.ascii();
@@ -419,11 +498,41 @@ public:
                     errors++;
                 }
             }
+            else if (type == RegistryValueType::Binary) {
+                if (name.Equals(L"identity") || name.Equals(L"appid")) {
+                    BYTE* blob = key.GetBinaryValue(name);
+                    if (blob != nullptr) {
+                        UnicodeString value((char*)blob, key.GetBinaryValueLength(name));
+                        CheckAsciiString(key, name, value);
+                        delete[] blob;
+                    }
+                }
+                else if (key.IsComponent() && (name.StartsWith(L"p!") || name.StartsWith(L"s!") || name.StartsWith(L"i!") || name.StartsWith(L"c!"))) {
+                    BYTE* blob = key.GetBinaryValue(name);
+                    if (blob != nullptr) {
+                        UINT64 length = *((UINT64*)blob);
+                        UnicodeString value((char*)&blob[8], (int)length);
+                        CheckAsciiString(key, name, value);
+                        delete[] blob;
+                    }
+                }
+            }
         }
         for (auto name : key.GetSubKeyNames())
         {
             RegistryKey sub = key.OpenSubKey(name);
-            check_registry(sub, verbose);
+            CheckRegistry(sub, verbose);
+        }
+    }
+
+    void CheckAsciiString(RegistryKey& key, UnicodeString& name, UnicodeString& value) {
+        try {
+            strings++;
+            char* check = value.ascii();
+        }
+        catch (const std::exception&) {
+            std::cout << "Ascii error in value '" << name.ascii() << "' of registry key '" << key.name.ascii() << "'" << std::endl;
+            errors++;
         }
     }
 };
@@ -432,7 +541,12 @@ int main(int argc, char* argv[])
 {
     Program p;
     if (p.ParseCommandLine(argc, argv)){
-        return p.Run();
+        try {
+            return p.Run();
+        }
+        catch (const std::exception& e) {
+            std::cout << "*** error in value '" << e.what() << "'" << std::endl;
+        }
     }
     else {
         p.PrintUsage();
