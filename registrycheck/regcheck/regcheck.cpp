@@ -163,7 +163,7 @@ public:
         len = WideCharToMultiByte(codepage, 0, buffer, size, ansi, len, &defaultChar, &usedDefaultChar);
         ansi[len] = '\0';
         if (usedDefaultChar) {
-            throw new std::runtime_error("found bad char!");
+            throw std::runtime_error("found bad char!");
         }
         return ansi;
     }
@@ -414,8 +414,8 @@ public:
                     strings++;
                     char* check = value.ascii();
                 }
-                catch (std::exception&) {
-                    std::cout << "Ascii error in value " << name.ascii() << " of registry key " << key.name.ascii() << std::endl;
+                catch (const std::exception&) {
+                    std::cout << "Ascii error in value '" << name.ascii() << "' of registry key '" << key.name.ascii() << "'" << std::endl;
                     errors++;
                 }
             }
