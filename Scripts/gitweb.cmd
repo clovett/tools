@@ -1,0 +1,1 @@
+pwsh %~dp0gitweb.ps1 $*
