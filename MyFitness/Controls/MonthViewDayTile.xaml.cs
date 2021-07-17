@@ -24,6 +24,7 @@ namespace MyFitness.Controls
 
         private const string NewNoteLabel = "Add new note...";
         static CalendarDay selected;
+        bool isMouseOver;
 
         public MonthViewDayTile()
         {
@@ -38,16 +39,35 @@ namespace MyFitness.Controls
         protected override void OnMouseEnter(MouseEventArgs e)
         {
             base.OnMouseEnter(e);
-            if (this.DataContext is CalendarDay d)
-            {
-                if (selected != null)
-                {
-                    selected.IsSelected = false;
-                }
+            isMouseOver = true;
+            UpdateBackground();
+        }
 
-                d.IsSelected = true;
-                selected = d;
+        void UpdateBackground()
+        {
+            bool selected = (this.DataContext is CalendarDay d && d.IsSelected);
+            if (selected || isMouseOver)
+            {
+                this.Background = (Brush)FindResource("SelectedCalendarDayBackgroundBrush");
             }
+            else
+            {
+                if (this.DataContext is CalendarDay dd && dd.IsToday)
+                {
+                    this.Background = (Brush)FindResource("TodayCalendarDayBackgroundBrush");
+                }
+                else
+                {
+                    this.SetValue(BackgroundProperty, DependencyProperty.UnsetValue);
+                }
+            }
+        }
+
+        protected override void OnMouseLeave(MouseEventArgs e)
+        {
+            base.OnMouseLeave(e);
+            isMouseOver = false;
+            UpdateBackground();
         }
 
         private void NotesList_KeyDown(object sender, KeyEventArgs e)
@@ -149,10 +169,26 @@ namespace MyFitness.Controls
             {
                 i.IsSelected = false;
             }
+            
             foreach (CalendarNote i in e.AddedItems)
             {
                 i.IsSelected = true;
-                selectedNote = i;
+                selectedNote = i;                
+            }            
+
+            if (e.AddedItems.Count > 0)
+            {
+                // user selected something so put this monthdayview into selected state.
+                if (this.DataContext is CalendarDay d)
+                {
+                    if (selected != null && selected != d)
+                    {
+                        selected.IsSelected = false;
+                    }
+
+                    d.IsSelected = true;
+                    selected = d;
+                }
             }
         }
 
