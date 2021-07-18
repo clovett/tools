@@ -70,6 +70,15 @@ namespace MyFitness.Controls
             UpdateBackground();
         }
 
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
+            base.OnMouseLeftButtonDown(e);
+            if (this.DataContext is CalendarDay d)
+            {
+                d.IsSelected = true;
+            }
+        }
+
         private void NotesList_KeyDown(object sender, KeyEventArgs e)
         {
             // make sure key is not going to an editable text box right now.
