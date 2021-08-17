@@ -1,0 +1,163 @@
+﻿<UserControl x:Class="ToonBuilder.ColorPicker.ColorPickerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             xmlns:my="clr-namespace:ToonBuilder.ColorPicker" 
+             >
+
+    <UserControl.Resources>
+        <Style x:Key="RectRangeColorSelection" TargetType="Rectangle">
+            <Setter Property="Width" Value="160"/>
+            <Setter Property="Height" Value="160"/>
+        </Style>
+        
+        <DataTemplate DataType="{x:Type my:ColorPickerItem}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Width="16" Height="16" Margin="3">
+                    <Rectangle.Fill>
+                        <SolidColorBrush Color="{Binding Color}"/>
+                    </Rectangle.Fill>
+                </Rectangle>
+                <TextBlock Text="{Binding Name}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <DrawingBrush x:Key="CheckerBackgroundBrush" Viewport="0, 0, 8, 8" ViewportUnits="Absolute"  TileMode="Tile">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="Gray">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="6,6,4,4"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="WhiteSmoke">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="6,2,4,4"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="Gray">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="2,2,4,4" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                    <GeometryDrawing Brush="WhiteSmoke">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="2,6,4,4" />
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+    </UserControl.Resources>
+
+
+    <Grid >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="160" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Final rendering -->
+        <Border x:Name="checkerBoardBackground" Grid.Row="1" Background="{DynamicResource CheckerBackgroundBrush}" Height="20" Margin="0,2,0,0" >
+            <Rectangle x:Name="PreviewOfCurrentColor"  />
+        </Border>
+
+        <!-- Saturation & Brightness range -->
+        <Border Grid.Column="0" >
+
+            <Canvas Height="160" Width="160">
+
+                <!-- LAYER 1 - (Bottom) full solid color-->
+                <Rectangle x:Name="RectRangeSolidColor" Fill="Red" Style="{StaticResource RectRangeColorSelection}"/>
+
+                <!-- LAYER 2 - (Middle) Left to Right Saturation -->
+                <Rectangle Style="{StaticResource RectRangeColorSelection}">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Offset="0" Color="#ffffffff"/>
+                            <GradientStop Offset="1" Color="#00ffffff"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <!-- LAYER 3 - (Top) Top to Bottom Brightness -->
+                <Rectangle  Style="{StaticResource RectRangeColorSelection}">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0" Color="#00000000"/>
+                            <GradientStop Offset="1" Color="#ff000000"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <!-- The circle indicating the color range beeing used and where the mouse is located-->
+                <Canvas x:Name="ColoRangesMouseTargetCircle" Canvas.Left="40" Canvas.Top="40" Width="10" Height="10">
+                    <Ellipse Width="10" Height="10" StrokeThickness="3" Stroke="#FFFFFFFF"/>
+                    <Ellipse Width="10" Height="10" StrokeThickness="1" Stroke="#FF000000"/>
+                </Canvas>
+
+                <!-- TOP LAYER - used for mouse capture -->
+                <Rectangle x:Name="ColorRangeRectangle" Fill="Transparent" Style="{StaticResource RectRangeColorSelection}" />
+            </Canvas>
+        </Border>
+
+
+        <!-- HUE selection 0 to 360 -->
+        <Border Grid.Column="1"  Width="20"  Margin="4,0,0,0" >
+            <Canvas>
+                <Rectangle x:Name="HuePicker" Canvas.Left="0" Canvas.Top="0" Width="20" Height="160" >
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint ="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0.00" Color="#ffff0000"/>
+                            <GradientStop Offset="0.17" Color="#ffffff00"/>
+                            <GradientStop Offset="0.33" Color="#ff00ff00"/>
+                            <GradientStop Offset="0.50" Color="#ff00ffff"/>
+                            <GradientStop Offset="0.66" Color="#ff0000ff"/>
+                            <GradientStop Offset="0.83" Color="#ffff00ff"/>
+                            <GradientStop Offset="1.00" Color="#ffff0000"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+
+                <!-- TRIANGLES SELECTION -->
+                <Canvas x:Name="HueSelector" Height="8" Canvas.Left="0" Canvas.Top="-4">
+                    <Polygon Width="5" Height="8" Stretch="Fill" Stroke="#FF000000" Fill="#FF000000" Points="0,0 10,5 0,10" />
+                    <Polygon Width="5" Height="8" Stretch="Fill" Stroke="#FF000000" Fill="#FF000000" Points="10,0 0,5 10,10"
+                                 Canvas.Left="15" />
+                </Canvas>
+            </Canvas>
+        </Border>
+
+
+        <!-- VALUES as R G B A  Text boxes -->
+        <Grid Grid.Column="2" Width="Auto" MinWidth="80" Height="180">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <my:ColorRgbaEditBox Grid.Row="0" x:Name="ColorEditBoxR" Label="R" ColorPart="1" />
+            <my:ColorRgbaEditBox Grid.Row="1" x:Name="ColorEditBoxG" Label="G" ColorPart="2"/>
+            <my:ColorRgbaEditBox Grid.Row="2" x:Name="ColorEditBoxB" Label="B" ColorPart="3"/>
+            <my:ColorRgbaEditBox Grid.Row="3" x:Name="ColorEditBoxA" Label="A"/>
+
+        </Grid>
+
+        <ComboBox x:Name="HexValue" Grid.Row="1"  Grid.Column="2"  Text="#FF010203" Margin="0,0,4,0" Width="90"  HorizontalAlignment="Right" LostFocus="OnHexValue_LostFocus"
+                  IsEditable="True" SelectionChanged="OnHexValueSelectionChanged"/>
+
+    </Grid>
+</UserControl>

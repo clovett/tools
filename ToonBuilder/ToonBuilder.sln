@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToonBuilder", "ToonBuilder.csproj", "{B2D85616-6833-461D-B8A4-73D247B339DA}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://lovettsoftware.visualstudio.com/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = ToonBuilder.csproj
+		SccLocalPath1 = .
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B2D85616-6833-461D-B8A4-73D247B339DA}.Debug|x86.ActiveCfg = Debug|x86
+		{B2D85616-6833-461D-B8A4-73D247B339DA}.Debug|x86.Build.0 = Debug|x86
+		{B2D85616-6833-461D-B8A4-73D247B339DA}.Release|x86.ActiveCfg = Release|x86
+		{B2D85616-6833-461D-B8A4-73D247B339DA}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

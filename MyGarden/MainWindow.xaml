@@ -1,0 +1,27 @@
+﻿<Window x:Class="MyGarden.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MyGarden"
+        Title="My Garden" Height="800" Width="1000">
+    <Canvas x:Name="RootContent">
+        
+        <!--<Path x:Name="SamplePath" Fill="Green" Stroke="DarkGreen" StrokeThickness="5" StrokeLineJoin="Miter">
+            <Path.Data>
+                <PathGeometry Figures="M556,260.04C594,229.04,568,182.04,651,128.04C724,89.04,772,128.04,806,110.04C767,131.04,793,172.04,716,226.04C623,286.04,592,232.04,551,262.04z" />
+            </Path.Data>
+        </Path>-->    
+        
+        <!--<local:Leaf x:Name="Leaf" Fill="Green" Stroke="DarkGreen" StrokeThickness="2" BasePosition="20,300" TipPosition="220,100" Width="70" Canvas.Left="37" Canvas.Top="-49"
+                    />-->
+
+        <!--<local:Trunk x:Name="Trunk" Stroke="Brown" StrokeThickness="2" BasePosition="200,300" TipPosition="200,100" Curviness="20"/>-->
+        
+        <!--<Slider Canvas.Left="400" Canvas.Top="20" Height="24" Width="200" Value="{Binding ElementName=Leaf, Path=Pointiness}" Minimum="0" Maximum="0.5"/>
+
+        <Slider Canvas.Left="400" Canvas.Top="50" Height="24" Width="200" Value="{Binding ElementName=Leaf, Path=Width}" Minimum="10" Maximum="100"/>-->
+
+        <!--<Slider Canvas.Left="467" Canvas.Top="63" Height="24" Width="200" Value="{Binding ElementName=Trunk, Path=Curviness}" Minimum="0" Maximum="20"
+                 />-->
+        
+    </Canvas>
+</Window>

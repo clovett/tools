@@ -1,0 +1,25 @@
+﻿<UserControl x:Class="ToonBuilder.SceneEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+        xmlns:local="clr-namespace:ToonBuilder"
+             Background="Transparent"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.CommandBindings>
+        <CommandBinding Command="local:SceneEditor.CommandFill" Executed="OnFill" CanExecute="HasSelectedShape"/>
+        <CommandBinding Command="local:SceneEditor.CommandBringToFront" Executed="OnBringToFront"  CanExecute="HasSelectedShape"/>
+        <CommandBinding Command="local:SceneEditor.CommandSendToBack" Executed="OnSendToBack"  CanExecute="HasSelectedShape"/>
+        <CommandBinding Command="local:SceneEditor.CommandBringForward" Executed="OnBringForward"  CanExecute="HasSelectedShape"/>
+        <CommandBinding Command="local:SceneEditor.CommandSendBackward" Executed="OnSendBackward"  CanExecute="HasSelectedShape"/>
+    </UserControl.CommandBindings>
+
+    <Grid>
+        <Canvas x:Name="EditorCanvas" >
+
+        </Canvas>
+        
+        <local:CurveEditor x:Name="CurveEditor"  Focusable="True"/>
+    </Grid>
+</UserControl>

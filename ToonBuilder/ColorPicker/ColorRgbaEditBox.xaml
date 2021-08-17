@@ -1,0 +1,34 @@
+﻿<UserControl x:Class="ToonBuilder.ColorPicker.ColorRgbaEditBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d" 
+             >
+
+   
+
+    <Grid DataContext="{Binding}" Margin="4,2,4,2">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Label x:Name="TheLabel" Grid.Column="0" Content="?" Foreground="{DynamicResource VsBrush.ToolWindowTextKey}" Width="20" HorizontalAlignment="Center" HorizontalContentAlignment="Center"/>
+
+        <Border Grid.Column="1" BorderThickness="1" BorderBrush="#AA000000">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height ="Auto" />
+                    <RowDefinition Height ="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="ColorEditBox" Text="0" MinWidth="50" TextChanged="ColorEditBox_TextChanged" LostKeyboardFocus="ColorEditBox_LostKeyboardFocus" />
+
+                <Border x:Name="checkerBoardBackground" Grid.Row="1" Background="{DynamicResource CheckerBackgroundBrush}" Height="8"/>
+                <Border x:Name="ColorPartRender" Grid.Row="1" Height="8"/>
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>
