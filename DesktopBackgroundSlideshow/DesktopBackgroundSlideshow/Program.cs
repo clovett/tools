@@ -12,6 +12,8 @@ namespace DesktopBackgroundSlideshow
 
     class Program
     {
+        static string[] extensions = new string[] { ".png", ".jpg", ".gif", ".bmp", ".nef" };
+
         string directory;
 
         static string ProgramName = "DesktopBackgroundSlideshow";
@@ -71,13 +73,12 @@ namespace DesktopBackgroundSlideshow
         private bool IsPicture(string filename)
         {
             string ext = System.IO.Path.GetExtension(filename);
-            if (string.Compare(ext, ".png", true) == 0 ||
-                string.Compare(ext, ".jpg", true) == 0 ||
-                string.Compare(ext, ".gif", true) == 0 ||
-                string.Compare(ext, ".bmp", true) == 0)
+            foreach (var e in extensions)
             {
-                // todo: see if we have permission to read this file.
-                return true;
+                if (string.Compare(ext, e, StringComparison.OrdinalIgnoreCase) == 0)
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -124,6 +125,12 @@ namespace DesktopBackgroundSlideshow
                         files.RemoveAt(i);
                     }
                 }
+
+                if (files.Count == 0)
+                {
+                    Console.WriteLine("### no images found with extensions: " + string.Join(", ", extensions));
+                    return 1;
+                }
                 Shuffle(files, rand);
 
                 if (index >= files.Count)
@@ -153,7 +160,16 @@ namespace DesktopBackgroundSlideshow
         private void PrintUsage()
         {
             Console.WriteLine("Usage: {0} [<dir>]", ProgramName);
-            Console.WriteLine("Sets a new picture from the folder each day");
+            Console.WriteLine("Sets a new picture from the folder each time you login");
+            Settings settings = LoadSettings();
+            if (!string.IsNullOrEmpty(settings.Path))
+            {
+                Console.WriteLine("Current path set to: " + settings.Path);
+                if (!System.IO.Directory.Exists(settings.Path))
+                {
+                    Console.WriteLine("### path does not exist");
+                }
+            }
         }
 
         private bool ParseCommandLine(string[] args)
@@ -163,7 +179,7 @@ namespace DesktopBackgroundSlideshow
                 var arg = args[i];
                 if (arg[0] == '/' || arg[0] == '-')
                 {
-                    switch (arg.Substring(1).ToLowerInvariant())
+                    switch (arg.Trim('/', '-').ToLowerInvariant())
                     {
                         case "h":
                         case "help":
