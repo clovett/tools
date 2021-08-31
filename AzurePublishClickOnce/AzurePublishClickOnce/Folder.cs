@@ -102,7 +102,7 @@ namespace Walkabout.Utilities
         private void LoadBlobDirectoryInfo()
         {
             int prefixLength = this.location.Length;
-            var blobs = client.GetBlobs(prefix: this.location);
+            var blobs = client.GetBlobs(prefix: this.location + "/");
             this.name = this.location;
             foreach (var item in blobs)
             {
