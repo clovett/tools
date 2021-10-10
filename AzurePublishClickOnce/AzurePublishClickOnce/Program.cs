@@ -125,7 +125,7 @@ namespace FtpPublishClickOnce
                 }
                 else if (source == null)
                 {
-                    source = arg;
+                    source = System.IO.Path.GetFullPath(arg);
                 }
                 else if (target == null)
                 {
