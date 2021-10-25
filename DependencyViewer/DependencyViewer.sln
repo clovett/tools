@@ -1,0 +1,56 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClrGraphGenerator", "ClrGraphGenerator\ClrGraphGenerator.csproj", "{E0CC67D1-A763-4551-AF32-B0F3E18B487F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyViewer", "DependencyViewer\DependencyViewer.csproj", "{A35D6313-101F-4BAF-8D24-D8362D51FDC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependencyViewer.Contracts", "DependencyViewer.Contracts\DependencyViewer.Contracts.csproj", "{3464ACDE-044F-4C57-ADC5-C4F02BEFBADA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBuildGraphGenerator", "MsBuildGraphGenerator\MsBuildGraphGenerator.csproj", "{291DB4E7-999D-463D-B7D1-57F5DB0758A1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XsltGraphGenerator", "XsltGraphGenerator\XsltGraphGenerator.csproj", "{3CBF9DB3-BA13-449C-84E0-234B037CE141}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XsdGraphGenerator", "XsdGraphGenerator\XsdGraphGenerator.csproj", "{F5178A59-132F-492F-B03C-9AD7AA3F1480}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsaglPlugin", "MsaglPlugin\MsaglPlugin.csproj", "{075B8866-C160-4A31-9CEE-11BC8D94D33C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E0CC67D1-A763-4551-AF32-B0F3E18B487F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0CC67D1-A763-4551-AF32-B0F3E18B487F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0CC67D1-A763-4551-AF32-B0F3E18B487F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0CC67D1-A763-4551-AF32-B0F3E18B487F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A35D6313-101F-4BAF-8D24-D8362D51FDC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A35D6313-101F-4BAF-8D24-D8362D51FDC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A35D6313-101F-4BAF-8D24-D8362D51FDC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A35D6313-101F-4BAF-8D24-D8362D51FDC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3464ACDE-044F-4C57-ADC5-C4F02BEFBADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3464ACDE-044F-4C57-ADC5-C4F02BEFBADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3464ACDE-044F-4C57-ADC5-C4F02BEFBADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3464ACDE-044F-4C57-ADC5-C4F02BEFBADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{291DB4E7-999D-463D-B7D1-57F5DB0758A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{291DB4E7-999D-463D-B7D1-57F5DB0758A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{291DB4E7-999D-463D-B7D1-57F5DB0758A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{291DB4E7-999D-463D-B7D1-57F5DB0758A1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3CBF9DB3-BA13-449C-84E0-234B037CE141}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3CBF9DB3-BA13-449C-84E0-234B037CE141}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3CBF9DB3-BA13-449C-84E0-234B037CE141}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3CBF9DB3-BA13-449C-84E0-234B037CE141}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5178A59-132F-492F-B03C-9AD7AA3F1480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5178A59-132F-492F-B03C-9AD7AA3F1480}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5178A59-132F-492F-B03C-9AD7AA3F1480}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5178A59-132F-492F-B03C-9AD7AA3F1480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{075B8866-C160-4A31-9CEE-11BC8D94D33C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{075B8866-C160-4A31-9CEE-11BC8D94D33C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{075B8866-C160-4A31-9CEE-11BC8D94D33C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{075B8866-C160-4A31-9CEE-11BC8D94D33C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

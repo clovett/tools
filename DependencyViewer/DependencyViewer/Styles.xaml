@@ -1,0 +1,465 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<ResourceDictionary xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' 
+                    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'
+                    xmlns:dep="clr-namespace:DependencyViewer">
+
+  <Style x:Key="customtip" TargetType="{x:Type ToolTip}">
+    <Setter Property="StaysOpen" Value="True"/>
+  </Style>
+  <Style x:Key="PrettyGreen" TargetType="{x:Type Run}">
+    <Setter Property="TextEffects">
+      <Setter.Value>
+        <TextEffectCollection>
+          <TextEffect PositionStart="0" PositionCount="100000">
+            <TextEffect.Foreground>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1, 1">
+                <LinearGradientBrush.GradientStops>
+                  <GradientStop Color="DarkGreen" Offset="0" />
+                  <GradientStop Color="Yellow" Offset=".5" />
+                  <GradientStop Color="DarkGreen" Offset="1" />
+                </LinearGradientBrush.GradientStops>
+              </LinearGradientBrush>
+            </TextEffect.Foreground>
+          </TextEffect>
+        </TextEffectCollection>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  
+  <Style x:Key="Verbage">
+    <Setter Property="TextBlock.FontFamily" Value="Courier New"/>
+    <Setter Property="TextBlock.FontSize" Value="12"/>
+    <Setter Property="TextBlock.Foreground" Value="White"/>
+  </Style>
+
+  <Storyboard x:Key="AnimPressedColors">
+    <ColorAnimation Duration="0:0:0.1" To="#395CB1" Storyboard.TargetName="OuterRimBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#005546" Storyboard.TargetName="OuterRimBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#0137A5" Storyboard.TargetName="TopLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#7BACE6" Storyboard.TargetName="InnerRimBrush"
+                      Storyboard.TargetProperty="(SolidColorBrush.Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#28E7FF" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#0139C2" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#001176" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[2].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#4073C2" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#3A3A96" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#206DBA" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[2].(Color)"/>
+  </Storyboard>
+  <Storyboard x:Key="AnimNormalColors">
+    <ColorAnimation Duration="0:0:0.1" To="#798FC1" Storyboard.TargetName="OuterRimBrush"
+                          Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#032C7B" Storyboard.TargetName="OuterRimBrush"
+                          Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#477BBC" Storyboard.TargetName="TopLightBrush"
+                          Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#98BCFF" Storyboard.TargetName="InnerRimBrush"
+                      Storyboard.TargetProperty="(SolidColorBrush.Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#6FDFFF" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#377CC6" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#123398" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[2].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#789CCC" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#2B5592" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#3190C3" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[2].(Color)"/>
+  </Storyboard>
+  <Storyboard x:Key="AnimMouseOverColors">
+    <ColorAnimation Duration="0:0:0.1" To="#6580BF" Storyboard.TargetName="OuterRimBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#1E5AB2" Storyboard.TargetName="OuterRimBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#64A8FB" Storyboard.TargetName="TopLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#E2F2FF" Storyboard.TargetName="InnerRimBrush"
+                      Storyboard.TargetProperty="(SolidColorBrush.Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#9CFFFF" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#32A9FF" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#305DD6" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[2].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#89B8FF" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#2852BA" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#4CA8BF" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[2].(Color)"/>
+  </Storyboard>
+  <Storyboard x:Key="AnimDisabledColors">
+    <ColorAnimation Duration="0:0:0.1" To="#ACAEB4" Storyboard.TargetName="OuterRimBrush"
+                          Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#8A8A8A" Storyboard.TargetName="OuterRimBrush"
+                          Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#C2CBD9" Storyboard.TargetName="TopLightBrush"
+                          Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#FFFFFF" Storyboard.TargetName="InnerRimBrush"
+                      Storyboard.TargetProperty="(SolidColorBrush.Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#EFFFFF" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#B3C7D9" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#C6C9CE" Storyboard.TargetName="BottomLightBrush"
+                      Storyboard.TargetProperty="(RadialGradientBrush.GradientStops)[2].(Color)"/>
+
+    <ColorAnimation Duration="0:0:0.1" To="#CAD0DA" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[0].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#A0A5B0" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[1].(Color)"/>
+    <ColorAnimation Duration="0:0:0.1" To="#ADC6CD" Storyboard.TargetName="ArrowStrokeBrush"
+                      Storyboard.TargetProperty="(LinearGradientBrush.GradientStops)[2].(Color)"/>
+  </Storyboard>
+
+  <Style x:Key="NewButton" TargetType="{x:Type Button}">
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Canvas Width="60" Height="30">
+            <Canvas.LayoutTransform>
+              <TransformGroup>
+                <ScaleTransform ScaleX=".5" ScaleY=".5"/>
+              </TransformGroup>
+            </Canvas.LayoutTransform>
+            <Rectangle Width="60" Height="30" RadiusX="2" RadiusY="2">
+              <Rectangle.Fill>
+                <LinearGradientBrush StartPoint="0.5,0" EndPoint="0.5,1">
+                  <LinearGradientBrush.GradientStops>
+                    <GradientStop Color="#FFFF50" Offset="0"/>
+                    <GradientStop Color="#8e8E0B" Offset="0.432129"/>
+                    <GradientStop Color="#CCCC40" Offset="0.87439"/>
+                    <GradientStop Color="#FFFF59" Offset="1"/>
+                  </LinearGradientBrush.GradientStops>
+                </LinearGradientBrush>
+              </Rectangle.Fill>
+            </Rectangle>
+            <TextBlock Text="New" Foreground="Yellow" FontSize="22" Canvas.Left="10" Canvas.Top="3">
+              <TextBlock.BitmapEffect>
+                <OuterGlowBitmapEffect GlowColor="Red" GlowSize="5"/>
+              </TextBlock.BitmapEffect>
+            </TextBlock>
+          </Canvas>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="BackButton" TargetType="{x:Type Button}">
+    <Setter Property="OverridesDefaultStyle" Value="True" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Canvas Height="24" Width="24">
+            <Ellipse Height="24" Width="24" Canvas.Left="0" Canvas.Top="0">
+              <Ellipse.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"  x:Name="OuterRimBrush">
+                  <GradientStop Color="#798FC1" Offset="0"/>
+                  <GradientStop Color="#032C7B" Offset="1"/>
+                </LinearGradientBrush>
+              </Ellipse.Fill>
+            </Ellipse>
+
+            <!-- the top half -->
+            <Ellipse Height="22" Width="22" Canvas.Left="1" Canvas.Top="1">
+              <Ellipse.Fill>
+                <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0.5,.5" x:Name="TopLightBrush" >
+                  <GradientStop Offset=".2" Color="#477BBC"/>
+                  <GradientStop Offset="1" Color="White" />
+                </RadialGradientBrush>
+              </Ellipse.Fill>
+            </Ellipse>
+
+            <!-- An inner ring for highlight -->
+            <Ellipse Height="22" Width="22" Canvas.Left="1" Canvas.Top="1" StrokeThickness="1">
+              <Ellipse.Stroke>
+                <SolidColorBrush Color="#98BCFF" x:Name="InnerRimBrush"/>
+              </Ellipse.Stroke>
+              <Ellipse.Clip>
+                <RectangleGeometry Rect="0,0 22,11"/>
+              </Ellipse.Clip>
+            </Ellipse>
+
+            <!-- the bright light on the bottom pointing up -->
+            <Rectangle Width="22" Height="22" Canvas.Left="1" Canvas.Top="1" >
+              <Rectangle.Clip>
+                <CombinedGeometry GeometryCombineMode="Intersect">
+                  <CombinedGeometry.Geometry1>
+                    <RectangleGeometry Rect="0,11 22,22"/>
+                  </CombinedGeometry.Geometry1>
+                  <CombinedGeometry.Geometry2>
+                    <EllipseGeometry RadiusX="11" RadiusY="11" Center="11,11"/>
+                  </CombinedGeometry.Geometry2>
+                </CombinedGeometry>
+              </Rectangle.Clip>
+              <Rectangle.Fill>
+                <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0.5,1" x:Name="BottomLightBrush">
+                  <GradientStop Offset=".1" Color="#6FDFFF"/>
+                  <GradientStop Offset=".5" Color="#377CC6"/>
+                  <GradientStop Offset="1" Color="#123398"/>
+                </RadialGradientBrush>
+              </Rectangle.Fill>
+            </Rectangle>
+            <Path Canvas.Left="1">
+              <Path.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" x:Name="ArrowStrokeBrush">
+                  <GradientStop Color="#789CCC" Offset="0"/>
+                  <GradientStop Color="#2B5592" Offset=".5"/>
+                  <GradientStop Color="#3190C3" Offset="1"/>
+                </LinearGradientBrush>
+              </Path.Stroke>
+              <Path.Data>
+                <PathGeometry>
+                  <PathFigure IsFilled="True" IsClosed="True" StartPoint="3,12">
+                    <LineSegment Point="9,6"/>
+                    <ArcSegment Point="12,8" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,10.5"/>
+                    <LineSegment Point="17,10.5"/>
+                    <ArcSegment Point="17,14" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,14"/>
+                    <LineSegment Point="12,16"/>
+                    <ArcSegment Point="9,18" SweepDirection="Clockwise" Size="2,2"/>
+                  </PathFigure>
+                </PathGeometry>
+              </Path.Data>
+            </Path>
+            <Path Canvas.Left="1">
+              <Path.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" x:Name="ArrowFillBrush">
+                  <GradientStop Color="White" Offset=".4"/>
+                  <GradientStop Color="#C6C6C6" Offset="1"/>
+                </LinearGradientBrush>
+              </Path.Fill>
+              <Path.Data>
+                <PathGeometry>
+                  <PathFigure IsFilled="True" IsClosed="True" StartPoint="3,12">
+                    <LineSegment Point="9,6"/>
+                    <ArcSegment Point="12,8" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,10.5"/>
+                    <LineSegment Point="17,10.5"/>
+                    <ArcSegment Point="17,14" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,14"/>
+                    <LineSegment Point="12,16"/>
+                    <ArcSegment Point="9,18" SweepDirection="Clockwise" Size="2,2"/>
+                  </PathFigure>
+                </PathGeometry>
+              </Path.Data>
+            </Path>
+          </Canvas>
+
+          <ControlTemplate.Triggers>
+            <!-- 
+              Note: triggers later in this list have highest precidence, therefore we do not want
+              an exit action in the IsPressed and IsEnabled exit actions because they would override
+              the AnimNormalColors set in the MultiTrigger.  That's why we use StopStoryboard.  But
+              we do want their EnterActions to override - IsPressed has higher precidence than IsMouseOver,
+              and IsEnabled=False has even higher precidence.
+              -->
+
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsMouseOver" Value="True" />
+                <Condition Property="IsPressed" Value="False" />
+                <Condition Property="IsEnabled" Value="True" />
+              </MultiTrigger.Conditions>
+              <MultiTrigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource AnimMouseOverColors}"/>
+              </MultiTrigger.EnterActions>
+              <MultiTrigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource AnimNormalColors}"/>
+              </MultiTrigger.ExitActions>
+            </MultiTrigger>
+
+            <Trigger Property="IsPressed" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard x:Name="ShowPressedColors" Storyboard="{StaticResource AnimPressedColors}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <StopStoryboard BeginStoryboardName="ShowPressedColors"/>
+              </Trigger.ExitActions>
+            </Trigger>
+
+            <Trigger Property="IsEnabled" Value="False">
+              <Trigger.EnterActions>
+                <BeginStoryboard x:Name="ShowDisabledColors" Storyboard="{StaticResource AnimDisabledColors}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <StopStoryboard BeginStoryboardName="ShowDisabledColors"/>
+              </Trigger.ExitActions>
+            </Trigger>
+
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="ForwardButton" TargetType="{x:Type Button}" >
+    <!--<Setter Property="OverridesDefaultStyle" Value="True" />-->
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Canvas Height="24" Width="24">
+            <Ellipse Height="24" Width="24" Canvas.Left="0" Canvas.Top="0">
+              <Ellipse.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" x:Name="OuterRimBrush">
+                  <GradientStop Color="#798FC1" Offset="0"/>
+                  <GradientStop Color="#032C7B" Offset="1"/>
+                </LinearGradientBrush>
+              </Ellipse.Fill>
+            </Ellipse>
+            <!-- the top half -->
+            <Ellipse Height="22" Width="22" Canvas.Left="1" Canvas.Top="1">
+              <Ellipse.Fill>
+                <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0.5,.5" x:Name="TopLightBrush" >
+                  <GradientStop Offset=".2" Color="#477BBC"/>
+                  <GradientStop Offset="1" Color="White" />
+                </RadialGradientBrush>
+              </Ellipse.Fill>
+            </Ellipse>
+
+            <!-- An inner ring for highlight -->
+            <Ellipse Height="22" Width="22" Canvas.Left="1" Canvas.Top="1" StrokeThickness="1">
+              <Ellipse.Stroke>
+                <SolidColorBrush Color="#98BCFF" x:Name="InnerRimBrush"/>
+              </Ellipse.Stroke>
+              <Ellipse.Clip>
+                <RectangleGeometry Rect="0,0 22,11"/>
+              </Ellipse.Clip>
+            </Ellipse>
+
+            <!-- the bright light on the bottom pointing up -->
+            <Rectangle Width="22" Height="22" Canvas.Left="1" Canvas.Top="1" >
+              <Rectangle.Clip>
+                <CombinedGeometry GeometryCombineMode="Intersect">
+                  <CombinedGeometry.Geometry1>
+                    <RectangleGeometry Rect="0,11 22,22"/>
+                  </CombinedGeometry.Geometry1>
+                  <CombinedGeometry.Geometry2>
+                    <EllipseGeometry RadiusX="11" RadiusY="11" Center="11,11"/>
+                  </CombinedGeometry.Geometry2>
+                </CombinedGeometry>
+              </Rectangle.Clip>
+              <Rectangle.Fill>
+                <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0.5,1" x:Name="BottomLightBrush">
+                  <GradientStop Offset=".1" Color="#6FDFFF"/>
+                  <GradientStop Offset=".5" Color="#377CC6"/>
+                  <GradientStop Offset="1" Color="#123398"/>
+                </RadialGradientBrush>
+              </Rectangle.Fill>
+            </Rectangle>
+
+            <Path Canvas.Left="1">
+              <Path.RenderTransform>
+                <ScaleTransform ScaleX="-1" ScaleY="1"  CenterX="11" CenterY="11"/>
+              </Path.RenderTransform>
+              <Path.Stroke>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" x:Name="ArrowStrokeBrush">
+                  <GradientStop Color="#789CCC" Offset="0"/>
+                  <GradientStop Color="#2B5592" Offset=".5"/>
+                  <GradientStop Color="#3190C3" Offset="1"/>
+                </LinearGradientBrush>
+              </Path.Stroke>
+              <Path.Data>
+                <PathGeometry>
+                  <PathFigure IsFilled="True" IsClosed="True" StartPoint="3,12">
+                    <LineSegment Point="9,6"/>
+                    <ArcSegment Point="12,8" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,10.5"/>
+                    <LineSegment Point="17,10.5"/>
+                    <ArcSegment Point="17,14" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,14"/>
+                    <LineSegment Point="12,16"/>
+                    <ArcSegment Point="9,18" SweepDirection="Clockwise" Size="2,2"/>
+                  </PathFigure>
+                </PathGeometry>
+              </Path.Data>
+            </Path>
+            <Path Canvas.Left="1" x:Name="Arrow">
+              <Path.RenderTransform>
+                <ScaleTransform ScaleX="-1" ScaleY="1" CenterX="11" CenterY="11"/>
+              </Path.RenderTransform>
+              <Path.Fill>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1" x:Name="ArrowFillBrush">
+                  <GradientStop Color="White" Offset=".4"/>
+                  <GradientStop Color="#C6C6C6" Offset="1"/>
+                </LinearGradientBrush>
+              </Path.Fill>
+              <Path.Data>
+                <PathGeometry>
+                  <PathFigure IsFilled="True" IsClosed="True" StartPoint="3,12">
+                    <LineSegment Point="9,6"/>
+                    <ArcSegment Point="12,8" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,10.5"/>
+                    <LineSegment Point="17,10.5"/>
+                    <ArcSegment Point="17,14" SweepDirection="Clockwise" Size="2,2"/>
+                    <LineSegment Point="9.5,14"/>
+                    <LineSegment Point="12,16"/>
+                    <ArcSegment Point="9,18" SweepDirection="Clockwise" Size="2,2"/>
+                  </PathFigure>
+                </PathGeometry>
+              </Path.Data>
+            </Path>
+          </Canvas>
+          <ControlTemplate.Triggers>
+
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsMouseOver" Value="True" />
+                <Condition Property="IsPressed" Value="False" />
+                <Condition Property="IsEnabled" Value="True" />
+              </MultiTrigger.Conditions>
+              <MultiTrigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource AnimMouseOverColors}"/>
+              </MultiTrigger.EnterActions>
+              <MultiTrigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource AnimNormalColors}"/>
+              </MultiTrigger.ExitActions>
+            </MultiTrigger>
+
+            <Trigger Property="IsPressed" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard x:Name="ShowPressedColors" Storyboard="{StaticResource AnimPressedColors}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <StopStoryboard BeginStoryboardName="ShowPressedColors"/>
+              </Trigger.ExitActions>
+            </Trigger>
+
+            <Trigger Property="IsEnabled" Value="False">
+              <Trigger.EnterActions>
+                <BeginStoryboard x:Name="ShowDisabledColors" Storyboard="{StaticResource AnimDisabledColors}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <StopStoryboard BeginStoryboardName="ShowDisabledColors"/>
+              </Trigger.ExitActions>
+            </Trigger>
+
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

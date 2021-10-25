@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="graph">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" name="sources">
+          <xs:complexType>
+            <xs:sequence minOccurs="0">
+              <xs:element maxOccurs="unbounded" name="file"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element maxOccurs="unbounded" name="node">
+          <xs:complexType>
+            <xs:sequence minOccurs="0">
+              <xs:element maxOccurs="unbounded" name="edge">
+                <xs:complexType>
+                  <xs:attribute name="to" type="xs:string" use="required" />
+                  <xs:attribute name="weight" type="xs:unsignedByte" use="optional" />
+                  <xs:attribute name="label" type="xs:string" use="optional" />
+                  <xs:attribute name="type" type="xs:string" use="optional" />
+                  <xs:attribute name="tip" type="xs:string" use="optional" />
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="label" type="xs:string" use="required" />
+            <xs:attribute name="id" type="xs:string" use="required" />
+            <xs:attribute name="type" type="xs:string" use="optional" />
+            <xs:attribute name="tip" type="xs:string" use="optional" />
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>      
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -1,0 +1,337 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="urn:bml/brainml.org:internal/BrainMetaL/1" xmlns="urn:bml/brainml.org:internal/BrainMetaL/1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+   <xs:annotation>
+      <xs:documentation>
+   This schema specifies the format for citations, which come under the
+   "reference" quintessence element.
+  
+   Two top-level citation tags are defined.  The first is a BrainML-specific
+   format, defining tags for journal articles, book chapters, and books.
+   The second allows the use of external citation schemas such as bibtex-ml.
+   It acts as a container for tags from these external schemas, but allows
+   some standard tags from the BrainML format as well.
+</xs:documentation>
+   </xs:annotation>
+   <xs:import namespace="http://www.w3.org/XML/1998/namespace" >
+      <xs:annotation>
+         <xs:documentation> Note: canonical location of the 'xml' schema is
+   "http://www.w3.org/2001/xml.xsd", however sometimes this server is down
+   or slow, so we use a local copy. </xs:documentation>
+      </xs:annotation>
+   </xs:import>
+   <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="xlink.xsd"/>
+   <xs:include schemaLocation="brainmetal.xsd"/>
+
+   <xs:element name="person" type="person-type">
+      <xs:annotation>
+         <xs:documentation>
+   An entity element based on bibtexml 'person'.  You can use this directly,
+   or use the type person-type, or extend from it.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="person-type">
+      <xs:complexContent>
+         <xs:extension base="entity_element-type">
+            <xs:sequence>
+               <xs:choice>
+                  <xs:element name="initials" type="xs:normalizedString">
+                     <xs:annotation>
+                        <xs:documentation>Initials of name (use instead of first/middle).</xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+                  <xs:sequence>
+                     <xs:element name="first" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>First given name.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                     <xs:element maxOccurs="1" minOccurs="0" name="middle" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>Second and subsequent given names.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                  </xs:sequence>
+               </xs:choice>
+               <xs:element maxOccurs="1" minOccurs="0" name="prelast" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Prefix such as "van" or "von der".</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="last" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Surname.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="lineage" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Suffixes such as "Jr.", "III".</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="email" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Email address.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="phone" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Phone number, including international dialing codes.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="institution" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Institution or company where researcher works.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="homepage" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Home page of researcher, lab, or institution.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="person_full" type="person-type-full">
+      <xs:annotation>
+         <xs:documentation>
+   Same as person-content but make contact info mandatory.  You can use this
+   directly, or use the type person-type, or extend from it.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="person-type-full">
+      <xs:complexContent>
+         <xs:restriction base="person-type">
+            <xs:sequence>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="link"/>
+               <xs:choice>
+                  <xs:element name="initials" type="xs:normalizedString">
+                     <xs:annotation>
+                        <xs:documentation>Initials of name (use instead of first/middle).</xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+                  <xs:sequence>
+                     <xs:element name="first" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>First given name.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                     <xs:element maxOccurs="1" minOccurs="0" name="middle" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>Second and subsequent given names.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                  </xs:sequence>
+               </xs:choice>
+               <xs:element maxOccurs="1" minOccurs="0" name="prelast" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Prefix such as "van" or "von der".</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="last" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Surname.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="lineage" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Suffixes such as "Jr.", "III".</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="email" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Email address.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="phone" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Phone number, including international dialing codes.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="institution" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Institution or company where researcher works.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="homepage" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Home page of researcher, lab, or institution.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+            </xs:sequence>
+         </xs:restriction>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="author" type="person-type">
+      <xs:annotation>
+         <xs:documentation>
+  An author of a publication.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="link_author">
+      <xs:annotation>
+         <xs:documentation>Link that must go to an author entity.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainMetaL/1,author" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="editor" type="person-type">
+      <xs:annotation>
+         <xs:documentation>
+  An editor of a publication.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="link_editor">
+      <xs:annotation>
+         <xs:documentation>Link that must go to an editor entity.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainMetaL/1,editor" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:attributeGroup name="type-attribute">
+      <xs:attribute name="type" use="required">
+         <xs:annotation>
+            <xs:documentation> Declares the type of material being cited.  Valid values are "article",
+     "chapter", or "book". </xs:documentation>
+         </xs:annotation>
+         <xs:simpleType>
+            <xs:restriction base="xs:token">
+               <xs:enumeration value="article"/>
+               <xs:enumeration value="chapter"/>
+               <xs:enumeration value="book"/>
+            </xs:restriction>
+         </xs:simpleType>
+      </xs:attribute>
+   </xs:attributeGroup>
+
+   <xs:complexType name="citation-type">
+      <xs:complexContent>
+         <xs:extension base="reference_element-type">
+            <xs:sequence>
+               <xs:choice maxOccurs="unbounded" minOccurs="0">
+                  <xs:element ref="author"/>
+                  <xs:element ref="link_author"/>
+                  <xs:element ref="editor"/>
+                  <xs:element ref="link_editor"/>
+               </xs:choice>
+               <xs:element name="title" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Title of work being cited (article, chapter, or book).</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="year" type="xs:gYear">
+                  <xs:annotation>
+                     <xs:documentation>Year of publication.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:choice>
+                  <xs:sequence>
+                     <xs:element name="journal" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>Journal (abbreviation preferred) an article is published in.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                     <xs:element name="volume" type="xs:normalizedString">
+                        <xs:annotation>
+                           <xs:documentation>Volume of journal an article is published in.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                     <xs:element maxOccurs="1" minOccurs="0" name="pubmedID" type="xs:integer">
+                        <xs:annotation>
+                           <xs:documentation>PubMed numerical ID (PMID) of an article.</xs:documentation>
+                        </xs:annotation>
+                     </xs:element>
+                  </xs:sequence>
+                  <xs:element maxOccurs="1" minOccurs="0" name="collection_title" type="xs:normalizedString">
+                     <xs:annotation>
+                        <xs:documentation>Title for book or proceedings volume an article is in.</xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+               </xs:choice>
+               <xs:element maxOccurs="1" minOccurs="0" name="pages" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Page range of an article or chapter.</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element maxOccurs="1" minOccurs="0" name="publisher" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Publisher (not required for journals).</xs:documentation>
+                  </xs:annotation>
+               </xs:element>
+            </xs:sequence>
+            <xs:attributeGroup ref="type-attribute"/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="citation" type="citation-type">
+      <xs:annotation>
+         <xs:documentation>
+  Represents a literature citation.  Currently journal articles, book chapters
+  and conference papers (BibTeX 'incollection'), and books are supported.
+  Author, title, and year are required for all types, and pages is required
+  for all but books.  Journal articles additionally require journal
+  (abbreviation is preferred), volume (volume only, no issue number).
+  In-collection types require collection_title.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="citation_external-type">
+      <xs:complexContent>
+         <xs:extension base="reference_element-type">
+            <xs:sequence>
+               <xs:group ref="anyExtEl"/>
+            </xs:sequence>
+            <xs:attributeGroup ref="type-attribute"/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="citation_external" type="citation_external-type">
+      <xs:annotation>
+         <xs:documentation>
+  If you wish to use an alternative XML syntax for expressing a bibliographic
+  reference (e.g., Open URL, or BibTeXML), use this element as the container
+  so that BrainML processors will recognize it as such.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="citations">
+      <xs:annotation>
+         <xs:documentation>
+  Usable as a top-level element in a stand-alone document containing only
+  citations.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element ref="citation"/>
+            <xs:element ref="citation_external"/>
+         </xs:choice>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

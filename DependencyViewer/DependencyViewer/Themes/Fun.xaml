@@ -1,0 +1,273 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:DependencyViewer">
+
+  <SolidColorBrush x:Key="GraphBackground" Color="White"/>
+  <SolidColorBrush x:Key="LabelBrush" Color="Navy"/>
+
+  <Storyboard x:Key="AnimEdgeShapeImport">
+    <ColorAnimation Duration="0:0:0.1" To="Green" 
+                    Storyboard.TargetProperty="Stroke.(SolidColorBrush.Color)"/>
+  </Storyboard>
+
+  <Style TargetType="ui:EdgeShape">
+    <Setter Property="Stroke">
+      <Setter.Value>
+        <SolidColorBrush Color="#A0A0E0"/>        
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Control.Foreground" Value="{StaticResource LabelBrush}"/>
+    <Setter Property="SelectedStroke">
+      <Setter.Value>
+        <SolidColorBrush Color="Navy"/>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="HighlightedStroke">
+      <Setter.Value>
+        <SolidColorBrush Color="Blue"/>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="EdgeType" Value="Import">
+        <Trigger.EnterActions>
+          <BeginStoryboard Storyboard="{StaticResource AnimEdgeShapeImport}"/>
+        </Trigger.EnterActions>
+      </Trigger>
+      <Trigger Property="EdgeType" Value="Inherits">
+        <Setter Property="StrokeDashArray" Value="2,2"/>
+      </Trigger>
+      <Trigger Property="EdgeType" Value="Circular">
+        <Setter Property="Stroke" Value="Red"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+  <Style x:Key="RoundRectFocus">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle RadiusX="5" RadiusY="5"
+                     StrokeDashArray="1 2" Stroke="White" StrokeThickness="2" />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style TargetType="ui:NodeShape">
+    <Setter Property="FocusVisualStyle" Value="{DynamicResource RoundRectFocus}"/>
+    <Setter Property="Foreground" Value="{StaticResource LabelBrush}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ui:NodeShape">
+          <ControlTemplate.Resources>
+            <Storyboard x:Key="TimelineMouseEnter">
+              <!-- mouse over -->
+              <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineMouseLeave">
+              <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineSelected">
+              <!-- red - selected color -->
+              <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="selected" Storyboard.TargetProperty="(UIElement.Opacity)" />
+            </Storyboard>
+            <Storyboard x:Key="TimelineDeselected">
+              <!-- remove red selected color -->
+              <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="selected" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineExternal">
+              <ColorAnimation To="#FF8080" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>            
+            <Storyboard x:Key="TimelineEnum">
+              <ColorAnimation To="#80ff80" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineElement">
+              <ColorAnimation To="#a080FF" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineGroup">
+              <ColorAnimation To="#FFFFC0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelinePeople">
+              <ColorAnimation To="#FFC0FF" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineAttributeGroup">
+              <ColorAnimation To="#C0FFFF" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="NodeTypeColor"
+                              Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+            </Storyboard>
+          </ControlTemplate.Resources>
+          <Border x:Name="border" BorderBrush="Navy" BorderThickness="2,2,2,2" CornerRadius="5,5,5,5" Width="Auto" Height="Auto">
+            <Grid>
+              <Border x:Name="NodeTypeColor" HorizontalAlignment="Stretch" Margin="0,0,0,0" Width="Auto" CornerRadius="3.5,3.5,3.5,3.5">
+                <Border.Background>
+                  <SolidColorBrush Color="#C0C0C0"/>
+                </Border.Background>
+              </Border>
+
+              <Border Opacity="0" HorizontalAlignment="Stretch" x:Name="selected" Width="Auto"  CornerRadius="3.5,3.5,3.5,3.5">
+                <Border.Background>
+                  <!-- selected brush highlight -->                  
+                  <SolidColorBrush Color="#80FFFF00"/>
+                </Border.Background>
+              </Border>
+
+              <Border Opacity="0" HorizontalAlignment="Stretch" x:Name="hover" Width="Auto"  CornerRadius="3.5,3.5,3.5,3.5">
+                <Border.Background>
+                  <!-- mouse over highlight -->
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#A0FFFFFF" Offset="0" />
+                    <GradientStop Color="#60A0A0A0" Offset="1" />
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+              
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Width="Auto" 
+                                ContentSource="Content" Margin="4,4,4,4"/>
+
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger  Property="Selected" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineSelected}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineDeselected}"/>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="External">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineExternal}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="Enum">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineEnum}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="Attribute">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineExternal}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="Element">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineEnum}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value=".csproj">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineEnum}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value=".vbproj">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelinePeople}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="People">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelinePeople}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value=".targets">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineExternal}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="Group">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineGroup}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="NodeType" Value="AttributeGroup">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineAttributeGroup}"/>
+              </Trigger.EnterActions>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineMouseEnter}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineMouseLeave}"/>
+              </Trigger.ExitActions>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="ui:SubgraphShape">
+    <Setter Property="FocusVisualStyle" Value="{DynamicResource RoundRectFocus}"/>
+    <Setter Property="Foreground" Value="{StaticResource LabelBrush}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ui:SubgraphShape">          
+          <ControlTemplate.Resources>
+            <Storyboard x:Key="TimelineMouseEnter">
+              <!-- mouse over -->
+              <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineMouseLeave">
+              <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+            <Storyboard x:Key="TimelineSelected">
+              <!-- red - selected color -->
+              <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="selected" Storyboard.TargetProperty="(UIElement.Opacity)" />
+            </Storyboard>
+            <Storyboard x:Key="TimelineDeselected">
+              <!-- remove red selected color -->
+              <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="selected" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+            </Storyboard>
+          </ControlTemplate.Resources>
+          <Border x:Name="border" BorderBrush="Navy" BorderThickness="1" CornerRadius="5,5,5,5" Width="Auto" Height="Auto">
+
+            <Grid>
+              <Border Opacity="0" HorizontalAlignment="Stretch" x:Name="selected" Width="Auto"  CornerRadius="3.5,3.5,3.5,3.5" >
+                <Border.Background>
+                  <!-- selected brush highlight -->
+                  <SolidColorBrush Color="#80FFFF00"/>
+                </Border.Background>
+              </Border>
+
+              <Border Opacity="0" HorizontalAlignment="Stretch" x:Name="hover" Width="Auto"  CornerRadius="3.5,3.5,3.5,3.5"  >
+                <Border.Background>
+                  <!-- mouse over highlight -->
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#A0FFFFFF" Offset="0" />
+                    <GradientStop Color="#60A0A0A0" Offset="1" />
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Width="Auto"
+                                ContentSource="Content" Margin="4,4,4,4"/>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Selected" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineSelected}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineDeselected}"/>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Trigger.EnterActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineMouseEnter}"/>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard Storyboard="{StaticResource TimelineMouseLeave}"/>
+              </Trigger.ExitActions>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+</ResourceDictionary>
