@@ -5,9 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfAppTemplate.Controls"
         mc:Ignorable="d"
+        xmlns:ui="http://schemas.modernwpf.com/2019"
+        ui:WindowHelper.UseModernWindowStyle="True"
         Title="WPF App Template" Height="450" Width="800">
 
-    <Grid Style="{StaticResource AppGridBackground}">
+    <Grid>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,7 +23,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Grid  Grid.ColumnSpan="2"  Style="{StaticResource AppBarGrid}" >
+        <Grid  Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -36,16 +38,16 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="OpenButton" Style="{StaticResource AppBarButtonStyle}" ToolTip="Open" Click="OnOpenFile">&#xE197;</Button>
-            
+            <ui:AppBarButton x:Name="OpenButton" ToolTip="Open a local file" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
+
             <!--<ToggleButton x:Name="ShowMapButton"  Grid.Column="1" Style="{StaticResource AppBarToggleButtonStyle}" ToolTip="Map" Checked="OnShowMap" Unchecked="OnHideMap">&#xE1C4;</ToggleButton>-->
 
-            <Button x:Name="ClearButton"  Grid.Column="3" Style="{StaticResource AppBarButtonStyle}" ToolTip="Clear" Click="OnClear">&#xE106;</Button>
+            <ui:AppBarButton x:Name="ClearButton"  Grid.Column="3" ToolTip="Clear contents" Label="Clear" Click="OnClear" Icon="Clear"/>
 
             <!--<Button x:Name="RecordButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="8" Click="OnRecord">&#xE102;</Button>-->
 
-            <Button x:Name="SettingsButton" Style="{StaticResource AppBarButtonStyle}" Grid.Column="9" Click="OnSettings">&#xE115;</Button>
-            
+            <ui:AppBarButton x:Name="SettingsButton" Grid.Column="9" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
+
         </Grid>
 
 
@@ -53,7 +55,7 @@
         </local:AppSettings>
 
 
-        <Border Grid.ColumnSpan="2" Grid.Row="4" Style="{StaticResource AppStatusBorder}">
+        <Border Grid.ColumnSpan="2" Grid.Row="4">
             <TextBlock x:Name="StatusText" Text=""  Margin="5" />
         </Border>
     </Grid>

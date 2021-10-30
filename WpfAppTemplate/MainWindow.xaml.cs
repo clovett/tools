@@ -71,11 +71,32 @@ namespace WpfAppTemplate
                 this.Width = XamlExtensions.ConvertToDeviceIndependentPixels(bounds.Width);
                 this.Height = XamlExtensions.ConvertToDeviceIndependentPixels(bounds.Height);
             }
+
+            UpdateTheme();
+
             this.Visibility = Visibility.Visible;
+        }
+
+        void UpdateTheme()
+        {
+            var theme = ModernWpf.ApplicationTheme.Light;
+            switch (Settings.Instance.Theme)
+            {
+                case AppTheme.Dark:
+                    theme = ModernWpf.ApplicationTheme.Dark;
+                    break;
+                default:
+                    break;
+            }
+            ModernWpf.ThemeManager.Current.ApplicationTheme = theme;
         }
 
         private void OnSettingsChanged(object sender, PropertyChangedEventArgs e)
         {
+            if (e.PropertyName == "Theme")
+            {
+                UpdateTheme();
+            }
             saveSettingsPending = true;
             delayedActions.StartDelayedAction("SaveSettings", OnSaveSettings, TimeSpan.FromSeconds(2));
         }
