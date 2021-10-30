@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+   <xs:annotation>
+      <xs:documentation>
+   This schema declares the subset of XLink attributes used for BrainMetaL
+   'link' elements.  We could refer to the outside world here, but this would
+   be overkill for one attribute..
+ </xs:documentation>
+   </xs:annotation>
+
+   <xs:attribute name="href" type="xs:anyURI">
+      <xs:annotation>
+         <xs:documentation>Reference to linked resource; should be a URL or URN.</xs:documentation>
+      </xs:annotation>
+   </xs:attribute>
+
+   <xs:attribute name="role" type="xs:anyURI">
+      <xs:annotation>
+         <xs:documentation>
+   Should be a URL referring to a relation defined in a file conforming to
+   "relations.xsd".
+</xs:documentation>
+      </xs:annotation>
+   </xs:attribute>
+</xs:schema>

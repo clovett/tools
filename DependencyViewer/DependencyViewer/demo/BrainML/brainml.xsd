@@ -1,0 +1,1109 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="urn:bml/brainml.org:internal/BrainML/3" xmlns="urn:bml/brainml.org:internal/BrainML/3" xmlns:bmtl="urn:bml/brainml.org:internal/BrainMetaL/1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+   <xs:annotation>
+      <xs:documentation>
+  This schema specifies basic common elements that most BrainML schemas are
+  expected to use and inherit from.
+  Nothing is specific to a particular field of neuroscience.  Included are:
+  
+  View and Trace definitions
+  Basic recording site definitions
+  Basic protocol definition
+  
+  Experiment definition
+</xs:documentation>
+   </xs:annotation>
+   <xs:import namespace="http://www.w3.org/XML/1998/namespace" >
+      <xs:annotation>
+         <xs:documentation> Note: canonical location of the 'xml' schema is
+   "http://www.w3.org/2001/xml.xsd", however sometimes this server is down
+   or slow, so we use a local copy. </xs:documentation>
+      </xs:annotation>
+   </xs:import>
+   <xs:import namespace="urn:bml/brainml.org:internal/BrainMetaL/1" schemaLocation="citation.xsd"/>
+
+   <xs:element name="link_experiment">
+      <xs:annotation>
+         <xs:documentation>Link that must go to an experiment entity.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,experiment" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="link_trace">
+      <xs:annotation>
+         <xs:documentation>Link that must go to a trace entity.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,trace" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="link_stimulus">
+      <xs:annotation>
+         <xs:documentation> Link going to a trace that serves as stimulus for containing trace, which
+   should be a response. </xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,trace" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="link_response">
+      <xs:annotation>
+         <xs:documentation> Link going to a trace that serves as response for containing trace, which
+   should be a stimulus. </xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,trace" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="link_recording_site">
+      <xs:annotation>
+         <xs:documentation>Link that must go to a recording_site entity.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,recording_site" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="trace_grouping" type="trace_grouping-type">
+      <xs:annotation>
+         <xs:documentation>Contains a set of links to traces forming a logical group.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="trace_grouping-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:collection-type">
+            <xs:sequence>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="link_trace"/>
+            </xs:sequence>
+            <xs:attribute name="type" type="xs:normalizedString" use="required">
+               <xs:annotation>
+                  <xs:documentation> A short description of the grouping type, e.g. 'analysis' or
+       'simultaneous' etc.. </xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="label" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Short name/description of a View or Trace.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="horizontal_axis_units">
+      <xs:annotation>
+         <xs:documentation>Unit of measure for horizontal axis (often a temporal unit).</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:unit-type"/>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="horizontal_axis_label" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Short, informative label for horizontal axis.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="vertical_axis_units">
+      <xs:annotation>
+         <xs:documentation>Unit of measure for vertical axis (dependent variable).</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:unit-type"/>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="vertical_axis_label" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Short, informative label for vertical axis.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="t_start" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>Recording start time for Trace.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="t_end" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>Recording end time for Trace.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="stimulus" type="xs:boolean">
+      <xs:annotation>
+         <xs:documentation>Indication of whether Trace represents stimulus signal or neuron response.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="t_rate" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>Trace sampling rate, in units of horizontal axis.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="number_of_trials" type="xs:positiveInteger">
+      <xs:annotation>
+         <xs:documentation>Number of trials contributing to View or Histogram's data.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="vertical_axis_type">
+      <xs:annotation>
+         <xs:documentation> Type of units reflected by bar height: 'probability', 'percentage', 'Hz',
+   or 'count'. </xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:vocab-type">
+               <xs:attribute fixed="trace.histogram trace.vertical axis type" name="domain" type="xs:token"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="bin_start" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>First bin center for Histogram (in H-axis units).</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="bin_width" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>Width of bin in Histogram (in H-axis units).</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="number_of_bins" type="xs:nonNegativeInteger">
+      <xs:annotation>
+         <xs:documentation>Number of bins in Histogram.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="min_max_are_ranges" type="xs:boolean">
+      <xs:annotation>
+         <xs:documentation> Whether or not the first and last bar heights reflect measurement including
+   h-axis values less than min or greater than max. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="min_value" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>Minimum h-axis value in raw histogram.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="max_value" type="xs:decimal">
+      <xs:annotation>
+         <xs:documentation>maximum h-axis value in a raw histogram.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="annotation" type="xs:string">
+      <xs:annotation>
+         <xs:documentation>Paragraph-length description of Experiment.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="recording_technique">
+      <xs:annotation>
+         <xs:documentation>Recording technique employed in collecting Trace.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:vocab-type">
+               <xs:attribute fixed="trace.recording technique" name="domain" type="xs:token"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="data_class">
+      <xs:annotation>
+         <xs:documentation>The nature of the data collected in Trace.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:vocab-type">
+               <xs:attribute fixed="trace.data class" name="domain" type="xs:token"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:complexType name="view-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element maxOccurs="1" minOccurs="0" ref="number_of_trials"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="link_recording_site"/>
+               <xs:element ref="label"/>
+            </xs:sequence>
+            <xs:attribute name="seq" type="xs:int" use="required">
+               <xs:annotation>
+                  <xs:documentation>Ordering position of this View within its containing experiment.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="view" type="view-type">
+      <xs:annotation>
+         <xs:documentation> Superclass View element.  Do not use directly, but any View defined should
+   declare itself in a substitution group with this. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="view-type-full">
+      <xs:annotation>
+         <xs:documentation>
+  Not for inheritance, since we can't later say that the slot must be a
+  subclass so that only certain trace types can appear within certain views.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexContent>
+         <xs:extension base="view-type">
+            <xs:sequence>
+               <xs:element ref="trace"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="time_series_view" substitutionGroup="view" type="time_series_view-type">
+      <xs:annotation>
+         <xs:documentation>View for containing time-series data.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="time_series_view-type">
+      <xs:complexContent>
+         <xs:extension base="view-type">
+            <xs:sequence>
+               <xs:element ref="horizontal_axis_units"/>
+               <xs:element maxOccurs="unbounded" ref="time_trace"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="x_y_view" substitutionGroup="view" type="x_y_view-type">
+      <xs:annotation>
+         <xs:documentation> View for containing X-Y (2-dimensional plot) data.  Traces share common
+   X- and Y-axis units. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="x_y_view-type">
+      <xs:complexContent>
+         <xs:extension base="view-type">
+            <xs:sequence>
+               <xs:element ref="horizontal_axis_units"/>
+               <xs:element ref="horizontal_axis_label"/>
+               <xs:element ref="vertical_axis_units"/>
+               <xs:element ref="vertical_axis_label"/>
+               <xs:element maxOccurs="unbounded" ref="x_y_trace"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="histogram_view" substitutionGroup="view" type="histogram_view-type">
+      <xs:annotation>
+         <xs:documentation>View for containing histogram data.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="histogram_view-type">
+      <xs:complexContent>
+         <xs:extension base="view-type">
+            <xs:sequence>
+               <xs:element ref="horizontal_axis_units"/>
+               <xs:element ref="horizontal_axis_label"/>
+               <xs:element maxOccurs="unbounded" ref="histogram_trace"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="trace" type="trace-type">
+      <xs:annotation>
+         <xs:documentation>Superclass Trace element.  Do not use directly.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="trace-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element ref="label"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="recording_technique"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="data_class"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="link_recording_site"/>
+               <xs:choice>
+                  <xs:element ref="bmtl:dataset"/>
+                  <xs:element ref="bmtl:labeled_dataset"/>
+               </xs:choice>
+            </xs:sequence>
+            <xs:attribute name="seq" type="xs:nonNegativeInteger" use="required">
+               <xs:annotation>
+                  <xs:documentation>Order of this Trace relative to others in the same View.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="time_trace" type="time_trace-type">
+      <xs:annotation>
+         <xs:documentation>Superclass with common elements of all traces valid in time series view.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="time_trace-type">
+      <xs:complexContent>
+         <xs:extension base="trace-type">
+            <xs:sequence>
+               <xs:element ref="t_start"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="time_series_trace" substitutionGroup="time_trace" type="time_series_trace-type">
+      <xs:annotation>
+         <xs:documentation>Trace consisting of a regularly-sampled list of data values.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="time_series_trace-type">
+      <xs:complexContent>
+         <xs:extension base="time_trace-type">
+            <xs:sequence>
+               <xs:element ref="t_rate"/>
+               <xs:element ref="stimulus"/>
+               <xs:element ref="vertical_axis_units"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="spike_train_trace" substitutionGroup="time_trace" type="spike_train_trace-type">
+      <xs:annotation>
+         <xs:documentation>Trace consisting of a list of event times at which spikes occurred.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="spike_train_trace-type">
+      <xs:complexContent>
+         <xs:extension base="time_trace-type">
+            <xs:sequence>
+               <xs:element ref="t_end"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="stimulus"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="event_list_trace" substitutionGroup="time_trace" type="event_list_trace-type">
+      <xs:annotation>
+         <xs:documentation> Trace consisting of a list of event times and describing labels.
+   These labels may be either strings, integers, or decimal values.
+   Data should be contained in a 'labeled_dataset' element, whose first
+   child is a decimal type dataset, and whose second child is a dataset
+   of any type. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="event_list_trace-type">
+      <xs:complexContent>
+         <xs:extension base="time_trace-type">
+            <xs:sequence>
+               <xs:element ref="t_end"/>
+               <xs:element ref="stimulus"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="link_trace"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="piecewise_series_trace" substitutionGroup="time_series_trace" type="piecewise_series_trace-type">
+      <xs:annotation>
+         <xs:documentation> The piecewise_series trace is a time series in which flat or linear sections
+   are encoded compactly.  The data consists of a list of segments.  Each segment
+   starts with a type code and a duration.  Type code may be 1, indicating a
+   constant-value segment, 2, indicating a linear segment, 3, indicating a
+   normal (fully-specified) segment, or 4, indicating an empty segment (gap).
+   The duration is an integer count indicating the number of samples specified
+   by this segment.  For constant-value segments, the next number is the
+   constant value to be held for this segment.  For linear segments, the next
+   number is the final value this segment reaches at the end of its duration.
+   The values before it are to be interpolated linearly starting from the value
+   of the series just before the linear segment begins.
+   (A linear segment cannot begin a piecewise series -- use a length-0
+   constant-value segment to indicate the starting value if needed.)
+   For type 3 segments, the next duration numbers are the actual samples for
+   this segment.
+   For type 4 segments, there are no numbers following the duration.  Instead,
+   the time series is understood to have no values (not been recorded) for the
+   given duration. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="piecewise_series_trace-type">
+      <xs:complexContent>
+         <xs:extension base="time_series_trace-type">
+            <xs:sequence/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="x_y_trace" type="x_y_trace-type">
+      <xs:annotation>
+         <xs:documentation> Bivariate trace consisting of a list of x- and y-values.  Dataset 'dimensions'
+   should have two values, the first indicating the number of data points in the
+   trace (or *), the second indicating the size of each tuple.  This should be
+   2 for plain (x,y) pairs, 3 for (x, y, y-error), 4 for
+   (x, y, y-error, x-error).  To use asymmetrical error bars, set second
+   dimension to 6 and use the format
+   (x, y, +y-error, -y-error, +x-error, -x-error). </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="x_y_trace-type">
+      <xs:complexContent>
+         <xs:extension base="trace-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="histogram_trace" type="histogram_trace-type">
+      <xs:annotation>
+         <xs:documentation>Superclass for histogram traces.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="histogram_trace-type">
+      <xs:complexContent>
+         <xs:extension base="trace-type">
+            <xs:sequence>
+               <xs:element ref="number_of_trials"/>
+               <xs:element ref="vertical_axis_label"/>
+               <xs:element ref="vertical_axis_type"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="histogram_prebin_trace" substitutionGroup="histogram_trace" type="histogram_prebin_trace-type">
+      <xs:annotation>
+         <xs:documentation> Prebinned histogram trace.  Dataset 'dimensions' should have two values, the
+   first indicating the number of data points in the trace (or *), the second
+   indicating the size of each tuple, either 1 (value), 2 (value, +/- error),
+   or 3 (value, + error, - error). </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="histogram_prebin_trace-type">
+      <xs:complexContent>
+         <xs:extension base="histogram_trace-type">
+            <xs:sequence>
+               <xs:element ref="bin_start"/>
+               <xs:element ref="bin_width"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="number_of_bins"/>
+               <xs:element ref="min_max_are_ranges"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="histogram_raw_trace" substitutionGroup="histogram_trace" type="histogram_raw_trace-type">
+      <xs:annotation>
+         <xs:documentation> Raw histogram trace that the end-consumer selects bin size for.  The values
+   provided here are raw values (e.g., the list of times after a marker that
+   spikes occurred).  The binning process counts up the numbers of values
+   within each range. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="histogram_raw_trace-type">
+      <xs:complexContent>
+         <xs:extension base="histogram_trace-type">
+            <xs:sequence>
+               <xs:element maxOccurs="1" minOccurs="0" ref="min_value"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="max_value"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="experiment" type="experiment-type">
+      <xs:annotation>
+         <xs:documentation>Holds an entire submission.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="experiment-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element ref="label"/>
+               <xs:element ref="annotation"/>
+               <xs:element maxOccurs="unbounded" ref="primary_contributor"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="contributor"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="bmtl:author"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="bmtl:citation"/>
+               <xs:element ref="protocol"/>
+               <xs:element maxOccurs="unbounded" ref="recording_site"/>
+               <xs:element maxOccurs="unbounded" ref="view"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="trace_grouping"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="username" type="xs:token">
+      <xs:annotation>
+         <xs:documentation>Account name (for submitters of data submissions).</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="primary_contributor" type="primary_contributor-type">
+      <xs:annotation>
+         <xs:documentation>Primary submitter of data.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="primary_contributor-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:person-type-full">
+            <xs:sequence>
+               <xs:element ref="username"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="link_experiment"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="contributor" type="contributor-type">
+      <xs:annotation>
+         <xs:documentation>A person contributing to a data submission.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="contributor-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:person-type">
+            <xs:sequence>
+               <xs:element maxOccurs="1" minOccurs="0" ref="link_experiment"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="recording_site" type="recording_site-type">
+      <xs:annotation>
+         <xs:documentation>Contains information on recording site (location and source).</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="recording_site-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:entity_element-type">
+            <xs:sequence>
+               <xs:element ref="identifier"/>
+               <xs:element ref="recording_location"/>
+               <xs:element ref="recording_source"/>
+               <xs:choice>
+                  <xs:element ref="subject_or_preparation"/>
+                  <xs:element ref="link_subject_or_preparation"/>
+               </xs:choice>
+               <xs:element maxOccurs="1" minOccurs="0" ref="link_experiment"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="identifier" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation> Short, unique, human-readable name or code that should be same as any
+   references in published work. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="recording_location" type="xs:anyType">
+      <xs:annotation>
+         <xs:documentation>Superclass for recording locations; do not use directly.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="recording_source" type="xs:anyType">
+      <xs:annotation>
+         <xs:documentation>Superclass for recording sources; do not use directly.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="subject_or_preparation" type="subject_or_preparation-type">
+      <xs:annotation>
+         <xs:documentation> Base entity for describing the subject or preparation in an experiment.
+   Different models will extend this depending on what descriptors they
+   require. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="subject_or_preparation-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:entity_element-type">
+            <xs:sequence>
+               <xs:element ref="identifier"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="link_subject_or_preparation">
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="bmtl:link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainML/3,subject_or_preparation" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="protocol" type="protocol-type">
+      <xs:annotation>
+         <xs:documentation>Experimental protocol.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="protocol-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="condition" type="condition-type">
+      <xs:annotation>
+         <xs:documentation> Experimental condition.  This is a generic structure for holding information
+   about the conditions under which data is collected that is not otherwise
+   represented in the data model.  This provides a dimension of flexibility to
+   allow recording of information not anticipated at the time of data model
+   construction, however it is generally best to avoid use of this facility when
+   possible because it prevents standardization on descriptors used.  This makes
+   data more difficult to search for and link to data in other databases. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="condition-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type">
+            <xs:attribute name="name" type="xs:normalizedString" use="required">
+               <xs:annotation>
+                  <xs:documentation>A short descriptive name of what this condition represents.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="type" use="required">
+               <xs:annotation>
+                  <xs:documentation>Data type for this condition's value: either 'numeric' or 'text'.</xs:documentation>
+               </xs:annotation>
+               <xs:simpleType>
+                  <xs:restriction base="xs:token">
+                     <xs:pattern value="numeric|text"/>
+                  </xs:restriction>
+               </xs:simpleType>
+            </xs:attribute>
+            <xs:attribute name="value" type="xs:normalizedString" use="required">
+               <xs:annotation>
+                  <xs:documentation>Value for the experimental condition.  Should follow 'type'.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="units" type="xs:token">
+               <xs:annotation>
+                  <xs:documentation> For numeric condition values that represent measured quantities, specify
+      the units.  Note this is not controlled in the way units generally are in
+      BrainML (based on the BrainMetaL 'unit' type), but a plain string. </xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="signal_channel" type="signal_channel-type">
+      <xs:annotation>
+         <xs:documentation> Represents a channel containing a data stream recorded from some source,
+   such as a neuron, or a stimulus variable. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="signal_channel-type">
+      <xs:attribute name="id" type="xs:ID" use="required">
+         <xs:annotation>
+            <xs:documentation>Unique identifier for the channel.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="seq" type="xs:positiveInteger" use="required">
+         <xs:annotation>
+            <xs:documentation>Sequence number for the channel, out of its group.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="name" type="xs:token" use="required">
+         <xs:annotation>
+            <xs:documentation>Short, precise, descriptive name for the channel.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="units" type="xs:token" use="required">
+         <xs:annotation>
+            <xs:documentation> Units for the channel's values.  Note this is not controlled in the way
+      units generally are in BrainML (based on the BrainMetaL 'unit' type),
+      but a plain string. </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:complexType>
+
+   <xs:element name="analysis_input" type="analysis_input-type">
+      <xs:annotation>
+         <xs:documentation> Element specifying a computational analysis to be carried out.
+   It contains a spike train data set together with attributional and
+   other metadata, a grouping imposed on the dataset indicating how to
+   structure the analysis, and a specification of the algorithm to be
+   used in performing the analysis. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="analysis_input-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type">
+            <xs:sequence>
+               <xs:element maxOccurs="unbounded" ref="algorithm_settings"/>
+               <xs:element ref="experiment"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="algorithm_settings" type="algorithm_settings-type">
+      <xs:annotation>
+         <xs:documentation> Contains specification of how to apply an algorithm.  This is
+   an abstract place-holder extended by specific applications. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="algorithm_settings-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="algorithm" type="algorithm-type">
+      <xs:annotation>
+         <xs:documentation>Describes an algorithm for computational analysis.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="algorithm-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type">
+            <xs:sequence>
+               <xs:element ref="name"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="short_description"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="long_description"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="bmtl:author"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="bmtl:citation"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="module"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="module" type="module-type">
+      <xs:annotation>
+         <xs:documentation> Algorithm module, which is defined as a stage of an analysis algorithm
+   that fulfills a distinct task. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="module-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type">
+            <xs:sequence>
+               <xs:element ref="name"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="short_description"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="long_description"/>
+               <xs:element maxOccurs="unbounded" minOccurs="0" ref="user_input"/>
+            </xs:sequence>
+            <xs:attribute name="seq" type="xs:positiveInteger" use="required">
+               <xs:annotation>
+                  <xs:documentation>Sequence number for the module.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="user_input" type="user_input-type">
+      <xs:annotation>
+         <xs:documentation>Defines the type of user setting, either a parameter or an option.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="user_input-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:method_element-type">
+            <xs:sequence>
+               <xs:element ref="name"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="display_name"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="short_description"/>
+               <xs:element ref="vectorizable"/>
+               <xs:element ref="default_value"/>
+            </xs:sequence>
+            <xs:attribute name="required" type="xs:boolean" use="required">
+               <xs:annotation>
+                  <xs:documentation>State whether this parameter or option is required or not.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="parameter" substitutionGroup="user_input" type="parameter-type">
+      <xs:annotation>
+         <xs:documentation> User-settable algorithm module parameter.  A range of valid values
+   may optionally specified. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="parameter-type">
+      <xs:complexContent>
+         <xs:extension base="user_input-type">
+            <xs:sequence>
+               <xs:element maxOccurs="1" minOccurs="0" ref="range"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="option" substitutionGroup="user_input" type="option-type">
+      <xs:annotation>
+         <xs:documentation> Algorithm module option, which may take one or more values from a
+   specified set. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="option-type">
+      <xs:complexContent>
+         <xs:extension base="user_input-type">
+            <xs:sequence>
+               <xs:element ref="option_set"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="name" type="xs:token">
+      <xs:annotation>
+         <xs:documentation>A short name such as a variable name or symbol representing a value.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="display_name" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>A descriptive name that may be displayed in a user interface.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="short_description" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Short description (e.g., a sentence) of an algorithm, module or parameter.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="long_description" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Long description (e.g., a paragraph) of an algorithm or module.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="vectorizable" type="xs:boolean">
+      <xs:annotation>
+         <xs:documentation>Indication of whether parameter is vectorizable or not.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="default_value" type="default_value-type">
+      <xs:annotation>
+         <xs:documentation>Default value for algorithm module parameter or option.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="default_value-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element ref="bmtl:dataset"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="range" type="range-type">
+      <xs:annotation>
+         <xs:documentation> Specifies a range of permitted values by means of min, min_or_equal,
+   max, max_or_equal.  Range boundaries may be either numbers or the
+   names of variables.  Mainly this is used for analysis algorithm
+   description to specify the range of valid values for a parameter. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="range-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:choice>
+                  <xs:element maxOccurs="1" minOccurs="0" name="min" type="xs:token">
+                     <xs:annotation>
+                        <xs:documentation> Specifies an exclusive minimum value for a range.  Value may be either
+     a decimal number OR the 'technical_name' of another parameter in the
+     algorithm. </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+                  <xs:element maxOccurs="1" minOccurs="0" name="min_or_equal" type="xs:token">
+                     <xs:annotation>
+                        <xs:documentation> Specifies an inclusive minimum value for a range.  Value may be either
+     a decimal number OR the 'technical_name' of another parameter in the
+     algorithm. </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+               </xs:choice>
+               <xs:choice>
+                  <xs:element maxOccurs="1" minOccurs="0" name="max" type="xs:token">
+                     <xs:annotation>
+                        <xs:documentation> Specifies an exclusive maximum value for a range.  Value may be either
+     a decimal number OR the 'technical_name' of another parameter in the
+     algorithm. </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+                  <xs:element maxOccurs="1" minOccurs="0" name="max_or_equal" type="xs:token">
+                     <xs:annotation>
+                        <xs:documentation> Specifies an inclusive maximum value for a range.  Value may be either
+     a decimal number OR the 'technical_name' of another parameter in the
+     algorithm. </xs:documentation>
+                     </xs:annotation>
+                  </xs:element>
+               </xs:choice>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="option_set" type="option_set-type">
+      <xs:annotation>
+         <xs:documentation>Set of permitted values for option.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="option_set-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element ref="bmtl:labeled_dataset"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="analysis_output" type="analysis_output-type">
+      <xs:annotation>
+         <xs:documentation> Element containing the results of a computational analysis, or a
+   promissory note for the results.  If the server finds the time to
+   complete the analysis exceeds an application-specific amount, it
+   will initially return this element with a status of 'PENDING' and
+   an estimated completion date.  A completed version may be retrieved
+   after this time.  If the time needed does not exceed this amount, the
+   full results will be sent right away. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="analysis_output-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type">
+            <xs:sequence>
+               <xs:element ref="experiment"/>
+               <xs:element ref="status"/>
+               <xs:element maxOccurs="1" minOccurs="0" ref="message"/>
+               <xs:choice>
+                  <xs:element ref="estimated_date"/>
+                  <xs:element ref="output_data"/>
+               </xs:choice>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+
+   <xs:element name="status" type="xs:string">
+      <xs:annotation>
+         <xs:documentation> Status of an analysis or other online process, e.g. 'pending', 'processed'.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="message" type="xs:normalizedString">
+      <xs:annotation>
+         <xs:documentation>Message sent accompanying status to provide further information.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="estimated_date" type="xs:dateTime">
+      <xs:annotation>
+         <xs:documentation> Estimated date and time for computational analysis to complete.
+   Formatted according to xs:dateTime standard, e.g. "2006-09-08T09:30:10Z". </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element abstract="true" name="output_data" type="output_data-type">
+      <xs:annotation>
+         <xs:documentation> Contains output data as a result of computational analysis.  This is
+   an abstract place-holder extended by specific applications. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="output_data-type">
+      <xs:complexContent>
+         <xs:extension base="bmtl:data_element-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+</xs:schema>

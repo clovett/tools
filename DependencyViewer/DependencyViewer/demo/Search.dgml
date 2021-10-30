@@ -1,0 +1,272 @@
+﻿<graph>
+  <sources>
+    
+  </sources>
+  <!-- Data/Document Creation Process -->
+  <node id="physicalworld" label="Physical World">
+  </node>
+  <node id="ppt" label="Person, Places, Things, Ideas">
+    <edge to="ppt" label="that exist in the"/>
+  </node>
+  <node id="descriptions" label="Descriptions">
+    <edge to="ppt" label="describe"/>
+    <edge to="attributes" label="are represented by"/>
+  </node>
+  <!-- orange -->
+  <node id="representations" label="Representations">
+    <edge to="physicalworld" label="of"/>
+    <edge to="wwwsites" label="such as"/>
+    <edge to="dataobjects" label="such as"/>
+    <edge to="wwwpages" label="such as"/>
+    <edge to="wwwobjects" label="such as"/>
+    <edge to="sensors" label="are sensed by"/>
+  </node>
+  <node id="attributes" label="Attriutes">
+    <edge to="wwwsites" label="describe"/>
+    <edge to="wwwpages" label="describe"/>
+    <edge to="wwwobjects" label="describe"/>
+    <edge to="dataobjects" label="describe"/>
+  </node>
+  <node id="wwwsites" label="WWW Sites">
+    <edge to="submissions" label="make up"/>
+    <edge to="wwwusers" label="are gathered by"/>
+  </node>
+  <node id="wwwobjects" label="WWW Objects">
+    <edge to="wwwpages" label="make up"/>
+    <edge to="ppt" label="represent"/>
+  </node>
+  <node id="wwwpages" label="WWW Pages">
+    <edge to="wwwsites" label="make up" />
+    <edge to="pagedatabases" label="make up"/>
+    <edge to="crawlers" label="are gatehred by"/>
+  </node>
+  <node id="dataobjects" label="Data Objects">
+    <edge to="ppt" label="represent"/>
+    <edge to="feeds" label="make up"/>
+    <edge to="3rdparties" label="are gathered by" />    
+  </node>
+  
+  <!-- Storage System -->
+  <node id="3rdparties" label="3rd Parties" type="External">
+    <edge to="sensors" label="are"/>
+    <edge to="feeds" label="generate"/>
+    <edge to="metadata" label="generate"/>
+    <edge to="analyzers" label="can act as"/>
+  </node>
+  <node id="feeds" label="Feeds" type="External">
+    <edge to="metadata" label="organized by"/>
+    <edge to="tables" label="organized into"/>
+  </node>
+  <node id="wwwusers" label="WWW Users" type="External">
+    <edge to="sensors" label="are"/>
+    <edge to="submissions" label="generate"/>
+    <edge to="editors" label="can be"/>
+  </node>
+  <node id="crawlers" label="Crawlers" type="External">
+    <edge to="sensors" label="are"/>
+    <edge to="pagedatabases" label="generate"/>
+  </node>
+  <node id="submissions" label="Submissions" type="External">
+    <edge to="editors" label="later organized by"/>
+  </node>
+  <node id="sensors" label="Sensors" type="External">
+    
+  </node>
+  <node id="pagedatabases" label="Page Databases">
+    <edge to="algorithms" label="later organized by"/>
+    <edge to="sortedlists" label="are organized into" />
+  </node>
+  <node id="algorithms" label="Algorithms" type="External">
+    <edge to="analyzers" label="act as"/>
+    <edge to="sortedlists" label="are used to create"/>
+  </node>
+  <node id="metadata" label="Metadata" type="External">
+    <edge to="tables" label="is used to create"/>
+  </node>
+  <node id="editors" label="Editors" type="External">
+    <edge to="analyzers" label="are"/>
+    <edge to="hierarchicaltaxonomies" label="create and maintain"/>
+  </node>
+  <node id="analyzers" label="Analyzers" type="External" >
+    <edge to="relevanceranking" label="collect data for"/>
+    <edge to="indexers" label="send data to"/>
+  </node>
+  <node id="tables" label="Tables" type="External">
+    <edge to="organizingprinciple" label="are an"/>
+    <edge to="databases" label="provide structure to"/>
+  </node>
+  <node id="databases" label="Databases" type="External">
+    <edge to="indexers" label="are indexed by"/>
+    <edge to="graph" label="are indexed by"/>
+  </node>
+  <node id="hierarchicaltaxonomies" label="Hierarchical
+Taxonomies" type="External">
+    <edge to="organizingprinciple" label="are an"/>
+    <edge to="wwwsitedirectorydatabases" label="provide structure to"/>
+  </node>
+  <node id="sortedlists" label="Sorted Lists" type="External">
+    <edge to="organizingprinciple" label="are an"/>
+  </node>
+  <node id="organizingprinciple" label="Organizing
+Principle" type="External">
+    <edge to="indexers" label="used by"/>
+    <edge to="graph" label="used by"/>
+  </node>
+  <node id="wwwdocumentdatabases" label="WWW Document
+Databases" type="External">
+    <edge to="indexers" label="are indexed by"/>
+    <edge to="graph" label="could be contained in a"/>
+  </node>
+  <node id="wwwsitedirectorydatabases" label="WWW Site
+Directory Databases" type="External">
+    <edge to="indexers" label="are indexed by"/>
+    <edge to="graph" label="could be contained in a"/>
+  </node>
+  <node id="indexers" label="Indexers" type="External">
+    <edge to="relevanceranking" label="can pair metadata from"/>
+    <edge to="index" label="create an"/>
+  </node>
+
+  <!-- Data/Document Retrieval System -->
+  <node id="graph" label="Graph" type="Element">
+    <edge to="index" label="is referenced by an"/>
+  </node>
+  <node id="relevanceranking" label="Relevance 
+Ranking" type="Element">
+    <edge to="postprocessors" label="can be done by"/>
+  </node>
+  <node id="index" label="Index" type="Element">
+    <edge to="postprocessors" label="sends data to"/>
+    <edge to="resultsdata" label="generates"/>
+  </node>
+  <node id="postprocessors" label="Post Processors" type="Element">
+    <edge to="articulator" label="sends data to an"/>
+    <edge to="resultsdata" label="generates"/>
+  </node>
+  <node id="interpreter" label="Interpreter" type="Element">
+    <edge to="index" label="sends data to an"/>
+  </node>
+  <node id="articulator" label="Articulator" type="Element">
+    <edge to="outputdevice" label="sends data to a"/>
+    <edge to="aggregator" label="could receive data from an"/>
+    <edge to="templates" label="makes us of"/>
+  </node>
+  <node id="resultsdata" label="Results Data" type="Element">
+    <edge to="metadataanddata" label="such as"/>
+    <edge to="rawdata" label="such as"/>
+  </node>
+  <node id="metadataanddata" label="Metadata 
+and Data" type="Element">    
+  </node>
+  <node id="rawdata" label="Raw Data" type="Element">
+    <edge to="scraper" label="could be sent to a "/>
+  </node>
+  <node id="scraper" label="Scraper" type="Element">
+    <edge to="aggregator" label="sends data to an"/>
+  </node>
+  <node id="aggregator" label="Aggregator" type="Element">
+    
+  </node>
+  <node id="templates" label="Templates" type="Element">
+    <edge to="resultspages" label="organize the form of"/>
+  </node>
+  
+  <!-- turquoise -->
+  <node id="inputdevice" label="Input Device" type="AttributeGroup">
+    <edge to="outputdevice" label="could be the same as the"/>
+  </node>
+  <node id="outputdevice" label="Output Device" type="AttributeGroup">
+    <edge to="metadataanddata" label="could directly receive"/>
+    <edge to="rawdata" label="could directly receive"/>
+    <edge to="scraper" label="could receive data directly from a"/>
+    <edge to="aggregator" label="could receive data directly from a"/>
+    <edge to="answers" label="displays"/>
+  </node>
+  <node id="answers" label="Answers" type="AttributeGroup">
+    <edge to="resultspages" label="could be contained in"/>
+    <edge to="information" label="should provide the required"/>
+    <edge to="actions" label="should empower"/>
+    <edge to="goals" label="should help people attain their"/>
+  </node>
+  <node id="queries" label="Queries" type="AttributeGroup">
+    <edge to="inputdevice" label="made using an"/>
+    <edge to="source" label="of a"/>
+  </node>
+  <node id="source" label="Source" type="AttributeGroup">
+    <edge to="articulator" label="could contain an"/>
+    <edge to="postprocessors" label="could contain a"/>
+    <edge to="index" label="contains an"/>
+    <edge to="graph" label="could contain a"/>
+    <edge to="interpreter" label="could contain an"/>
+    <edge to="answers" label="in order to get"/>
+  </node>
+  <node id="resultspages" label="Results Pages" type="AttributeGroup">
+    
+  </node>
+  <node id="views" label="Views" type="AttributeGroup">
+    <edge to="resultspages" label="control the display order of"/>
+    <edge to="outputdevice" label="could be redrawn by an"/>
+    <edge to="articulator" label="could be redrawn by the"/>
+  </node>
+  
+  <!-- data/document retrieval process-->
+  <node id="people" label="People" type="People">
+    <edge to="representations" label="create"/>
+    <edge to="information" label="require"/>
+    <edge to="activesearchers" label="could be"/>
+    <edge to="passivesearchers" label="could be"/>
+    <edge to="queries" label="make"/>
+    <edge to="views" label="could specify"/>   
+  </node>
+  <node id="information" label="Information" type="People">
+    <edge to="actions" label="to enable"/>
+    <edge to="descriptions" label="is made up of"/>
+  </node>
+  <node id="activesearchers" label="Active Searchers" type="People">
+    <edge to="options" label="can specify"/>
+    <edge to="keywords" label="can specify"/>
+  </node>
+  <node id="keywords" label="Keywords" type="People">
+    <edge to="customizationsettings" label="can be stored in"/>
+    <edge to="queries" label="can contribute to the specification of"/>
+  </node>
+  <node id="passivesearchers" label="Passive Searchers" type="People">
+    <edge to="behavioralhistory" label="rely on"/>
+    <edge to="environmentalstate" label="rely on"/>
+  </node>
+  <node id="behavioralhistory" label="Behavioral
+History" type="People">
+    <edge to="queries" label="contain data that can improve the specification of"/>
+    <edge to="personalizationprofiles" label="can be stored in"/>
+  </node>
+  <node id="environmentalstate" label="Environmental State" type="People">
+    <edge to="personalizationprofiles" label="can be stored in"/>
+    <edge to="queries" label="contain data that can improve the specification of"/>
+  </node>
+  <node id="personalizationprofiles" label="Personalization Profiles" type="People">
+    <edge to="queries" label="contain data that can improve the specification of"/>
+    <edge to="groupprofiles" label="can be collected and stored into"/>
+    <edge to="relevanceranking" label="can influence"/>
+  </node>
+  <node id="groupprofiles" label="Group Profiles" type="People">
+    <edge to="relevanceranking" label="can influence"/>
+  </node>
+  <node id="options" label="Options" type="People">
+    <edge to="customizationsettings" label="can be stored in"/>
+    <edge to="queries" label="can contribute to the specification of"/>
+  </node>
+  <node id="customizationsettings" label="Customization Settings" type="People">
+    <edge to="relevanceranking" label="can influence"/>
+    <edge to="views" label="can specify"/>
+    <edge to="queries" label="can contribute to the specification of"/>
+  </node>
+        
+  <!-- user context -->
+  <node id="actions" label="Actions" type="People">
+    <edge to="goals" label="toward"/>
+    <edge to="ppt" label="involve"/>
+  </node>
+  <node id="goals" label="Goals" type="People">
+    <edge to="physicalworld" label="exist in the"/>
+  </node>
+</graph>

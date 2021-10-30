@@ -1,0 +1,727 @@
+﻿<Window x:Class="DependencyViewer.Window1"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:DependencyViewer"
+    Icon="Gear.png"
+    Title="Dependency Viewer" Width="1000" Height="800" 
+    > 
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source='Clock.xaml'/>
+        <ResourceDictionary Source="Styles.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+        
+      <Storyboard x:Key='SecondsRotation' RepeatBehavior='Forever' TargetName='ClockSeconds'>
+        <DoubleAnimation From='0' To='360' Storyboard.TargetProperty='(Rectangle.RenderTransform).(RotateTransform.Angle)' Duration='0:0:5' BeginTime='0:0:0' />
+      </Storyboard>
+
+      <Storyboard x:Key='MinutesRotation' RepeatBehavior='Forever' TargetName='ClockMinutes'>
+        <DoubleAnimation From='0' To='360' Storyboard.TargetProperty='(Rectangle.RenderTransform).(RotateTransform.Angle)' Duration='0:0:10' BeginTime='0:0:0' />
+      </Storyboard>
+
+    </ResourceDictionary>
+
+  </Window.Resources>
+  <Window.InputBindings>
+    <KeyBinding Key="O" Modifiers="Control" Command="ApplicationCommands.Open"/>
+    <KeyBinding Key="N" Modifiers="Control" Command="ApplicationCommands.New"/>
+    <KeyBinding Key="S" Modifiers="Control" Command="ApplicationCommands.Save"/>
+    <KeyBinding Key="A" Modifiers="Control" Command="ApplicationCommands.SaveAs"/>
+    <KeyBinding Key="F4" Modifiers="Alt" Command="ApplicationCommands.Close"/>
+    <KeyBinding Key="F5" Command="ui:Window1.ReloadFileCommand"/>
+    <KeyBinding Key="X" Modifiers="Control" Command="ApplicationCommands.Cut"/>
+    <KeyBinding Key="C" Modifiers="Control" Command="ApplicationCommands.Copy"/>    
+    <KeyBinding Key="V" Modifiers="Control" Command="ApplicationCommands.Paste"/>
+    <KeyBinding Key="P" Modifiers="Control" Command="ApplicationCommands.Print"/>
+    <KeyBinding Key="F1" Command="ApplicationCommands.Help"/>
+    <KeyBinding Key="F" Modifiers="Control" Command="ApplicationCommands.Find"/>
+  </Window.InputBindings>
+  <Window.CommandBindings>
+    <CommandBinding Command="ApplicationCommands.Open" Executed="OpenFile"/>
+    <CommandBinding Command="ApplicationCommands.New" Executed="NewFile"/>
+    <CommandBinding Command="ui:Window1.ReloadFileCommand" Executed="ReloadFiles"/>
+    <CommandBinding Command="ApplicationCommands.Save" Executed="SaveFile"/>
+    <CommandBinding Command="ApplicationCommands.SaveAs" Executed="SaveAsFile"/>
+    <CommandBinding Command="ApplicationCommands.Close" Executed="Exit"/>
+    <CommandBinding Command="ApplicationCommands.Cut" Executed="Cut"/>
+    <CommandBinding Command="ApplicationCommands.Copy" Executed="Copy"/>
+    <CommandBinding Command="ui:Window1.CopyImageCommand" Executed="CopyImage"/>
+    <CommandBinding Command="ui:Window1.CopyUnscaledCommand" Executed="CopyUnscaled"/>
+    <CommandBinding Command="ApplicationCommands.Paste" Executed="Paste"/>
+    <CommandBinding Command="ui:Window1.PageSetupCommand" Executed="PageSetup"/>
+    <CommandBinding Command="ApplicationCommands.Print" Executed="Print"/>
+    <CommandBinding Command="ApplicationCommands.PrintPreview" Executed="PrintPreview"/>
+    <CommandBinding Command="ApplicationCommands.Help" Executed="ShowHelp"/>
+    <CommandBinding Command="ApplicationCommands.Find" Executed="OnFind"/>    
+  </Window.CommandBindings>
+  <DockPanel  Name="dockPanel" Background="Gray" Initialized="dockPanel_Initialized">
+    <ToolBarTray DockPanel.Dock="Top" IsLocked="False">
+      <ToolBarTray.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="white" Offset="0"/>
+          <GradientStop Color="#BBBBBB" Offset="1"/>
+        </LinearGradientBrush>
+      </ToolBarTray.Background>
+      <ToolBar Band="0" Background="#DDDDDD">
+        <Menu IsMainMenu="True" Background="#DDDDDD">
+          <MenuItem>
+            <MenuItem.Header>_File</MenuItem.Header>
+            <MenuItem Command="ApplicationCommands.New" Header="_New" InputGestureText="Ctrl+N" />
+            <MenuItem Command="ApplicationCommands.Open" Header="_Open..." InputGestureText="Ctrl+O" />
+            <MenuItem Command="ui:Window1.ReloadFileCommand" Header="_Reload" InputGestureText="F5" />
+            <MenuItem Name="SaveMenu" Command="ApplicationCommands.Save" Header="_Save" InputGestureText="Ctrl+S" />
+            <MenuItem Command="ApplicationCommands.SaveAs" Header="Save _as..." InputGestureText="Ctrl+A" />
+            <Separator/>
+            <MenuItem Command="ui:Window1.PageSetupCommand" Header="Page s_etup..." IsEnabled="False"/>
+            <MenuItem Command="ApplicationCommands.Print" Header="_Print..." InputGestureText="Ctrl+P"/>
+            <MenuItem Command="ApplicationCommands.PrintPreview" Header="Print pre_view..."  IsEnabled="False" />
+            <Separator/>
+            <MenuItem x:Name="RecentFilesParent" Header="Recent _Files"/>
+            <Separator/>
+            <MenuItem Command="ApplicationCommands.Close" Header="E_xit" InputGestureText="Alt+F4" />
+          </MenuItem>
+          <MenuItem >
+            <MenuItem.Header>_Edit</MenuItem.Header>
+            <MenuItem Name="CutMenu" Command="ApplicationCommands.Cut" Header="_Cut" InputGestureText="Ctrl+X" />
+            <MenuItem Name="CopyMenu" Command="ApplicationCommands.Copy" Header="_Copy" InputGestureText="Ctrl+C" />
+            <MenuItem Command="ui:Window1.CopyImageCommand" Header="Copy _image"/>
+            <MenuItem Command="ui:Window1.CopyUnscaledCommand" Header="Copy _unscaled"/>
+            <MenuItem IsEnabled="False" Command="ApplicationCommands.Paste" Header="_Paste" InputGestureText="Ctrl+V" />
+            <Separator/>
+            <MenuItem Command="ApplicationCommands.Find" Header="_Find..." InputGestureText="Ctrl+F"/>
+          </MenuItem>
+          <MenuItem Name="ViewMenu">
+            <MenuItem.Header>_View</MenuItem.Header>
+          </MenuItem>
+          <MenuItem Name="Zoom">
+            <MenuItem.Header>_Zoom</MenuItem.Header>
+            <MenuItem Header="_Fit To Window" Click="OnZoomMenu" Tag="Fit"/>
+            <MenuItem Header="_500%" Click="OnZoomMenu" Tag="500"/>
+            <MenuItem Header="_400%" Click="OnZoomMenu" Tag="400"/>
+            <MenuItem Header="_300%" Click="OnZoomMenu" Tag="300"/>
+            <MenuItem Header="_200%" Click="OnZoomMenu" Tag="200"/>
+            <MenuItem Header="_150%" Click="OnZoomMenu" Tag="150"/>
+            <MenuItem Header="_125%" Click="OnZoomMenu" Tag="125"/>
+            <MenuItem Header="_100%" Click="OnZoomMenu" Tag="100"/>
+            <MenuItem Header="_75%" Click="OnZoomMenu" Tag="75"/>
+            <MenuItem Header="_66%" Click="OnZoomMenu" Tag="66"/>
+            <MenuItem Header="_50%" Click="OnZoomMenu" Tag="50"/>
+            <MenuItem Header="_33%" Click="OnZoomMenu" Tag="33"/>
+            <MenuItem Header="_25%" Click="OnZoomMenu" Tag="25"/>
+            <MenuItem Header="_10%" Click="OnZoomMenu" Tag="10"/>
+          </MenuItem>
+          <MenuItem>
+            <MenuItem.Header>_Layout</MenuItem.Header>
+            <Separator/>
+            <MenuItem Name="TopToBottomMenu" Click="TopToBottom" Header="_Top to bottom" IsChecked="True"/>
+            <MenuItem Name="BottomToTopMenu" Click="BottomToTop" Header="_Bottom to top"/>
+            <MenuItem Name="LeftToRightMenu" Click="LeftToRight" Header="_Left to right"/>
+            <MenuItem Name="RightToLeftMenu" Click="RightToLeft" Header="_Right to left"/>
+            <Separator/>
+            <MenuItem Name="OptionsMenu" Header="_Options..." Click="ShowOptions"/>
+            <Separator/>
+            <MenuItem Name="CancelMenu" Click="CancelLayout" Header="_Cancel" IsEnabled="False"/>
+          </MenuItem>
+          <MenuItem x:Name="ThemeMenu">
+            <MenuItem.Header>_Theme</MenuItem.Header>
+            <MenuItem Click="SetTheme" Header="_Glass" IsChecked="True" Tag="Glass"/>
+            <MenuItem Click="SetTheme" Header="_Fun" Tag="Fun"/>
+            <MenuItem Click="SetTheme" Header="_Elegant" Tag="Elegant"/>
+          </MenuItem>
+
+          <MenuItem >
+            <MenuItem.Header>_Window</MenuItem.Header>
+            <MenuItem Click="OnNewWindow" Header="_New Window"/>
+          </MenuItem>
+          <MenuItem >
+            <MenuItem.Header>_Help</MenuItem.Header>
+            <MenuItem Command="ApplicationCommands.Help" Header="_Content" InputGestureText="F1" />
+          </MenuItem>
+        </Menu>
+      </ToolBar>
+      <ToolBar Band="0" Width="100" Height="34" Background="#DDDDDD">
+        <Canvas x:Name="HistoryButtons">
+          <Path IsHitTestVisible="False">
+            <Path.Data>
+              <PathGeometry>
+                <PathFigure StartPoint="14,0" IsClosed="True">
+                  <ArcSegment IsStroked="True" Point="14,28" SweepDirection="Counterclockwise" Size="11,11"/>
+                  <BezierSegment IsStroked="True" Point1="21,28" Point2="23,26" Point3="26,26"/>
+                  <BezierSegment IsStroked="True" Point1="31,26" Point2="32,28" Point3="39,28"/>
+                  <ArcSegment IsStroked="True" Point="39,0" SweepDirection="Counterclockwise" Size="11,11"/>
+                  <BezierSegment IsStroked="True" Point1="30,2" Point2="32,2" Point3="26,2"/>
+                  <BezierSegment IsStroked="True" Point1="25,2" Point2="18,0" Point3="15,0"/>
+                </PathFigure>
+              </PathGeometry>
+            </Path.Data>
+            <Path.Stroke>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#A0A0A0" Offset="0"/>
+                <GradientStop Color="#DDDDDD" Offset="1"/>
+              </LinearGradientBrush>
+            </Path.Stroke>
+            <Path.Fill>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                <GradientStop Color="#A0A0A0" Offset="0"/>
+                <GradientStop Color="white" Offset=".5"/>
+                <GradientStop Color="white" Offset="1"/>
+              </LinearGradientBrush>
+            </Path.Fill>
+          </Path>
+
+          <Button x:Name="BackButton" Click="OnBackButton" IsEnabled="True" Style="{StaticResource BackButton}" 
+                            Canvas.Top="2" Canvas.Left="2"/>
+          <Button x:Name="ForwardButton" Click="OnForwardButton" IsEnabled="True"  Style="{StaticResource ForwardButton}" 
+                            Canvas.Top="2" Canvas.Left="27" />
+          <Canvas.Triggers></Canvas.Triggers>
+
+        </Canvas>
+      </ToolBar>
+    </ToolBarTray>
+    <Grid DockPanel.Dock='Bottom' Background="CornflowerBlue" Height="30" >
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="10"/>
+        <ColumnDefinition Width="500"/>
+        <ColumnDefinition Width="10"/>
+        <ColumnDefinition Width="50"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock Name="toolStripStatusLabel" Height="20" Width="500" Grid.Column="1" />
+      <Viewbox Width='30' Height='30' Name='Clock' Visibility='Hidden' Grid.Column='3'>
+        <Grid Width='10' Height='10'>
+          <Rectangle Fill='{StaticResource ClockFaceBrush}'/>
+          <Rectangle Margin='4.5,4,3,3' Fill='{StaticResource ClockMinutesBrush}'
+          RenderTransformOrigin='.1,.25' Name='ClockMinutes'>
+            <Rectangle.RenderTransform>
+              <RotateTransform Angle='0'/>
+            </Rectangle.RenderTransform>
+          </Rectangle>
+          <Rectangle Margin='4.3,.5,4.4,4.6' Fill='{StaticResource ClockSecondsBrush}'
+            RenderTransformOrigin='.5,.85' Name='ClockSeconds'>
+            <Rectangle.RenderTransform>
+              <RotateTransform Angle='0'/>
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+      </Viewbox>
+    </Grid>
+    <Grid>
+      <ui:GraphScroller x:Name='scroller'>
+        <Canvas x:Name='clipper' ClipToBounds='True' >
+          <WrapPanel Name="panel" Orientation="Horizontal" Background="{DynamicResource GraphBackground}">
+          </WrapPanel>
+        </Canvas>
+      </ui:GraphScroller>
+      
+      <FlowDocumentPageViewer x:Name="Help" Focusable="False" HorizontalAlignment="Stretch"
+                             VerticalAlignment="Stretch" Foreground="White" Background="Black" Padding="0,0,10,0" >
+        <FlowDocumentPageViewer.Resources>
+        </FlowDocumentPageViewer.Resources>
+        <FlowDocument x:Name="FDoc" FontWeight="Normal" Style="{StaticResource Verbage}"
+                      ColumnWidth="800" Block.TextAlignment="Left" Background="Black">
+          <Section>
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">Welcome to Dependency Viewer</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              This application can view various types of dependency graphs including
+
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="3">CLR graphs</Hyperlink> ,
+              <Hyperlink  NavigateUri="#msbuild" Foreground="Yellow" Click="LinkClicked" Tag="4">MSBuild graphs</Hyperlink>
+              and
+              <Hyperlink  NavigateUri="#xsd" Foreground="Yellow" Click="LinkClicked" Tag="5">XSD graphs</Hyperlink> .
+
+              You can use the View menu to select different options on what is visible in the graph.
+              Use the Layout menu to select different layouts and the Theme menu to change the
+              look of the graph using different XAML templates.
+
+              Some very simple
+              <Hyperlink  NavigateUri="#editing" Foreground="Yellow" Click="LinkClicked" Tag="6">editing</Hyperlink> ,
+              operations are also supported.
+            </Paragraph>
+            <Table CellSpacing="5">
+              <Table.Columns>
+                <TableColumn Width="1*"/>
+                <TableColumn Width="1*"/>
+              </Table.Columns>
+              <TableRowGroup>
+                <TableRow>
+                  <TableCell>
+                    <Paragraph Foreground="Yellow">User Interface Hints:</Paragraph>
+                    <Table CellSpacing="5">
+                      <Table.Columns>
+                        <TableColumn Width="180"/>
+                        <TableColumn Width="220*"/>
+                      </Table.Columns>
+                      <TableRowGroup>
+                        <TableRow>
+                          <TableCell>
+                            <Paragraph>Mouse Wheel</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>
+                              Zoom in/out around mouse position while holding down the Control key
+                              See
+                              <Hyperlink  NavigateUri="#mapzoom" Foreground="Yellow" Click="LinkClicked" Tag="2">MapZoom</Hyperlink> for details.
+                            </Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <Paragraph>Control + Mouse Drag Rectangle</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Zoom into the rectangle you draw</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <Paragraph>Mouse Drag</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Pan the view as you drag the mouse</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <Paragraph>Mouse Left Button Down</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>
+                              Select a node or edge and make it the focus and scroll it into full view.
+                              Shift-Click to add to the selected nodes.
+                            </Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- left arrow -->
+                            <Paragraph>&#x2190;</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Move keyboard focus left</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- right arrow -->
+                            <Paragraph>&#x2192;</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Move keyboard focus right</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- up arrow -->
+                            <Paragraph>&#x2191;</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Move keyboard focus up</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- down arrow -->
+                            <Paragraph>&#x2193;</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Move keyboard focus down</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- shift arrow -->
+                            <Paragraph>Shift-Arrows</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Move focus to node that has connecting edge in given direction</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- Page-up -->
+                            <Paragraph>Page-up</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Scroll up one page.  Control key to page horizontally.</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                        <TableRow>
+                          <TableCell>
+                            <!-- Page-Down -->
+                            <Paragraph>Page-Down</Paragraph>
+                          </TableCell>
+                          <TableCell>
+                            <Paragraph>Scroll down one page. Control key to page horizontally.</Paragraph>
+                          </TableCell>
+                        </TableRow>
+                      </TableRowGroup>
+                    </Table>
+                  </TableCell>
+                  <!-- Recently Added List-->
+                  <TableCell>
+                    <Paragraph Foreground="Yellow">Recently Added:</Paragraph>
+                    <List>
+                      <ListItem>
+                        <Paragraph>
+                          <Button Style="{StaticResource NewButton}"/>
+                          Add "Recent Files" menu.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          <Button Style="{StaticResource NewButton}"/>
+                          Add Zoom menu with handy options like "Fit to Window".
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          <Button Style="{StaticResource NewButton}"/>
+                          Add Group by Namespace and Assembly in CLR graphs
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          <Button Style="{StaticResource NewButton}"/>
+                          Fix Find Dialog on nested graphs
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          <Button Style="{StaticResource NewButton}"/>
+                          Fixed save/load of nested graphs
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added Find Dialog.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added scroll bars.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added inheritance edges to CLR dependency graph using different visual style.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added "Namespaces" dialog for easier selection of CLR namespaces
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added context menu items to CLR graph for showing graph subsets based on selected nodes only.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added Call Graph, and Containment Graphs which are subsets of Dependency Graph to CLR graph.
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added CreateContextMenu so GraphGenerators can customize it
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added tooltips on nodes and edges
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>
+                          Added support for multiple selection
+                        </Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Made GraphGenerator assemblies pluggable</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Added "EdgeType" for styling different types of edges</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Highlight all edges to/from selected node</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Add support for XSLT graphs</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Show or hide selected subsets via context menu</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>MSBuild project dependency graphs</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Support for nested sub graphs (See XSD 'Files' graph)</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>XSD View filters on element, attribute, complexType, etc.</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>XSD "Files" view shows import/include hierarchy</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Show XSD groups and attributeGroups</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Added "Copy Image" - the "Copy" menu now copies selected node label</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Zoom to show all of selected edge</Paragraph>
+                      </ListItem>
+                      <ListItem>
+                        <Paragraph>Smooth zoom to rectangle</Paragraph>
+                      </ListItem>
+                    </List>
+                  </TableCell>
+                </TableRow>
+              </TableRowGroup>
+            </Table>
+            <Paragraph Foreground="LightGray" >
+              This sample application is written by
+              <Hyperlink  NavigateUri="mailto://clovett;hermanv;levnach?Subject=Dependency Viewer" Click="LinkClicked"
+                          Foreground="Yellow">Chris Lovett</Hyperlink>
+              using C# on the
+              <Hyperlink NavigateUri="http://windowsclient.net/"  Foreground="Yellow"
+            Click="LinkClicked">Windows Presentation Framework</Hyperlink> .
+              It also uses the Common Compiler Framework by
+              <Hyperlink  NavigateUri="mailto://clovett;hermanv;levnach?Subject=Dependency Viewer"
+                   Click="LinkClicked" Foreground="Yellow">Herman Venter</Hyperlink>
+              and the
+              <Hyperlink  NavigateUri="http://codebox/msagl"
+                        Click="LinkClicked" Foreground="Yellow">MSAGL</Hyperlink> graph layout engine
+              by
+              <Hyperlink  NavigateUri="mailto://clovett;hermanv;levnach?Subject=Dependency Viewer"
+       Click="LinkClicked" Foreground="Yellow">Lev Nachmanson</Hyperlink> and the XSLT graph generator
+              was provided by
+              <Hyperlink  NavigateUri="mailto://antonl?Subject=XSLT Dependency Viewer"
+       Click="LinkClicked" Foreground="Yellow">Anton Lapounov</Hyperlink>
+            </Paragraph>
+          </Section>
+          <Section BreakPageBefore="True" x:Name="mapzoom">
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">MapZoom</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              This application implements an experiment in smooth zooming of large graphs
+              called "MapZoom". The idea is to eliminate the need for scroll bars by providing
+              effortless zooming using the mouse wheel.  The idea is that scrolling with
+              scroll bars in a large graph can be very tedious and one tends to get lost very
+              easily.  So many large graph applications provide a separate thumbnail "map" view so you
+              can see the big picture and drag the window around on the map for faster pin pointing
+              of the piece you want to see.
+            </Paragraph>
+            <Paragraph>
+              Well, the "MapZoom" concept combines this thumbnail navigation concept into the main view
+              by making it really easy to zoom out to that high level view and then zoom on on the
+              piece you want to see.  The implementation will detect when the user spins the
+              mouse wheel fast and will zoom further and the zoom is animated in a way that makes you
+              feel like you are flying. Of course this only works if you have a very high performance
+              rendering engine like that provided by WPF.
+            </Paragraph>
+            <Paragraph>
+              To complete the experiment, some other zooming and panning tools are also provided.
+              You can simply drag the canvas for fine grained panning control, or you can hold
+              down the control key and draw a rectangle to zoom on on a piece of the graph very
+              quickly.  You can also click the middle mouse button to get "auto scrolling" behavior
+              which is a nice way to explore a large graph and read it without thinking about scrollbars.
+            </Paragraph>
+            <Paragraph>
+              If you like this or have ideas on how to improve it please let me know, thanks.
+              <LineBreak/>
+              <LineBreak/>
+              <Hyperlink  NavigateUri="mailto://clovett;?Subject=MapZoom" Click="LinkClicked"
+                         Foreground="Yellow">Chris Lovett</Hyperlink>
+            </Paragraph>
+            <Paragraph>
+              [
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="1">Home</Hyperlink> ]
+            </Paragraph>
+          </Section>
+          <Section BreakPageBefore="True" x:Name="clr">
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">CLR Graphs</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              Use the File/Open menu to load one or more CLR .dll or .exe assemblies and you will
+              see the CLR Type Hierarchy by default.  Use the View menu to switch to
+              the Containment, Calls or Dependency graphs.  The Containment graph shows how objects
+              are contained inside other objects via field members.  The Call graph shows how
+              objects call other objects, and the Dependency graph shows all dependencies (either
+              containment or method call dependencies and inheritance).
+              You can also use the View menu to filter out Public, Internal, Private, or External stuff
+              which can make the graph more manageable.  You can also group by Namespace or Assembly.
+            </Paragraph>
+            <Paragraph>
+              If you use the Context menu to select different graph types which will show you that graph
+              type starting with the nodes you selected.  You can also show/hide selected graphs and
+              you can hide individual selected nodes or disconnect them so you get multiple independent
+              graphs.  You can also modify the level of detail shown in these graphs.
+            </Paragraph>
+            <Paragraph>
+              [
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="1">Home</Hyperlink> ]
+            </Paragraph>
+          </Section>
+          <Section BreakPageBefore="True" x:Name="msbuild">
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">MSBuild Graphs</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              Use the File/Open menu to load one or more MSbuild *.*proj files, like a .csproj file
+              and see the project file dependency graph - including .targets imports.
+              Use the View menu to filter out .targets if you just want to see project references.
+            </Paragraph>
+            <Paragraph>
+              Some MSBuild project files contain variables that are inherited from build
+              environments (like Razzle) including variables like $(_NTDRIVE) and so on.
+              If you want to load a project file like this then you need to launch the
+              dependency viewer from a DOS command prompt where these variables are
+              defined, then the viewer will be able to resolve the location of those imports.
+            </Paragraph>
+            <Paragraph>
+              [
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="1">Home</Hyperlink> ]
+            </Paragraph>
+          </Section>
+          <Section BreakPageBefore="True" x:Name="xsd">
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">XSD Graphs</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              Use the File/Open menu to load one or more XSD files and you will see the
+              XSD Type Hierarchy by default.  This type hierarchy includes elements
+              and attributes and the simple and complex types they depend on and the type
+              inheritance hierarchy.
+            </Paragraph>
+            <Paragraph>
+              Use the View menu to switch to a "Dependency" view to see how each type and
+              element depends on the others inside content model groups.  You can also use
+              the View menu to turn on or off the visibility of elements, attributes,
+              complex types, simple types, groups and attribute groups.
+            </Paragraph>
+            <Paragraph>
+              [
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="1">Home</Hyperlink> ]
+            </Paragraph>
+          </Section>
+          <Section BreakPageBefore="True" x:Name="editing">
+            <Paragraph>
+              <TextBlock HorizontalAlignment="Center" FontSize="24" FontWeight="Bold">
+                <Run Style="{StaticResource PrettyGreen}">Editing Operations</Run>
+              </TextBlock>
+            </Paragraph>
+            <Paragraph>
+              In order to make a graph more readable, you can use the View menu to
+              filter out stuff.  You can also right-click on a node to get a context menu
+              which allows you to "Disconnect" a node from the graph.  This is useful when you
+              have a node that has just too many connections.  You can also right click on
+              that node again and "Reconnect" it later.
+            </Paragraph>
+            <Paragraph>
+              A little more drastic is the Edit/Cut operation which deletes a node.  This
+              can cause a complete re-layout of the graph, since it could result in even cutting
+              one graph into two separate graphs.  This does not modify the original source of the
+              information, it is only an in-memory edit that is lost the minute you close the app
+              or load a different input source.
+            </Paragraph>
+            <Paragraph>
+              [
+              <Hyperlink  NavigateUri="#clr" Foreground="Yellow" Click="LinkClicked" Tag="1">Home</Hyperlink> ]
+            </Paragraph>
+          </Section>
+        </FlowDocument>
+      </FlowDocumentPageViewer>
+      <Button x:Name="CloseBox" Height="24" HorizontalAlignment="Right" Margin="0,17.103,18,0" VerticalAlignment="Top" Width="24" Click="CloseHelp">
+        <Button.Template>
+          <ControlTemplate>
+            <ControlTemplate.Resources>
+              <Storyboard x:Key="TimelineMouseEnter">
+                <!-- mouse over -->
+                <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+                <DoubleAnimation To="1" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="glow" Storyboard.TargetProperty="(OuterGlowBitmapEffect.Opacity)"/>
+              </Storyboard>
+              <Storyboard x:Key="TimelineMouseLeave">
+                <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="hover" Storyboard.TargetProperty="(UIElement.Opacity)"/>
+                <DoubleAnimation To="0" BeginTime="00:00:00" Duration="00:00:00.1" Storyboard.TargetName="glow" Storyboard.TargetProperty="(OuterGlowBitmapEffect.Opacity)"/>
+              </Storyboard>
+            </ControlTemplate.Resources>
+            <Canvas>
+              <Ellipse Width="24" Height="24">
+                <Ellipse.Fill>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#FFC03080" Offset="0" />
+                    <GradientStop Color="#FF800000" Offset="1" />
+                  </LinearGradientBrush>
+                </Ellipse.Fill>
+              </Ellipse>
+              <Ellipse  Width="22" Height="22" Canvas.Left="1" Canvas.Top="1">
+                <Ellipse.Fill>
+                  <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0,0">
+                    <GradientStop Color="#FFFF3080" Offset=".1" />
+                    <GradientStop Color="#FFC02070" Offset=".5" />
+                    <GradientStop Color="#FF800050" Offset="1" />
+                  </RadialGradientBrush>
+                </Ellipse.Fill>
+              </Ellipse>
+              <Ellipse x:Name="hover" Opacity="0" Width="22" Height="22" Canvas.Left="1" Canvas.Top="1">
+                <Ellipse.Fill>
+                  <RadialGradientBrush RadiusX="1" RadiusY="1" GradientOrigin="0,0">
+                    <GradientStop Color="#FFFF80C0" Offset=".1" />
+                    <GradientStop Color="#FFFF2070" Offset=".5" />
+                    <GradientStop Color="#FFC02050" Offset="1" />
+                  </RadialGradientBrush>
+                </Ellipse.Fill>
+              </Ellipse>
+              <TextBlock Text="X" FontSize="16" Foreground="White" Canvas.Left="6.5" Canvas.Top="3"
+                         FontFamily="Courier" FontWeight="Bold"/>
+              <Canvas.BitmapEffect>
+                <OuterGlowBitmapEffect x:Name="glow" GlowColor="red" GlowSize="5" Opacity="0"/>
+              </Canvas.BitmapEffect>
+            </Canvas>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Trigger.EnterActions>
+                  <BeginStoryboard Storyboard="{StaticResource TimelineMouseEnter}"/>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                  <BeginStoryboard Storyboard="{StaticResource TimelineMouseLeave}"/>
+                </Trigger.ExitActions>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Button.Template>
+      </Button>
+    </Grid>
+  </DockPanel>
+
+  <Window.Triggers>
+    <EventTrigger RoutedEvent='ui:Window1.LayoutPending'>
+      <EventTrigger.Actions>
+        <BeginStoryboard Name='AnimateSeconds' Storyboard='{StaticResource SecondsRotation}'/>
+        <BeginStoryboard Name='AnimateMinutes' Storyboard='{StaticResource MinutesRotation}'/>
+      </EventTrigger.Actions>
+    </EventTrigger>
+    <EventTrigger RoutedEvent='ui:Window1.LayoutComplete'>
+      <EventTrigger.Actions>
+        <PauseStoryboard BeginStoryboardName='AnimateSeconds' />
+        <PauseStoryboard BeginStoryboardName='AnimateMinutes' />
+      </EventTrigger.Actions>
+    </EventTrigger>
+  </Window.Triggers>
+</Window>

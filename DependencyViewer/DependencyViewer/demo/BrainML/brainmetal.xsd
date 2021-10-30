@@ -1,0 +1,591 @@
+<?xml version="1.0"?>
+<xs:schema elementFormDefault="qualified" targetNamespace="urn:bml/brainml.org:internal/BrainMetaL/1" xmlns="urn:bml/brainml.org:internal/BrainMetaL/1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+   <xs:annotation>
+      <xs:documentation>
+   This schema specifies top-level elements that BrainML elements should inherit
+   from, and utility elements to be used by BrainML schemas and/or instance
+   documents.  Included are:
+  
+   - the Quintessence elements, abstract top-level data "classes"
+  
+   - a 'link' element for linking between quintessence elements, both within
+     and between documents, and for referencing external resources such as
+     journal article PDFs
+  
+   - a 'unit' element which supports reference to unit definitions defined
+     in instance documents conforming to the "units" schema
+  
+   - a 'vocab' element which supports reference to term declarations in
+     instance documents conforming to the "vocabulary" schema
+  
+   - utility complex data type elements
+  
+   - [temporary] elements defining the structure of a data submission, so that
+     instance documents can be validated directly against this.. these will be
+     moved to one or more "brainml" schemas defining document types for exchange
+</xs:documentation>
+   </xs:annotation>
+   <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="xlink.xsd"/>
+   <xs:import namespace="http://www.w3.org/XML/1998/namespace">
+      <xs:annotation>
+         <xs:documentation> Note: canonical location of the 'xml' schema is
+   "http://www.w3.org/2001/xml.xsd", however sometimes this server is down
+   or slow, so we use a local copy. </xs:documentation>
+      </xs:annotation>
+   </xs:import>
+
+   <xs:attributeGroup name="anyExtAttr">
+      <xs:annotation>
+         <xs:documentation>Wildcard attribute.</xs:documentation>
+      </xs:annotation>
+      <xs:anyAttribute/>
+   </xs:attributeGroup>
+
+   <xs:group name="anyExtEl">
+      <xs:annotation>
+         <xs:documentation>
+   Wildcard content supporting any elements and attributes that have namespaces
+   outside of this one, w/any attributes.
+</xs:documentation>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:any namespace="##other"/>
+      </xs:sequence>
+   </xs:group>
+
+   <xs:group name="anythingExt">
+      <xs:annotation>
+         <xs:documentation>
+   Wildcard content supporting any elements and attributes that have namespaces
+   outside of this one, w/any attributes.
+</xs:documentation>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:group ref="anyExtEl"/>
+      </xs:sequence>
+   </xs:group>
+
+   <xs:attributeGroup name="anythingExt">
+      <xs:annotation>
+         <xs:documentation>
+   Wildcard content supporting any elements and attributes that have namespaces
+   outside of this one, w/any attributes.
+</xs:documentation>
+      </xs:annotation>
+      <xs:attributeGroup ref="anyExtAttr"/>
+   </xs:attributeGroup>
+
+   <xs:element name="link" type="link-type">
+      <xs:annotation>
+         <xs:documentation>
+   Generic element for linking to another element within the same or
+   another document.  The href attribute should be of form #id, where 'id'
+   is an XML ID in the current document (no whitespace, cannot start with
+   number).  This will be resolved relative to the local value of xml:base
+   (see http://www.w3.org/TR/xmlbase/).  To ensure a local reference when
+   there might be an externally-referencing xml:base value in the context,
+   set xml:base="" within the link.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="link-type">
+      <xs:attribute ref="xml:base"/>
+      <xs:attribute ref="xlink:href" use="required"/>
+      <xs:attribute ref="xlink:role">
+         <xs:annotation>
+            <xs:documentation>Indicates nature of the referred-to end of the relation.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="dest" type="xs:anyURI">
+         <xs:annotation>
+            <xs:documentation>
+     If this is a link to another BrainML element (not an external resource),
+     the definition of this element is given here, in the form
+     URI,element, as in "urn:bml/brainml.org:internal/BrainML/1,experiment".
+   </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:complexType>
+
+   <xs:element name="link_collection">
+      <xs:annotation>
+         <xs:documentation>Link that must go to a collection element.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:complexContent>
+            <xs:restriction base="link-type">
+               <xs:attribute fixed="urn:bml/brainml.org:internal/BrainMetaL/1,collection" name="dest" type="xs:anyURI" use="required"/>
+            </xs:restriction>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="collection" type="collection-type">
+      <xs:annotation>
+         <xs:documentation> Designates a collection of BrainML elements, identified by links, which may
+   themselves go to collections.  More precisely, this element consists of a
+   list of zero or more links to other collections, followed by a list of zero
+   or more links to non-collection items.  An empty collection is legal.
+   The order of the links may be ignored by the processing application unless
+   the attribute 'ordered' is set to "true".
+   This element can be extended to add any metadata for describing the
+   collection that is needed. </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="collection-type">
+      <xs:sequence>
+         <xs:element maxOccurs="unbounded" minOccurs="0" ref="link_collection"/>
+         <xs:element maxOccurs="unbounded" minOccurs="0" ref="link"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:ID" use="required"/>
+      <xs:attribute name="name" type="xs:token">
+         <xs:annotation>
+            <xs:documentation>Optional name for the collection.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="ordered" type="xs:boolean">
+         <xs:annotation>
+            <xs:documentation>Order of contents may be ignored unless present and set to "true".</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:complexType>
+
+   <xs:element name="unit" type="unit-type">
+      <xs:annotation>
+         <xs:documentation>
+   Element for referencing predefined units.  (Defined in documents conforming
+   to units.xsd.  You should subclass / substitute this element to define your
+   own semantics.  (See examples.)
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="unit-type">
+      <xs:attribute name="name" type="xs:token">
+         <xs:annotation>
+            <xs:documentation>(Optional) Name of the unit (excluding hierarchical context).</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute ref="xlink:href" use="required">
+         <xs:annotation>
+            <xs:documentation>Full URL to the unit's ID in its declaring document.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:complexType>
+
+   <xs:element name="measured_quantity" type="measured_quantity-type">
+      <xs:annotation>
+         <xs:documentation>
+  Type for measured quantities.  The href attribute should be a unit reference,
+  as for the 'unit' element.  Inside this element is a decimal value.
+  You should subclass / substitute this element to define your own semantics.
+  (See examples.)
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="measured_quantity-type">
+      <xs:simpleContent>
+         <xs:extension base="xs:decimal">
+            <xs:attribute ref="xlink:href" use="required">
+               <xs:annotation>
+                  <xs:documentation>Full URL to the unit's ID in its declaring document.</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+            <xs:attribute name="name" type="xs:token">
+               <xs:annotation>
+                  <xs:documentation>(Optional) Name of the unit (excluding hierarchical context).</xs:documentation>
+               </xs:annotation>
+            </xs:attribute>
+         </xs:extension>
+      </xs:simpleContent>
+   </xs:complexType>
+
+   <xs:element name="vocab" type="vocab-type">
+      <xs:annotation>
+         <xs:documentation>
+   Type for referencing predefined vocabulary terms.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="vocab-type">
+      <xs:attribute name="domain" type="xs:token">
+         <xs:annotation>
+            <xs:documentation>Domain of applicability for the term (including hierarchical context).</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute name="term" type="xs:token">
+         <xs:annotation>
+            <xs:documentation>Name of the term (including hierarchical context).</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute ref="xlink:href" use="required">
+         <xs:annotation>
+            <xs:documentation>Full URL to the term's ID in its declaring document.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:complexType>
+
+   <xs:element name="datum" type="xs:token">
+      <xs:annotation>
+         <xs:documentation>A single data point, possibly multi-dimensional.</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:simpleType name="dimension-type">
+      <xs:annotation>
+         <xs:documentation> 
+   Type for expressing dimensions of a dataset, that is, its length if it is
+   a one-dimensional series, the number of arrays and their length for a
+   two-dimensional grid, and so on.  For nonrectangular datasets where the
+   lengths of subarrays may vary, use '*' instead of a number.
+</xs:documentation>
+      </xs:annotation>
+      <xs:union memberTypes="xs:unsignedInt">
+         <xs:simpleType>
+            <xs:restriction base="xs:token">
+               <xs:enumeration value="*"/>
+            </xs:restriction>
+         </xs:simpleType>
+      </xs:union>
+   </xs:simpleType>
+
+   <xs:simpleType name="datatype-type">
+      <xs:annotation>
+         <xs:documentation>
+   Type for expressing the type of data points in a dataset.  Valid values are
+   integer, decimal, and string.  Integer and decimal types can be of arbitrary
+   size and precision, however BrainML applications MAY process these as 4-byte
+   signed integers, and 8-byte IEEE doubles respectively.  Strings are in
+   whatever encoding the XML document itself declares.  Custom refers to
+   anything not covered by the first three, such as binary images, sound files,
+   etc..
+</xs:documentation>
+      </xs:annotation>
+      <xs:restriction base="xs:token">
+         <xs:pattern value="integer|decimal|string|custom"/>
+      </xs:restriction>
+   </xs:simpleType>
+
+   <xs:attributeGroup name="dataset-common">
+      <xs:annotation>
+         <xs:documentation>
+   Attributes describing a dataset: the sizes of its array(s), and the type
+   of its data points.
+</xs:documentation>
+      </xs:annotation>
+      <xs:attribute name="dimensions" use="required">
+         <xs:annotation>
+            <xs:documentation>
+      Describes the dimensions of the dataset, as a space-separated list
+      consisting of numbers or "*".  Each number indicates the number of
+      values the dataset contains on a dimension.  Thus, a one-dimensional
+      dataset such as a time series will have just one number -- the length
+      of the time series.  A two-dimensional dataset such as a grid of values
+      has two numbers -- the sizes of the X and Y axes of the grid.
+      Alternatively, two numbers may be used to indicate a number of tuples
+      and the length of each tuple.  (Containing element should specify which
+      usage is valid.)  For example, "* 2" indicates a list of ordered pairs.
+      Non-rectangular or unknown length data is accomodated through use of the
+      special '*' value.
+      A list of five time series, each of a different length, would have
+      dimensions "5 *".  Each individual time series entry contained under this
+      would have its own dimensions entry of a single number giving its length.
+   </xs:documentation>
+         </xs:annotation>
+         <xs:simpleType>
+            <xs:restriction>
+               <xs:simpleType>
+                  <xs:list itemType="dimension-type"/>
+               </xs:simpleType>
+               <xs:minLength value="1"/>
+            </xs:restriction>
+         </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="type" type="datatype-type" use="required">
+         <xs:annotation>
+            <xs:documentation>
+      The data type of this data set.  Valid values are integer, decimal, and
+      string.  Integer and decimal types can be of arbitrary size and
+      precision, however BrainML applications MAY process these as 4-byte
+      signed integers, and 8-byte IEEE doubles respectively.  Strings are in
+      whatever encoding the XML document itself declares.
+   </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:attributeGroup>
+
+   <xs:element name="datasetX" substitutionGroup="dataset">
+      <xs:annotation>
+         <xs:documentation>
+   Data container:  Full XML format, where every data value is contained in
+   its own tag, and dimensional structure is reflected in tag containment.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:choice>
+            <xs:choice maxOccurs="unbounded">
+               <xs:element ref="datasetX"/>
+               <xs:element ref="datasetC"/>
+               <xs:element ref="datasetB"/>
+               <xs:element ref="datasetR"/>
+            </xs:choice>
+            <xs:element maxOccurs="unbounded" ref="datum"/>
+         </xs:choice>
+         <xs:attributeGroup ref="dataset-common"/>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="datasetC" substitutionGroup="dataset">
+      <xs:annotation>
+         <xs:documentation>
+   Data container:  Whitespace- or comma-separated values contained under
+   a single XML tag.  Rectangular multi-dimensional data is given as a linear
+   array which must be stepped through by the application.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:string">
+               <xs:attribute name="delimiter" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation>Character(s) used to delimit individual data values.</xs:documentation>
+                  </xs:annotation>
+               </xs:attribute>
+               <xs:attribute name="group" type="xs:normalizedString">
+                  <xs:annotation>
+                     <xs:documentation> 
+      Characters used to delimit dimensional groups in the dataset.  The left
+      and right delimiters should be given, as in "()".  Group delimiters are
+      required to express multi-dimensional nonrectangular datasets.  For
+      example, an integer dataset with dimensions "2 *" might be expressed
+      as '(23,25,29) (25,26)'.
+   </xs:documentation>
+                  </xs:annotation>
+               </xs:attribute>
+               <xs:attributeGroup ref="dataset-common"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="datasetB" substitutionGroup="dataset">
+      <xs:annotation>
+         <xs:documentation>
+   Data container: Base-64 encoded binary, in which values are encoded in IEEE
+   standard, network byte order.  Rectangular multi-dimensional data is given
+   as a linear array as in the whitespace/comma-separated case.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:base64Binary">
+               <xs:attributeGroup ref="dataset-common"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element name="datasetR" substitutionGroup="dataset">
+      <xs:annotation>
+         <xs:documentation>
+   Data reference: a reference to external data.  The contents of this element
+   should be a URI pointing to the data.  The 'formatType' and 'formatRef'
+   attributes should describe the data format and the optional 'info' attribute
+   can be used for application- or format-specific information.
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:anyURI">
+               <xs:attributeGroup ref="dataset-common"/>
+               <xs:attribute name="formatType" type="xs:normalizedString" use="required">
+                  <xs:annotation>
+                     <xs:documentation>
+     A short string describing the format of the referenced unit.  This could
+     be a MIME string if such exists for this data type.
+   </xs:documentation>
+                  </xs:annotation>
+               </xs:attribute>
+               <xs:attribute name="formatRef" type="xs:anyURI" use="required">
+                  <xs:annotation>
+                     <xs:documentation>
+     A URL to a specification or description of the format of the referenced
+     unit.
+   </xs:documentation>
+                  </xs:annotation>
+               </xs:attribute>
+               <xs:attribute name="info" type="xs:string">
+                  <xs:annotation>
+                     <xs:documentation>
+     Any required additional information describing this file or its relation to
+     others in this dataset may go here.
+   </xs:documentation>
+                  </xs:annotation>
+               </xs:attribute>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:element abstract="true" name="dataset" type="xs:anyType">
+      <xs:annotation>
+         <xs:documentation>
+   Superclass for different dataset formats.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:element name="labeled_dataset">
+      <xs:annotation>
+         <xs:documentation>
+   Consists of two datasets.  The first contains the values, the second,
+   which should have exactly the same dimensions, contains the labels
+   (as strings).
+</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element maxOccurs="2" minOccurs="2" ref="dataset"/>
+         </xs:sequence>
+      </xs:complexType>
+   </xs:element>
+
+   <xs:group name="quintessence-common-content">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence elements.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Common content defining an optional ID and an optional xml:base.
+   The ID is used as a link target and must be unique within a document.
+   The xml:base is used to direct links contained within a given element
+   to resolve to an external document.
+</xs:documentation>
+      </xs:annotation>
+      <xs:sequence>
+         <xs:element maxOccurs="unbounded" minOccurs="0" ref="link"/>
+      </xs:sequence>
+   </xs:group>
+
+   <xs:attributeGroup name="quintessence-common-content">
+      <xs:attribute name="id" type="xs:ID">
+         <xs:annotation>
+            <xs:documentation>This attribute is needed so that others may link to it.</xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      <xs:attribute ref="xml:base">
+         <xs:annotation>
+            <xs:documentation> Used to indicate URL that links under this element and its children
+      should resolve relative to. </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+   </xs:attributeGroup>
+
+   <xs:element abstract="true" name="data_element" type="data_element-type">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence element.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Data element for numerical data and container structures, including
+   entire submission.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="data_element-type">
+      <xs:sequence>
+         <xs:group ref="quintessence-common-content"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="quintessence-common-content"/>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="entity_element" type="entity_element-type">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence element.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Entity element for recording sites, chemical substances, genes, anything
+   that has a physical existence.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="entity_element-type">
+      <xs:sequence>
+         <xs:group ref="quintessence-common-content"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="quintessence-common-content"/>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="method_element" type="method_element-type">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence element.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Method element for methods, techniques, procedures, analytical algorithms.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="method_element-type">
+      <xs:sequence>
+         <xs:group ref="quintessence-common-content"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="quintessence-common-content"/>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="model_element" type="model_element-type">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence element.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Model element for theories, hypotheses.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="model_element-type">
+      <xs:group ref="quintessence-common-content"/>
+      <xs:attributeGroup ref="quintessence-common-content"/>
+   </xs:complexType>
+
+   <xs:element abstract="true" name="reference_element" type="reference_element-type">
+      <xs:annotation>
+         <xs:documentation>
+   Quintessence element.  These simply allow an unlimited content model
+   beneath them, but explicitly declare some optional contents so that
+   BrainML applications know to expect them.
+   Reference element for bibliographic and other references to external
+   material.
+</xs:documentation>
+      </xs:annotation>
+   </xs:element>
+
+   <xs:complexType name="reference_element-type">
+      <xs:sequence>
+         <xs:group ref="quintessence-common-content"/>
+      </xs:sequence>
+      <xs:attributeGroup ref="quintessence-common-content"/>
+   </xs:complexType>
+
+   <xs:element name="data_document">
+      <xs:annotation>
+         <xs:documentation>Top-level element for a stand-alone document containing a dataset.</xs:documentation>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:choice maxOccurs="unbounded" minOccurs="0">
+            <xs:element ref="dataset"/>
+            <xs:element ref="labeled_dataset"/>
+         </xs:choice>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

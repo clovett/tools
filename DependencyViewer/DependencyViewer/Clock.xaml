@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ResourceDictionary xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' 
+                    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
+
+
+  <DrawingBrush x:Key='ClockBrush'>
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 320.661,394.938C 320.661,403.299 313.884,410.076 305.522,410.076C 297.162,410.076 290.385,403.299 290.385,394.938C 290.385,386.577 297.162,379.8 305.522,379.8C 313.884,379.8 320.661,386.577 320.661,394.938M 320.661,394.938'/>
+
+          <GeometryDrawing Brush='#4A000000' Geometry='F1 M 319.773,389.821C 320.348,391.419 320.661,393.141 320.661,394.938C 320.661,403.299 313.884,410.076 305.522,410.076C 299.785,410.076 294.793,406.884 292.226,402.179C 294.323,408.022 299.912,412.2 306.477,412.2C 314.838,412.2 321.615,405.423 321.615,397.062C 321.615,394.439 320.947,391.971 319.773,389.821M 319.773,389.821'/>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 306.477,381.924C 298.116,381.924 291.339,388.701 291.339,397.062C 291.339,398.858 291.652,400.581 292.226,402.179C 294.793,406.884 299.785,410.076 305.522,410.076C 313.884,410.076 320.661,403.299 320.661,394.938C 320.661,393.141 320.348,391.419 319.773,389.821C 317.206,385.115 312.215,381.924 306.477,381.924M 306.477,381.924'/>
+
+          <GeometryDrawing Geometry='F1 M 318.269,394.935C 318.269,401.976 312.561,407.684 305.522,407.684C 298.48,407.684 292.773,401.976 292.773,394.935C 292.773,387.894 298.48,382.186 305.522,382.186C 312.561,382.186 318.269,387.894 318.269,394.935'>
+            <GeometryDrawing.Brush>
+              <!-- White To Black -->
+              <LinearGradientBrush MappingMode='Absolute' StartPoint='319.283,413.033' EndPoint='319.283,368.367'>
+                <GradientBrush.GradientStops>
+                  <GradientStopCollection>
+                    <GradientStop Color='#FFFFFFFF' Offset='0'/>
+                    <GradientStop Color='#FF000000' Offset='1'/>
+                  </GradientStopCollection>
+                </GradientBrush.GradientStops>
+              </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+          </GeometryDrawing>
+
+          <GeometryDrawing Geometry='F1 M 316.042,392.074C 316.042,396.851 311.333,400.723 305.522,400.723C 299.709,400.723 294.998,396.851 294.998,392.074C 294.998,387.299 299.709,383.427 305.522,383.427C 311.333,383.427 316.042,387.299 316.042,392.074'>
+            <GeometryDrawing.Brush>
+              <!-- White To Black -->
+              <LinearGradientBrush MappingMode='Absolute' StartPoint='320.617,386.033' EndPoint='320.617,432.033'>
+                <GradientBrush.GradientStops>
+                  <GradientStopCollection>
+                    <GradientStop Color='#FFFFFFFF' Offset='0'/>
+                    <GradientStop Color='#FF000000' Offset='1'/>
+                  </GradientStopCollection>
+                </GradientBrush.GradientStops>
+              </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+          </GeometryDrawing>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 308.797,394.935C 308.797,396.744 307.331,398.211 305.521,398.211C 303.712,398.211 302.245,396.744 302.245,394.935C 302.245,393.125 303.712,391.658 305.521,391.658C 307.331,391.658 308.797,393.125 308.797,394.935'/>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 304.294,393.314L 305.601,383.344L 306.899,393.314L 304.294,393.314'/>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 306.787,394.389L 310.886,401.2L 305.228,397.013L 306.787,394.389'/>
+
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <DrawingBrush x:Key='ClockMinutesBrush'>
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 297.942,418.799L 302.04,425.611L 296.383,421.424L 297.942,418.799'/>
+
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <DrawingBrush x:Key='ClockSecondsBrush'>
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 296.493,423.376L 297.8,413.406L 299.098,423.376L 296.493,423.376'/>
+
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <DrawingBrush x:Key='ClockFaceBrush'>
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 312.381,419.778C 312.381,428.139 305.604,434.916 297.242,434.916C 288.882,434.916 282.105,428.139 282.105,419.778C 282.105,411.417 288.882,404.64 297.242,404.64C 305.604,404.64 312.381,411.417 312.381,419.778M 312.381,419.778'/>
+
+          <GeometryDrawing Brush='#4A000000' Geometry='F1 M 311.493,414.661C 312.068,416.259 312.381,417.981 312.381,419.778C 312.381,428.139 305.604,434.916 297.242,434.916C 291.505,434.916 286.513,431.724 283.946,427.019C 286.043,432.862 291.632,437.04 298.197,437.04C 306.558,437.04 313.335,430.263 313.335,421.902C 313.335,419.279 312.667,416.811 311.493,414.661M 311.493,414.661'/>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 298.197,406.764C 289.836,406.764 283.059,413.541 283.059,421.902C 283.059,423.698 283.372,425.421 283.946,427.019C 286.513,431.724 291.505,434.916 297.242,434.916C 305.604,434.916 312.381,428.139 312.381,419.778C 312.381,417.981 312.068,416.259 311.493,414.661C 308.926,409.955 303.935,406.764 298.197,406.764M 298.197,406.764'/>
+
+          <GeometryDrawing Geometry='F1 M 309.989,419.775C 309.989,426.816 304.281,432.524 297.242,432.524C 290.201,432.524 284.493,426.816 284.493,419.775C 284.493,412.734 290.201,407.026 297.242,407.026C 304.281,407.026 309.989,412.734 309.989,419.775'>
+            <GeometryDrawing.Brush>
+              <!-- White To Black -->
+              <LinearGradientBrush MappingMode='Absolute' StartPoint='311.003,437.873' EndPoint='311.003,393.207'>
+                <GradientBrush.GradientStops>
+                  <GradientStopCollection>
+                    <GradientStop Color='#FFFFFFFF' Offset='0'/>
+                    <GradientStop Color='#FF000000' Offset='1'/>
+                  </GradientStopCollection>
+                </GradientBrush.GradientStops>
+              </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+          </GeometryDrawing>
+
+          <GeometryDrawing Geometry='F1 M 307.762,416.914C 307.762,421.691 303.053,425.563 297.242,425.563C 291.429,425.563 286.718,421.691 286.718,416.914C 286.718,412.139 291.429,408.267 297.242,408.267C 303.053,408.267 307.762,412.139 307.762,416.914'>
+            <GeometryDrawing.Brush>
+              <!-- White To Black -->
+              <LinearGradientBrush MappingMode='Absolute' StartPoint='312.337,410.873' EndPoint='312.337,456.873'>
+                <GradientBrush.GradientStops>
+                  <GradientStopCollection>
+                    <GradientStop Color='#FFFFFFFF' Offset='0'/>
+                    <GradientStop Color='#FF000000' Offset='1'/>
+                  </GradientStopCollection>
+                </GradientBrush.GradientStops>
+              </LinearGradientBrush>
+            </GeometryDrawing.Brush>
+          </GeometryDrawing>
+
+          <GeometryDrawing Brush='#FF000000' Geometry='F1 M 300.517,419.775C 300.517,421.584 299.051,423.051 297.241,423.051C 295.432,423.051 293.965,421.584 293.965,419.775C 293.965,417.965 295.432,416.498 297.241,416.498C 299.051,416.498 300.517,417.965 300.517,419.775'/>
+
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+</ResourceDictionary>
