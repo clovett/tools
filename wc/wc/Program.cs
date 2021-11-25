@@ -17,6 +17,8 @@ namespace wc
             public long totalLineCount;
             public long totalWordCount;
             public long totalLongestLine;
+
+            public string Name { get; internal set; }
         }
 
         bool doCharCount;
@@ -30,8 +32,11 @@ namespace wc
         bool extensions;
         int fileCount;
 
+        // when summarizing by file extension with -e
         Dictionary<string, FileStats> extmap = new Dictionary<string, FileStats>();
-        FileStats root = new FileStats();
+
+        // when not summarizing with -e
+        List<FileStats> fileStats = new List<FileStats>(); 
 
         List<string> files = new List<string>();
 
@@ -172,6 +177,8 @@ the following order: newline, word, character, byte, maximum line length.
             if (files.Count == 0)
             {
                 extensions = false;
+                var root = new FileStats() { Name = "stdin" };
+                this.fileStats.Add(root);
                 ProcessFile("stdin", Console.In, root);                
             }
             else
@@ -182,10 +189,11 @@ the following order: newline, word, character, byte, maximum line length.
                 }
             }
 
-            int firstCol = 8;
+            int firstCol = 0;
             List<string> cols = new List<string>();
             if (extensions)
             {
+                // we print the summary by file extension.
                 foreach (var key in this.extmap.Keys)
                 {
                     if (key.Length > firstCol)
@@ -197,8 +205,18 @@ the following order: newline, word, character, byte, maximum line length.
             }
             else
             {
-                cols.Add("   total");
+                // then we print each file we find.
+                foreach (var s in this.fileStats)
+                {
+                    var name = s.Name;
+                    if (name.Length > firstCol)
+                    {
+                        firstCol = name.Length;
+                    }
+                }
+                cols.Add(SpacePad("file", firstCol));
             }
+
             if (doCharCount)
             {
                 cols.Add("     chars");
@@ -217,59 +235,66 @@ the following order: newline, word, character, byte, maximum line length.
             }
             Console.WriteLine(string.Join(",", cols));
 
+            FileStats total = new FileStats();
+            List<FileStats> list = this.fileStats;
             if (extensions)
             {
-
-                List<string> sorted = new List<string>(this.extmap.Keys);
+                var sorted = new List<string>(this.extmap.Keys);
                 sorted.Sort();
-                foreach(string key in sorted)
+                foreach (string key in sorted)
                 {
-                    var stats = this.extmap[key];                    
-                    Console.Write(SpacePad(key, firstCol));
-
-                    if (doCharCount)
-                    {
-                        root.totalCharCount += stats.totalCharCount;
-                        Console.Write(",{0,10}", stats.totalCharCount);
-                    }
-                    if (doWordCount)
-                    {
-                        root.totalWordCount += stats.totalWordCount;
-                        Console.Write(",{0,8}", stats.totalWordCount);
-                    }
-                    if (doLineCount)
-                    {
-                        root.totalLineCount += stats.totalLineCount;
-                        Console.Write(",{0,8}", stats.totalLineCount);
-                    }
-                    if (doLongestLine)
-                    {
-                        root.totalLongestLine += stats.totalLongestLine;
-                        Console.Write(",{0,8}", stats.totalLongestLine);
-                    }
-                    Console.WriteLine();
+                    var stats = this.extmap[key];
+                    list.Add(stats);
                 }
+            }
+
+            foreach (var stats in list)
+            { 
+                Console.Write(SpacePad(stats.Name, firstCol));
+
+                if (doCharCount)
+                {
+                    total.totalCharCount += stats.totalCharCount;
+                    Console.Write(",{0,10}", stats.totalCharCount);
+                }
+                if (doWordCount)
+                {
+                    total.totalWordCount += stats.totalWordCount;
+                    Console.Write(",{0,8}", stats.totalWordCount);
+                }
+                if (doLineCount)
+                {
+                    total.totalLineCount += stats.totalLineCount;
+                    Console.Write(",{0,8}", stats.totalLineCount);
+                }
+                if (doLongestLine)
+                {
+                    total.totalLongestLine += stats.totalLongestLine;
+                    Console.Write(",{0,8}", stats.totalLongestLine);
+                }
+                Console.WriteLine();
             }
 
             if (fileCount > 1)
             {
                 // print the totals
                 Console.Write(SpacePad("total", firstCol));
+                
                 if (doCharCount)
                 {
-                    Console.Write(",{0,10}", root.totalCharCount);
+                    Console.Write(",{0,10}", total.totalCharCount);
                 }
                 if (doWordCount)
                 {
-                    Console.Write(",{0,8}", root.totalWordCount);
+                    Console.Write(",{0,8}", total.totalWordCount);
                 }
                 if (doLineCount)
                 {
-                    Console.Write(",{0,8}", root.totalLineCount);
+                    Console.Write(",{0,8}", total.totalLineCount);
                 }
                 if (doLongestLine)
                 {
-                    Console.Write(",{0,8}", root.totalLongestLine);
+                    Console.Write(",{0,8}", total.totalLongestLine);
                 }
                 Console.WriteLine();
             }
@@ -391,14 +416,19 @@ the following order: newline, word, character, byte, maximum line length.
             try
             {
                 string ext = System.IO.Path.GetExtension(filePath).ToLowerInvariant();
-                FileStats stats = this.root;
+                FileStats stats = null;
                 if (extensions)
                 {
                     if (!extmap.TryGetValue(ext, out stats)) 
                     {
-                        stats = new FileStats();
+                        stats = new FileStats() { Name = ext };
                         extmap[ext] = stats;
                     }
+                }
+                else
+                {
+                    stats = new FileStats() { Name = MakeRelative(filePath) };
+                    this.fileStats.Add(stats);
                 }
 
                 using (StreamReader reader = new StreamReader(filePath))
@@ -462,6 +492,26 @@ the following order: newline, word, character, byte, maximum line length.
                 }
             }
             return wordCount;
+        }
+
+        static string MakeRelative(string filename)
+        {
+            var baseUri = new Uri(Directory.GetCurrentDirectory() + "\\");
+            var uri = new Uri(filename);
+            var relative = baseUri.MakeRelativeUri(uri);
+            if (relative.IsAbsoluteUri)
+            {
+                return relative.LocalPath;
+            }
+
+            string original = uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.SafeUnescaped).Replace('/', '\\');
+            string result = relative.GetComponents(UriComponents.SerializationInfoString, UriFormat.SafeUnescaped).Replace('/', '\\');
+            if (result.Length > original.Length)
+            {
+                // keep the full path then, it's shorter!
+                return filename;
+            }
+            return result;
         }
     }
 }
