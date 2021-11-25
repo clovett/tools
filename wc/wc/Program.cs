@@ -201,7 +201,7 @@ the following order: newline, word, character, byte, maximum line length.
                         firstCol = key.Length;
                     }
                 }
-                cols.Add(SpacePad("ext", firstCol));
+                cols.Add(SpacePadRight("ext", firstCol));
             }
             else
             {
@@ -214,7 +214,7 @@ the following order: newline, word, character, byte, maximum line length.
                         firstCol = name.Length;
                     }
                 }
-                cols.Add(SpacePad("file", firstCol));
+                cols.Add(SpacePadRight("file", firstCol));
             }
 
             if (doCharCount)
@@ -250,7 +250,7 @@ the following order: newline, word, character, byte, maximum line length.
 
             foreach (var stats in list)
             { 
-                Console.Write(SpacePad(stats.Name, firstCol));
+                Console.Write(SpacePadRight(stats.Name, firstCol));
 
                 if (doCharCount)
                 {
@@ -278,7 +278,7 @@ the following order: newline, word, character, byte, maximum line length.
             if (fileCount > 1)
             {
                 // print the totals
-                Console.Write(SpacePad("total", firstCol));
+                Console.Write(SpacePadRight("total", firstCol));
                 
                 if (doCharCount)
                 {
@@ -301,11 +301,11 @@ the following order: newline, word, character, byte, maximum line length.
             return 0;
         }
 
-        private string SpacePad(string s, int len)
+        private string SpacePadRight(string s, int len)
         {
             while (s.Length < len)
             {
-                s = " " + s;
+                s = s + " ";
             }
             return s;
         }
