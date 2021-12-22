@@ -5,6 +5,7 @@ using System.Text;
 using System.Net;
 using System.IO;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 
 namespace Walkabout.Utilities
 {
@@ -266,9 +267,12 @@ namespace Walkabout.Utilities
                 {
                     string address = this.GetFullPath(name);
                     string localFile = source.GetFullPath(name);
+                    var mimeType = MimeMap.GetMimeType(Path.GetExtension(localFile));
+
                     var blob = this.client.GetBlobClient(address);
                     using var stream = File.OpenRead(localFile);
                     blob.Upload(stream, overwrite: true);
+                    blob.SetHttpHeaders(new BlobHttpHeaders() { ContentType = mimeType });
                     Console.WriteLine();
                 }
                 catch (Exception e)
