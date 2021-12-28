@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
              BorderBrush="{DynamicResource FlyoutBorderThemeBrush}" BorderThickness="{DynamicResource FlyoutBorderThemeThickness}"
+             Background="{DynamicResource ApplicationPageBackgroundThemeBrush}"
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
 

@@ -33,10 +33,10 @@ namespace WpfAppTemplate
 
         public MainWindow()
         {
+            UiDispatcher.Initialize();
+
             InitializeComponent();
             RestoreSettings();
-
-            UiDispatcher.Initialize();
 
             this.SizeChanged += OnWindowSizeChanged;
             this.LocationChanged += OnWindowLocationChanged;
@@ -49,6 +49,7 @@ namespace WpfAppTemplate
             this.Chart.ColumnClicked += OnColumnClicked;
             this.Chart.ToolTipGenerator = OnGenerateTip;
             this.Chart.Foreground = Brushes.SlateGray;
+
             LoadSamples();
             if (!string.IsNullOrEmpty(Settings.Instance.LastFile) && File.Exists(Settings.Instance.LastFile))
             {
