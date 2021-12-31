@@ -1,4 +1,5 @@
-﻿using LovettSoftware.Controls;
+﻿using LovettSoftware.Charts;
+using LovettSoftware.Controls;
 using LovettSoftware.Utilities;
 using System;
 using System.Collections.Generic;
@@ -22,8 +23,7 @@ namespace WpfAppTemplate
 
         class Dataset
         {
-            public Color Color;
-            public List<BarChartDataValue> Data;
+            public List<ChartDataValue> Data;
         }
 
         List<Dataset> datasets = new List<Dataset>();
@@ -64,7 +64,6 @@ namespace WpfAppTemplate
         void Toggle()
         {
             var ds = datasets[dataset];
-            Chart.FillColor = ds.Color;
             Chart.Series = ds.Data;
 
             dataset++;
@@ -77,82 +76,79 @@ namespace WpfAppTemplate
         void LoadSamples()
         {
             datasets.Add(new Dataset() {
-                Color = Colors.Purple,
-                Data = new List<BarChartDataValue>()
+                Data = new List<ChartDataValue>()
                 {
-                    new BarChartDataValue() { Label = "2002", Value = 14813.67 },
-                    new BarChartDataValue() { Label = "2003", Value = 13260.92 },
-                    new BarChartDataValue() { Label = "2004", Value = 18412.61 },
-                    new BarChartDataValue() { Label = "2005", Value = 16824.06 },
-                    new BarChartDataValue() { Label = "2006", Value = 18653.40 },
-                    new BarChartDataValue() { Label = "2007", Value = 20828.9 },
-                    new BarChartDataValue() { Label = "2008", Value = 20534.97 },
-                    new BarChartDataValue() { Label = "2009", Value = 19595.84 },
-                    new BarChartDataValue() { Label = "2010", Value = 17665.99 },
-                    new BarChartDataValue() { Label = "2011", Value = 19748.83 },
-                    new BarChartDataValue() { Label = "2012", Value = 18100.11 },
-                    new BarChartDataValue() { Label = "2013", Value = 19053.027 },
-                    new BarChartDataValue() { Label = "2014", Value = 19971.89 },
-                    new BarChartDataValue() { Label = "2015", Value = 17086.59 },
-                    new BarChartDataValue() { Label = "2016", Value = 18769.17 },
-                    new BarChartDataValue() { Label = "2017", Value = 21448.2 },
-                    new BarChartDataValue() { Label = "2018", Value = 22470.60 },
-                    new BarChartDataValue() { Label = "2019", Value = 20611.92 },
-                    new BarChartDataValue() { Label = "2020", Value = 25070.87 },
-                    new BarChartDataValue() { Label = "2021", Value = 25200.55 }
+                    new ChartDataValue() { Label = "2002", Value = 14813.67 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2003", Value = 13260.92 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2004", Value = 18412.61 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2005", Value = 16824.06 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2006", Value = 18653.40 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2007", Value = 20828.9  , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2008", Value = 20534.97 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2009", Value = 19595.84 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2010", Value = 17665.99 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2011", Value = 19748.83 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2012", Value = 18100.11 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2013", Value = 19053.02 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2014", Value = 19971.89 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2015", Value = 17086.59 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2016", Value = 18769.17 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2017", Value = 21448.2  , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2018", Value = 22470.60 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2019", Value = 20611.92 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2020", Value = 25070.87 , Color = Colors.Purple},
+                    new ChartDataValue() { Label = "2021", Value = 25200.55 , Color = Colors.Purple}
                 }
             });
 
             datasets.Add(new Dataset() {
-                Color = Colors.Orange,
-                Data = new List<BarChartDataValue>()
+                Data = new List<ChartDataValue>()
                 {
-                    new BarChartDataValue() { Label = "2002",    Value = 2678.25  },
-                    new BarChartDataValue() { Label = "2003",    Value = 3461.95  },
-                    new BarChartDataValue() { Label = "2004",    Value = 3034.71  },
-                    new BarChartDataValue() { Label = "2005",    Value = 2540.69  },
-                    new BarChartDataValue() { Label = "2006",    Value = 2587.59  },
-                    new BarChartDataValue() { Label = "2007",    Value = 2729.91  },
-                    new BarChartDataValue() { Label = "2008",    Value = 2660.03  },
-                    new BarChartDataValue() { Label = "2009",    Value = 1678.28  },
-                    new BarChartDataValue() { Label = "2010",    Value = 1811.17  },
-                    new BarChartDataValue() { Label = "2011",    Value = 2332.09  },
-                    new BarChartDataValue() { Label = "2012",    Value = 2109.82  },
-                    new BarChartDataValue() { Label = "2013",    Value = 1227.98  },
-                    new BarChartDataValue() { Label = "2014",    Value = 1880.62  },
-                    new BarChartDataValue() { Label = "2015",    Value = 2053.86  },
-                    new BarChartDataValue() { Label = "2016",    Value = 2019.01  },
-                    new BarChartDataValue() { Label = "2017",    Value = 2702.83  },
-                    new BarChartDataValue() { Label = "2018",    Value = 2717.44  },
-                    new BarChartDataValue() { Label = "2019",    Value = 1638.22  },
-                    new BarChartDataValue() { Label = "2020",    Value = 1903.7   },
-                    new BarChartDataValue() { Label = "2021",    Value = -836.56   }
+                    new ChartDataValue() { Label = "2002",    Value = 2678.25 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2003",    Value = 3461.95 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2004",    Value = 3034.71 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2005",    Value = 2540.69 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2006",    Value = 2587.59 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2007",    Value = 2729.91 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2008",    Value = 2660.03 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2009",    Value = 1678.28 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2010",    Value = 1811.17 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2011",    Value = 2332.09 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2012",    Value = 2109.82 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2013",    Value = 1227.98 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2014",    Value = 1880.62 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2015",    Value = 2053.86 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2016",    Value = 2019.01 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2017",    Value = 2702.83 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2018",    Value = 2717.44 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2019",    Value = 1638.22 , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2020",    Value = 1903.7  , Color = Colors.Orange},
+                    new ChartDataValue() { Label = "2021",    Value = -836.56 , Color = Colors.Orange}
                 }
             });
 
             datasets.Add(new Dataset()
             {
-                Color = Color.FromRgb(0xA3, 0x00, 0x27),
-                Data = new List<BarChartDataValue>()
+                Data = new List<ChartDataValue>()
                 {
-                    new BarChartDataValue() { Label = "14 January", Value = 158.22  },
-                    new BarChartDataValue() { Label = "14 February", Value = 226.5   },
-                    new BarChartDataValue() { Label = "14 March", Value = 291.19  },
-                    new BarChartDataValue() { Label = "14 April", Value = 430.28  },
-                    new BarChartDataValue() { Label = "14 May", Value = 140.75  },
-                    new BarChartDataValue() { Label = "14 June", Value = 139.82  },
-                    new BarChartDataValue() { Label = "14 July", Value = 448.72  },
-                    new BarChartDataValue() { Label = "14 August", Value = 149.81  },
-                    new BarChartDataValue() { Label = "14 September", Value = 75.84   },
-                    new BarChartDataValue() { Label = "14 October", Value = 40.97   },
-                    new BarChartDataValue() { Label = "14 November", Value = 140.52  },
-                    new BarChartDataValue() { Label = "14 December", Value = 705.66  }
+                    new ChartDataValue() { Label = "14 January", Value = 158.22   , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 February", Value = 226.5   , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 March", Value = 291.19     , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 April", Value = 430.28     , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 May", Value = 140.75       , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 June", Value = 139.82      , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 July", Value = 448.72      , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 August", Value = 149.81    , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 September", Value = 75.84  , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 October", Value = 40.97    , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 November", Value = 140.52  , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
+                    new ChartDataValue() { Label = "14 December", Value = 705.66  , Color = Color.FromRgb(0xA3, 0x00, 0x27)   }
                 }
             });
         }
 
 
-        private UIElement OnGenerateTip(BarChartDataValue value)
+        private UIElement OnGenerateTip(ChartDataValue value)
         {
             var tip = new StackPanel() { Orientation = Orientation.Vertical };
             tip.Children.Add(new TextBlock() { Text = value.Label, FontWeight = FontWeights.Bold });
@@ -160,12 +156,12 @@ namespace WpfAppTemplate
             return tip;
         }
 
-        private void OnColumnHover(object sender, BarChartDataValue e)
+        private void OnColumnHover(object sender, ChartDataValue e)
         {
 
         }
 
-        private void OnColumnClicked(object sender, BarChartDataValue e)
+        private void OnColumnClicked(object sender, ChartDataValue e)
         {
             Toggle();
         }
@@ -205,7 +201,8 @@ namespace WpfAppTemplate
 
         private Dataset ReadDataset(XDocument doc)
         {
-            List<BarChartDataValue> data = new List<BarChartDataValue>();
+            var color = GetRandomColor();
+            List<ChartDataValue> data = new List<ChartDataValue>();
             foreach(var row in doc.Root.Elements())
             {
                 var attrs = row.Attributes();
@@ -218,16 +215,12 @@ namespace WpfAppTemplate
                         var value = list[1].Value;
                         if (double.TryParse(value, out double v))
                         {
-                            data.Add(new BarChartDataValue() { Label = label, Value = v });
+                            data.Add(new ChartDataValue() { Label = label, Value = v, Color = color });
                         }
                     }
                 }
             }
-            return new Dataset()
-            {
-                Color = GetRandomColor(),
-                Data = data
-            };
+            return new Dataset() { Data = data };
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -368,6 +361,18 @@ namespace WpfAppTemplate
         private Color GetRandomColor()
         {
             return Color.FromRgb((byte)rand.Next(80, 200), (byte)rand.Next(80, 200), (byte)rand.Next(80, 200));
+        }
+
+        private void OnBarChart(object sender, RoutedEventArgs e)
+        {
+            Chart.Visibility = Visibility.Visible;
+            PieChart.Visibility = Visibility.Collapsed;
+        }
+
+        private void OnPieChart(object sender, RoutedEventArgs e)
+        {
+            Chart.Visibility = Visibility.Collapsed;
+            PieChart.Visibility = Visibility.Visible;
         }
     }
 }

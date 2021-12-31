@@ -8,16 +8,18 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 
-namespace LovettSoftware.Controls
+namespace LovettSoftware.Charts
 {
-    public class BarChartDataValue
+    public class ChartDataValue
     {
         public string Label;
         public double Value;
         public object UserData;
+
+        public Color Color { get; internal set; }
     }
 
-    public delegate UIElement ToolTipGenerator(BarChartDataValue value);
+    public delegate UIElement ToolTipGenerator(ChartDataValue value);
 
     /// <summary>
     /// Interaction logic for AnimatingBarChart.xaml
@@ -25,11 +27,9 @@ namespace LovettSoftware.Controls
     public partial class AnimatingBarChart : UserControl
     {
         DelayedActions actions = new DelayedActions();
-        Color fill;
-        Color mouseOverColor;
         int tipColumn = -1;
         Point movePos;
-        Polygon inside;
+        ColumnInfo inside;
         bool mouseOverAnimationCompleted = false;
 
         class ColumnInfo
@@ -37,6 +37,7 @@ namespace LovettSoftware.Controls
             public TextBlock Label;
             public Rect Bounds;
             public Polygon Shape;
+            public Color Color;
         }
 
         // this is maintained for hit testing only since the mouse events don't seem to be 
@@ -46,6 +47,7 @@ namespace LovettSoftware.Controls
         List<Polygon> axisLines = new List<Polygon>();
         List<TextBlock> axisLabels = new List<TextBlock>();
 
+
         public AnimatingBarChart()
         {
             InitializeComponent();
@@ -53,12 +55,6 @@ namespace LovettSoftware.Controls
             this.AnimationGrowthMilliseconds = 250;
             this.AnimationRippleMilliseconds = 20;
             this.AnimationColorMilliseconds = 120;
-        }
-
-        public Color FillColor
-        {
-            get => fill;
-            set { fill = value; OnColorChanged(); }
         }
 
         /// <summary>
@@ -76,18 +72,16 @@ namespace LovettSoftware.Controls
         /// </summary>
         public int AnimationColorMilliseconds { get; set; }
 
-        private void OnColorChanged()
+        private Color GetMouseOverColor(Color c)
         {
-            var hls = new HlsColor(fill);
+            var hls = new HlsColor(c);
             hls.Lighten(0.25f);
-            mouseOverColor = hls.Color;
+            return hls.Color;
         }
 
         public int HoverDelayMilliseconds { get; set; }
 
         public ToolTipGenerator ToolTipGenerator { get; set; }
-
-
 
         public Brush LineBrush
         {
@@ -119,14 +113,14 @@ namespace LovettSoftware.Controls
             ((AnimatingBarChart)d).OnDelayedUpdate();
         }
 
-        public List<BarChartDataValue> Series
+        public List<ChartDataValue> Series
         {
-            get { return (List<BarChartDataValue>)GetValue(PointsProperty); }
-            set { SetValue(PointsProperty, value); }
+            get { return (List<ChartDataValue>)GetValue(SeriesProperty); }
+            set { SetValue(SeriesProperty, value); }
         }
 
-        public static readonly DependencyProperty PointsProperty =
-            DependencyProperty.Register("Series", typeof(List<BarChartDataValue>), typeof(AnimatingBarChart), new PropertyMetadata(null, OnSeriesChanged));
+        public static readonly DependencyProperty SeriesProperty =
+            DependencyProperty.Register("Series", typeof(List<ChartDataValue>), typeof(AnimatingBarChart), new PropertyMetadata(null, OnSeriesChanged));
 
         private static void OnSeriesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -165,8 +159,8 @@ namespace LovettSoftware.Controls
             return base.ArrangeOverride(arrangeBounds);
         }
 
-        public event EventHandler<BarChartDataValue> ColumnHover;
-        public event EventHandler<BarChartDataValue> ColumnClicked;
+        public event EventHandler<ChartDataValue> ColumnHover;
+        public event EventHandler<ChartDataValue> ColumnClicked;
 
 
         private void UpdateChart()
@@ -206,7 +200,7 @@ namespace LovettSoftware.Controls
                 return;
             }
 
-            BarChartDataValue value = Series[i];
+            ChartDataValue value = Series[i];
             var s = this.PointToScreen(this.movePos);
             var tip = this.ToolTip as ToolTip;
             var content = ToolTipGenerator != null ? ToolTipGenerator(value) : new TextBlock() { Text = value.Label + "\r\n" + value.Value };
@@ -287,27 +281,31 @@ namespace LovettSoftware.Controls
         {
             if (i < bars.Count)
             {
-                Polygon r = bars[i].Shape;
-                if (r != inside)
+                var info = bars[i];
+                var color = info.Color;
+                Polygon r = info.Shape;
+                if (inside == null || r != inside.Shape)
                 {
                     if (inside != null)
                     {
                         OnExitColumn();
                     }
+
                     var duration = new Duration(TimeSpan.FromMilliseconds(AnimationColorMilliseconds));
                     var brush = r.Fill as SolidColorBrush;
-                    var mouseOverAnimation = new ColorAnimation() { To = this.mouseOverColor, Duration = duration };
+                    var highlight = GetMouseOverColor(color);
+                    var mouseOverAnimation = new ColorAnimation() { To = highlight, Duration = duration };
                     mouseOverAnimation.Completed += (s, e) =>
                     {
                         this.mouseOverAnimationCompleted = true;
-                        if (r != inside)
+                        if (info != inside)
                         {
-                            brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = this.fill, Duration = duration });
+                            brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = color, Duration = duration });
                         }
                     };
                     this.mouseOverAnimationCompleted = false;
                     brush.BeginAnimation(SolidColorBrush.ColorProperty, mouseOverAnimation);
-                    inside = r;
+                    inside = info;
                 }
             }
         }
@@ -317,8 +315,8 @@ namespace LovettSoftware.Controls
             if (inside != null && this.mouseOverAnimationCompleted)
             {
                 var duration = new Duration(TimeSpan.FromMilliseconds(AnimationColorMilliseconds));
-                var brush = inside.Fill as SolidColorBrush;
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = this.fill, Duration = duration });
+                var brush = inside.Shape.Fill as SolidColorBrush;
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = inside.Color, Duration = duration });
             }
             inside = null;
         }
@@ -329,7 +327,7 @@ namespace LovettSoftware.Controls
             var i = FindColumn(pos);
             if (i >= 0 && i < Series.Count)
             {
-                BarChartDataValue value = Series[i];
+                ChartDataValue value = Series[i];
                 if (ColumnClicked != null)
                 {
                     ColumnClicked(this, value);
@@ -353,6 +351,7 @@ namespace LovettSoftware.Controls
                     info = new ColumnInfo();
                     bars.Add(info);
                 }
+                info.Color = item.Color;
 
                 if (!string.IsNullOrEmpty(item.Label))
                 {
@@ -580,7 +579,7 @@ namespace LovettSoftware.Controls
                 ChartCanvas.Children.Add(polygon);
 
                 polygon.BeginAnimation(Polygon.PointsProperty, new PointCollectionAnimation() { To = poly, Duration = duration, BeginTime = start });
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = this.FillColor, Duration = duration, BeginTime = start });
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = item.Color, Duration = duration, BeginTime = start });
                 index++;
             }
         }
@@ -736,17 +735,9 @@ namespace LovettSoftware.Controls
 
                 ChartCanvas.Children.Add(polygon);
                 polygon.BeginAnimation(Polygon.PointsProperty, new PointCollectionAnimation() { To = poly, Duration = duration, BeginTime = start });
-                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = this.FillColor, Duration = duration, BeginTime = start });
+                brush.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation() { To = item.Color, Duration = duration, BeginTime = start });
 
                 index++;
-            }
-
-            while (index < bars.Count)
-            {
-                var item = bars[index];
-                if (item.Shape != null) ChartCanvas.Children.Remove(item.Shape);
-                if (item.Label != null) ChartCanvas.Children.Remove(item.Label);
-                bars.RemoveAt(index);
             }
         }
     }

@@ -4,12 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LovettSoftware.Controls"
+        xmlns:c="clr-namespace:LovettSoftware.Charts"
         xmlns:ui="http://schemas.modernwpf.com/2019"
         mc:Ignorable="d"
         ui:WindowHelper.UseModernWindowStyle="True"
         Title="WPF Animating Bar Chart" Height="450" Width="800">
 
-    <Grid>
+    <Grid x:Name="Root">
 
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -35,18 +36,23 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <ui:AppBarButton x:Name="OpenButton" ToolTip="Open a .csv file containing 2 columns (label, value)" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
-            <ui:AppBarButton x:Name="RefreshButton"  Grid.Column="3" ToolTip="Refresh" Label="Refresh" Click="OnRefresh" Icon="Refresh"/>
+            <ui:AppBarButton x:Name="RefreshButton" Grid.Column="3" ToolTip="Refresh" Label="Refresh" Click="OnRefresh" Icon="Refresh"/>
             <ui:AppBarButton x:Name="PlayButton" Grid.Column="8" Click="OnPlay" ToolTip="Play" Label="Play" Icon="Play"/>
             <ui:AppBarButton x:Name="PauseButton" Grid.Column="9" Click="OnPause" ToolTip="Pause" Label="Pause" Icon="Pause"/>
             <ui:AppBarButton x:Name="RotateButton" Grid.Column="10" Click="OnRotate" ToolTip="Rotate" Label="Rotate" Icon="Rotate"/>
-            <ui:AppBarButton x:Name="SettingsButton" Grid.Column="12" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
+            <ui:AppBarButton x:Name="BarChartButton" Grid.Column="11" Click="OnBarChart" ToolTip="BarChart" Label="BarChart" Icon="ThreeBars"/>
+            <ui:AppBarButton x:Name="PieChartButton" Grid.Column="12" Click="OnPieChart" ToolTip="PieChart" Label="PieChart" Icon="Clock"/>
+            
+            <ui:AppBarButton x:Name="SettingsButton" Grid.Column="14" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
         </Grid>
 
-        <local:AnimatingBarChart x:Name="Chart" Grid.Row="2" Grid.Column="0" Margin="20" LineBrush="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+        <c:AnimatingBarChart x:Name="Chart" Grid.Row="2" Grid.Column="0" Margin="20" LineBrush="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
+        <c:AnimatingPieChart x:Name="PieChart" Grid.Row="2" Grid.Column="0" Margin="20" Visibility="Collapsed" />
 
         <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="0" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
         </local:AppSettings>
