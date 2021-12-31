@@ -22,12 +22,7 @@ namespace WpfAppTemplate
     {
         DelayedActions delayedActions = new DelayedActions();
 
-        class Dataset
-        {
-            public List<ChartDataValue> Data;
-        }
-
-        List<Dataset> datasets = new List<Dataset>();
+        List<ChartSeries> datasets = new List<ChartSeries>();
         int dataset = 0;
         Random rand = new Random(Environment.TickCount);
         const double PlaySpeedSeconds = 2;
@@ -66,20 +61,25 @@ namespace WpfAppTemplate
             }
         }
 
-        void Toggle()
+        ChartSeries GetNext()
         {
             var ds = datasets[dataset];
-            Chart.Series = ds.Data;
-            PieChart.Series = CreatePieData(ds);
-
             dataset++;
             if (dataset >= datasets.Count)
             {
                 dataset = 0;
             }
+            return ds;
         }
 
-        private List<ChartDataValue> CreatePieData(Dataset ds)
+        void Toggle()
+        {
+            var ds = GetNext();
+            Chart.Series = new List<ChartSeries>() { ds };
+            PieChart.Series = CreatePieData(ds);
+        }
+
+        private List<ChartDataValue> CreatePieData(ChartSeries ds)
         {
             var data = new List<ChartDataValue>();
             foreach(var item in ds.Data)
@@ -97,7 +97,8 @@ namespace WpfAppTemplate
 
         void LoadSamples()
         {
-            datasets.Add(new Dataset() {
+            datasets.Add(new ChartSeries() {
+                Name = "Landscaping",
                 Data = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "2002", Value = 14813.67 , Color = Colors.Purple},
@@ -123,7 +124,9 @@ namespace WpfAppTemplate
                 }
             });
 
-            datasets.Add(new Dataset() {
+            datasets.Add(new ChartSeries()
+            {
+                Name = "Home",
                 Data = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "2002",    Value = 2678.25 , Color = Colors.Orange},
@@ -149,8 +152,9 @@ namespace WpfAppTemplate
                 }
             });
 
-            datasets.Add(new Dataset()
+            datasets.Add(new ChartSeries()
             {
+                Name = "Fun",
                 Data = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "14 January", Value = 158.22   , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
@@ -217,7 +221,8 @@ namespace WpfAppTemplate
                 {
                     reader.ColumnsAsAttributes = true;
                     XDocument doc = XDocument.Load(reader);
-                    Dataset ds = ReadDataset(doc);
+                    ChartSeries ds = ReadDataset(doc);
+                    ds.Name = System.IO.Path.GetFileName(fileName);
                     dataset = this.datasets.Count;
                     this.datasets.Add(ds);
                     Toggle();
@@ -231,7 +236,7 @@ namespace WpfAppTemplate
             }
         }
 
-        private Dataset ReadDataset(XDocument doc)
+        private ChartSeries ReadDataset(XDocument doc)
         {
             var color = GetRandomColor();
             List<ChartDataValue> data = new List<ChartDataValue>();
@@ -252,7 +257,7 @@ namespace WpfAppTemplate
                     }
                 }
             }
-            return new Dataset() { Data = data };
+            return new ChartSeries() { Data = data };
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -383,9 +388,10 @@ namespace WpfAppTemplate
             var data = Chart.Series;
             Chart.Series = null;
             Chart.Series = data;
-            data = PieChart.Series;
+
+            var pieData = PieChart.Series;
             PieChart.Series = null;
-            PieChart.Series = data;
+            PieChart.Series = pieData;
         }
 
         private void OnRotate(object sender, RoutedEventArgs e)
@@ -408,6 +414,22 @@ namespace WpfAppTemplate
         {
             Chart.Visibility = Visibility.Collapsed;
             PieChart.Visibility = Visibility.Visible;
+        }
+
+        private void OnAddSeries(object sender, RoutedEventArgs e)
+        {
+            if (Chart.Visibility == Visibility.Visible)
+            {
+                var data = Chart.Series;
+                var ds = GetNext();
+                while (ds.Data.Count != data[0].Data.Count)
+                {
+                    ds = GetNext();
+                }
+                data.Add(ds);
+                Chart.Series = null;
+                Chart.Series = data;
+            }
         }
     }
 }

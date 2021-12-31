@@ -37,16 +37,18 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/> 
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <ui:AppBarButton x:Name="OpenButton" ToolTip="Open a .csv file containing 2 columns (label, value)" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
-            <ui:AppBarButton x:Name="RefreshButton" Grid.Column="3" ToolTip="Refresh" Label="Refresh" Click="OnRefresh" Icon="Refresh"/>
-            <ui:AppBarButton x:Name="PlayButton" Grid.Column="8" Click="OnPlay" ToolTip="Play" Label="Play" Icon="Play"/>
-            <ui:AppBarButton x:Name="PauseButton" Grid.Column="9" Click="OnPause" ToolTip="Pause" Label="Pause" Icon="Pause"/>
-            <ui:AppBarButton x:Name="RotateButton" Grid.Column="10" Click="OnRotate" ToolTip="Rotate" Label="Rotate" Icon="Rotate"/>
-            <ui:AppBarButton x:Name="BarChartButton" Grid.Column="11" Click="OnBarChart" ToolTip="BarChart" Label="BarChart" Icon="ThreeBars"/>
-            <ui:AppBarButton x:Name="PieChartButton" Grid.Column="12" Click="OnPieChart" ToolTip="PieChart" Label="PieChart" Icon="Clock"/>
+            <ui:AppBarButton x:Name="OpenButton"  Grid.Column="0" ToolTip="Open a .csv file containing 2 columns (label, value)" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
+            <ui:AppBarButton x:Name="RefreshButton" Grid.Column="1" ToolTip="Refresh" Label="Refresh" Click="OnRefresh" Icon="Refresh"/>
+            <ui:AppBarButton x:Name="PlayButton" Grid.Column="2" Click="OnPlay" ToolTip="Play" Label="Play" Icon="Play"/>
+            <ui:AppBarButton x:Name="PauseButton" Grid.Column="3" Click="OnPause" ToolTip="Pause" Label="Pause" Icon="Pause"/>
+            <ui:AppBarButton x:Name="RotateButton" Grid.Column="4" Click="OnRotate" ToolTip="Rotate" Label="Rotate" Icon="Rotate"/>
+            <ui:AppBarButton x:Name="AddButton" Grid.Column="5" Click="OnAddSeries" ToolTip="Add Series" Label="Add Series" Icon="Add"/>
+            <ui:AppBarButton x:Name="BarChartButton" Grid.Column="6" Click="OnBarChart" ToolTip="BarChart" Label="BarChart" Icon="ThreeBars"/>
+            <ui:AppBarButton x:Name="PieChartButton" Grid.Column="7" Click="OnPieChart" ToolTip="PieChart" Label="PieChart" Icon="Clock"/>
             
             <ui:AppBarButton x:Name="SettingsButton" Grid.Column="14" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
         </Grid>
