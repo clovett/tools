@@ -17,14 +17,16 @@ namespace LovettSoftware.Charts
         public double Value;
         public object UserData;
 
-        public Color Color { get; internal set; }
+        public Color? Color { get; internal set; }
     }
 
-    public class ChartSeries
+    public class ChartDataSeries
     {
         public String Name { get; set; }
 
-        public List<ChartDataValue> Data{ get; set; }
+        public List<ChartDataValue> Data { get; set; }
+
+        public ChartDataSeries() { Data = new List<ChartDataValue>(); }
     }
 
     public delegate UIElement ToolTipGenerator(ChartDataValue value);
@@ -39,6 +41,7 @@ namespace LovettSoftware.Charts
         Point movePos;
         ColumnInfo inside;
         bool mouseOverAnimationCompleted = false;
+        Random rand = new Random(Environment.TickCount);
 
         class ColumnInfo
         {
@@ -68,7 +71,21 @@ namespace LovettSoftware.Charts
 
         private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
+            if (e.NewValue is bool b && !b)
+            {
+                HideToolTip();
+            }
             OnDelayedUpdate();
+        }
+
+        private void HideToolTip()
+        {
+            var tip = this.ToolTip as ToolTip;
+            if (tip != null)
+            {
+                tip.IsOpen = false;
+                this.ToolTip = null;
+            }
         }
 
         public int HoverDelayMilliseconds { get; set; }
@@ -130,14 +147,14 @@ namespace LovettSoftware.Charts
         /// <summary>
         /// Note that if there are multiple ChartSeries we assume the X-axis labels are the same across all series.
         /// </summary>
-        public List<ChartSeries> Series
+        public List<ChartDataSeries> Series
         {
-            get { return (List<ChartSeries>)GetValue(SeriesProperty); }
+            get { return (List<ChartDataSeries>)GetValue(SeriesProperty); }
             set { SetValue(SeriesProperty, value); }
         }
 
         public static readonly DependencyProperty SeriesProperty =
-            DependencyProperty.Register("Series", typeof(List<ChartSeries>), typeof(AnimatingBarChart), new PropertyMetadata(null, OnSeriesChanged));
+            DependencyProperty.Register("Series", typeof(List<ChartDataSeries>), typeof(AnimatingBarChart), new PropertyMetadata(null, OnSeriesChanged));
 
         private static void OnSeriesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -146,24 +163,32 @@ namespace LovettSoftware.Charts
 
         private void OnSeriesChanged(object newValue)
         {
+            HideToolTip();
             if (newValue == null)
             {
                 ResetVisuals();
             }
-            else if (newValue is List<ChartSeries> s)
+            else if (newValue is List<ChartDataSeries> s)
             {
                 if (s.Count > 0)
                 {
-                    int cols = s[0].Data.Count;
+                    var first = s[0].Data;
+                    int cols = first.Count;
                     foreach(var series in s)
                     {
+                        var seriesDefaultColor = GetRandomColor();
                         if (series.Data.Count != cols)
                         {
                             throw new Exception("All series must have the same number of columns");
                         }
                         for (int i = 0; i < series.Data.Count; i++)
                         {
-                            if (series.Data[i].Label != s[0].Data[i].Label)
+                            var d = series.Data[i];
+                            if (!d.Color.HasValue)
+                            {
+                                d.Color = seriesDefaultColor;
+                            }
+                            if (d.Label != first[i].Label)
                             {
                                 throw new Exception("All series must have the same label on each column");
                             }
@@ -291,12 +316,7 @@ namespace LovettSoftware.Charts
             if (info != null)
             {
                 OnEnterColumn(info);
-                var tip = this.ToolTip as ToolTip;
-                if (tip != null)
-                {
-                    tip.IsOpen = false;
-                    this.ToolTip = null;
-                }
+                HideToolTip();
                 this.movePos = pos;
                 this.tipColumn = info;
                 actions.StartDelayedAction("hover", () =>
@@ -389,7 +409,7 @@ namespace LovettSoftware.Charts
                         bars.Add(info);
                     }
                     info.Data = item;
-                    info.Color = item.Color;
+                    info.Color = item.Color.Value;
 
                     if (firstSeries && !string.IsNullOrEmpty(item.Label))
                     {
@@ -557,7 +577,7 @@ namespace LovettSoftware.Charts
                 {
                     var dataValue = series.Data[col];
                     double s = (dataValue.Value * w / range); 
-                    Color color = dataValue.Color;
+                    Color color = dataValue.Color.Value;
 
                     ColumnInfo info = this.bars[col + (index * columns)];
                     Polygon polygon = info.Shape;
@@ -728,7 +748,7 @@ namespace LovettSoftware.Charts
                 {
                     var dataValue = series.Data[col];
                     double s = (dataValue.Value * h / range);
-                    Color color = dataValue.Color;
+                    Color color = dataValue.Color.Value;
 
                     var start = TimeSpan.FromMilliseconds(index * AnimationRippleMilliseconds);
                     ColumnInfo info = this.bars[col + (index * columns)];
@@ -816,6 +836,12 @@ namespace LovettSoftware.Charts
                 x += seriesGap;
             }
         }
+
+        private Color GetRandomColor()
+        {
+            return Color.FromRgb((byte)rand.Next(80, 200), (byte)rand.Next(80, 200), (byte)rand.Next(80, 200));
+        }
+
     }
 }
 

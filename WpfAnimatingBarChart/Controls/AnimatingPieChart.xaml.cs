@@ -22,6 +22,7 @@ namespace LovettSoftware.Charts
         Point movePos;
         PieSlice inside;
         bool mouseOverAnimationCompleted = false;
+        Random rand = new Random(Environment.TickCount);
 
         public AnimatingPieChart()
         {
@@ -55,7 +56,21 @@ namespace LovettSoftware.Charts
 
         private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
+            if (e.NewValue is bool b && !b)
+            {
+                HideToolTip();
+            }
             OnDelayedUpdate();
+        }
+
+        private void HideToolTip()
+        {
+            var tip = this.ToolTip as ToolTip;
+            if (tip != null)
+            {
+                tip.IsOpen = false;
+                this.ToolTip = null;
+            }
         }
 
         public List<ChartDataValue> Series
@@ -74,12 +89,20 @@ namespace LovettSoftware.Charts
 
         private void OnSeriesChanged(object newValue)
         {
+            HideToolTip();
             if (newValue == null || this.Series.Count == 0)
             {
                 ResetVisuals();
             }
-            else
+            else 
             {
+                foreach (var dv in this.Series)
+                {
+                    if (!dv.Color.HasValue)
+                    {
+                        dv.Color = GetRandomColor();
+                    }
+                }
                 OnDelayedUpdate();
             }
         }
@@ -144,10 +167,14 @@ namespace LovettSoftware.Charts
                     slices.Add(slice);
                 }
 
-                slice.Color = item.Color;
+                slice.Color = item.Color.Value;
                 double start = (sum * 360) / total;
                 double end = ((sum + item.Value) * 360) / total;
-                AnimateSlice(sb, slice, oldStart, start, oldEnd, end, item.Color);
+                if (end == 360)
+                {
+                    end = 359.99;
+                }
+                AnimateSlice(sb, slice, oldStart, start, oldEnd, end, item.Color.Value);
                 sum += item.Value;
                 i++;
             }
@@ -269,12 +296,7 @@ namespace LovettSoftware.Charts
             if (i >= 0 && i < Series.Count)
             {
                 OnEnterSlice(i);
-                var tip = this.ToolTip as ToolTip;
-                if (tip != null)
-                {
-                    tip.IsOpen = false;
-                    this.ToolTip = null;
-                }
+                HideToolTip();
                 this.movePos = pos;
                 this.tipSlice = i;
                 actions.StartDelayedAction("hover", () =>
@@ -454,5 +476,11 @@ namespace LovettSoftware.Charts
 
 
         }
+
+        private Color GetRandomColor()
+        {
+            return Color.FromRgb((byte)rand.Next(80, 200), (byte)rand.Next(80, 200), (byte)rand.Next(80, 200));
+        }
+
     }
 }
