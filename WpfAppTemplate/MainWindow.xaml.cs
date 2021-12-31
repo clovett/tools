@@ -1,7 +1,11 @@
 ﻿using LovettSoftware.Utilities;
+using ModernWpf.Controls;
 using System;
 using System.ComponentModel;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace WpfAppTemplate
 {
@@ -23,6 +27,20 @@ namespace WpfAppTemplate
             this.LocationChanged += OnWindowLocationChanged;
 
             Settings.Instance.PropertyChanged += OnSettingsChanged;
+
+            foreach(var field in typeof(Symbol).GetFields(BindingFlags.Static | BindingFlags.Public))
+            {
+                object value = field.GetValue(null);
+                if (value is Symbol s)
+                {
+                    AppBarButton b = new AppBarButton() { 
+                        Background = Brushes.Transparent, 
+                        ToolTip = s.ToString() + "\r\n" + (int)s,
+                        Icon = new SymbolIcon() { Symbol = s }
+                    };
+                    this.SymbolPanel.Children.Add(b);
+                }
+            }
         }
 
         private void OnOpenFile(object sender, RoutedEventArgs e)

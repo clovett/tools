@@ -19,7 +19,6 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -50,10 +49,10 @@
 
         </Grid>
 
-
         <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
         </local:AppSettings>
 
+        <WrapPanel x:Name="SymbolPanel" Grid.Row="2" Grid.Column="0" Margin="20" HorizontalAlignment="Stretch"></WrapPanel>
 
         <Border Grid.ColumnSpan="2" Grid.Row="4">
             <TextBlock x:Name="StatusText" Text=""  Margin="5" />
