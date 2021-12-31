@@ -4,6 +4,7 @@ using LovettSoftware.Utilities;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -50,6 +51,10 @@ namespace WpfAppTemplate
             this.Chart.ToolTipGenerator = OnGenerateTip;
             this.Chart.Foreground = Brushes.SlateGray;
 
+
+            this.PieChart.PieSliceClicked += OnPieSliceClicked;
+            this.PieChart.PieSliceHover += OnPieSliceHovered;
+
             LoadSamples();
             if (!string.IsNullOrEmpty(Settings.Instance.LastFile) && File.Exists(Settings.Instance.LastFile))
             {
@@ -65,12 +70,29 @@ namespace WpfAppTemplate
         {
             var ds = datasets[dataset];
             Chart.Series = ds.Data;
+            PieChart.Series = CreatePieData(ds);
 
             dataset++;
             if (dataset >= datasets.Count)
             {
                 dataset = 0;
             }
+        }
+
+        private List<ChartDataValue> CreatePieData(Dataset ds)
+        {
+            var data = new List<ChartDataValue>();
+            foreach(var item in ds.Data)
+            {
+                data.Add(new ChartDataValue() { Color = GetRandomColor(), Label = item.Label, UserData = item.UserData, Value = item.Value });
+            }
+
+            data.Sort((a, b) =>
+            {
+                return (int)(b.Value - a.Value);
+            });
+
+            return data;
         }
 
         void LoadSamples()
@@ -158,10 +180,20 @@ namespace WpfAppTemplate
 
         private void OnColumnHover(object sender, ChartDataValue e)
         {
-
+            Debug.WriteLine("OnColumnHover: " + e.Label + " = " + e.Value);
         }
 
         private void OnColumnClicked(object sender, ChartDataValue e)
+        {
+            Toggle();
+        }
+
+        private void OnPieSliceHovered(object sender, ChartDataValue e)
+        {
+            Debug.WriteLine("OnPieSliceHovered: " + e.Label + " = " + e.Value);
+        }
+
+        private void OnPieSliceClicked(object sender, ChartDataValue e)
         {
             Toggle();
         }
@@ -351,6 +383,9 @@ namespace WpfAppTemplate
             var data = Chart.Series;
             Chart.Series = null;
             Chart.Series = data;
+            data = PieChart.Series;
+            PieChart.Series = null;
+            PieChart.Series = data;
         }
 
         private void OnRotate(object sender, RoutedEventArgs e)

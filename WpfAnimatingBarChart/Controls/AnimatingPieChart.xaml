@@ -7,22 +7,5 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Canvas x:Name="ChartCanvas" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-        <Path Fill="Purple" StrokeThickness="1">
-            <Path.Data>
-                <PathGeometry>
-                    <PathGeometry.Figures>
-                        <PathFigureCollection>
-                            <PathFigure StartPoint="100,100">
-                                <PathFigure.Segments>
-                                    <PathSegmentCollection>
-                                        <ArcSegment x:Name="PieSlice" Size="50,50" IsLargeArc="True" SweepDirection="CounterClockwise" Point="500,100"   />
-                                    </PathSegmentCollection>
-                                </PathFigure.Segments>
-                            </PathFigure>
-                        </PathFigureCollection>
-                    </PathGeometry.Figures>
-                </PathGeometry>
-            </Path.Data>
-        </Path>
     </Canvas>
 </UserControl>

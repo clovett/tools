@@ -51,11 +51,19 @@ namespace LovettSoftware.Charts
         public AnimatingBarChart()
         {
             InitializeComponent();
-            HoverDelayMilliseconds = 250;
+            this.HoverDelayMilliseconds = 250;
             this.AnimationGrowthMilliseconds = 250;
             this.AnimationRippleMilliseconds = 20;
             this.AnimationColorMilliseconds = 120;
+            this.IsVisibleChanged += OnVisibleChanged;
         }
+
+        private void OnVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            OnDelayedUpdate();
+        }
+
+        public int HoverDelayMilliseconds { get; set; }
 
         /// <summary>
         /// Time to animate growth of the columns.
@@ -78,8 +86,6 @@ namespace LovettSoftware.Charts
             hls.Lighten(0.25f);
             return hls.Color;
         }
-
-        public int HoverDelayMilliseconds { get; set; }
 
         public ToolTipGenerator ToolTipGenerator { get; set; }
 
@@ -155,7 +161,7 @@ namespace LovettSoftware.Charts
 
         protected override Size ArrangeOverride(Size arrangeBounds)
         {
-            actions.StartDelayedAction("update", UpdateChart, TimeSpan.FromMilliseconds(10));
+            OnDelayedUpdate();
             return base.ArrangeOverride(arrangeBounds);
         }
 
@@ -171,7 +177,7 @@ namespace LovettSoftware.Charts
             {
                 ResetVisuals();
             }
-            else
+            else if (this.Visibility == Visibility.Visible)
             {
                 if (this.Orientation == Orientation.Horizontal)
                 {
@@ -201,7 +207,6 @@ namespace LovettSoftware.Charts
             }
 
             ChartDataValue value = Series[i];
-            var s = this.PointToScreen(this.movePos);
             var tip = this.ToolTip as ToolTip;
             var content = ToolTipGenerator != null ? ToolTipGenerator(value) : new TextBlock() { Text = value.Label + "\r\n" + value.Value };
             if (tip == null)
@@ -221,7 +226,7 @@ namespace LovettSoftware.Charts
             }
             tip.Measure(new Size(100, 100));
             tip.HorizontalOffset = 0;
-            tip.VerticalOffset = -tip.DesiredSize.Height;
+            tip.VerticalOffset = -tip.ActualHeight;
 
             // notify any interested listeners
             var h = this.ColumnHover;

@@ -52,7 +52,7 @@
         </Grid>
 
         <c:AnimatingBarChart x:Name="Chart" Grid.Row="2" Grid.Column="0" Margin="20" LineBrush="{DynamicResource SystemControlBackgroundChromeMediumBrush}"/>
-        <c:AnimatingPieChart x:Name="PieChart" Grid.Row="2" Grid.Column="0" Margin="20" Visibility="Collapsed" />
+        <c:AnimatingPieChart x:Name="PieChart" Grid.Row="2" Grid.Column="0" Margin="20" Visibility="Collapsed" Padding="50"/>
 
         <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="0" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
         </local:AppSettings>
