@@ -363,6 +363,7 @@ namespace LovettSoftware.Charts
                 this.path.Stroke = new SolidColorBrush(color);
                 this.path.Fill = new SolidColorBrush(color);
                 this.path.StrokeThickness = 1;
+                this.path.StrokeMiterLimit = 1; // stop narrow slices from creating long pointed line join.
                 owner.Children.Add(this.path);
                 this.Size = size;
                 this.Center = center;
