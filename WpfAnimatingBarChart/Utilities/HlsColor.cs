@@ -1,7 +1,7 @@
 using System;
 using System.Windows.Media;
 
-namespace LovettSoftware.Utilities
+namespace Walkabout.Utilities
 {
 
     public class HlsColor

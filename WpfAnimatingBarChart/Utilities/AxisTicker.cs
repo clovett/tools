@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LovettSoftware.Utilities
+namespace Walkabout.Utilities
 {
     class AxisTickSpacer
     {

@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 
-namespace LovettSoftware.Utilities
+namespace Walkabout.Utilities
 {
     /// <summary>
     /// Thanks to the very awesome Charles Petzold for this code.

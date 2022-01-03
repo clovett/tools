@@ -12,6 +12,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Xml;
 using System.Xml.Linq;
+using Walkabout.Charts;
+using Walkabout.Utilities;
 
 namespace WpfAppTemplate
 {
@@ -74,14 +76,16 @@ namespace WpfAppTemplate
         void Toggle()
         {
             var ds = GetNext();
-            Chart.Series = new List<ChartDataSeries>() { ds };
+            var data = new ChartData();
+            data.Series.Add(ds);
+            Chart.Data = data;
             PieChart.Series = CreatePieData(ds);
         }
 
         private List<ChartDataValue> CreatePieData(ChartDataSeries ds)
         {
             var data = new List<ChartDataValue>();
-            foreach(var item in ds.Data)
+            foreach(var item in ds.Values)
             {
                 data.Add(new ChartDataValue() { Label = item.Label, UserData = item.UserData, Value = item.Value });
             }
@@ -98,7 +102,7 @@ namespace WpfAppTemplate
         {
             datasets.Add(new ChartDataSeries() {
                 Name = "Landscaping",
-                Data = new List<ChartDataValue>()
+                Values = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "2002", Value = 14813.67 },
                     new ChartDataValue() { Label = "2003", Value = 13260.92 },
@@ -126,7 +130,7 @@ namespace WpfAppTemplate
             datasets.Add(new ChartDataSeries()
             {
                 Name = "Home",
-                Data = new List<ChartDataValue>()
+                Values = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "2002",    Value = 2678.25 },
                     new ChartDataValue() { Label = "2003",    Value = 3461.95 },
@@ -154,7 +158,7 @@ namespace WpfAppTemplate
             datasets.Add(new ChartDataSeries()
             {
                 Name = "Fun",
-                Data = new List<ChartDataValue>()
+                Values = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "14 January", Value = 158.22   , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
                     new ChartDataValue() { Label = "14 February", Value = 226.5   , Color = Color.FromRgb(0xA3, 0x00, 0x27)   },
@@ -173,7 +177,7 @@ namespace WpfAppTemplate
             datasets.Add(new ChartDataSeries()
             {
                 Name = "Test",
-                Data = new List<ChartDataValue>()
+                Values = new List<ChartDataValue>()
                 {
                     new ChartDataValue() { Label = "Singleton!", Value = 705.66 }
                 }
@@ -263,7 +267,7 @@ namespace WpfAppTemplate
                     }
                 }
             }
-            return new ChartDataSeries() { Data = data };
+            return new ChartDataSeries() { Values = data };
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -391,9 +395,9 @@ namespace WpfAppTemplate
 
         private void OnRefresh(object sender, RoutedEventArgs e)
         {
-            var data = Chart.Series;
-            Chart.Series = null;
-            Chart.Series = data;
+            var data = Chart.Data;
+            Chart.Data = null;
+            Chart.Data = data;
 
             var pieData = PieChart.Series;
             PieChart.Series = null;
@@ -421,15 +425,15 @@ namespace WpfAppTemplate
         {
             if (Chart.Visibility == Visibility.Visible)
             {
-                var data = Chart.Series;
+                var data = Chart.Data;
                 var ds = GetNext();
-                while (ds.Data.Count != data[0].Data.Count)
+                while (ds.Values.Count != data.Series[0].Values.Count)
                 {
                     ds = GetNext();
                 }
-                data.Add(ds);
-                Chart.Series = null;
-                Chart.Series = data;
+                data.Series.Add(ds);
+                Chart.Data = null;
+                Chart.Data = data;
             }
         }
     }

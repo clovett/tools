@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LovettSoftware.Utilities
+namespace Walkabout.Utilities
 {
     /// <summary>
     /// This class provides a delayed action that has a name.  If the same named action is
