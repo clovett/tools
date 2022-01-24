@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfLightning", "WpfLightning.csproj", "{9319EA3E-7BED-42E1-A75F-7CF79C5EA67C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9319EA3E-7BED-42E1-A75F-7CF79C5EA67C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9319EA3E-7BED-42E1-A75F-7CF79C5EA67C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9319EA3E-7BED-42E1-A75F-7CF79C5EA67C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9319EA3E-7BED-42E1-A75F-7CF79C5EA67C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0B3EC61E-342C-4802-B668-C5CE5579697E}
+	EndGlobalSection
+EndGlobal
