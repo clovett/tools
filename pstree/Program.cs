@@ -29,18 +29,26 @@ namespace pstree
             {
                 foreach (var child in Children)
                 {
-                    if (match == null || child.ContainsMatch(match))
+                    if (child.ContainsMatch(match))
                     {
-                        child.PrintTree(indent + "  ", match);
+                        // print everything under a matching node.
+                        child.PrintTree(indent + "  ", this.IsMatch(match) ? null : match);
                     }
                 }
             }
         }
 
+        internal bool IsMatch(string match) { 
+            return !string.IsNullOrEmpty(match) && this.Name.IndexOf(match, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
         internal bool ContainsMatch(string match)
         {
-            int pos = this.Name.IndexOf(match, StringComparison.OrdinalIgnoreCase);
-            if (pos >= 0) 
+            if (match == null)
+            {
+                return true;
+            }
+            if (IsMatch(match)) 
                 return true;
             if (this.Children != null)
             {
@@ -158,7 +166,7 @@ namespace pstree
             {
                 if (n.Parent == null)
                 {
-                    if (match == null || n.ContainsMatch(match))
+                    if (n.ContainsMatch(match))
                     {
                         n.PrintTree("", match);
                     }
