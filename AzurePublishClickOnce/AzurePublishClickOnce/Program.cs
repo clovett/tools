@@ -98,13 +98,10 @@ namespace FtpPublishClickOnce
         {
             Console.WriteLine("Usage: AzurePublishClickOnce SourceFolder TargetFolder connectionString");
             Console.WriteLine("Copies all files and directories from the source directory to the target directory");
-            Console.WriteLine("using Azure blob credentials found in the BlobContainerUri.");
+            Console.WriteLine("using the given Azure storage connection string.");
             Console.WriteLine("It also cleans up old versions in 'Application Files'");
             Console.WriteLine("versions after the copy to ensure local and remote folders only contain the latest verion.");
             Console.WriteLine();
-            Console.WriteLine("The BlobContainerUri should look something like this:");
-            Console.WriteLine("https://somwhere.blob.core.windows.net/downloads?sv=...&st=...&se=...&sr=c&sp=...&sig=...");
-            Console.WriteLine("You will probably need to put double quotes around the http Uri for it to become a valid command line argument");
         }
 
         private bool ParseCommandLine(string[] args)
