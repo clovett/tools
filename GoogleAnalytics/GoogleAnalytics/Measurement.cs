@@ -1,20 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace GoogleAnalytics
 {
-    public abstract class Measurement
+    [KnownType(typeof(PageMeasurement))]
+    [KnownType(typeof(EventMeasurement))]
+    [KnownType(typeof(ExceptionMeasurement))]
+    [KnownType(typeof(UserTimingMeasurement))]
+    [DataContract]
+    public class Analytics
     {
-        protected int Version { get; set; }
+        public Analytics()
+        {
+            this.TimeStamp = DateTimeOffset.Now.ToUnixTimeMilliseconds() * 1000;
+        }
 
-        public string TrackingId { get; set; }
+        public string ApiSecret { get; set; }
 
+        public string MeasurementId { get; set; }
+
+        [DataMember(Name="client_id")]
         public string ClientId { get; set; }
 
-        protected string Type { get; set; }
+        [DataMember(Name = "events")]
+        public List<Measurement> Events = new List<Measurement>();
 
-        public Measurement()
+        [DataMember(Name = "timestamp_micros")]
+        public long TimeStamp { get; set; }
+
+        [DataMember(Name = "non_personalized_ads")]
+        public bool NonPersonalizedAds { get; set; }
+
+        public string ToQueryString()
         {
-            this.Version = 1;
+            Required(MeasurementId, "MeasurementId");
+            Required(ClientId, "ClientId");
+            Required(ApiSecret, "ApiSecret");
+
+            return string.Format("api_secret={0}&measurement_id={1}", ApiSecret, MeasurementId);
         }
 
         protected void Required(string value, string name)
@@ -25,107 +49,165 @@ namespace GoogleAnalytics
             }
         }
 
-        public override string ToString()
-        {
-            Required(TrackingId, "TrackingId");
-            Required(ClientId, "ClientId");
-            Required(Type, "Type");
-
-            return string.Format("v={0}&tid={1}&cid={2}&t={3}", Version, TrackingId, ClientId, Type);
-        }
     }
 
+    [DataContract]
+    public abstract class Measurement
+    {
+        public Measurement()
+        {
+            this.Version = 1;
+        }
+
+        protected int Version { get; set; }
+
+        [DataMember(Name="name")]
+        protected string Name { get; set; }
+
+        [DataMember(Name = "params")]
+        public Dictionary<string, string> Params = new Dictionary<string, string>();
+
+        //[DataMember(Name = "items")]
+        //public List<DataItem> Items = new List<DataItem>();
+
+        protected void Required(string value, string name)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new ArgumentNullException(name);
+            }
+        }
+
+        protected string GetParam(string name)
+        {
+            if (Params.TryGetValue(name, out string value))
+            {
+                return value;
+            }
+            return null;
+        }
+
+        protected void SetParam(string name, string value)
+        {
+            Params[name] = value;
+        }
+
+    }
+
+    [DataContract]
     public class PageMeasurement : Measurement
     {
         public PageMeasurement()
         {
-            Type = "pageview";
+            Name = "page_view";
         }
 
-        public string HostName { get; set; }
-
-        public string Path { get; set; }
-
-        public string Title { get; set; }
-
-        public override string ToString()
+        public string HostName
         {
-            Required(HostName, "HostName");
-            Required(Path, "Path");
-            Required(Title, "Title");
-            
-            return base.ToString() + "&" + string.Format("dh={0}&dp={1}&dt={2}", HostName, Path, Title);
+            get => GetParam("host_name");
+            set => SetParam("host_name", value);
         }
+
+        public string Path
+        {
+            get => GetParam("page_location");
+            set => SetParam("page_location", value);
+        }
+
+        public string Title
+        {
+            get => GetParam("page_title");
+            set => SetParam("page_title", value);
+        }
+
     }
 
+    [DataContract]
     public class EventMeasurement : Measurement
     {
         public EventMeasurement()
         {
-            Type = "event";
+            Name = "event";
         }
 
-        public string Category { get; set; }
-
-        public string Action { get; set; }
-
-        public string Label { get; set; }
-
-        public string Value { get; set; }
-
-        public override string ToString()
+        public string Category
         {
-            Required(Category, "Category");
-            Required(Action, "Action");
-            Required(Label, "Label");
-            Required(Value, "Value");
-
-            return base.ToString() + "&" + string.Format("ec={0}&ea={1}&el={2}&ev={3}", Category, Action, Label, Value);
+            get => GetParam("category");
+            set => SetParam("category", value);
         }
+
+
+        public string Action
+        {
+            get => GetParam("action");
+            set => SetParam("action", value);
+        }
+
+
+        public string Label
+        {
+            get => GetParam("label");
+            set => SetParam("label", value);
+        }
+
+        public string Value
+        {
+            get => GetParam("value");
+            set => SetParam("value", value);
+        }
+
     }
 
+    [DataContract]
     public class ExceptionMeasurement : Measurement
     {
         public ExceptionMeasurement()
         {
-            Type = "exception";
+            Name = "exception";
         }
 
-        public string Description { get; set; }
-
-        public bool Fatal { get; set; }
-
-        public override string ToString()
+        public string Description
         {
-            Required(Description, "Description");
+            get => GetParam("description");
+            set => SetParam("description", value);
+        }
 
-            int fval = Fatal ? 1 : 0;
-            return base.ToString() + "&" + string.Format("exd={0}&exf={1}", Description, fval);
+        public string Fatal
+        {
+            get => GetParam("fatal");
+            set => SetParam("fatal", value);
         }
     }
 
+    [DataContract]
     public class UserTimingMeasurement : Measurement
     {
         public UserTimingMeasurement()
         {
-            Type = "timing";
+            Name = "timing";
         }
 
-        public string Category { get; set; }
-
-        public string Variable { get; set; }
-
-        public int Time { get; set; }
-
-        public string Label { get; set; }
-
-        public override string ToString()
+        public string Category
         {
-            Required(Category, "Category");
-            Required(Variable, "Variable");
-            Required(Label, "Label");
+            get => GetParam("category");
+            set => SetParam("category", value);
+        }
+        public string Variable
+        {
+            get => GetParam("variable");
+            set => SetParam("variable", value);
+        }
 
-            return base.ToString() + "&" + string.Format("utc={0}&utv={1}&utt={2}&utl={3}", Category, Variable, Time, Label);
+        public string Time
+        {
+            get => GetParam("time");
+            set => SetParam("time", value);
+        }
+
+        public string Label
+        {
+            get => GetParam("label");
+            set => SetParam("label", value);
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Threading.Tasks;
 using GoogleAnalytics;
 
@@ -8,23 +11,31 @@ namespace Test
     {
         static async Task Main(string[] args)
         {
-            if (args.Length == 0)
+            if (args.Length < 2)
             {
-                Console.WriteLine("Usage Test Google Analytics Tracking Id");
+                Console.WriteLine("Usage Test <Google Analytics Measurement Id> <Api Secret>");
                 return;
             }
 
-            string clientId = Guid.NewGuid().ToString(); 
+            string clientId = Guid.NewGuid().ToString();
             string trackingId = args[0];
+            string apiSecret = args[1];
 
-            await GoogleAnalytics.HttpProtocol.PostMeasurements(new PageMeasurement()
+            var analytics = new Analytics()
             {
-                TrackingId = trackingId,
-                ClientId = clientId,
-                HostName = "microsoft.github.io",
-                Path = "/App/Launch",
-                Title = "Launch"
-            });
+                MeasurementId = trackingId,
+                ApiSecret = apiSecret,
+                ClientId = clientId
+            };
+            var m = new PageMeasurement()
+            {
+                Path = "/App/FormSearch",
+                Title = "FormSearch"
+            };
+            m.Params["debug_mode"] = "1";
+            analytics.Events.Add(m);
+
+            await GoogleAnalytics.HttpProtocol.PostMeasurements(analytics);
 
             Console.WriteLine("measurement sent!!");
         }

@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,38 +11,38 @@ namespace GoogleAnalytics
 {
     public class HttpProtocol
     {
-        public static async Task PostMeasurements(params Measurement[] args)
+        public static async Task PostMeasurements(Analytics a)
         {
-            const string guide = "\r\nSee: https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide";
+            const string guide = "\r\nSee https://developers.google.com/analytics/devguides/collection/protocol/ga4";
 
-            if (args.Length > 20)
+            if (a.Events.Count > 25)
             {
-                throw new Exception("A maximum of 20 hits can be specified per request." + guide);
+                throw new Exception("A maximum of 25 events can be specified per request." + guide);
             }
 
-            StringBuilder sb = new StringBuilder();
-            foreach(var m in args)
-            {
-                var line = m.ToString();
-                if (Encoding.UTF8.GetByteCount(line) > 8192)
-                {
-                    throw new Exception("No single hit payload can be greater than 8K bytes" + guide);
-                }
-                sb.Append(line);
-                sb.AppendLine();
-            }
-
-            string msg = sb.ToString();
-            if (Encoding.UTF8.GetByteCount(msg) > 16384)
-            {
-                throw new Exception("The total size of all hit payloads cannot be greater than 16K bytes" + guide);
-            }
-
-            string baseUrl = "http://www.google-analytics.com/";
-            string verb = args.Length > 1 ? "batch" : "collect";
+            string baseUrl = "https://www.google-analytics.com/mp/collect";
+            string query = a.ToQueryString();
+            string url = baseUrl + "?" + query;
 
             HttpClient client = new HttpClient();
-            var response = await client.PostAsync(baseUrl + verb, new StringContent(msg, Encoding.UTF8));
+
+            var settings = new DataContractJsonSerializerSettings();
+            settings.EmitTypeInformation = EmitTypeInformation.Never;
+            settings.UseSimpleDictionaryFormat = true;
+
+            DataContractJsonSerializer s = new DataContractJsonSerializer(typeof(Analytics), settings);
+            MemoryStream ms = new MemoryStream();
+            s.WriteObject(ms, a);
+            var  bytes = ms.Position;
+            if (bytes > 130000)
+            {
+                throw new Exception("The total size of analytics payloads cannot be greater than 130kb bytes" + guide);
+            }
+            ms.Seek(0, SeekOrigin.Begin);
+            string json = System.Text.Encoding.UTF8.GetString(ms.GetBuffer());
+
+            var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(url, jsonContent);
             response.EnsureSuccessStatusCode();
        }
     }
