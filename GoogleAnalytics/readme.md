@@ -1,17 +1,23 @@
-This is very simple .NET standard library for sending google analytics measurements to google. 
+This is very simple .NET standard library for sending Google analytics measurements to Google
+using the `Google Analytics 4` protocol.
 
 Use it like this:
 
-```
-await GoogleAnalytics.HttpProtocol.PostMeasurements(new PageMeasurement()
+```c#
+var analytics = new Analytics()
 {
-    TrackingId = "UA-12345678-1",
-    ClientId = "123",
-    HostName = "microsoft.github.io",
-    Path = "/XmlNotepad/help/clipboard",
-    Title = "Schemas"
+    MeasurementId = trackingId,
+    ApiSecret = apiSecret,
+    ClientId = clientId
+};
+analytics.Events.Add(new PageMeasurement()
+{
+    Path = "https://microsoft.github.io/XmlNotepad/help/find/",
+    Title = "Find"
 });
+// you can add up to 25 events per Post.
+await GoogleAnalytics.HttpProtocol.PostMeasurements(analytics);
 ```
 
-Supports page views, events, timing, and exception measurements. The library is tiny, only 180 lines of code.
-
+Supports page views, events, timing, and exception measurements. The library is tiny, only 180 lines of code
+so feel free to fork it and have fun or submit a PR, thanks.
