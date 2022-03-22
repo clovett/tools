@@ -29,10 +29,12 @@ namespace Test
             };
             var m = new PageMeasurement()
             {
-                Path = "/App/FormSearch",
-                Title = "FormSearch"
+                Path = "https://microsoft.github.io/XmlNotepad/App/FormSearch",
+                Title = "FormOptions"
             };
-            m.Params["debug_mode"] = "1";
+
+            // m.Params["debug_mode"] = "1";
+
             analytics.Events.Add(m);
 
             await GoogleAnalytics.HttpProtocol.PostMeasurements(analytics);

@@ -120,6 +120,11 @@ namespace GoogleAnalytics
             set => SetParam("page_title", value);
         }
 
+        public string Referrer
+        {
+            get => GetParam("page_referrer");
+            set => SetParam("page_referrer", value);
+        }
     }
 
     [DataContract]
