@@ -1,7 +1,5 @@
 @echo off
-set profile=%USERPROFILE%
-set "profile=%profile:\=/%"
-set keyfile=%profile%/.ssh/clovett
+set keyfile=~/.ssh/clovett
 if not exist "%keyfile%" goto :nokey
 if "%clovett_email%" == "" goto :noemail
 git config core.sshCommand "ssh -i %keyfile%"
