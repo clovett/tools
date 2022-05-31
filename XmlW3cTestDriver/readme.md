@@ -11,11 +11,11 @@ cd bin\debug\net6.0
 TestDriver.exe https://www.w3.org/XML/Test/xmlts20031210.zip
 ```
 
-It reports all test failures, and the reson for the failure along with a summary of results, which
+It reports all test failures, and the reason for the failure along with a summary of results, which
 on .NET 6.0 is as follows:
 
 | Suite                                         | Tests  | Pass Rate    |
-|-----------------------------------------------|-----------------------|
+|-----------------------------------------------|--------|--------------|
 | https://www.w3.org/XML/Test/xmlts20031210.zip | 1026   | 81 %         |
 | https://www.w3.org/XML/Test/xmlts20080205.zip | 2559   | 76 %         |
 | https://www.w3.org/XML/Test/xmlts20080827.zip | 2570   | 76 %         |
