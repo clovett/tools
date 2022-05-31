@@ -14,35 +14,16 @@ namespace MyApp // Note: actual namespace depends on the project name.
             {
                 string fileName = null;
                 Console.WriteLine($"Running test from {url}");
-                Uri uri = new Uri(url);
+                Uri uri = new Uri(url, uriKind: UriKind.RelativeOrAbsolute);
+                if (!uri.IsAbsoluteUri)
+                {
+                    uri = new Uri(Path.GetFullPath(url));
+                }
                 if (uri.Scheme == "http" || uri.Scheme == "https")
                 {
-                    fileName = uri.Segments[uri.Segments.Length - 1];
-                    var dir = Directory.GetCurrentDirectory();
-                    var outDir = Path.Combine(dir, Path.GetFileNameWithoutExtension(fileName));
-                    if (Directory.Exists(outDir))
+                    fileName = await DownloadTest(uri);
+                    if (string.IsNullOrEmpty(fileName))
                     {
-                        Console.WriteLine($"Local cache {outDir} already exists so using it");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Downloading {fileName}...");
-                        HttpClient client = new HttpClient();
-                        var response = await client.GetAsync(url);
-                        response.EnsureSuccessStatusCode();
-                        var stream = response.Content.ReadAsStream();
-                        using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
-                        {
-                            await stream.CopyToAsync(fs);
-                        }
-                        Directory.CreateDirectory(outDir);
-                        ZipFile.ExtractToDirectory(fileName, outDir);
-                    }
-
-                    fileName = Path.Combine(outDir, "xmlconf", "xmlconf.xml");
-                    if (!File.Exists(fileName))
-                    {
-                        Console.WriteLine($"Missing file {fileName} in zip archive {url}");
                         return 1;
                     }
                 }
@@ -63,6 +44,39 @@ namespace MyApp // Note: actual namespace depends on the project name.
             return 0;
         }
 
+        static async Task<string> DownloadTest(Uri uri)
+        {
+            var fileName = uri.Segments[uri.Segments.Length - 1];
+            var dir = Directory.GetCurrentDirectory();
+            var outDir = Path.Combine(dir, Path.GetFileNameWithoutExtension(fileName));
+            if (Directory.Exists(outDir))
+            {
+                Console.WriteLine($"Local cache {outDir} already exists so using it");
+            }
+            else
+            {
+                Console.WriteLine($"Downloading {fileName}...");
+                HttpClient client = new HttpClient();
+                var response = await client.GetAsync(uri);
+                response.EnsureSuccessStatusCode();
+                var stream = response.Content.ReadAsStream();
+                using (var fs = new FileStream(fileName, FileMode.Create, FileAccess.Write))
+                {
+                    await stream.CopyToAsync(fs);
+                }
+                Console.WriteLine($"Extracting to {outDir}...");
+                Directory.CreateDirectory(outDir);
+                ZipFile.ExtractToDirectory(fileName, outDir);
+            }
+
+            fileName = Path.Combine(outDir, "xmlconf", "xmlconf.xml");
+            if (!File.Exists(fileName))
+            {
+                Console.WriteLine($"### Missing file {fileName} in zip archive {uri.OriginalString}");
+                return null;
+            }
+            return fileName;
+        }
     }
 
     internal class TestDriver
@@ -70,7 +84,6 @@ namespace MyApp // Note: actual namespace depends on the project name.
         int totalTests;
         int testsFailed;
         int testsPassed;
-        List<string> testFailures = new List<string>();
 
         public void Report()
         {
@@ -79,17 +92,6 @@ namespace MyApp // Note: actual namespace depends on the project name.
             Console.WriteLine($"{testsPassed} tests passed ");
             var rate = (testsPassed * 100) / totalTests;
             Console.WriteLine($"pass rate {rate} %");
-        }
-
-        private XName GetName(XmlReader reader)
-        {
-            var name = reader.LocalName;
-            var ns = reader.NamespaceURI;
-            if (!string.IsNullOrEmpty(ns))
-            {
-                return XName.Get(name, ns);
-            }
-            return XName.Get(name);
         }
 
         private XDocument LoadXml(string fileName)
@@ -142,11 +144,6 @@ namespace MyApp // Note: actual namespace depends on the project name.
                 settings.CheckCharacters = true;
                 settings.ValidationFlags = System.Xml.Schema.XmlSchemaValidationFlags.ReportValidationWarnings;
                 settings.XmlResolver = new XmlUrlResolver();
-                //settings.ValidationEventHandler += (s, e) =>
-                //{
-                //    if (e.Exception != null) throw e.Exception;
-                //    throw new Exception(e.Message);
-                //};
                 using (var reader = XmlReader.Create(resolved.LocalPath, settings))
                 {
                     XmlDocument doc = new XmlDocument();
@@ -192,7 +189,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
                     }
                     break;
                 default:
-                    Console.WriteLine("???");
+                    Console.WriteLine($"### Unexpected test type {type}");
                     break;
             }
         }
