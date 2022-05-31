@@ -169,9 +169,11 @@ namespace xmlint
                     {
                         XmlReaderSettings settings = new XmlReaderSettings();
                         settings.Schemas = sc;
+                        settings.DtdProcessing = DtdProcessing.Parse;
                         settings.ValidationFlags = XmlSchemaValidationFlags.AllowXmlAttributes | XmlSchemaValidationFlags.ProcessIdentityConstraints | XmlSchemaValidationFlags.ProcessInlineSchema | XmlSchemaValidationFlags.ProcessSchemaLocation | XmlSchemaValidationFlags.ReportValidationWarnings;
                         settings.ValidationType = validation;
                         settings.ValidationEventHandler += new ValidationEventHandler(this.ValidationCallback);
+                        settings.XmlResolver = new XmlUrlResolver();
                         using (XmlReader reader = XmlReader.Create(stream, settings))
                         {
                             while (reader.Read())
