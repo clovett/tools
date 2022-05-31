@@ -18,7 +18,8 @@ namespace MyApp // Note: actual namespace depends on the project name.
                 if (uri.Scheme == "http" || uri.Scheme == "https")
                 {
                     fileName = uri.Segments[uri.Segments.Length - 1];
-                    var outDir = Path.GetFileNameWithoutExtension(fileName);
+                    var dir = Directory.GetCurrentDirectory();
+                    var outDir = Path.Combine(dir, Path.GetFileNameWithoutExtension(fileName));
                     if (Directory.Exists(outDir))
                     {
                         Console.WriteLine($"Local cache {outDir} already exists so using it");
@@ -114,7 +115,7 @@ namespace MyApp // Note: actual namespace depends on the project name.
             {
                 var profile = (string)suite.Attribute("PROFILE");
                 Console.WriteLine($"============= {profile} ================================= ");
-                foreach (XElement test in suite.Elements("TEST"))
+                foreach (XElement test in suite.Descendants("TEST"))
                 {
                     RunTest(test);
                 }
@@ -189,6 +190,9 @@ namespace MyApp // Note: actual namespace depends on the project name.
                         testsPassed++;
                         Console.WriteLine("passed");
                     }
+                    break;
+                default:
+                    Console.WriteLine("???");
                     break;
             }
         }
