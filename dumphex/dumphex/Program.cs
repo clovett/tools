@@ -187,7 +187,7 @@ namespace dumphex
                 {
                     byte b = line[j];
                     char c = Convert.ToChar(b);
-                    if (Char.IsLetterOrDigit(c) || Char.IsPunctuation(c))
+                    if (Char.IsLetterOrDigit(c) || Char.IsPunctuation(c) || (c >= 0x21 && c <= 0x7e))
                     {
                         Console.Write(c);
                     }
