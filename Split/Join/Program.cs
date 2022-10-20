@@ -9,17 +9,49 @@ namespace Split
 {
     class Program
     {
-        static void Main(string[] args)
+        static void PrintUsage()
         {
-            TextReader reader = null;
-            if (args.Length == 0)
+            Console.WriteLine("Usage: join characters [filename]");
+            Console.WriteLine("Joins all lines in the given input using the characters provided in first argument");
+        }
+
+        static int Main(string[] args)
+        {
+            string join = null;
+            string fileName = null;
+            foreach (string arg in args)
             {
-                Console.WriteLine("Usage: join characters [filename]");
-                Console.WriteLine("Splits all lines in the given input using the characters provided in first argument");
-                return;
+                if (arg.StartsWith("-"))
+                { 
+                    switch (arg.Trim('-').ToLowerInvariant())
+                    {
+                        default:
+                            PrintUsage();
+                            return 1;
+                    }
+                } 
+                else if (join == null)
+                {
+                    join = arg;
+                }
+                else if (fileName == null)
+                {
+                    fileName = arg;
+                }
+                else
+                {
+                    Console.WriteLine("Error: too many arguments");
+                    PrintUsage();
+                }
             }
-            string join = args[0];
-            if (args.Length == 1)
+
+            if (join == null)
+            {
+                PrintUsage();
+                return 1;
+            }
+            TextReader reader = null;
+            if (fileName == null)
             {
                 reader = Console.In;
             }
@@ -41,6 +73,8 @@ namespace Split
                 }
             }
             Console.WriteLine();
+
+            return 0;
         }
     }
 }
