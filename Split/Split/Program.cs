@@ -19,12 +19,20 @@ namespace Split
         {
             string split = null;
             string fileName = null;
+            bool sort = false;
+            bool toLower = false;
             foreach (string arg in args)
             {
                 if (arg.StartsWith("-"))
                 {
                     switch (arg.Trim('-').ToLowerInvariant())
                     {
+                        case "sort":
+                            sort = true;
+                            break;
+                        case "tolower":
+                            toLower = true;
+                            break;
                         default:
                             PrintUsage();
                             return 1;
@@ -53,14 +61,15 @@ namespace Split
 
             TextReader reader = null;
             char[] splitChars = split.ToCharArray();
-            if (args.Length == 1)
+            if (fileName == null)
             {
                 reader = Console.In;
             }
             else
             {
-                reader = new StreamReader(args[1]);
+                reader = new StreamReader(fileName);
             }
+            List<string> output = new List<string>();
             while (true)
             {
                 string line = reader.ReadLine();
@@ -70,9 +79,14 @@ namespace Split
                 }
                 foreach (var part in line.Split(splitChars))
                 {
-                    Console.WriteLine(part);
+                    output.Add(toLower ? part.ToLowerInvariant() : part);
                 }
             }
+            if (sort)
+            {
+                output.Sort();
+            }
+            output.ForEach(line => Console.WriteLine(line));
             return 0;
         }
     }
