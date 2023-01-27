@@ -181,7 +181,15 @@ namespace xmlint
                                 // it validates while we read !
                                 if (reader.NodeType == XmlNodeType.XmlDeclaration)
                                 {
-                                    xmlEncoding = Encoding.GetEncoding(reader.GetAttribute("encoding"));
+                                    var name = reader.GetAttribute("encoding");
+                                    if (!string.IsNullOrEmpty(name))
+                                    {
+                                        try
+                                        {
+                                            xmlEncoding = Encoding.GetEncoding(name);
+                                        }
+                                        catch { }
+                                    }
                                 }
                             }
                         }
