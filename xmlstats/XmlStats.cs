@@ -1,440 +1,625 @@
-/***********************************************************************
-* FileName:    XmlStats.cs
-*
-* Description: reports statistics about XML files
-*
-* Authors:     Chris Lovett and Andreas Lang
-*
-* Archive:     http://www.lovettsoftware.com/tools/xmlstats/readme.htm
-*
-* History:     See readme.
-*
-* todo / wish list:
-*
-* - option -e and entity ref list
-* - report size/timestamp of files
-* - calculate percentages of various "total chars" related to file size
-* - report min/max/avg length of text of every elem
-*
-***********************************************************************/
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
 
 using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Xml;
 using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Xml;
 
-namespace XmlStats
+namespace Microsoft.Xml
 {
-  public class XmlStats : PerfTimer
-  {
-    Hashtable elements    = new Hashtable();
-    long      elemCount   = 0;
-    long      emptyCount  = 0;
-    long      attrCount   = 0;
-    long      cmntCount   = 0;
-    long      piCount     = 0;
-    long      elemChars   = 0;
-    long      attrChars   = 0;
-    long      cmntChars   = 0;
-    long      whiteChars  = 0;
-    long      whiteSChars = 0;
-    long      piChars     = 0;
-    WhitespaceHandling whiteSpace = WhitespaceHandling.All;
-
-    static void PrintUsage() 
+    /// <summary>
+    /// XmlStats class provides a command line tool that reports various statistics about the structure of 
+    /// a given XML file, like total number of element and attributes and so on.
+    /// </summary>
+    public class XmlStats
     {
-      Console.WriteLine("*** usage: XmlStats [options] <filenames>");
-      Console.WriteLine("    reports statistics about elements, attributes and text found");
-      Console.WriteLine("    in the specified XML files (URLs or local file names).");
-      Console.WriteLine("    filenames: wildcards in local filenames allowed");
-      Console.WriteLine("               (for reporting on all files in a directory)");
-      Console.WriteLine("*** options:");
-      Console.WriteLine("-v         Generates individual reports for all specified files (default is summary only).");
-      Console.WriteLine("-nologo    Removes logo from the report");
-      Console.WriteLine("-w[a|s|n]  XML whitespace handling: -wa=All (default), -ws=Significant, -wn=None");
-    }
+        private Dictionary<string, NodeStats> _elements = new Dictionary<string, NodeStats>();
+        private long _elemCount;
+        private long _emptyCount;
+        private long _attrCount;
+        private long _commentCount;
+        private long _piCount;
+        private long _elemChars;
+        private long _attrChars;
+        private long _commentChars;
+        private long _whiteChars;
+        private long _whiteSChars;
+        private long _piChars;
+        private string _newLine = "\n";
+        private WhitespaceHandling _whiteSpace = WhitespaceHandling.All;
+        private Stopwatch _watch = new Stopwatch();
+        HashSet<string> _filters = new HashSet<string>();
 
-    [STAThread]
-    static void Main(string[] args)
-    {
-      bool               summary = true;
-      bool               logo    = true;
-      XmlStats           xs      = new XmlStats();
-      ArrayList          files   = new ArrayList();
-      
-      foreach (string arg in args)
-      {       
-        if (arg.Length > 1 && (arg[0] == '-' || arg[0] == '/'))
+        private static void PrintUsage()
         {
-          string larg = arg.Substring(1).ToLower();
-          switch (larg) 
-          {
-            case "?":
-            case "h":
-              PrintUsage();
-              return;
-            case "v":
-              summary = false;
-              break;
-            case "wn":
-              xs.whiteSpace = WhitespaceHandling.None;
-              break;
-            case "ws":
-              xs.whiteSpace = WhitespaceHandling.Significant;
-              break;
-            case "wa":
-              xs.whiteSpace = WhitespaceHandling.All;
-              break;
-            case "nologo":
-              logo = false;
-              break;
-            default: // invalid opt
-              Console.WriteLine("+++ invalid option ignored '" + arg + "'");
-              break;
-          }
+            Console.WriteLine("usage: XmlStats [options] <filenames>");
+            Console.WriteLine("    reports statistics about elements, attributes and text found");
+            Console.WriteLine("    in the specified XML files (URLs or local file names).");
+            Console.WriteLine("    filenames: wildcards in local filenames allowed");
+            Console.WriteLine("               (for reporting on all files in a directory)");
+            Console.WriteLine("options:");
+            Console.WriteLine("  -f filename Reports stats on files names found in the given file (one per line).");
+            Console.WriteLine("  -v          Generates individual reports for all specified files (default is summary only).");
+            Console.WriteLine("  -nologo     Removes logo from the report");
+            Console.WriteLine("  -w[a|s|n]   XML whitespace handling: -wa=All (default), -ws=Significant, -wn=None");
+            Console.WriteLine("  -s names    Report only on the contents of elements with the given comma separated names.");
+            Console.WriteLine("              This will include everything inside the selected elements.");
         }
-        else if (arg.IndexOf("://") > 0)  // url
-        {                             
-          files.Add(arg);
-        }
-        else if (arg.IndexOf("*") >= 0 || arg.IndexOf("?") >= 0)     // wildcard
-        {                                                             // resolve
-          string   path  = Path.Combine(Directory.GetCurrentDirectory(), arg);
-          string   dir   = Path.GetDirectoryName(path);
-          string   name  = Path.GetFileName(path);
-          string[] names = Directory.GetFiles(dir, name);
 
-          foreach (string file in names) 
-          {
-            files.Add(file);
-          }
-        }
-        else 
+        [STAThread]
+        private static int Main(string[] args)
         {
-          files.Add(arg);
-        }
-      }
+            bool summary = true;
+            bool logo = true;
+            XmlStats xs = new XmlStats();
+            List<string> files = new List<string>();
 
-      if (logo) 
-      {
-        Console.WriteLine("*** XmlStats V1.09 (March 2003)");
-        Console.WriteLine("    (by Chris Lovett and andreas lang,");
-        Console.WriteLine("     http://www.lovettsoftware.com/tools/xmlstats/readme.htm)");
-        Console.WriteLine();
-      }
-
-      xs.ProcessFiles((string[]) files.ToArray(typeof(string)), summary);
-
-      Console.WriteLine("*** XmlStats ended.");
-    }
-
-    public void ProcessFiles(string[] files, bool summary)
-    {
-      Reset();
-      int count = 0;
-
-      foreach (string file in files)
-      {
-        if (!summary)
-          Reset();
-
-        try
-        {
-          Process(file);
-          count++;
-          if (!summary)
-            Report(file, Console.Out);
-        }
-        catch (Exception e)
-        {
-          Console.WriteLine("+++ error in file '" + file + "':");
-          Console.WriteLine(e.Message);
-        }
-      }
-
-      if (summary && count > 0)
-        Report("XmlStats", Console.Out);
-    }
-
-    public void Process(TextReader input)
-    {
-      Reset();
-      XmlTextReader r = new XmlTextReader(input);
-      Process(r);
-    }
-
-    public void Process(string path)
-    {
-      XmlTextReader r = new XmlTextReader(path);
-      Process(r);
-    }
-
-    public void Process(XmlTextReader r)
-    {
-      r.WhitespaceHandling = this.whiteSpace;
-
-      Stack     elementStack   = new Stack();
-      NodeStats currentElement = null;
-
-      while (r.Read() )
-      {
-        switch (r.NodeType)
-        {
-          case XmlNodeType.CDATA:
-          case XmlNodeType.Text:
-          {
-            long len              = r.Value.Length;
-            currentElement.Chars += len;
-            elemChars            += len;
-            break;
-          }
-          case XmlNodeType.Element:
-            elemCount++;
-
-            if (r.IsEmptyElement)
-              emptyCount++;
-
-            NodeStats es   = CountNode(elements, r.Name);
-            elementStack.Push(es);
-            currentElement = es;
-
-            if (es.attrs == null)
-              es.attrs = new Hashtable();
-            Hashtable attrs = es.attrs;
-
-            while (r.MoveToNextAttribute() )
+            for (int i = 0; i < args.Length; i++)
             {
-              attrCount++;
-              // create a name that makes attributes unique to their parent elements
-              NodeStats ns = CountNode(attrs, r.Name);
-              string    s  = r.Value;
-              if (s != null)
-              {
-                long len   = r.Value.Length;
-                ns.Chars  += len;
-                attrChars += len;
-              }
+                var arg = args[i];
+                if (arg.Length > 1 && arg[0] == '-')
+                {
+                    string larg = arg.Trim('-').ToLower(CultureInfo.CurrentCulture);
+                    switch (larg)
+                    {
+                        case "?":
+                        case "h":
+                        case "help":
+                            PrintUsage();
+                            return 1;
+                        case "f":
+                            if (i + 1 == args.Length)
+                            {
+                                Console.WriteLine("missing file name after '-f' argument");
+                                PrintUsage();
+                                return 1;
+                            }
+                            else
+                            {
+                                files = ReadFileNames(args[++i]);
+                            }
+                            break;
+                        case "s":
+                            if (i + 1 == args.Length)
+                            {
+                                Console.WriteLine("missing name after '-s' argument");
+                                PrintUsage();
+                                return 1;
+                            }
+                            else
+                            {
+                                foreach (var name in args[++i].Split(','))
+                                {
+                                    xs._filters.Add(name.Trim());
+                                }
+                            }
+                            break;
+                        case "v":
+                            summary = false;
+                            break;
+                        case "wn":
+                            xs._whiteSpace = WhitespaceHandling.None;
+                            break;
+                        case "ws":
+                            xs._whiteSpace = WhitespaceHandling.Significant;
+                            break;
+                        case "wa":
+                            xs._whiteSpace = WhitespaceHandling.All;
+                            break;
+                        case "nologo":
+                            logo = false;
+                            break;
+                        default: // invalid opt
+                            Console.WriteLine("invalid option '" + arg + "'");
+                            PrintUsage();
+                            return 1;
+                    }
+                }
+                else if (arg.IndexOf("://", StringComparison.InvariantCulture) > 0)
+                {
+                    // url
+                    files.Add(arg);
+                }
+                else if (arg.IndexOf("*", StringComparison.InvariantCulture) >= 0 || arg.IndexOf("?", StringComparison.InvariantCulture) >= 0)
+                {
+                    // resolve wildcards
+                    string path = Path.Combine(Directory.GetCurrentDirectory(), arg);
+                    string dir = Path.GetDirectoryName(path);
+                    string name = Path.GetFileName(path);
+                    string[] names = Directory.GetFiles(dir, name);
+
+                    foreach (string file in names)
+                    {
+                        files.Add(file);
+                    }
+                }
+                else
+                {
+                    files.Add(arg);
+                }
             }
-            break;
-          case XmlNodeType.EndElement:
-            currentElement = (NodeStats) elementStack.Pop();
-            break;
-          case XmlNodeType.Entity:
-            break;
-          case XmlNodeType.EndEntity:
-            break;
-          case XmlNodeType.EntityReference:
-            // if you want entity references expanded then use the XmlValidatingReader.
-            // or perhaps we should report a list of them!
-            break;
-          case XmlNodeType.ProcessingInstruction:
-            piCount++;
-            piChars += r.Value.Length;
-            break;
-          case XmlNodeType.Comment:
-            cmntCount++;
-            cmntChars += r.Value.Length;
-            break;
-          case XmlNodeType.SignificantWhitespace:
-            whiteSChars += r.Value.Length;
-            break;
-          case XmlNodeType.Whitespace:
-            whiteChars += r.Value.Length;
-            break;
-          case XmlNodeType.None:
-            break;
-          case XmlNodeType.Notation:
-            break;
-          case XmlNodeType.XmlDeclaration:
-            break;
-          case XmlNodeType.Document:
-            break;
-          case XmlNodeType.DocumentFragment:
-            break;
-          case XmlNodeType.DocumentType:
-            break;
+
+            if (files.Count == 0)
+            {
+                PrintUsage();
+                return 1;
+            }
+
+            if (logo)
+            {
+                Console.WriteLine("*** XmlStats " + typeof(XmlStats).Assembly.GetName().Version.ToString() + " by Chris Lovett and Andreas Lang");
+                Console.WriteLine();
+            }
+
+            xs.ProcessFiles(files.ToArray(), summary, Console.Out, "\n");
+
+            if (files.Count > 1)
+            {
+                Console.WriteLine("*** XmlStats ended.");
+            }
+            return 0;
         }
-      }
-      r.Close();
-    }
 
-    public string GetReport()
-    {
-      StringWriter sw = new StringWriter();
-      Report("Summary", sw);
-      return sw.ToString();
-    }
-
-    public void Report(string path, TextWriter output)
-    {
-      output.Write("*** " + path);                     // filename or "Summary"
-
-      this.Stop();
-      float time = this.Milliseconds;
-      if (time > 1000)
-        output.WriteLine("   ({0,1:F} secs)", (time/1000f));
-      else
-        output.WriteLine("   ({0,1:F} msecs)", time);
-
-      output.WriteLine();
-
-      // count how many unique attributes
-      long attrsCount = 0;
-      foreach (NodeStats ns in elements.Values)
-      {
-        attrsCount += ns.attrs.Count;
-      }
-
-      // overall stats
-      output.WriteLine("elements");
-      output.WriteLine("{0,-20} {1,9:D}", "  unique",  elements.Count);
-      output.WriteLine("{0,-20} {1,9:D}", "  empty",   emptyCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  total",   elemCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  chars",   elemChars);
-
-      output.WriteLine("attributes");
-      output.WriteLine("{0,-20} {1,9:D}", "  unique",  attrsCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  total",   attrCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  chars",   attrChars);
-
-      output.WriteLine("comments");
-      output.WriteLine("{0,-20} {1,9:D}", "  total",   cmntCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  chars",   cmntChars);
-
-      output.WriteLine("PIs");
-      output.WriteLine("{0,-20} {1,9:D}", "  total",   piCount);
-      output.WriteLine("{0,-20} {1,9:D}", "  chars",   piChars);
-
-      if (this.whiteSpace != WhitespaceHandling.None)
-      {
-        output.WriteLine("whitespace");
-        output.WriteLine("{0,-20} {1,9:D}", "  chars",   whiteChars);
-        if (this.whiteSpace == WhitespaceHandling.Significant ||
-            this.whiteSpace == WhitespaceHandling.All)
-          output.WriteLine("{0,-20} {1,9:D}", "  significant",  whiteSChars);
-      }
-
-      // elem/attr stats
-      output.WriteLine();
-      output.WriteLine("elem/attr                count     chars");
-      output.WriteLine("----------------------------------------");
-
-      // sort the list.
-      SortedList slist = new SortedList(elements, new NodeStatsComparer());
-
-      foreach (NodeStats es in slist.Values)
-      {
-        output.WriteLine("{0,-20} {1,9:D} {2,9:D}", es.Name, es.Count, es.Chars);
-        foreach (NodeStats ns in es.attrs.Values)
+        private static List<string> ReadFileNames(string fileName)
         {
-          output.WriteLine("  @{0,-17} {1,9:D} {2,9:D}", ns.Name, ns.Count, ns.Chars);
+            List<string> files = new List<string>();
+            using (var reader = new StreamReader(fileName, true))
+            {                
+                while (!reader.EndOfStream)
+                {
+                    files.Add(reader.ReadLine());
+                }
+            }
+            return files;
         }
-      }
-      output.WriteLine();
+
+        /// <summary>
+        /// Process the given files adding to the current XmlStats.
+        /// </summary>
+        /// <param name="files">The list of files to process.</param>
+        /// <param name="summary">Whether to print the report.</param>
+        /// <param name="output">The output to write the report to.</param>
+        /// <param name="newLineChar">What kind of newline character to use in the reporting.</param>
+        public void ProcessFiles(string[] files, bool summary, TextWriter output, string newLineChar)
+        {
+            this._newLine = newLineChar;
+
+            this._watch.Start();
+            int count = 0;
+
+            foreach (string file in files)
+            {
+                try
+                {
+                    this.Process(file);
+                    count++;
+                    if (!summary)
+                    {
+                        this.WriteReport(file, output);
+                    }
+                }
+                catch (Exception e)
+                {
+                    output.Write("+++ error in file '" + file + "':");
+                    output.Write(this._newLine);
+                    output.Write(e.Message);
+                    output.Write(this._newLine);
+                }
+            }
+
+            if (summary && count > 0)
+            {
+                this.WriteReport(files, output);
+            }
+        }
+
+        /// <summary>
+        /// Add stats from the given xml content to the current XmlStats.
+        /// </summary>
+        public void Process(TextReader input)
+        {
+            using (XmlTextReader r = new XmlTextReader(input))
+            {
+                this.Process(r);
+            }
+        }
+
+        /// <summary>
+        /// Add stats from given xml file to the current XmlStats.
+        /// </summary>
+        public void Process(string path)
+        {
+            if (!File.Exists(path))
+            {
+                Console.WriteLine("*** file not found: " + path);
+                return;
+            }
+
+            try
+            {
+                using (XmlTextReader r = new XmlTextReader(path))
+                {
+                    this.Process(r);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("*** xml error in file: " + path);
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Add stats from the given xml reader to the current XmlStats.
+        /// </summary>
+        public void Process(XmlTextReader r)
+        {
+            if (r == null)
+            {
+                return;
+            }
+
+            r.WhitespaceHandling = this._whiteSpace;
+
+            Stack elementStack = new Stack();
+            NodeStats currentElement = null;
+            bool hasFilters = this._filters.Count > 0;
+            int selected = hasFilters ? 0 : 1;
+
+            while (r.Read())
+            {
+                switch (r.NodeType)
+                {
+                    case XmlNodeType.CDATA:
+                    case XmlNodeType.Text:
+                        {
+                            if (selected > 0)
+                            {
+                                long len = r.Value.Length;
+                                currentElement.Chars += len;
+                                this._elemChars += len;
+                            }
+                            break;
+                        }
+                    case XmlNodeType.Element:
+                        this._elemCount++;
+
+                        if (r.IsEmptyElement)
+                        {
+                            this._emptyCount++;
+                        }
+                        int dec = 0;
+                        if (hasFilters && this._filters.Contains(r.LocalName))
+                        {
+                            selected++;
+                            if (r.IsEmptyElement) dec = 1;
+                        }
+                        NodeStats es = CountNode(this._elements, r.Name);
+                        es.Selected = selected;
+                        elementStack.Push(es);
+                        currentElement = es;
+
+                        while (r.MoveToNextAttribute())
+                        {
+                            if (selected > 0)
+                            {
+                                if (es.Attrs == null)
+                                {
+                                    es.Attrs = new Dictionary<string, NodeStats>();
+                                }
+
+                                var attrs = es.Attrs;
+
+                                this._attrCount++;
+
+                                // create a name that makes attributes unique to their parent elements
+                                NodeStats ns = CountNode(attrs, r.Name);
+                                string s = r.Value;
+                                if (s != null)
+                                {
+                                    long len = r.Value.Length;
+                                    ns.Chars += len;
+                                    this._attrChars += len;
+                                }
+                            }
+                        }
+                        selected -= dec;
+                        break;
+                    case XmlNodeType.EndElement:
+                        if (hasFilters && this._filters.Contains(r.LocalName))
+                        {
+                            selected--;
+                        }
+                        currentElement = (NodeStats)elementStack.Pop();
+                        break;
+                    case XmlNodeType.Entity:
+                        break;
+                    case XmlNodeType.EndEntity:
+                        break;
+                    case XmlNodeType.EntityReference:
+                        // if you want entity references expanded then use the XmlValidatingReader.
+                        // or perhaps we should report a list of them!
+                        break;
+                    case XmlNodeType.ProcessingInstruction:
+                        if (selected > 0)
+                        {
+                            this._piCount++;
+                            this._piChars += r.Value.Length;
+                        }
+                        break;
+                    case XmlNodeType.Comment:
+                        if (selected > 0)
+                        {
+                            this._commentCount++;
+                            this._commentChars += r.Value.Length;
+                        }
+                        break;
+                    case XmlNodeType.SignificantWhitespace:
+                        if (selected > 0)
+                        {
+                            this._whiteSChars += r.Value.Length;
+                        }
+                        break;
+                    case XmlNodeType.Whitespace:
+                        if (selected > 0)
+                        {
+                            this._whiteChars += r.Value.Length;
+                        }
+                        break;
+                    case XmlNodeType.None:
+                        break;
+                    case XmlNodeType.Notation:
+                        break;
+                    case XmlNodeType.XmlDeclaration:
+                        break;
+                    case XmlNodeType.Document:
+                        break;
+                    case XmlNodeType.DocumentFragment:
+                        break;
+                    case XmlNodeType.DocumentType:
+                        break;
+                }
+            }
+            r.Close();
+        }
+
+        /// <summary>
+        /// Get the summary report as a string.
+        /// </summary>
+        public string GetReport()
+        {
+            using (StringWriter sw = new StringWriter())
+            {
+                this.WriteReport("Summary", sw);
+                return sw.ToString();
+            }
+        }
+
+        private string FormatMilliseconds()
+        {
+            float time = this._watch.ElapsedMilliseconds;
+            if (time > 1000)
+            {
+                return String.Format("{0,1:F} secs", time / 1000f);
+            }
+            else
+            {
+                return String.Format("{0,1:F} msecs", time);
+            }
+        }
+
+        private void WriteReport(string[] files, TextWriter output)
+        {
+            this._watch.Stop();
+
+            foreach (var f in files) {
+                output.Write("*** " + f);                     // filename or "Summary"
+                output.Write(this._newLine);
+            }
+            output.Write(this._newLine);
+            output.Write("Processed in {0}", FormatMilliseconds());
+            output.Write(this._newLine);
+            output.Write(this._newLine);
+
+            ReportStats(output);
+        }
+
+
+        /// <summary>
+        /// Get the summary report written to the given output.
+        /// </summary>
+        public void WriteReport(string path, TextWriter output)
+        {
+            this._watch.Stop();
+            output.Write(String.Format("*** {0}   ({1})", path, FormatMilliseconds()));
+            output.Write(this._newLine);
+            output.Write(this._newLine);
+
+            ReportStats(output);
+            Reset();
+        }
+
+        private void ReportStats(TextWriter output)
+        { 
+            // strip out unselected nodes.
+            foreach (var key in new List<string>(this._elements.Keys))
+            {
+                var es = this._elements[key];
+                if (es.Selected <= 0)
+                {
+                    this._elements.Remove(key);
+                }
+            }
+            // count how many unique attributes
+            long attrsCount = 0;
+            foreach (NodeStats ns in this._elements.Values)
+            {
+                if (ns.Attrs != null)
+                {
+                    attrsCount += ns.Attrs.Count;
+                }
+            }
+
+            // overall stats
+            output.Write("elements");
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  unique", this._elements.Count);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  empty", this._emptyCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  total", this._elemCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  chars", this._elemChars);
+            output.Write(this._newLine);
+
+            output.Write("attributes");
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  unique", attrsCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  total", this._attrCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  chars", this._attrChars);
+            output.Write(this._newLine);
+
+            output.Write("comments");
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  total", this._commentCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  chars", this._commentChars);
+            output.Write(this._newLine);
+
+            output.Write("PIs");
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  total", this._piCount);
+            output.Write(this._newLine);
+            output.Write("{0,-20} {1,9:D}", "  chars", this._piChars);
+            output.Write(this._newLine);
+
+            if (this._whiteSpace != WhitespaceHandling.None)
+            {
+                output.Write("whitespace");
+                output.Write(this._newLine);
+                output.Write("{0,-20} {1,9:D}", "  chars", this._whiteChars);
+                output.Write(this._newLine);
+                if (this._whiteSpace == WhitespaceHandling.Significant ||
+                    this._whiteSpace == WhitespaceHandling.All)
+                {
+                    output.Write("{0,-20} {1,9:D}", "  significant", this._whiteSChars);
+                    output.Write(this._newLine);
+                }
+            }
+
+            // elem/attr stats
+            output.Write(this._newLine);
+            output.Write(this._newLine);
+            output.Write("elem/attr                count     chars");
+            output.Write(this._newLine);
+            output.Write("----------------------------------------");
+            output.Write(this._newLine);
+
+            // sort the list.
+            SortedList slist = new SortedList(this._elements, new NodeStatsComparer());
+
+            foreach (NodeStats es in slist.Values)
+            {
+                output.Write("{0,-20} {1,9:D} {2,9:D}", es.Name, es.Count, es.Chars);
+                output.Write(this._newLine);
+                if (es.Attrs != null)
+                {
+                    var list = new List<NodeStats>(es.Attrs.Values);
+                    list.Sort(new Comparison<NodeStats>((a, b) =>
+                    {
+                        return a.Name.CompareTo(b.Name);
+                    }));
+
+                    foreach (NodeStats ns in list)
+                    {
+                        output.Write("  @{0,-17} {1,9:D} {2,9:D}", ns.Name, ns.Count, ns.Chars);
+                        output.Write(this._newLine);
+                    }
+                }
+            }
+            output.Write(this._newLine);
+        }
+
+        /// <summary>
+        /// Reset all the current stats to zero.
+        /// </summary>
+        public void Reset()
+        {
+            this._elements = new Dictionary<string, NodeStats>();
+            this._elemCount = 0;
+            this._emptyCount = 0;
+            this._attrCount = 0;
+            this._commentCount = 0;
+            this._piCount = 0;
+            this._elemChars = 0;
+            this._attrChars = 0;
+            this._commentChars = 0;
+            this._piChars = 0;
+            this._whiteChars = 0;
+            this._whiteSChars = 0;
+
+            this._watch.Reset();
+            this._watch.Start();
+        }
+
+        internal static NodeStats CountNode(Dictionary<string, NodeStats> ht, string name)
+        {
+            NodeStats es = null;
+            if (!ht.TryGetValue(name, out es))
+            {                
+                ht[name] = es = new NodeStats(name);
+            }
+            else
+            {
+                es.Count++;
+            }
+            return es;
+        }
     }
 
-    internal void Reset()
+    internal class NodeStats
     {
-      this.elements    = new Hashtable();
-      this.elemCount   = 0;
-      this.emptyCount  = 0;
-      this.attrCount   = 0;
-      this.cmntCount   = 0;
-      this.piCount     = 0;
-      this.elemChars   = 0;
-      this.attrChars   = 0;
-      this.cmntChars   = 0;
-      this.piChars     = 0;
-      this.whiteChars  = 0;
-      this.whiteSChars = 0;
+        public string Name;
+        public long Count;
+        public long Chars;
+        public Dictionary<string, NodeStats> Attrs;
 
-      this.Start();
+        public NodeStats(string name)
+        {
+            this.Name = name;
+            this.Count = 1;
+            this.Chars = 0;
+        }
+
+        public int Selected { get; internal set; }
     }
 
-    internal NodeStats CountNode(Hashtable ht, string name)
+    internal class NodeStatsComparer : IComparer
     {
-      NodeStats es = (NodeStats) ht[name];
-      if (es == null)
-      {
-        ht[name] = es = new NodeStats(name);
-      }
-      else
-      {
-        es.Count++;
-      }
-      return es;
+        // Used for sorting keys of NodeStats hashtable, the keys are string objects.
+        public int Compare(object x, object y)
+        {
+            string a = x as string;
+            string b = y as string;
+            if (a == null)
+            {
+                return (b == null) ? 0 : -1;
+            }
+            else if (b == null)
+            {
+                return (a == null) ? 0 : 1;
+            }
+            else
+            {
+                return string.Compare(a, b, StringComparison.Ordinal);
+            }
+        }
     }
-
-  }
-
-  internal class NodeStats
-  {
-    public NodeStats(string name)
-    {
-      this.Name  = name;
-      this.Count = 1;
-      this.Chars = 0;
-    }
-    public string    Name;
-    public long      Count;
-    public long      Chars;
-    public Hashtable attrs;
-  }
-
-  internal class NodeStatsComparer : IComparer 
-  {
-    // Used for sorting keys of NodeStats hashtable, the keys are string objects.
-    public int Compare(object x, object y) 
-    {
-      string a = x as string;
-      string b = y as string;
-      if (a == null) 
-      {
-        return (b == null) ? 0 : -1;
-      } 
-      else if (b == null) 
-      {
-        return (a == null) ? 0 : 1;
-      }
-      else 
-      {
-        return a.CompareTo(b);
-      }
-    }
-  }
-
-  public class PerfTimer
-  {
-    [DllImport("kernel32.dll", EntryPoint = "QueryPerformanceCounter",   CharSet = CharSet.Unicode)]
-    extern static bool QueryPerformanceCounter(out long perfcount);
-
-    [DllImport("kernel32.dll", EntryPoint = "QueryPerformanceFrequency", CharSet = CharSet.Unicode)]
-    extern static bool QueryPerformanceFrequency(out long frequency);
-
-    long startTime;
-    long stopTime;
-
-    public void Start()
-    {
-      QueryPerformanceCounter(out this.startTime);
-    }
-
-    public void Stop()
-    {
-      QueryPerformanceCounter(out this.stopTime);
-    }
-
-    public float Milliseconds
-    {
-      get
-      {
-        long frequency;
-        QueryPerformanceFrequency(out frequency);
-        float diff = (stopTime - startTime);
-        return diff * 1000f / (float)frequency;
-      }
-    }
-  }
 }
 /* EoF XmlStats.cs ---------------------------------------------------*/
