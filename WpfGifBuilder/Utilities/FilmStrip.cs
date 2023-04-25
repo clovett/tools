@@ -10,6 +10,9 @@ namespace WpfGifBuilder.Utilities
 {
     public class FilmStrip
     {
+        // TODO: Add GIF metadata to control frame timing and looping behavior.
+        // See https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Win7Samples/multimedia/wic/wicanimatedgif/WicAnimatedGif.vcproj
+
         private BitmapEncoder encoder = new GifBitmapEncoder();
 
         protected BitmapEncoder Encoder
