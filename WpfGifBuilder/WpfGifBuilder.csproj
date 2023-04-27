@@ -1,10 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net7.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
+        <PlatformTarget>x64</PlatformTarget>
+        <OutputPath>x64\$(Configuration)</OutputPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +14,29 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="ModernWpfUI" Version="0.9.4" />
+      <PackageReference Include="ModernWpfUI" Version="0.9.7-preview.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AnimatedGif\AnimatedGif.vcxproj">
+        <Private>False</Private>
+        <ReferenceOutputAssembly>True</ReferenceOutputAssembly>
+      </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Properties\Settings.Designer.cs">
+        <DesignTimeSharedInput>True</DesignTimeSharedInput>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Settings.settings</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Properties\Settings.settings">
+        <Generator>SettingsSingleFileGenerator</Generator>
+        <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      </None>
     </ItemGroup>
 
 </Project>

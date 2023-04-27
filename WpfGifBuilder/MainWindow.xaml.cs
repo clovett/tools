@@ -11,6 +11,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using WpfGifBuilder.Utilities;
 using System.Security.Policy;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace WpfGifBuilder
 {
@@ -20,7 +22,7 @@ namespace WpfGifBuilder
     public partial class MainWindow : Window
     {
         DelayedActions delayedActions = new DelayedActions();
-        List<BitmapFrame> frames = new List<BitmapFrame>();
+        AnimatedGif gif = new AnimatedGif();
 
         public MainWindow()
         {
@@ -52,24 +54,21 @@ namespace WpfGifBuilder
 
         private void AddGifFrame(string file)
         {
-
-            BitmapDecoder bitmapDecoder = BitmapDecoder.Create(new Uri(file), BitmapCreateOptions.None, BitmapCacheOption.None);
-            foreach (var frame in bitmapDecoder.Frames)
+            if (gif == null)
             {
-                Image image = new Image();
-                var snapshot = BitmapFrame.Create(frame);
-                image.Source = snapshot;
-                image.Width = 200;
-                image.Margin = new Thickness(10);
-                frames.Add(snapshot);
-                ThumbnailPanel.Children.Add(image);
+                gif = new AnimatedGif();
             }
+
+            gif.ReadMetadata(file);
+
+
+            ThumbnailPanel.Children.Add(image);
         }
 
         private void OnClear(object sender, RoutedEventArgs e)
         {
             ThumbnailPanel.Children.Clear();
-            frames.Clear();
+            gif = null;
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -172,16 +171,13 @@ namespace WpfGifBuilder
 
         private void OnBuild(object sender, RoutedEventArgs e)
         {
-            FilmStrip film = new FilmStrip();
-            foreach (var frame in this.frames)
-            {                
-                film.AddFrame(frame);
-            }
-
-            SaveFileDialog sd = new SaveFileDialog();
-            if (sd.ShowDialog() == true)
+            if (gif != null)
             {
-                film.SaveToFile(sd.FileName);
+                SaveFileDialog sd = new SaveFileDialog();
+                if (sd.ShowDialog() == true)
+                {
+                    gif.SaveToFile(sd.FileName);
+                }
             }
         }
 
@@ -189,5 +185,6 @@ namespace WpfGifBuilder
         {
 
         }
+
     }
 }

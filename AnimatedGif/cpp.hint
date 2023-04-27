@@ -1,0 +1,2 @@
+#define ANIMATEDGIF_API __declspec(dllexport)
+#define ANIMATEDGIF_API __declspec(dllimport)
