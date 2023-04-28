@@ -10,9 +10,17 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace WpfGifBuilder.Utilities
 {
+    class AnimatedGifFrame
+    {
+        public BitmapSource Bitmap;
+        public uint Delay; // in milliseconds.
+    }
+
     class AnimatedGif
     {
         // See https://github.com/microsoft/Windows-classic-samples/blob/main/Samples/Win7Samples/multimedia/wic/wicanimatedgif/WicAnimatedGif.vcproj
@@ -28,20 +36,19 @@ namespace WpfGifBuilder.Utilities
         [StructLayout(LayoutKind.Sequential)]
         struct ColorF
         {
-            float r;
-            float g;
-            float b;
-            float a;
+            public float r;
+            public float g;
+            public float b;
+            public float a;
         };
 
         [StructLayout(LayoutKind.Sequential)]
         struct RectF
         {
-            float left;
-            float top;
-            float right;
-            float bottom;
-
+            public float left;
+            public float top;
+            public float right;
+            public float bottom;
         };
 
         [StructLayout(LayoutKind.Sequential)]
@@ -78,12 +85,25 @@ namespace WpfGifBuilder.Utilities
 
         AnimatedGifMetadata metadata;
         List<AnimatedGifFrameMetadata> frameMetatadata;
-        List<BitmapFrame> frames = new List<BitmapFrame>();
+        List<BitmapFrame> originalFrames = new List<BitmapFrame>();
+        BitmapSource previousFrame = null;
+        List<BitmapSource> renderedFrames;
+        int position = 0;
+        int loopIndex = 0;
+
+
+        public IEnumerable<BitmapFrame> OriginalFrames => this.originalFrames;
+
+        public Size Size => new Size(metadata.cxGifImage, metadata.cyGifImage);
 
         public void ReadMetadata(string file)
         {
-            metadata = new AnimatedGifMetadata();
-            frameMetatadata = new List<AnimatedGifFrameMetadata>();
+            this.metadata = new AnimatedGifMetadata();
+            this.frameMetatadata = new List<AnimatedGifFrameMetadata>();
+            this.originalFrames = new List<BitmapFrame>();
+            this.previousFrame = null;
+            this.position = 0;
+            this.loopIndex = 0;
 
             int hr = OpenAnimatedGif(file, ref metadata);
             if(hr == 0)
@@ -103,251 +123,130 @@ namespace WpfGifBuilder.Utilities
             BitmapDecoder bitmapDecoder = BitmapDecoder.Create(new Uri(file), BitmapCreateOptions.None, BitmapCacheOption.None);            
             foreach (var frame in bitmapDecoder.Frames)
             {
-                //Image image = new Image();
-                //image.Source = snapshot;
-                //image.Width = 200;
-                //image.Margin = new Thickness(10);
                 var snapshot = BitmapFrame.Create(frame);
-                frames.Add(snapshot);
+                originalFrames.Add(snapshot);
+            }
+
+            renderedFrames = new List<BitmapSource>();
+            for (int i = 0; i < frameMetatadata.Count; i++)
+            {
+                var frame = this.RenderNextFrame(i);
+                renderedFrames.Add(frame);
             }
         }
 
-        private BitmapEncoder encoder = new GifBitmapEncoder();
-
-        protected BitmapEncoder Encoder
+        public Color GetBackgroundColor()
         {
-            get { return encoder; }
+            return Color.FromArgb((byte)(metadata.backgroundColor.a * 255), (byte)(metadata.backgroundColor.r * 255), (byte)(metadata.backgroundColor.g * 255), (byte)(metadata.backgroundColor.b * 255));
         }
 
-        public void AddFrame(BitmapFrame frame)
+        /// <summary>
+        /// Get the next frame in the 
+        /// </summary>
+        /// <returns></returns>
+        public AnimatedGifFrame GetNextFrame()
         {
-            Encoder.Frames.Add(frame);
+            if (renderedFrames.Count == 0 || frameMetatadata == null  || position >= renderedFrames.Count)
+            {
+                return null;
+            }
+
+            var metadata = this.frameMetatadata[position];
+            var frame = this.renderedFrames[position];
+
+            position++;
+            if (position >= renderedFrames.Count && (!this.metadata.hasLoop || this.loopIndex < this.metadata.totalLoopCount))
+            {
+                position = 0;
+                this.loopIndex++;
+            }
+
+            return new AnimatedGifFrame() { Bitmap = frame, Delay = metadata.frameDelay };
         }
 
-        public void AddFrame(BitmapSource source)
-        {
-            AddFrame(BitmapFrame.Create(source));
-        }
 
         public void SaveToFile(String fileName)
         {
+            BitmapEncoder encoder = new GifBitmapEncoder();
+            foreach(var frame in this.originalFrames)
+            {
+                encoder.Frames.Add(frame);
+            }
+
+            // todo: create a metadata writer in C++.
+
             using (FileStream fs = new FileStream(fileName, FileMode.Create))
             {
-                Encoder.Save(fs);
+                encoder.Save(fs);
             }
         }
 
-
-        /*
-         * Drawing algorithm for animated gif frames
-        
-        
-        HRESULT OverlayNextFrame()
+        private BitmapSource RenderNextFrame(int position)
         {
-            // Get Frame information
-            HRESULT hr = GetRawFrame(m_uNextFrameIndex);
-            if (SUCCEEDED(hr))
-            {
-                // For disposal 3 method, we would want to save a copy of the current
-                // composed frame
-                if (m_uFrameDisposal == DM_PREVIOUS)
-                {
-                    hr = SaveComposedFrame();
-                }
-            }
+            var frame = this.originalFrames[position];
+            var metadata = this.frameMetatadata[position];
 
-            if (SUCCEEDED(hr))
-            {
-                // Start producing the next bitmap
-                m_pFrameComposeRT->BeginDraw();
+            int width = (int)this.metadata.cxGifImage;
+            int height = (int)this.metadata.cyGifImage;
+            RenderTargetBitmap newFrame = new RenderTargetBitmap(width, height, 96.0, 96.0, PixelFormats.Pbgra32);
+            DrawingVisual drawingVisual = new DrawingVisual();
+            DrawingContext drawingContext = drawingVisual.RenderOpen();
 
-                // If starting a new animation loop
-                if (m_uNextFrameIndex == 0)
-                {
-                    // Draw background and increase loop count
-                    m_pFrameComposeRT->Clear(m_backgroundColor);
-                    m_uLoopNumber++;
-                }
+            var frameRect = new Rect(new Point(metadata.framePosition.left, metadata.framePosition.top),
+                new Size(metadata.framePosition.right - metadata.framePosition.left, metadata.framePosition.bottom - metadata.framePosition.top));
 
-                // Produce the next frame
-                m_pFrameComposeRT->DrawBitmap(
-                    m_pRawFrame,
-                    m_framePosition);
+            // Debug.WriteLine("Frame {0} x {1} delay {2}, disposal {3}", frameRect.Width, frameRect.Height, metadata.frameDelay, metadata.frameDisposal);
+            this.RestoreSavedFrame(drawingContext, frameRect);
+            this.DisposeCurrentFrame(drawingContext, metadata, frameRect);
+            this.OverlayNextFrame(drawingContext, frame, frameRect);
+            drawingContext.Close();
 
-                hr = m_pFrameComposeRT->EndDraw();
-            }
+            newFrame.Render(drawingVisual);
+            this.previousFrame = newFrame;
 
-            // To improve performance and avoid decoding/composing this frame in the 
-            // following animation loops, the composed frame can be cached here in system 
-            // or video memory.
-
-            if (SUCCEEDED(hr))
-            {
-                // Increase the frame index by 1
-                m_uNextFrameIndex = (++m_uNextFrameIndex) % m_cFrames;
-            }
-
-            return hr;
+            return newFrame;
         }
 
-
-        HRESULT SaveComposedFrame()
+        private void OverlayNextFrame(DrawingContext drawingContext, BitmapFrame frame, Rect frameRect)
         {
-            HRESULT hr = S_OK;
-
-            ID2D1Bitmap* pFrameToBeSaved = NULL;
-
-            hr = m_pFrameComposeRT->GetBitmap(&pFrameToBeSaved);
-            if (SUCCEEDED(hr))
-            {
-                // Create the temporary bitmap if it hasn't been created yet 
-                if (m_pSavedFrame == NULL)
-                {
-                    D2D1_SIZE_U bitmapSize = pFrameToBeSaved->GetPixelSize();
-                    D2D1_BITMAP_PROPERTIES bitmapProp;
-                    pFrameToBeSaved->GetDpi(&bitmapProp.dpiX, &bitmapProp.dpiY);
-                    bitmapProp.pixelFormat = pFrameToBeSaved->GetPixelFormat();
-
-                    hr = m_pFrameComposeRT->CreateBitmap(
-                        bitmapSize,
-                        bitmapProp,
-                        &m_pSavedFrame);
-                }
-            }
-
-            if (SUCCEEDED(hr))
-            {
-                // Copy the whole bitmap
-                hr = m_pSavedFrame->CopyFromBitmap(NULL, pFrameToBeSaved, NULL);
-            }
-
-            SafeRelease(pFrameToBeSaved);
-
-            return hr;
+            drawingContext.DrawImage(frame, frameRect);
         }
 
-
-        HRESULT RestoreSavedFrame()
+        private void RestoreSavedFrame(DrawingContext drawingContext, Rect frameRect)
         {
-            HRESULT hr = S_OK;
-
-            ID2D1Bitmap* pFrameToCopyTo = NULL;
-
-            hr = m_pSavedFrame ? S_OK : E_FAIL;
-
-            if (SUCCEEDED(hr))
+            if (this.previousFrame != null)
             {
-                hr = m_pFrameComposeRT->GetBitmap(&pFrameToCopyTo);
+                drawingContext.DrawImage(this.previousFrame, new Rect(new Point(0, 0),
+                    new Size(this.previousFrame.Width, this.previousFrame.Height)));
             }
-
-            if (SUCCEEDED(hr))
+            else
             {
-                // Copy the whole bitmap
-                hr = pFrameToCopyTo->CopyFromBitmap(NULL, m_pSavedFrame, NULL);
+                // or clear the background color.
+                drawingContext.DrawRectangle(new SolidColorBrush(this.GetBackgroundColor()), null, frameRect);
             }
-
-            SafeRelease(pFrameToCopyTo);
-
-            return hr;
         }
 
-        HRESULT ClearCurrentFrameArea()
+        private void DisposeCurrentFrame(DrawingContext drawingContext, AnimatedGifFrameMetadata metadata, Rect frameRect)
         {
-            m_pFrameComposeRT->BeginDraw();
-
-            // Clip the render target to the size of the raw frame
-            m_pFrameComposeRT->PushAxisAlignedClip(
-                &m_framePosition,
-                D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-
-            m_pFrameComposeRT->Clear(m_backgroundColor);
-
-            // Remove the clipping
-            m_pFrameComposeRT->PopAxisAlignedClip();
-
-            return m_pFrameComposeRT->EndDraw();
-        }
-
-
-        HRESULT DisposeCurrentFrame()
-        {
-            HRESULT hr = S_OK;
-
-            switch (m_uFrameDisposal)
+            switch (metadata.frameDisposal)
             {
-            case DM_UNDEFINED:
-            case DM_NONE:
-                // We simply draw on the previous frames. Do nothing here.
-                break;
-            case DM_BACKGROUND:
-                // Dispose background
-                // Clear the area covered by the current raw frame with background color
-                hr = ClearCurrentFrameArea();
-                break;
-            case DM_PREVIOUS:
-                // Dispose previous
-                // We restore the previous composed frame first
-                hr = RestoreSavedFrame();
-                break;
-            default:
-                // Invalid disposal method
-                hr = E_FAIL;
+                case DisposalMethods.DM_UNDEFINED:
+                case DisposalMethods.DM_NONE:
+                    // We simply build on the previous frame, so nothing to do here.                    
+                    break;
+                case DisposalMethods.DM_BACKGROUND:
+                    // Clear the area covered by the current raw frame with background color
+                    this.ClearCurrentFrameArea(drawingContext, frameRect);
+                    break;
+                case DisposalMethods.DM_PREVIOUS:
+                    // We restore the previous composed frame first (already done!)
+                    break;
             }
-
-            return hr;
         }
 
-
-        HRESULT ComposeNextFrame()
+        private void ClearCurrentFrameArea(DrawingContext drawingContext, Rect frameRect)
         {
-            HRESULT hr = S_OK;
-
-            // Check to see if the render targets are initialized
-            if (m_pHwndRT && m_pFrameComposeRT)
-            {
-                // Compose one frame
-                hr = DisposeCurrentFrame();
-                if (SUCCEEDED(hr))
-                {
-                    hr = OverlayNextFrame();
-                }
-
-                // Keep composing frames until we see a frame with delay greater than
-                // 0 (0 delay frames are the invisible intermediate frames), or until
-                // we have reached the very last frame.
-                while (SUCCEEDED(hr) && m_uFrameDelay == 0 && !IsLastFrame())
-                {
-                    hr = DisposeCurrentFrame();
-                    if (SUCCEEDED(hr))
-                    {
-                        hr = OverlayNextFrame();
-                    }
-                }
-
-                // If we have more frames to play, set the timer according to the delay.
-                // Set the timer regardless of whether we succeeded in composing a frame
-                // to try our best to continue displaying the animation.
-                if (!EndOfAnimation() && m_cFrames > 1)
-                {
-                    // Set the timer according to the delay
-                    // SetTimer(m_hWnd, DELAY_TIMER_ID, m_uFrameDelay, NULL);
-                }
-            }
-
-            return hr;
+            drawingContext.DrawRectangle(new SolidColorBrush(this.GetBackgroundColor()), null, frameRect);
         }
-
-        BOOL EndOfAnimation()
-        {
-            return m_fHasLoop && IsLastFrame() && m_uLoopNumber == m_uTotalLoopCount + 1;
-        }
-
-        BOOL IsLastFrame()
-        {
-            return (m_uNextFrameIndex == 0);
-        }
-
-    */
-
     }
 }

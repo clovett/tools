@@ -388,21 +388,6 @@ public:
                 // single frame image (non-animated gif)
                 m_uFrameDelay = 0;
             }
-
-            if (SUCCEEDED(hr))
-            {
-                // Insert an artificial delay to ensure rendering for gif with very small
-                // or 0 delay.  This delay number is picked to match with most browsers' 
-                // gif display speed.
-                //
-                // This will defeat the purpose of using zero delay intermediate frames in 
-                // order to preserve compatibility. If this is removed, the zero delay 
-                // intermediate frames will not be visible.
-                if (m_uFrameDelay < 90)
-                {
-                    m_uFrameDelay = 90;
-                }
-            }
         }
 
         if (SUCCEEDED(hr))
