@@ -31,7 +31,7 @@ def record(filename, device=0):
         pass
 
     with open(filename, "w") as f:
-        json.dump(recording, f)
+        json.dump(recording, f, indent=2)
 
 
 def main():

@@ -28,9 +28,13 @@ def play(filename):
     time.sleep(0.1)
     gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
 
+    print("loading recording...")
     with open(filename, "r") as f:
         recording = json.load(f)
 
+    time.sleep(3)
+
+    print("playing...")
     start = 0
     pb = 0
     print("Playing...")
