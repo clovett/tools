@@ -37,16 +37,19 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <ui:AppBarButton x:Name="OpenButton" ToolTip="Open a local file" Label="Add" Click="OnAddFiles" Icon="Add"/>
-      <ui:AppBarButton x:Name="ClearButton"  Grid.Column="1" ToolTip="Clear contents" Label="Clear" Click="OnClear" Icon="Clear"/>
-      <ui:AppBarButton x:Name="BuildButton"  Grid.Column="2" ToolTip="Build GIF" Label="Build" Click="OnBuild" Icon="Play"/>
+      <ui:AppBarButton x:Name="OpenButton" ToolTip="Open a local file" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
+      <ui:AppBarButton x:Name="ClearButton" Grid.Column="1" ToolTip="Clear contents" Label="Clear" Click="OnClear" Icon="Clear"/>
+      <ui:AppBarButton x:Name="PlayButton"  Grid.Column="2" ToolTip="Play GIF" Label="Play" Click="OnPlay" Icon="Play"/>
       <ui:AppBarButton x:Name="EditButton"  Grid.Column="3" ToolTip="Edit Frames" Label="Edit" Click="OnEdit" Icon="Edit"/>
+      <ui:AppBarButton x:Name="SaveButton"  Grid.Column="4" ToolTip="Save GIF" Label="Save" Click="OnSave" Icon="Save"/>
 
       <ui:AppBarButton x:Name="SettingsButton" Grid.Column="11" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
 
     </Grid>
 
-    <WrapPanel x:Name="ThumbnailPanel" Grid.Row="2" Grid.Column="0" Margin="10" HorizontalAlignment="Stretch"></WrapPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Grid.Row="2" Grid.Column="0" >
+      <WrapPanel x:Name="ThumbnailPanel" Margin="10" HorizontalAlignment="Stretch"></WrapPanel>
+    </ScrollViewer>
 
     <local:AppSettings x:Name="AppSettingsPanel" Grid.Row="2" Grid.Column="1" Width="300" HorizontalAlignment="Right" Visibility="Collapsed">
     </local:AppSettings>

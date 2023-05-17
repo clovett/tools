@@ -13,6 +13,7 @@ using WpfGifBuilder.Utilities;
 using System.Security.Policy;
 using System.Runtime.InteropServices;
 using System.Windows.Interop;
+using System.Diagnostics;
 
 namespace WpfGifBuilder
 {
@@ -37,38 +38,16 @@ namespace WpfGifBuilder
             Settings.Instance.PropertyChanged += OnSettingsChanged;
         }
 
-        private void OnAddFiles(object sender, RoutedEventArgs e)
+        private void OnOpenFile(object sender, RoutedEventArgs e)
         {
             OpenFileDialog od = new OpenFileDialog();
             od.Filter = "App Files (*.*)|*.*";
             od.CheckFileExists = true;
-            od.Multiselect = true;
+            od.Multiselect = false;
             if (od.ShowDialog() == true)
             {
-                foreach (var file in od.FileNames)
-                {
-                    AddGifFrame(file);
-                }
+                OpenGif(od.FileName);
             }
-        }
-
-        private void AddGifFrame(string file)
-        {
-            if (gif == null)
-            {
-                gif = new AnimatedGif();
-            }
-
-            gif.ReadMetadata(file);
-
-
-            ThumbnailPanel.Children.Add(image);
-        }
-
-        private void OnClear(object sender, RoutedEventArgs e)
-        {
-            ThumbnailPanel.Children.Clear();
-            gif = null;
         }
 
         private void OnSettings(object sender, RoutedEventArgs e)
@@ -169,7 +148,77 @@ namespace WpfGifBuilder
 
         private bool saveSettingsPending;
 
-        private void OnBuild(object sender, RoutedEventArgs e)
+        private void OnPlay(object sender, RoutedEventArgs e)
+        {
+            Play();
+        }
+
+        void Play() 
+        { 
+            if (gif == null)
+            {
+                return;
+            }
+
+            delayedActions.CancelDelayedAction("render");
+            ThumbnailPanel.Children.Clear();
+            image = new Image();
+            image.HorizontalAlignment = HorizontalAlignment.Left;
+            image.VerticalAlignment = VerticalAlignment.Top;
+            image.Margin = new Thickness(10);
+            ThumbnailPanel.Children.Add(image);
+
+            RenderNextFrame();
+        }
+
+        Image image;
+
+        private void OpenGif(string file)
+        {
+            gif = new AnimatedGif();
+            gif.ReadMetadata(file);
+            this.Play();
+        }
+
+        private void RenderNextFrame()
+        {
+            if (gif == null)
+            {
+                return;
+            }
+            var frame = gif.GetNextFrame();
+            if (frame != null)
+            {
+                image.Source = frame.Bitmap;
+                image.Width = frame.Bitmap.Width;
+                image.Height = frame.Bitmap.Height;
+                delayedActions.StartDelayedAction("render", RenderNextFrame, TimeSpan.FromMilliseconds(frame.Delay));
+            }
+        }
+
+
+        private void OnEdit(object sender, RoutedEventArgs e)
+        {
+            if (gif == null)
+            {
+                return;
+            }
+            delayedActions.CancelDelayedAction("render");
+            ThumbnailPanel.Children.Clear();
+
+            var size = this.gif.Size;
+            foreach (var frame in gif.OriginalFrames)
+            {
+                Image image = new Image();
+                image.Margin = new Thickness(10);
+                image.Source = frame;
+                image.Width = size.Width;
+                image.Height = size.Height;
+                ThumbnailPanel.Children.Add(image);
+            }
+        }
+
+        private void OnSave(object sender, RoutedEventArgs e)
         {
             if (gif != null)
             {
@@ -181,9 +230,17 @@ namespace WpfGifBuilder
             }
         }
 
-        private void OnEdit(object sender, RoutedEventArgs e)
+        private void OnClear(object sender, RoutedEventArgs e)
         {
+            this.Clear();
+        }
 
+        void Clear() 
+        { 
+            delayedActions.CancelDelayedAction("render");
+            ThumbnailPanel.Children.Clear();
+            image = null;
+            gif = null;
         }
 
     }
