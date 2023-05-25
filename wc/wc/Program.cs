@@ -13,12 +13,13 @@ namespace wc
     {
         class FileStats
         {
+            public long totalFiles;
             public long totalCharCount;
             public long totalLineCount;
             public long totalWordCount;
             public long totalLongestLine;
 
-            public string Name { get; internal set; }
+            public string Extension { get; internal set; }
         }
 
         bool doCharCount;
@@ -128,11 +129,6 @@ the following order: newline, word, character, byte, maximum line length.
                     files.Add(arg);
                 }
             }
-
-            if (!doLineCount && !doCharCount && !doWordCount && !doLongestLine)
-            {
-                doLineCount = true; // a default
-            }
             return true;
         }
 
@@ -177,7 +173,7 @@ the following order: newline, word, character, byte, maximum line length.
             if (files.Count == 0)
             {
                 extensions = false;
-                var root = new FileStats() { Name = "stdin" };
+                var root = new FileStats() { Extension = "stdin" };
                 this.fileStats.Add(root);
                 ProcessFile("stdin", Console.In, root);                
             }
@@ -208,7 +204,7 @@ the following order: newline, word, character, byte, maximum line length.
                 // then we print each file we find.
                 foreach (var s in this.fileStats)
                 {
-                    var name = s.Name;
+                    var name = s.Extension;
                     if (name.Length > firstCol)
                     {
                         firstCol = name.Length;
@@ -216,6 +212,8 @@ the following order: newline, word, character, byte, maximum line length.
                 }
                 cols.Add(SpacePadRight("file", firstCol));
             }
+
+            cols.Add("     files");
 
             if (doCharCount)
             {
@@ -236,6 +234,7 @@ the following order: newline, word, character, byte, maximum line length.
             Console.WriteLine(string.Join(",", cols));
 
             FileStats total = new FileStats();
+
             List<FileStats> list = this.fileStats;
             if (extensions)
             {
@@ -249,8 +248,11 @@ the following order: newline, word, character, byte, maximum line length.
             }
 
             foreach (var stats in list)
-            { 
-                Console.Write(SpacePadRight(stats.Name, firstCol));
+            {
+                Console.Write(SpacePadRight(stats.Extension, firstCol));
+
+                Console.Write(",{0,10}", stats.totalFiles);
+                total.totalFiles += stats.totalFiles;
 
                 if (doCharCount)
                 {
@@ -279,7 +281,9 @@ the following order: newline, word, character, byte, maximum line length.
             {
                 // print the totals
                 Console.Write(SpacePadRight("total", firstCol));
-                
+
+                Console.Write(",{0,10}", total.totalFiles);
+
                 if (doCharCount)
                 {
                     Console.Write(",{0,10}", total.totalCharCount);
@@ -421,13 +425,13 @@ the following order: newline, word, character, byte, maximum line length.
                 {
                     if (!extmap.TryGetValue(ext, out stats)) 
                     {
-                        stats = new FileStats() { Name = ext };
+                        stats = new FileStats() { Extension = ext };
                         extmap[ext] = stats;
                     }
                 }
                 else
                 {
-                    stats = new FileStats() { Name = MakeRelative(filePath) };
+                    stats = new FileStats() { Extension = MakeRelative(filePath) };
                     this.fileStats.Add(stats);
                 }
 
@@ -444,6 +448,7 @@ the following order: newline, word, character, byte, maximum line length.
 
         void ProcessFile(string filename, TextReader reader, FileStats stats)
         {
+            stats.totalFiles++;
             string line = reader.ReadLine();
             while (line != null)
             {
