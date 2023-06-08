@@ -41,18 +41,20 @@ namespace ConsoleApplication1
 
         int CountLines(string file)
         {
-            TextReader reader = new StreamReader(inputFile);
-           
             int count = 1;
-
-            using (reader)
+            using (var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) 
             {
-                string line = reader.ReadLine();
-                while (line != null)
+                TextReader reader = new StreamReader(fs, true);
+
+                using (reader)
                 {
-                    
-                    line = reader.ReadLine();
-                    count++;
+                    string line = reader.ReadLine();
+                    while (line != null)
+                    {
+
+                        line = reader.ReadLine();
+                        count++;
+                    }
                 }
             }
             return count;
@@ -66,7 +68,7 @@ namespace ConsoleApplication1
             {
                 int digits = (int)Math.Log10(CountLines(inputFile)) + 1;                
                 linePrefix = "{0:" + new string('0', digits) + "}: ";
-                reader = new StreamReader(inputFile);
+                reader = new StreamReader(new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite));
             }
 
             int i = 1;
