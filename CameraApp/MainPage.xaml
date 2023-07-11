@@ -1,0 +1,27 @@
+﻿<Page
+    x:Class="CameraApp.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CameraApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <CommandBar HorizontalAlignment="Left">
+      <AppBarButton x:Name="RecordButton" Icon="Play" Label="Record" Click="OnRecord"/>
+      <AppBarButton x:Name="PauseButton" Icon="Pause" Label="Pause" Click="OnPause"/>
+      <AppBarButton x:Name="StopButton" Icon="Stop" Label="Stop" Click="OnStop"/>
+      </CommandBar>
+      <Image x:Name="CameraFrame" Stretch="Uniform" Grid.Row="1"/>
+      <Border Grid.Row="2" Padding="10">
+        <TextBlock x:Name="Status" Text="" Foreground="White" />
+      </Border>
+  </Grid>
+</Page>
