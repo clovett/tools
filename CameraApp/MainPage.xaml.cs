@@ -19,6 +19,7 @@ namespace CameraApp
     public sealed partial class MainPage : Page
     {
         private MediaCapture _mediaCapture;
+        LowLagMediaRecording _mediaRecording;
         private FrameRenderer _frameRenderer;
         bool _recording;
         bool _paused;
@@ -126,7 +127,7 @@ namespace CameraApp
         {
             if (_paused && _recording)
             {
-                await _mediaCapture.ResumeRecordAsync();
+                await _mediaRecording.ResumeAsync();
                 _paused = false;
                 UpdateButtonState();
                 return;
@@ -145,7 +146,6 @@ namespace CameraApp
             }
 
         }
-        LowLagMediaRecording _mediaRecording;
 
         private async Task StartRecording()
         {
@@ -192,6 +192,8 @@ namespace CameraApp
                 UpdateButtonState();
                 await _mediaRecording.StopAsync();
                 ShowStatus("Recording stopped");
+                await _mediaRecording.FinishAsync();
+                _mediaRecording = null;
             }
         }
 
