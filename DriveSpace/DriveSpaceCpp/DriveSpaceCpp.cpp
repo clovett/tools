@@ -11,10 +11,9 @@
 #include <sstream>
 #include "timer.h"
 
-static inline void ltrim(std::string& s, unsigned char c) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [c](unsigned char ch) {
-        return ch == c;
-    }));
+static inline const std::string ltrim(const std::string& s, unsigned char c) {
+    size_t trim = s.find_first_not_of(c);
+    return (trim == std::string::npos) ? "" : s.substr(trim);
 }
 
 static inline void tolower(std::string& s) {
