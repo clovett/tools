@@ -41,16 +41,24 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <Button x:Name="OpenButton"  Grid.Column="0" Label="Open" Click="OnOpenFile" Icon="OpenFile"/>
-      <Button x:Name="RefreshButton" Grid.Column="1" Label="Refresh" Click="OnRefresh" Icon="Refresh"/>
-      <Button x:Name="PlayButton" Grid.Column="2" Click="OnPlay" Label="Play" Icon="Play"/>
-      <Button x:Name="PauseButton" Grid.Column="3" Click="OnPause" Label="Pause" Icon="Pause"/>
-      <Button x:Name="RotateButton" Grid.Column="4" Click="OnRotate" Label="Rotate" Icon="Rotate"/>
-      <Button x:Name="AddButton" Grid.Column="5" Click="OnAddSeries" Label="Add Series" Icon="Add"/>
-      <Button x:Name="BarChartButton" Grid.Column="6" Click="OnBarChart" Label="BarChart" Icon="ThreeBars"/>
-      <Button x:Name="PieChartButton" Grid.Column="7" Click="OnPieChart" Label="PieChart" Icon="Clock"/>
 
-      <Button x:Name="SettingsButton" Grid.Column="14" Click="OnSettings" ToolTip="Show Settings panel" Label="Settings" Icon="Setting"/>
+      <!--<c:AppBarButton x:Name="OpenButton" Grid.Column="0" Label="Open" Icon="OpenFile" />
+      <c:AppBarButton x:Name="RefreshButton" Grid.Column="1" Label="Refresh" Icon="Refresh"/>
+      <c:AppBarButton x:Name="PlayButton" Grid.Column="2" Label="Play" Icon="Play"/>
+      <c:AppBarButton x:Name="PauseButton" Grid.Column="3" Label="Pause" Icon="Pause"/>
+      <c:AppBarButton x:Name="RotateButton" Grid.Column="4" Label="Rotate" Icon="Rotate"/>
+      <c:AppBarButton x:Name="AddButton" Grid.Column="5" Label="Add Series" Icon="Add"/>-->
+      
+      <Button Margin="10" x:Name="RefreshButton" Grid.Column="1" >Refresh</Button>
+      <Button Margin="10" x:Name="PlayButton" Grid.Column="2" >Play</Button>
+      <Button Margin="10" x:Name="PauseButton" Grid.Column="3" >Pause</Button>
+      <Button Margin="10" x:Name="RotateButton" Grid.Column="4">Rotate</Button>
+      <Button Margin="10" x:Name="AddButton" Grid.Column="5" >Add</Button>
+      
+      <!--<c:AppBarButton x:Name="BarChartButton" Grid.Column="6" Label="BarChart" Icon="ThreeBars"/>
+      <c:AppBarButton x:Name="PieChartButton" Grid.Column="7" Label="PieChart" Icon="Clock"/>
+      <c:AppBarButton x:Name="SettingsButton" Grid.Column="14" Click="OnSettings" Label="Settings" Icon="Setting"/>-->
+    
     </Grid>
 
     <c:AnimatingBarChart x:Name="Chart" Grid.Row="2" Grid.Column="0" Margin="20"

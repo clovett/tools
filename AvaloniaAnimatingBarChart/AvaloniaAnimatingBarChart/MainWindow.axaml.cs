@@ -36,8 +36,63 @@ namespace AvaloniaAnimatingBarChart
             this.Chart.ToolTipGenerator = OnGenerateTip;
             this.Chart.Foreground = Brushes.SlateGray;
 
+            this.RefreshButton.Click += OnRefresh;
+            this.PlayButton.Click += OnPlay;
+            this.PauseButton.Click += OnPause;
+            this.RotateButton.Click += OnRotate;
+            this.AddButton.Click += OnAddSeries;
+
+            PauseButton.IsVisible = false;
+
             LoadSamples();
             Toggle();
+        }
+
+        private void OnAddSeries(object sender, RoutedEventArgs e)
+        {
+            if (Chart.IsVisible)
+            {
+                var data = Chart.Data;
+                var ds = GetNext();
+                while (ds.Values.Count != data.Series[0].Values.Count)
+                {
+                    ds = GetNext();
+                }
+                data.Series.Add(ds);
+                Chart.Data = null;
+                Chart.Data = data;
+            }
+        }
+
+        private void OnPause(object sender, RoutedEventArgs e)
+        {
+            delayedActions.CancelDelayedAction("play");
+            PauseButton.IsVisible = false;
+            PlayButton.IsVisible = true;
+        }
+
+        private void OnPlay(object sender, RoutedEventArgs e)
+        {
+            PauseButton.IsVisible = true;
+            PlayButton.IsVisible = false;
+            Toggle();
+            delayedActions.StartDelayedAction("play", MoveNext, TimeSpan.FromSeconds(PlaySpeedSeconds));
+        }
+
+        private void MoveNext()
+        {
+            Toggle();
+            delayedActions.StartDelayedAction("play", MoveNext, TimeSpan.FromSeconds(PlaySpeedSeconds));
+        }
+
+        private void OnRefresh(object sender, RoutedEventArgs e)
+        {
+            var data = Chart.Data;
+            Chart.Data = null;
+            Chart.Data = data;
+            // var pieData = PieChart.Series;
+            //PieChart.Series = null;
+            //PieChart.Series = pieData;
         }
 
         ChartDataSeries GetNext()
@@ -63,6 +118,16 @@ namespace AvaloniaAnimatingBarChart
             }
             
             // PieChart.Series = CreatePieData(ds);
+        }
+
+        private void OnOpenFile(object sender, RoutedEventArgs e)
+        {
+            //Microsoft.Win32.OpenFileDialog od = new Microsoft.Win32.OpenFileDialog();
+            //od.Filter = "CSV files (*.csv)|*.csv";
+            //if (od.ShowDialog() == true)
+            //{
+            //    Open(od.FileName);
+            //}
         }
 
         private void OnRotate(object sender, RoutedEventArgs e)
@@ -180,7 +245,6 @@ namespace AvaloniaAnimatingBarChart
 
         private void OnWindowPositionChanged(object sender, PixelPointEventArgs e)
         {
-            Debug.WriteLine("Window position : " + e.Point);
             if (this.WindowState == WindowState.Normal && Settings.Instance != null)
             {
                 Settings.Instance.WindowLocation = e.Point;

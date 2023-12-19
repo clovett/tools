@@ -77,7 +77,7 @@ namespace AvaloniaAnimatingBarChart.Controls
         {
             LineBrushProperty.Changed.AddClassHandler<Interactive>(OnLineBrushChanged);
             ChartDataProperty.Changed.AddClassHandler<Interactive>(OnDataChanged);
-            ChartDataProperty.Changed.AddClassHandler<Interactive>(OnOrientationChanged);
+            OrientationProperty.Changed.AddClassHandler<Interactive>(OnOrientationChanged);
         }
 
         private static void OnOrientationChanged(Interactive interactive, AvaloniaPropertyChangedEventArgs args)
