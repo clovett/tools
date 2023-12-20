@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:BarChart.ViewModels"
+             xmlns:c="using:BarChart.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="BarChart.Views.MainView"
+             x:DataType="vm:MainViewModel">
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+  <UserControl.Resources>
+    <SolidColorBrush x:Key="SystemChromeMediumBrush" Color="{DynamicResource SystemChromeMediumColor}"/>
+  </UserControl.Resources>
+  <Grid x:Name="Root">
+
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <Grid  Grid.ColumnSpan="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <!--<c:AppBarButton x:Name="OpenButton" Grid.Column="0" Label="Open" Icon="OpenFile" />
+      <c:AppBarButton x:Name="RefreshButton" Grid.Column="1" Label="Refresh" Icon="Refresh"/>
+      <c:AppBarButton x:Name="PlayButton" Grid.Column="2" Label="Play" Icon="Play"/>
+      <c:AppBarButton x:Name="PauseButton" Grid.Column="3" Label="Pause" Icon="Pause"/>
+      <c:AppBarButton x:Name="RotateButton" Grid.Column="4" Label="Rotate" Icon="Rotate"/>
+      <c:AppBarButton x:Name="AddButton" Grid.Column="5" Label="Add Series" Icon="Add"/>-->
+
+      <Button Margin="10" x:Name="RefreshButton" Grid.Column="1" >Refresh</Button>
+      <Button Margin="10" x:Name="PlayButton" Grid.Column="2" >Play</Button>
+      <Button Margin="10" x:Name="PauseButton" Grid.Column="3" >Pause</Button>
+      <Button Margin="10" x:Name="RotateButton" Grid.Column="4">Rotate</Button>
+      <Button Margin="10" x:Name="AddButton" Grid.Column="5" >Add</Button>
+
+      <!--<c:AppBarButton x:Name="BarChartButton" Grid.Column="6" Label="BarChart" Icon="ThreeBars"/>
+      <c:AppBarButton x:Name="PieChartButton" Grid.Column="7" Label="PieChart" Icon="Clock"/>
+      <c:AppBarButton x:Name="SettingsButton" Grid.Column="14" Click="OnSettings" Label="Settings" Icon="Setting"/>-->
+
+    </Grid>
+
+    <c:AnimatingBarChart x:Name="Chart" Grid.Row="2" Grid.Column="0" Margin="20"
+                         LineBrush="{DynamicResource SystemChromeMediumBrush}"
+                         DataContext="{Binding ChartData}"
+                         />
+
+  </Grid>
+</UserControl>
