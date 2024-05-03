@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,7 +14,7 @@ namespace dumphex
         int count;
         bool cpp = false;
         bool decimalHeader = false;
-        bool hexHeader = false;
+        bool lineNumbers = false;
         string headerFormat = null;
 
         static void Main(string[] args)
@@ -37,8 +38,9 @@ namespace dumphex
             Console.WriteLine("Options:");
             Console.WriteLine("   -c count    dumps the first count bytes only");
             Console.WriteLine("   -cpp        outputs in c++ format");
-            Console.WriteLine("   -hex        add hex address to each line");
-            Console.WriteLine("   -dec        add decimal address");
+            Console.WriteLine("   -hex        add hex offset to each line");
+            Console.WriteLine("   -dec        add decimal offset");
+            Console.WriteLine("   -line       add line number with offset");
         }
 
         private void Run()
@@ -52,10 +54,24 @@ namespace dumphex
                         if (decimalHeader)
                         {
                             var digits = fs.Length.ToString().Length;
-                            this.headerFormat = "{0:D" + digits.ToString() + "}: ";
+                            if (this.lineNumbers)
+                            {
+                                this.headerFormat = "{0:D" + digits.ToString() + "}, {1:D" + digits.ToString() + "}: ";
+                            }
+                            else
+                            {
+                                this.headerFormat = "{0:D" + digits.ToString() + "}: ";
+                            }
                         } else { 
                             var digits = fs.Length.ToString("x").Length;
-                            this.headerFormat = "{0:X" + digits.ToString() + "}: ";
+                            if (this.lineNumbers)
+                            {
+                                this.headerFormat = "{0:X" + digits.ToString() + "}, {1:X" + digits.ToString() + "}: ";
+                            }
+                            else
+                            {
+                                this.headerFormat = "{0:X" + digits.ToString() + "}: ";
+                            }
                         }
 
                         if (this.files.Count > 1)
@@ -96,10 +112,13 @@ namespace dumphex
                         case "help":
                             return false;
                         case "hex":
-                            hexHeader = true;
+                            // this is the default
                             break;
                         case "dec":
                             decimalHeader = true;
+                            break;
+                        case "line":
+                            lineNumbers = true;
                             break;
                         case "c":
                             int count = 0;
@@ -153,17 +172,17 @@ namespace dumphex
 
         private void DumpHex(Stream stream)
         {
-            int total = 0;
+            long position = 0;
+            long lineNumber = 0;
             byte[] line = new byte[16];
             while (true)
             {
-                PrintHeader(stream.Position);
+                PrintHeader(lineNumber, position);
                 int lineLength = stream.Read(line, 0, 16);
                 if (lineLength == 0)
                 {
                     break;
                 }
-                total += lineLength;
 
                 int j = 0;
                 for (j = 0; j < lineLength; j++)
@@ -186,6 +205,23 @@ namespace dumphex
                 for (j = 0; j < lineLength; j++)
                 {
                     byte b = line[j];
+
+                    if (lineNumbers)
+                    {
+                        if (b == '\n')
+                        {
+                            lineNumber++;
+                            position = 0;
+                        }
+                        else
+                        {
+                            position++;
+                        }
+                    }
+                    else
+                    {
+                        position++;
+                    }
                     char c = Convert.ToChar(b);
                     if (Char.IsLetterOrDigit(c) || Char.IsPunctuation(c) || (c >= 0x21 && c <= 0x7e))
                     {
@@ -199,50 +235,64 @@ namespace dumphex
 
                 Console.WriteLine();
 
-                if (this.count != 0 && total >= this.count)
+                if (this.count != 0 && stream.Position >= this.count)
                 {
                     break;
                 }
             }
         }
 
-        private void PrintHeader(long position)
+        private void PrintHeader(long lineNumber, long position)
         {
             if (this.headerFormat != null)
             {
-                Console.Write(this.headerFormat, position);
+                if (this.lineNumbers)
+                {
+                    Console.Write(this.headerFormat, lineNumber, position);
+                }
+                else {
+                    Console.Write(this.headerFormat, position);
+                }
             }
         }
 
         private void DumpCpp(FileStream stream)
         {
-            int total = 0;
+            int position = 0;
             byte[] line = new byte[16];
+            int lineNumber = 0;
             while (true)
             {
-                PrintHeader(stream.Position);
+                PrintHeader(lineNumber, stream.Position);
 
                 int lineLength = stream.Read(line, 0, 16);
                 if (lineLength == 0)
                 {
                     break;
                 }
-                total += lineLength;
 
-                int j = 0;
-                for (j = 0; j < lineLength; j++)
+                for (int j = 0; j < lineLength; j++)
                 {
                     if (j > 0)
                     {
                         Console.Write(", ");
                     }
                     byte b = line[j];
+                    if (b == '\n')
+                    {
+                        lineNumber++;
+                        position = 0;
+                    }
+                    else
+                    {
+                        position++;
+                    }
                     Console.Write("0x" + b.ToString("x2") );
                 }
                 
                 Console.WriteLine(",");
 
-                if (this.count != 0 && total >= this.count)
+                if (this.count != 0 && stream.Position >= this.count)
                 {
                     break;
                 }
