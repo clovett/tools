@@ -1,0 +1,18 @@
+<Button xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="200" 
+             MinWidth="32" MinHeight="32" 
+             x:Class="AvaloniaAnimatingBarChart.Controls.AppBarButton">
+  <Button.Content>
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" >
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+      <TextBlock x:Name="TextBlockIcon" FontFamily="Segoe UI Symbol" FontSize="24" HorizontalAlignment="Center" Text="&#xe105;"/>
+      <TextBlock x:Name="TextBlockLabel" Text="Refresh" HorizontalAlignment="Center" />
+    </Grid>
+  </Button.Content>
+</Button>
