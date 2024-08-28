@@ -1,0 +1,40 @@
+﻿<c:CustomizableButton x:Class="WpfDesktopProperyViewer.Controls.CloseBox"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:WpfDesktopProperyViewer.Controls"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             Background="{DynamicResource ButtonBackground}" 
+             Foreground="{DynamicResource ButtonForeground}" 
+             MousePressedBackground="{DynamicResource ButtonBackgroundPressed}" 
+             MousePressedForeground="{DynamicResource ButtonForegroundPressed}" 
+             MouseOverBackground="{DynamicResource ButtonBackgroundPointerOver}" 
+             MouseOverForeground="{DynamicResource ButtonForegroundPointerOver}" 
+             BorderThickness="2"         
+             mc:Ignorable="d" Width="32" Height="32"
+             d:DesignHeight="32" d:DesignWidth="32"
+                      >
+    <Button.Template>
+        <ControlTemplate TargetType="{x:Type c:CloseBox}">
+            <Grid Opacity="{TemplateBinding Opacity}" >
+                <Ellipse x:Name="Ellipse" HorizontalAlignment="Left" Height="{TemplateBinding Width}" Width="{TemplateBinding Height}" 
+                         VerticalAlignment="Top" Fill="{TemplateBinding Background}"
+                         Stroke="{TemplateBinding Foreground}" StrokeThickness="2">
+                </Ellipse>
+                <Path x:Name="CrossShape" Data="M0,0 L6,6 M3,0 L 0,6"  StrokeThickness="2" StrokeEndLineCap="Round" StrokeStartLineCap="Round" 
+                      Stroke="{TemplateBinding Foreground}"/>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver}">
+                    <Setter TargetName="Ellipse" Property="Fill" Value="{Binding MouseOverBackground}"/>
+                    <Setter TargetName="CrossShape" Property="Stroke" Value="{Binding MouseOverForeground}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsPressed}">
+                    <Setter TargetName="Ellipse" Property="Fill" Value="{Binding MousePressedBackground}"/>
+                    <Setter TargetName="CrossShape" Property="Stroke" Value="{Binding MousePressedForeground}"/>
+                </DataTrigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate>
+
+    </Button.Template>
+</c:CustomizableButton>
