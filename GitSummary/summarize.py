@@ -11,8 +11,17 @@ def is_code(file_type: str) -> bool:
     return False
 
 
-def get_authors(date: str):
-    result = subprocess.run(f"git shortlog -s -n  --no-merges --after {date}", capture_output=True, text=True, encoding="utf-8")
+def add_date_range(cmd: str, after: str, before: str) -> str:
+    if after:
+        cmd += f" --after {after}"
+    if before:
+        cmd += f" --before {before}"
+    return cmd
+
+
+def get_authors(after: str, before: str):
+    cmd = add_date_range("git shortlog -s -n  --no-merges", after, before)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     for line in result.stdout.split("\n"):
         line = line.strip()
         i = line.find("\t")
@@ -22,8 +31,9 @@ def get_authors(date: str):
             yield count, author
 
 
-def git_log(date: str, author: str):
-    result = subprocess.run(f"git log --oneline --author \"{author}\" --after {date}", capture_output=True, text=True, encoding="utf-8")
+def git_log(after: str, before: str, author: str):
+    cmd = add_date_range(f"git log --oneline --author \"{author}\"", after, before)
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
     for line in result.stdout.split("\n"):
         i = line.find(" ")
         if i > 0:
@@ -52,11 +62,12 @@ def get_commit_size(commit_id: str):
 def main():
     """ Parse command line with --date argument """
     parser = argparse.ArgumentParser(description="Summarize git commits")
-    parser.add_argument("--date", help="The date to summarize from", required=True)
+    parser.add_argument("--after", help="The date to start summarizing")
+    parser.add_argument("--before", help="The date to end summarizing")
     args = parser.parse_args()
-    for count, author in get_authors(args.date):
+    for count, author in get_authors(args.after, args.before):
         tally = 0
-        for commit_id, _ in git_log(args.date, author):
+        for commit_id, _ in git_log(args.after, args.before, author):
             change_count = get_commit_size(commit_id)
             tally += change_count
         print(f"{count},{tally},{author}")
