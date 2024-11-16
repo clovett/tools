@@ -1,5 +1,14 @@
 import argparse
+import os
 import subprocess
+
+
+def is_code(file_type: str) -> bool:
+    if file_type == ".py" or file_type == ".cs" or file_type == ".cpp" or file_type == ".h":
+        return True
+    if file_type == ".cmd" or file_type == ".sh" or file_type == ".ps1" or file_type == ".psm1":
+        return True
+    return False
 
 
 def get_authors(date: str):
@@ -28,7 +37,8 @@ def get_commit_size(commit_id: str):
     total = 0
     for line in result.stdout.split("\n"):
         parts = line.split("|")
-        if len(parts) > 1:
+        file_type = os.path.splitext(parts[0].strip().replace("}", ""))[-1]
+        if len(parts) > 1 and is_code(file_type):
             changes = parts[1].strip()
             if changes.startswith("Bin"):
                 change_count = 1  # binary files only count as 1 change (e.g. png images)
