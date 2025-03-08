@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,7 +10,7 @@ namespace HttpHead
 {
     class Program
     {
-        static int Main(string[] args)
+        static async Task<int> Main(string[] args)
         {
             try
             {
@@ -18,15 +19,21 @@ namespace HttpHead
                     Console.WriteLine("httphead url");
                     return 1;
                 }
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(args[0]);
-                req.Method = "HEAD";
+                HttpClient client = new HttpClient();
+                var resp = await client.GetAsync(args[0]);
 
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
                 Console.WriteLine("Response: " + resp.StatusCode);
-                foreach (string key in resp.Headers.Keys)
+                foreach (var keyValuePair in resp.Headers)
                 {
-                    Console.WriteLine(key + "=" + resp.Headers[key]);
+                    var values = string.Join(",", keyValuePair.Value);
+                    Console.WriteLine(keyValuePair.Key + "=" + values);
                 }
+                foreach (var keyValuePair in resp.Content.Headers)
+                {
+                    var values = string.Join(",", keyValuePair.Value);
+                    Console.WriteLine(keyValuePair.Key + "=" + values);
+                }
+                
             }
             catch (Exception ex)
             {
