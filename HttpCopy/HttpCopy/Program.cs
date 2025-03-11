@@ -113,6 +113,7 @@ namespace HttpCopy
             Console.WriteLine("Usage: HttpCopy <url> [<filename>]");
             Console.WriteLine("Downloads the content at the given url and stores it in a local file");
             Console.WriteLine("If no local filename is provided it uses the last segment of the url as the filename");
+            Console.WriteLine("If the last segment is empty (url ends in /) it uses 'index.htm'");
         }
 
 
