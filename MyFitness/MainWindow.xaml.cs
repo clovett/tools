@@ -29,6 +29,8 @@ namespace MyFitness
             InitializeComponent();
             RestoreSettings();
 
+
+
             UiDispatcher.Initialize();
 
             this.SizeChanged += OnWindowSizeChanged;

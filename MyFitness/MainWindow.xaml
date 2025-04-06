@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:MyFitness"
         xmlns:control="clr-namespace:MyFitness.Controls"
         mc:Ignorable="d"
-        Title="My Fitness" Height="450" Width="800" Icon="/App.ico">
+        Title="My Fitness" Height="450" Width="800" >
     <Window.CommandBindings>
         <CommandBinding Command="Open" Executed="OnOpenFile"/>
         <CommandBinding Command="Save" Executed="OnSaveFile"/>
