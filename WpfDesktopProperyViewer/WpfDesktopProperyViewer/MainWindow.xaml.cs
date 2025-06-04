@@ -38,7 +38,6 @@ namespace WpfDesktopProperyViewer
             this.Height = 450;
             this.Loaded += OnMainWindowLoaded;
             this.gesture = new WindowMoveGesture(this);
-            NativeMethods.SetBottomMost(new WindowInteropHelper(this).Handle);
             this.SizeChanged += OnWindowSizeChanged;
             this.LocationChanged += OnWindowLocationChanged;
         }
@@ -92,6 +91,7 @@ namespace WpfDesktopProperyViewer
                 this.Height = this.model.Height;
             }
             PropertyView.ItemsSource = model.Entities;
+            NativeMethods.SetBottomMost(new WindowInteropHelper(this).Handle);
         }
 
         protected override void OnMouseEnter(MouseEventArgs e)
