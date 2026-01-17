@@ -26,6 +26,7 @@ namespace WpfDesktopProperyViewer
     {
         private WindowMoveGesture gesture;
         private Model model = new Model();
+        private DelayedActions delayedActions = new DelayedActions();
 
         public MainWindow()
         {
@@ -33,9 +34,22 @@ namespace WpfDesktopProperyViewer
             InitializeComponent();
             this.Top = 200;
             this.Left = 300;
+            this.Width = 800;
+            this.Height = 450;
             this.Loaded += OnMainWindowLoaded;
             this.gesture = new WindowMoveGesture(this);
-            NativeMethods.SetBottomMost(new WindowInteropHelper(this).Handle);
+            this.SizeChanged += OnWindowSizeChanged;
+            this.LocationChanged += OnWindowLocationChanged;
+        }
+
+        private void OnWindowLocationChanged(object sender, EventArgs e)
+        {
+            delayedActions.StartDelayedAction("SaveSize", OnSaveSize, TimeSpan.FromSeconds(1));
+        }
+
+        private void OnWindowSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            delayedActions.StartDelayedAction("SaveSize", OnSaveSize, TimeSpan.FromSeconds(1));
         }
 
         string GetIpAddress()
@@ -62,11 +76,22 @@ namespace WpfDesktopProperyViewer
             model.Entities = this.model.Entities;            
             if (this.model.Left != 0){
                 this.Left = this.model.Left;
+                this.WindowStartupLocation = WindowStartupLocation.Manual;
             }
             if (this.model.Top != 0){
                 this.Top = this.model.Top;
+                this.WindowStartupLocation = WindowStartupLocation.Manual;
+            }
+            if (this.model.Width != 0)
+            {
+                this.Width = this.model.Width;
+            }
+            if (this.model.Height != 0)
+            {
+                this.Height = this.model.Height;
             }
             PropertyView.ItemsSource = model.Entities;
+            NativeMethods.SetBottomMost(new WindowInteropHelper(this).Handle);
         }
 
         protected override void OnMouseEnter(MouseEventArgs e)
@@ -104,8 +129,15 @@ namespace WpfDesktopProperyViewer
 
         protected override void OnClosing(CancelEventArgs e)
         {
+            delayedActions.Close();
+        }
+
+        private void OnSaveSize()
+        {
             this.model.Left = this.Left;
             this.model.Top = this.Top;
+            this.model.Width = this.ActualWidth;
+            this.model.Height = this.ActualHeight;
             this.model.Save();
         }
     }
